@@ -423,6 +423,27 @@
 - **Traps:** `FogOfWarManager.DisabledCheat` is an INSTANCE property. Regenerating the map: rerun
   `mission2_town.py` FIRST (it writes mission2-plan.json), then Blender, then export.
 - **Open:** both cutscenes (to discuss before building them); the user's playtest of v1.
+- **PLAYTEST 3 (the user, 2026-11-12, after SWORD + SIEGE) -- ALL BUILT (setup green, CityDefenceTests green), sheet synced, NOT SEEN by the user; 3 strikes + gate closing await approval:**
+  1. Green ring round the square looks cheap -> effects instead of a line. [code] HealersMotes: rising green motes on the circle edge (fxGlow), brighter while healing
+  2. Ардан is child-sized -> as big as the other soldiers. [code] figure scaled to the soldier renderer height (Figure.cs)
+  3. Closed gate model + closing animation (render for approval first). [RENDERS SENT, awaiting approval] Tools/blender/gate_close_drafts.py: FortifiedGate1-Passage (dark arch), -Leaf (oak leaf on its hinge, two mirrored on the town face), -Grille (portcullis on the field face); closing in code
+  4. Ардан strikes from far off -> almost touching. [code] MeleeReach.Factor = m2_melee_reach_mult (0,6) for both sides in the mission
+  5. Burnt building texture flickers (z-fight). [code] ruins are now RUBBLE ON THE GROUND (low cut, ash plate raised, trigger box) -- the user (2026-11-12) wanted rubble, not the shell; ruins.md
+  6. Haystacks float -> on the ground. [code] GroundAt rays only the terrain layer
+  7. Orcs broke the gate but cannot pass the ruined one. [code] the ruin box is a trigger; part-2 breach only at the gate
+  8. Defeat window cheap -> richer, in the skin; the game must PAUSE after defeat. [code] BuildEndPanel: dim, parchment card, wood ribbon title, stats strip (#m2_end_stats), glyph buttons, pop-in; Time.timeScale = 0
+  9. XP to Ардан for the death of any enemy he wounded at least once. [code] OrcUnit.Wounded event; _woundedByArden pays on death
+  10. Attacks boring -> 3 strike variants alternating + slash trail + hit sparks + an effect per skill (renders first). [code FX done + RENDERS SENT] CityDefenceMode.Fx.cs: crescent slash (3 tilts in turn) + sparks per blow, Cry gold ring + embers, Whirl spinning ring, Dash dust, Breath green spiral; Blender poses wind_up2/strike2 (backhand), wind_up3/strike3 (overhead) in ardan_sword.py await approval, then Attack2/Attack3 clips
+  11. Holding a skill button shows what the skill is. [code] SkillHold (0.35 s) -> hint #m2_skill_{i} / _line / _locked
+  12. Soldiers must NOT leave through the gates (said before). [code] PenOf boxes for the single gate; Man inward
+  13. Hero RESPAWN: on the square after N s (sheet), level/xp kept; loss only by gate/centre. [code] m2_arden_respawn_sec 15, #m2_respawn on the HUD; test ArdenDying_RisesAgain_TheMissionGoesOn
+  14. FPS fell hard at minute 3 -- VERY IMPORTANT, find why. [code; MEASURED on PC after the fix: 16.6 ms flat over 3 min (vsync-capped, up to 8 orcs + 29 soldiers + 20 townsfolk; no component costs anything measurable) -- a phone check still needed] causes found: per-orc FindObjectsByType<BuildingInstance> (5 loops -> BuildingInstance.All), per-frame blocker scan while stuck (0.5 s throttle), the ruin box blocking the gate (pile-up), forced waves every 35 s (gone). Probe Tests/PlayMode/M2PerfProbe.cs (temporary, never commit) needs Unity closed
+  15. Soldiers and orcs fight from far apart -> close in; no hitting through gates or walls. [code] same as 4; InReachOfPen 0.1 for melee
+  16. Too hard at 2 min -> a WAVES SHEET tab to set each wave's make-up by hand. [code + sheet] m2waves.csv / tab «Кампания: волны обороны» (gid 2000067): part, wave, raiders, brutes, throwers, rams, towers, level, pause_sec; last row repeats
+  17. Siege tower drives to a wall section, stands by it, orcs CLIMB ONTO THE WALL. [code] Siege.cs: TowerRoad to a wall spot 4-12 cells from the gate, Dock, crew Climb foot->deck->walk->drop
+  18. The next wave starts only once the previous is fully beaten. [code] TickWaves waits for every orc dead, then pause_sec
+  19. MAP: remake as a castle with ONE gate (user chose). [code, MAP APPROVED 2026-11-12] plan Design/mission2_map_v3.png (Tools/campaign/mission2_map_v3.py); mission2_town.py one gate per ring, lanes converge at (50.5,31.6); Mission2Town.json regenerated
+  20. After the gate falls orcs go raze the whole town, then attack the second line. [code] LetThemLoose: inside the outer pen after the gate falls, lane orcs drop their road and raze
 - **SWORD + SIEGE (approved by the user 2026-11-12, «Утверждаю, ставь») -> IN THE GAME (not seen).**
   - Ардан WITH THE SWORD replaces the Латник's look: CineArdanSword.fbx from
     Tools/blender/cinematic/export_ardan_sword.py (poses from ardan_sword.py; clips Idle, Run, Attack, Whirl, Cry,

@@ -7783,26 +7783,14 @@ MonoBehaviour:
     part1Seconds: 480
     part2Seconds: 480
     firstWaveSeconds: 10
-    wavePauseSeconds: 8
-    wavePauseLateSeconds: 5
-    waveMaxSeconds: 35
-    waveOrcs: 4
-    waveOrcsGrowEvery: 1
-    waveOrcsMax: 12
-    lateOrcsMult: 1.8
-    orcLevel: 2
-    lateOrcLevel: 3
-    orcLevelPart2: 3
-    bruteEvery: 2
-    lateBruteEvery: 1
-    throwerEvery: 1
-    orcHealthMult: 1.5
-    orcDamageMult: 1.5
-    squadInfantry: 4
-    squadCrossbows: 3
-    squadMonks: 1
-    wallArchers: 3
-    wallCrossbows: 2
+    meleeReachMult: 0.6
+    orcHealthMult: 1.2
+    orcDamageMult: 1.2
+    squadInfantry: 6
+    squadCrossbows: 4
+    squadMonks: 2
+    wallArchers: 5
+    wallCrossbows: 3
     patrols: 2
     patrolSize: 3
     innerGuards: 2
@@ -7840,6 +7828,7 @@ MonoBehaviour:
     squareHealers: 2
     healRadius: 3
     healPerSecond: 0.08
+    ardenRespawnSeconds: 15
     cameraDistance: 6
     cameraPitch: 50
     minimapRadius: 22
@@ -7856,15 +7845,17 @@ MonoBehaviour:
     wheatEarsMax: 300
     wallPatrolCells: 3
     wallPatrolSeconds: 8
-    ramEvery: 3
-    towerEvery: 4
     ramHealthMult: 6
     ramDamageMult: 8
     towerHealthMult: 5
     siegeSpeed: 0.6
     towerCrew: 4
-    towerDockCells: 3.5
+    towerDockCells: 0.8
     towerStaySeconds: 20
+    towerWallFromCells: 4
+    towerWallToCells: 12
+    towerClimbSeconds: 1.2
+    towerClimbGapSeconds: 0.8
   tutorialBuildSeconds: 5
   tutorialStartPeople: 3
   tutorialKingHealBelow: 0.25
@@ -8774,6 +8765,187 @@ MonoBehaviour:
     unit: bot_archer
     count: 15
     level: 5
+  m2Waves:
+  - part: 1
+    wave: 1
+    raiders: 5
+    brutes: 0
+    throwers: 0
+    rams: 0
+    towers: 0
+    level: 1
+    pause: 10
+  - part: 1
+    wave: 2
+    raiders: 6
+    brutes: 0
+    throwers: 0
+    rams: 0
+    towers: 0
+    level: 1
+    pause: 10
+  - part: 1
+    wave: 3
+    raiders: 6
+    brutes: 1
+    throwers: 0
+    rams: 0
+    towers: 0
+    level: 1
+    pause: 10
+  - part: 1
+    wave: 4
+    raiders: 7
+    brutes: 0
+    throwers: 1
+    rams: 0
+    towers: 0
+    level: 1
+    pause: 10
+  - part: 1
+    wave: 5
+    raiders: 7
+    brutes: 1
+    throwers: 1
+    rams: 0
+    towers: 0
+    level: 1
+    pause: 10
+  - part: 1
+    wave: 6
+    raiders: 8
+    brutes: 1
+    throwers: 1
+    rams: 0
+    towers: 0
+    level: 2
+    pause: 10
+  - part: 1
+    wave: 7
+    raiders: 8
+    brutes: 1
+    throwers: 1
+    rams: 1
+    towers: 0
+    level: 2
+    pause: 10
+  - part: 1
+    wave: 8
+    raiders: 9
+    brutes: 1
+    throwers: 2
+    rams: 0
+    towers: 1
+    level: 2
+    pause: 10
+  - part: 1
+    wave: 9
+    raiders: 9
+    brutes: 2
+    throwers: 1
+    rams: 1
+    towers: 0
+    level: 2
+    pause: 10
+  - part: 1
+    wave: 10
+    raiders: 10
+    brutes: 2
+    throwers: 2
+    rams: 0
+    towers: 1
+    level: 2
+    pause: 10
+  - part: 1
+    wave: 11
+    raiders: 10
+    brutes: 2
+    throwers: 2
+    rams: 1
+    towers: 1
+    level: 2
+    pause: 10
+  - part: 1
+    wave: 12
+    raiders: 12
+    brutes: 2
+    throwers: 2
+    rams: 1
+    towers: 1
+    level: 3
+    pause: 10
+  - part: 2
+    wave: 1
+    raiders: 6
+    brutes: 1
+    throwers: 0
+    rams: 0
+    towers: 0
+    level: 2
+    pause: 10
+  - part: 2
+    wave: 2
+    raiders: 7
+    brutes: 1
+    throwers: 1
+    rams: 0
+    towers: 0
+    level: 2
+    pause: 10
+  - part: 2
+    wave: 3
+    raiders: 8
+    brutes: 1
+    throwers: 1
+    rams: 1
+    towers: 0
+    level: 2
+    pause: 10
+  - part: 2
+    wave: 4
+    raiders: 9
+    brutes: 2
+    throwers: 1
+    rams: 0
+    towers: 1
+    level: 2
+    pause: 10
+  - part: 2
+    wave: 5
+    raiders: 10
+    brutes: 2
+    throwers: 2
+    rams: 1
+    towers: 0
+    level: 3
+    pause: 10
+  - part: 2
+    wave: 6
+    raiders: 10
+    brutes: 2
+    throwers: 2
+    rams: 1
+    towers: 1
+    level: 3
+    pause: 10
+  - part: 2
+    wave: 7
+    raiders: 12
+    brutes: 2
+    throwers: 2
+    rams: 1
+    towers: 1
+    level: 3
+    pause: 10
+  - part: 2
+    wave: 8
+    raiders: 12
+    brutes: 3
+    throwers: 3
+    rams: 1
+    towers: 1
+    level: 3
+    pause: 10
   boosters:
   - id: lumberjack
     nameKey: '#booster_lumberjack'

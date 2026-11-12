@@ -200,7 +200,8 @@ namespace CityBuilder.Buildings
                 renderers.Add(renderer);
             }
 
-            // the break: a third or so of the way up, its teeth a share of a cell
+            // the break: LOW -- a burnt stub of the walls over a heap of rubble (the user, 2026-11-12: «вид обломков на
+            // земле», the orcs walking over it; was a shell broken a third of the way up)
             var ground = transform.position.y;
             var top = ground + 0.3f * cellSize;
             foreach (var r in renderers) top = Mathf.Max(top, r.bounds.max.y);
@@ -208,8 +209,8 @@ namespace CityBuilder.Buildings
             var flat = height < 0.35f * cellSize;   // a road, a low fence: burnt, not broken
             if (shell != null)
             {
-                shell.SetFloat("_RuinCut", flat ? top + 1f : ground + Mathf.Max(0.22f * cellSize, height * (0.3f + 0.12f * (float)rng.NextDouble())));
-                shell.SetFloat("_RuinJag", 0.14f * cellSize);
+                shell.SetFloat("_RuinCut", flat ? top + 1f : ground + Mathf.Max(0.08f * cellSize, height * (0.06f + 0.05f * (float)rng.NextDouble())));
+                shell.SetFloat("_RuinJag", 0.06f * cellSize);
                 shell.SetFloat("_RuinSeed", (float)rng.NextDouble() * 100f);
                 shell.SetFloat("_Char", 0.8f);
             }
@@ -219,7 +220,10 @@ namespace CityBuilder.Buildings
 
             // a box to tap
             var box = gameObject.AddComponent<BoxCollider>();
-            var boxHeight = flat ? Mathf.Max(0.3f * cellSize, height) : Mathf.Max(0.4f * cellSize, height * 0.45f);
+            // a TAP target only, never a wall: a solid box stopped every walker (the user, 2026-11-12: the orcs broke
+            // the gate and could not pass its ruin). BuildingSelector's raycast still hits triggers.
+            box.isTrigger = true;
+            var boxHeight = Mathf.Max(0.3f * cellSize, Mathf.Min(height, 0.4f * cellSize));
             box.size = new Vector3(Mathf.Max(0.5f, size.x * 0.95f), boxHeight, Mathf.Max(0.5f, size.y * 0.95f));
             // the box in the ruin's own axes: the plot's X/Z are the unrotated footprint's
             if (RotationSteps % 2 == 1) box.size = new Vector3(box.size.z, box.size.y, box.size.x);
@@ -254,20 +258,21 @@ namespace CityBuilder.Buildings
             float Gauss() => (float)(rng.NextDouble() + rng.NextDouble() + rng.NextDouble() - 1.5) / 1.5f;
 
             var area = size.x * size.y / (cellSize * cellSize);
-            var count = Mathf.Clamp(Mathf.RoundToInt(area * (flat ? 3f : 7f)), 3, 40);
+            var count = Mathf.Clamp(Mathf.RoundToInt(area * (flat ? 3f : 12f)), 3, 60);
             for (var i = 0; i < count; i++)
             {
                 var x = Mathf.Clamp(Gauss() * size.x * 0.32f, -size.x * 0.45f, size.x * 0.45f);
                 var z = Mathf.Clamp(Gauss() * size.y * 0.32f, -size.y * 0.45f, size.y * 0.45f);
-                var r = Mathf.Lerp(0.06f, 0.16f, (float)rng.NextDouble()) * cellSize;
+                var r = Mathf.Lerp(0.06f, 0.2f, (float)rng.NextDouble()) * cellSize;
                 var beam = i % 4 == 3;
                 var scale = beam ? new Vector3(r * 0.5f, r * 0.45f, r * 3.2f) : new Vector3(r, r * Mathf.Lerp(0.6f, 1.1f, (float)rng.NextDouble()), r * Mathf.Lerp(0.8f, 1.3f, (float)rng.NextDouble()));
                 var turn = Quaternion.Euler(Mathf.Lerp(-25f, 25f, (float)rng.NextDouble()), (float)rng.NextDouble() * 360f, Mathf.Lerp(-25f, 25f, (float)rng.NextDouble()));
                 Box(vertices, normals, stones, undo * new Vector3(x, scale.y * 0.3f, z), undo * turn, scale);
             }
             // ash on the ground
-            Box(vertices, normals, ashes, new Vector3(0f, 0.008f * cellSize, 0f), Quaternion.identity,
-                new Vector3(size.x * 0.84f, 0.012f * cellSize, size.y * 0.84f), undo);
+            // clear of the ground: a plate a hair over it flickered against the terrain (the user, 2026-11-12)
+            Box(vertices, normals, ashes, new Vector3(0f, 0.035f * cellSize, 0f), Quaternion.identity,
+                new Vector3(size.x * 0.84f, 0.03f * cellSize, size.y * 0.84f), undo);
 
             var mesh = new Mesh { name = "RuinRubble" };
             mesh.SetVertices(vertices);

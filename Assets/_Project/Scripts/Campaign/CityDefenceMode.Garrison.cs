@@ -63,12 +63,11 @@ namespace CityBuilder.Campaign
             var b = B;
             _pen = PenOf(outer);
             // each gate (plan) and the way into the town from it
-            var gates = outer
-                ? new[] { (World(28.5f, 40.5f), new Vector3(1f, 0f, 0f)), (World(50.5f, 34.5f), new Vector3(0f, 0f, -1f)), (World(72.5f, 40.5f), new Vector3(-1f, 0f, 0f)) }
-                : new[] { (World(41.5f, 56.5f), new Vector3(1f, 0f, 0f)), (World(50.5f, 51.5f), new Vector3(0f, 0f, -1f)), (World(59.5f, 56.5f), new Vector3(-1f, 0f, 0f)) };
-            for (var lane = 0; lane < 3; lane++)
+            // the ONE gate of the ring (the user's third playtest), the way into the town from it: south
+            var gate = outer ? World(50.5f, 34.5f) : World(50.5f, 51.5f);
+            var inward = new Vector3(0f, 0f, -1f);
             {
-                var (gate, inward) = gates[lane];
+                const int lane = 1;
                 var side = new Vector3(inward.z, 0f, -inward.x);
                 if (outer)
                 {
@@ -106,11 +105,12 @@ namespace CityBuilder.Campaign
             group.OrderMoveTo(post);
         }
 
-        /// <summary>The town inside the outer (or the inner) walls, walls included, in world x/z.</summary>
+        /// <summary>The town INSIDE the outer (or the inner) walls, the walls themselves left out, in world x/z: nobody
+        /// steps into a gateway or onto the far side of it (the user's third playtest, again).</summary>
         private Rect PenOf(bool outer)
         {
-            var a = outer ? World(28f, 67f) : World(41f, 67f);
-            var c = outer ? World(73f, 34f) : World(60f, 51f);
+            var a = outer ? World(29f, 66f) : World(42f, 66f);
+            var c = outer ? World(72f, 35f) : World(59f, 52f);
             return Rect.MinMaxRect(Mathf.Min(a.x, c.x), Mathf.Min(a.z, c.z), Mathf.Max(a.x, c.x), Mathf.Max(a.z, c.z));
         }
 

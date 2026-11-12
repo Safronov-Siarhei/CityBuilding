@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using CityBuilder.Core;
 using CityBuilder.UI;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace CityBuilder.Campaign
@@ -37,9 +38,13 @@ namespace CityBuilder.Campaign
         private readonly Image[] _skillIcon = new Image[CityDefenceMode.SkillCount];
         private CanvasGroup _bannerGroup;
         private GameObject _endPanel;
-        private Text _endTitle, _endLine;
+        private RectTransform _endCard;
+        private Text _endTitle, _endLine, _endStats;
         private GameObject _restartButton;
-        private float _bannerFor;
+        private float _bannerFor, _endPop = -1f;
+        // the skill hint: shown while a skill's button is held (the user's third playtest)
+        private GameObject _hint;
+        private Text _hintTitle, _hintLine;
 
         public void Bind(CityDefenceMode mode)
         {
@@ -109,6 +114,7 @@ namespace CityBuilder.Campaign
 
             BuildPortrait(safe, art);
             BuildSkills(safe, art);
+            BuildHint(safe);
 
             // the banner (a part begins, a level) and the middle line (the courier)
             _bannerGroup = new GameObject("Banner", typeof(RectTransform), typeof(CanvasGroup)).GetComponent<CanvasGroup>();
@@ -124,7 +130,7 @@ namespace CityBuilder.Campaign
             _middle = MissionSkin.Label(safe, "", UiTheme.Heavy, 30, UiTheme.OnWood, TextAnchor.MiddleCenter, new Vector2(0.1f, 0.42f), new Vector2(0.9f, 0.56f), Vector2.zero);
             _middle.gameObject.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.8f);
 
-            BuildEndPanel(root);
+            BuildEndPanel(root, art);
 
             _stick = FloatingJoystick.Create(84f, 36f, 0.12f, 1.5f, 4f, Localization.Get("#m2_stick_hint"));
             _stick.transform.SetParent(transform, false);
@@ -210,7 +216,13 @@ namespace CityBuilder.Campaign
                 var x = -width * 0.5f + size * 0.5f + i * (size + gap);
                 var button = MissionSkin.Round(safe, "Skill" + i, "round", HudInk.Keep, _mode.SkillGlyph(i), new Vector2(0.5f, 0f), new Vector2(x, size * 0.5f + 14f), size);
                 var skill = i;
-                button.onClick.AddListener(() => _mode.UseSkill(skill));
+                var hold = button.gameObject.AddComponent<SkillHold>();
+                hold.Shown = held => ShowHint(held ? skill : -1);
+                button.onClick.AddListener(() =>
+                {
+                    if (hold.WasHint) return;   // a hold read the hint: the release casts nothing
+                    _mode.UseSkill(skill);
+                });
                 var icon = button.transform.Find("Icon");
                 _skillIcon[i] = icon != null ? icon.GetComponent<Image>() : button.GetComponent<Image>();
                 if (icon != null) _skillIcon[i].color = Color.white;   // a picture in its own colours
@@ -237,6 +249,31 @@ namespace CityBuilder.Campaign
             }
         }
 
+        /// <summary>The plaque over the skills while one is held: its name and what it does.</summary>
+        private void BuildHint(RectTransform safe)
+        {
+            var plaque = MissionSkin.Image(safe, "SkillHint", "plaque", new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 112f), new Vector2(520f, 104f));
+            plaque.raycastTarget = false;
+            _hintTitle = MissionSkin.Label(plaque.transform, "", UiTheme.Heavy, 24, UiTheme.Ink, TextAnchor.UpperCenter, Vector2.zero, Vector2.one, new Vector2(18f, 10f));
+            _hintLine = MissionSkin.Label(plaque.transform, "", UiTheme.Bold, 18, UiTheme.InkSoft, TextAnchor.LowerCenter, Vector2.zero, new Vector2(1f, 0.66f), new Vector2(18f, 10f));
+            _hintLine.resizeTextForBestFit = true;
+            _hintLine.resizeTextMaxSize = 18;
+            _hintLine.resizeTextMinSize = 11;
+            _hint = plaque.gameObject;
+            _hint.SetActive(false);
+        }
+
+        private void ShowHint(int skill)
+        {
+            if (_hint == null) return;
+            _hint.SetActive(skill >= 0);
+            if (skill < 0) return;
+            _hintTitle.text = Localization.Get("#m2_skill_" + skill);
+            var line = Localization.Get("#m2_skill_" + skill + "_line");
+            if (!_mode.SkillOpen(skill)) line = Localization.Format("#m2_skill_locked", skill + 1) + "\n" + line;
+            _hintLine.text = line;
+        }
+
         private static Image Bar(Transform parent, Vector2 at, Vector2 size, Vector2 anchor)
         {
             var back = new GameObject("Bar", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
@@ -259,7 +296,13 @@ namespace CityBuilder.Campaign
             return fill;
         }
 
-        private void BuildEndPanel(Transform root)
+        /// <summary>
+        /// The end window (the user's third playtest: the plain one «выглядит дёшево»): the screen dimmed, a parchment
+        /// card in the game's frame popping in, the title on a wooden ribbon across its top edge, the reason, a
+        /// parchment strip with the run's numbers (waves beaten, time held, Ардан's level), and two wooden buttons
+        /// with their pictures. The game is PAUSED under it (Time.timeScale 0; both buttons put it back).
+        /// </summary>
+        private void BuildEndPanel(Transform root, MissionHud.Art art)
         {
             _endPanel = new GameObject("End", typeof(RectTransform), typeof(Image));
             _endPanel.transform.SetParent(root, false);
@@ -267,12 +310,27 @@ namespace CityBuilder.Campaign
             er.anchorMin = Vector2.zero;
             er.anchorMax = Vector2.one;
             er.offsetMin = er.offsetMax = Vector2.zero;
-            _endPanel.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.6f);
-            var card = MissionSkin.Image(_endPanel.transform, "Card", "panel", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(560f, 340f));
-            _endTitle = MissionSkin.Label(card.transform, "", UiTheme.Heavy, 42, UiTheme.Ink, TextAnchor.UpperCenter, Vector2.zero, Vector2.one, new Vector2(24f, 28f));
-            _endLine = MissionSkin.Label(card.transform, "", UiTheme.Bold, 22, UiTheme.InkSoft, TextAnchor.MiddleCenter, new Vector2(0f, 0.3f), new Vector2(1f, 0.75f), new Vector2(30f, 0f));
-            _restartButton = TextButton(card.transform, "#m2_restart", new Vector2(-120f, 46f), CityDefenceMode.Restart).gameObject;
-            TextButton(card.transform, "#m2_to_map", new Vector2(120f, 46f), () =>
+            _endPanel.GetComponent<Image>().color = new Color(0.04f, 0.02f, 0.01f, 0.72f);
+
+            var card = Picture(_endPanel.transform, "Card", art.panel, new Vector2(0.5f, 0.5f), new Vector2(0f, -10f), new Vector2(620f, 400f));
+            _endCard = card.rectTransform;
+            // the title on a wooden ribbon over the card's top edge
+            var ribbon = Picture(card.transform, "Ribbon", art.pillWood, new Vector2(0.5f, 1f), new Vector2(0f, 6f), new Vector2(440f, 84f));
+            var shadow = Picture(ribbon.transform, "Shadow", null, new Vector2(0.5f, 0f), new Vector2(0f, -6f), new Vector2(400f, 8f));
+            shadow.color = new Color(0f, 0f, 0f, 0.25f);
+            _endTitle = MissionSkin.Label(ribbon.transform, "", UiTheme.Heavy, 44, UiTheme.Gold, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(16f, 6f));
+            _endTitle.gameObject.AddComponent<Outline>().effectColor = new Color(0.12f, 0.05f, 0f, 0.95f);
+            _endTitle.gameObject.AddComponent<Shadow>().effectDistance = new Vector2(0f, -3f);
+            // the reason
+            _endLine = MissionSkin.Label(card.transform, "", UiTheme.Heavy, 26, UiTheme.Ink, TextAnchor.MiddleCenter, new Vector2(0f, 0.56f), new Vector2(1f, 0.8f), new Vector2(40f, 0f));
+            // the numbers on a parchment strip
+            var strip = Picture(card.transform, "Stats", art.pillParchment, new Vector2(0.5f, 0.5f), new Vector2(0f, 10f), new Vector2(520f, 58f));
+            _endStats = MissionSkin.Label(strip.transform, "", UiTheme.Bold, 20, UiTheme.InkSoft, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(18f, 4f));
+            _endStats.resizeTextForBestFit = true;
+            _endStats.resizeTextMaxSize = 20;
+            _endStats.resizeTextMinSize = 12;
+            _restartButton = TextButton(card.transform, art, art.restartGlyph, "#m2_restart", new Vector2(-130f, 62f), CityDefenceMode.Restart).gameObject;
+            TextButton(card.transform, art, art.homeGlyph, "#m2_to_map", new Vector2(130f, 62f), () =>
             {
                 Time.timeScale = 1f;
                 LoadingScreen.ToCampaignMap("CampaignMap");
@@ -280,12 +338,37 @@ namespace CityBuilder.Campaign
             _endPanel.SetActive(false);
         }
 
-        private static Button TextButton(Transform parent, string key, Vector2 at, UnityEngine.Events.UnityAction act)
+        private static Image Picture(Transform parent, string name, Sprite sprite, Vector2 anchor, Vector2 at, Vector2 size)
         {
-            var img = MissionSkin.Image(parent, key, "pillWood", new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), at, new Vector2(210f, 64f));
+            var img = new GameObject(name, typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+            img.transform.SetParent(parent, false);
+            img.rectTransform.anchorMin = img.rectTransform.anchorMax = anchor;
+            img.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            img.rectTransform.anchoredPosition = at;
+            img.rectTransform.sizeDelta = size;
+            img.sprite = sprite;
+            if (sprite != null && sprite.border != Vector4.zero) img.type = Image.Type.Sliced;
+            img.raycastTarget = false;
+            return img;
+        }
+
+        private static Button TextButton(Transform parent, MissionHud.Art art, Sprite glyph, string key, Vector2 at, UnityEngine.Events.UnityAction act)
+        {
+            var img = Picture(parent, key, art.pillWood, new Vector2(0.5f, 0f), at, new Vector2(230f, 70f));
+            img.raycastTarget = true;
             var b = img.gameObject.AddComponent<Button>();
             b.onClick.AddListener(act);
-            MissionSkin.Label(img.transform, Localization.Get(key), UiTheme.Bold, 24, UiTheme.OnWood, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(8f, 4f));
+            var textLeft = 12f;
+            if (glyph != null)
+            {
+                var icon = Picture(img.transform, "Glyph", glyph, new Vector2(0f, 0.5f), new Vector2(40f, 0f), new Vector2(38f, 38f));
+                icon.preserveAspect = true;
+                textLeft = 62f;
+            }
+            var label = MissionSkin.Label(img.transform, Localization.Get(key), UiTheme.Heavy, 26, UiTheme.OnWood, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, Vector2.zero);
+            label.rectTransform.offsetMin = new Vector2(textLeft, 4f);
+            label.rectTransform.offsetMax = new Vector2(-12f, -4f);
+            label.gameObject.AddComponent<Outline>().effectColor = new Color(0.1f, 0.04f, 0f, 0.8f);
             return b;
         }
 
@@ -309,8 +392,11 @@ namespace CityBuilder.Campaign
             var why = _mode.Loss == CityDefenceMode.LossReason.Arden ? "#m2_lost_arden"
                 : _mode.Loss == CityDefenceMode.LossReason.Castle ? "#m2_lost_castle" : "#m2_lost_line";
             _endLine.text = Localization.Get(won ? "#m2_won_line" : why);
+            _endStats.text = Localization.Format("#m2_end_stats", Mathf.Max(0, _mode.Wave - (won ? 0 : 1)), MissionSkin.Clock(_mode.HeldSeconds), _mode.ArdenLevel);
             _restartButton.SetActive(!won);
             _endPanel.SetActive(true);
+            _endPop = 0f;
+            Time.timeScale = 0f;   // the game stops under the window (the user's third playtest)
         }
 
         private void Update()
@@ -342,7 +428,18 @@ namespace CityBuilder.Campaign
                 _skillShade[i].fillAmount = open ? _mode.SkillCooldownShare(i) : 0f;
             }
 
-            _middle.text = stage == CityDefenceMode.Stage.Courier ? Localization.Get("#m2_courier") : "";
+            _middle.text = stage == CityDefenceMode.Stage.Courier ? Localization.Get("#m2_courier")
+                : _mode.RespawnLeft > 0f ? Localization.Format("#m2_respawn", Mathf.CeilToInt(_mode.RespawnLeft)) : "";
+
+            // the end card pops in, on the unscaled clock (the game is paused)
+            if (_endPop >= 0f && _endCard != null)
+            {
+                _endPop += dt;
+                var k = Mathf.Clamp01(_endPop / 0.28f);
+                var s = k < 1f ? Mathf.LerpUnclamped(0.82f, 1f, 1f + 2.2f * Mathf.Pow(k - 1f, 3f) + 1.2f * Mathf.Pow(k - 1f, 2f)) : 1f;
+                _endCard.localScale = Vector3.one * s;
+                if (k >= 1f) _endPop = -1f;
+            }
 
             if (_bannerFor > 0f) _bannerFor -= dt;
             _bannerGroup.alpha = Mathf.Clamp01(_bannerFor / 0.6f);

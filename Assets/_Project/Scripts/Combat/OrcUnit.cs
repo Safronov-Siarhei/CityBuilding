@@ -324,7 +324,7 @@ namespace CityBuilder.Combat
                 : IsMonster(kind) ? BalanceConfig.Instance.MonsterUnit(SheetIdOf(kind)) : BalanceConfig.Instance.Unit(SheetIdOf(kind));
             Row = stats;
             _buildingAttackRange = stats.attackRangeStructures;
-            _soldierAttackRange = stats.attackRangeUnits;
+            _soldierAttackRange = stats.attackRangeUnits * (IsRanged ? 1f : MeleeReach.Factor);
             _soldierAggroRadius = stats.engageRadius;
 
             // An orc's "level" is the raid's own scaling (see Initialize), not a researched one --
@@ -609,6 +609,7 @@ namespace CityBuilder.Combat
             // ore armour (the ore golem past half health): a share of every blow turned aside
             if (Armour > 0f) amount = Mathf.Max(1, Mathf.RoundToInt(amount * (1f - Mathf.Clamp01(Armour))));
             CurrentHealth = Mathf.Max(0, CurrentHealth - amount);
+            if (by != null) Wounded?.Invoke(this, by);
             if (CurrentHealth > 0)
             {
                 ShowHealth();
@@ -698,6 +699,9 @@ namespace CityBuilder.Combat
 
         /// <summary>Raised as an orc falls, whoever struck it -- the King's experience and a run's gold are counted from it.</summary>
         public static event System.Action<OrcUnit> Died;
+
+        /// <summary>A blow from a fighter of the player's landed (campaign mission 2: Ардан is paid for every orc he wounded).</summary>
+        public static event System.Action<OrcUnit, SoldierUnit> Wounded;
 
         /// <summary>
         /// Told that a soldier just hit it, and turns on that soldier even when the soldier stands
@@ -889,11 +893,20 @@ namespace CityBuilder.Combat
         private static NavRoute NewRoute() => new NavRoute { AreaMask = CityBuilder.Maps.NavAreas.WithoutGates };
 
         private BuildingInstance _blocker;
+        // a stuck orc with nothing in reach looked for a blocker EVERY frame, over every building (the FPS fall in
+        // mission 2, the user 2026-11-12: a crowd stuck at a gate's ruin): now twice a second
+        private float _blockerScan;
 
         /// <summary>At the end of a chase the NavMesh cannot finish: strikes the fence, gate or building there (BlockerReachRadius) until it is down.</summary>
         private void BreakThrough()
         {
-            if (_blocker == null || _blocker.CurrentHealth <= 0) _blocker = NearestBuildingWithin(BlockerReachRadius);
+            if (_blocker == null || _blocker.CurrentHealth <= 0)
+            {
+                _blockerScan -= Time.deltaTime;
+                if (_blockerScan > 0f) return;
+                _blockerScan = 0.5f;
+                _blocker = NearestBuildingWithin(BlockerReachRadius);
+            }
             if (_blocker == null || !CanStrike(_blocker)) return;
 
             _attackTimer -= Time.deltaTime;
@@ -908,7 +921,7 @@ namespace CityBuilder.Combat
         {
             BuildingInstance nearest = null;
             var nearestDistance = radius;
-            foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+            foreach (var instance in BuildingInstance.All)
             {
                 if (instance.Data == null || instance.Data.IsGroundWork) continue;
                 if (BotSide && instance.IsBot) continue;
@@ -933,7 +946,7 @@ namespace CityBuilder.Combat
             toTarget.y = 0f;
             BuildingInstance nearest = null;
             var nearestDistance = targetWall - 0.05f;
-            foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+            foreach (var instance in BuildingInstance.All)
             {
                 if (instance == target || instance.Data == null || instance.Data.IsGroundWork || instance.CurrentHealth <= 0) continue;
                 if (BotSide && instance.IsBot) continue;
@@ -1259,7 +1272,7 @@ namespace CityBuilder.Combat
                 nearestDistSq = radius * radius;
             }
 
-            foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+            foreach (var instance in BuildingInstance.All)
             {
                 // Roads/bridges are technically BuildingInstances too but not real targets -- a
                 // raid beelining for the nearest stray road tile instead of an actual building
@@ -1361,7 +1374,7 @@ namespace CityBuilder.Combat
         {
             BuildingInstance nearest = null;
             var best = float.MaxValue;
-            foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+            foreach (var instance in BuildingInstance.All)
             {
                 if (instance.Data == null || instance.Data.IsGroundWork || instance.CurrentHealth <= 0) continue;
                 if (Invasion.InvasionRules.IsBarrier(instance.Data)) continue;
@@ -1553,7 +1566,7 @@ namespace CityBuilder.Combat
 
             BuildingInstance first = null;
             var firstAt = float.MaxValue;
-            foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
+            foreach (var instance in BuildingInstance.All)
             {
                 if (instance.Data == null || instance.Data.IsGroundWork || instance.CurrentHealth <= 0) continue;
                 var body = instance.GetComponent<Collider>();

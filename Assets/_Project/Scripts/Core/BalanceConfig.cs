@@ -1407,6 +1407,30 @@ namespace CityBuilder.Core
 
         [SerializeField] private List<BotWaveRow> botWaves = new List<BotWaveRow>();
 
+        /// <summary>One wave of campaign mission 2 (the m2waves tab, the user 2026-11-12): who comes, at what level,
+        /// and the pause after the wave before it is beaten. Spread over the three roads in turn.</summary>
+        [System.Serializable]
+        public class M2WaveRow
+        {
+            public int part, wave, raiders, brutes, throwers, rams, towers, level;
+            public float pause;
+        }
+
+        [SerializeField] private List<M2WaveRow> m2Waves = new List<M2WaveRow>();
+
+        /// <summary>Wave `wave` (1 = the first) of part `part`; past the last row of the part, the last again. Null when the part has none.</summary>
+        public M2WaveRow M2Wave(int part, int wave)
+        {
+            M2WaveRow last = null, hit = null;
+            foreach (var row in m2Waves)
+            {
+                if (row.part != part) continue;
+                if (last == null || row.wave > last.wave) last = row;
+                if (row.wave == wave) hit = row;
+            }
+            return hit ?? last;
+        }
+
         /// <summary>The waves' rows as the sheet has them.</summary>
         public IReadOnlyList<BotWaveRow> BotWaves => botWaves;
 
@@ -1428,6 +1452,7 @@ namespace CityBuilder.Core
 #if UNITY_EDITOR
         /// <summary>The importer's way in (BalanceImporter, the botwaves tab).</summary>
         public void EditorSetBotWaves(List<BotWaveRow> rows) => botWaves = rows ?? new List<BotWaveRow>();
+        public void EditorSetM2Waves(List<M2WaveRow> rows) => m2Waves = rows ?? new List<M2WaveRow>();
 #endif
 
         /// <summary>One good inside an offer bundle: a ResourceType name or `Crystals`, and how many.</summary>
@@ -2849,10 +2874,9 @@ namespace CityBuilder.Core
         // the parts and the waves (the user's first playtest, 2026-11-12: 8 minutes EACH part; waves from
         // all three sides at once, growing, short pauses; past half the part much harder)
         public float part1Seconds = 480f, part2Seconds = 480f;
-        public float firstWaveSeconds = 10f, wavePauseSeconds = 12f, wavePauseLateSeconds = 8f, waveMaxSeconds = 45f;
-        public int waveOrcs = 2, waveOrcsGrowEvery = 2, waveOrcsMax = 6;
-        public float lateOrcsMult = 1.6f;
-        public int orcLevel = 1, lateOrcLevel = 2, orcLevelPart2 = 2, bruteEvery = 3, lateBruteEvery = 2, throwerEvery = 2;
+        // each wave's make-up is a row of the m2waves tab (the user's third playtest: «удобный лист с волнами»)
+        public float firstWaveSeconds = 10f;
+        public float meleeReachMult = 0.6f;
         public float orcHealthMult = 1f, orcDamageMult = 1f;
         // the garrison: a squad inside each gate, shooters on the walls, patrols on the streets
         public int squadInfantry = 4, squadCrossbows = 3, squadMonks = 1, wallArchers = 3, wallCrossbows = 2;
@@ -2870,6 +2894,7 @@ namespace CityBuilder.Core
         // the healers on the square
         public int squareHealers = 2;
         public float healRadius = 3f, healPerSecond = 0.08f;
+        public float ardenRespawnSeconds = 15f;
         // the view, the minimap, the dark past the fields and the fords (plan cells)
         public float cameraDistance = 6f, cameraPitch = 50f, minimapRadius = 22f;
         public float litX0 = 8f, litY0 = 6f, litX1 = 92f, litY1 = 70f, darkSoft = 4f;
@@ -2881,8 +2906,6 @@ namespace CityBuilder.Core
         public int wallPatrolCells = 3;
         public float wallPatrolSeconds = 8f;
         // the orcs' siege machines from the second half of a part (approved 2026-11-12)
-        public int ramEvery = 3;
-        public int towerEvery = 4;
         public float ramHealthMult = 6f;
         public float ramDamageMult = 8f;
         public float towerHealthMult = 5f;
@@ -2890,6 +2913,7 @@ namespace CityBuilder.Core
         public int towerCrew = 4;
         public float towerDockCells = 3.5f;
         public float towerStaySeconds = 20f;
+        public float towerWallFromCells = 4f, towerWallToCells = 12f, towerClimbSeconds = 1.2f, towerClimbGapSeconds = 0.8f;
 
         public void Read(System.Func<string, float?> get)
         {
@@ -2898,19 +2922,7 @@ namespace CityBuilder.Core
             part1Seconds = F("m2_part1_sec", part1Seconds);
             part2Seconds = F("m2_part2_sec", part2Seconds);
             firstWaveSeconds = F("m2_first_wave_sec", firstWaveSeconds);
-            wavePauseSeconds = F("m2_wave_pause_sec", wavePauseSeconds);
-            wavePauseLateSeconds = F("m2_wave_pause_late_sec", wavePauseLateSeconds);
-            waveMaxSeconds = F("m2_wave_max_sec", waveMaxSeconds);
-            waveOrcs = I("m2_wave_orcs", waveOrcs);
-            waveOrcsGrowEvery = I("m2_wave_orcs_grow_every", waveOrcsGrowEvery);
-            waveOrcsMax = I("m2_wave_orcs_max", waveOrcsMax);
-            lateOrcsMult = F("m2_late_orcs_mult", lateOrcsMult);
-            orcLevel = I("m2_orc_level", orcLevel);
-            lateOrcLevel = I("m2_late_orc_level", lateOrcLevel);
-            orcLevelPart2 = I("m2_orc_level_part2", orcLevelPart2);
-            bruteEvery = I("m2_brute_every", bruteEvery);
-            lateBruteEvery = I("m2_late_brute_every", lateBruteEvery);
-            throwerEvery = I("m2_thrower_every", throwerEvery);
+            meleeReachMult = F("m2_melee_reach_mult", meleeReachMult);
             orcHealthMult = F("m2_orc_health_mult", orcHealthMult);
             orcDamageMult = F("m2_orc_damage_mult", orcDamageMult);
             squadInfantry = I("m2_squad_infantry", squadInfantry);
@@ -2932,6 +2944,7 @@ namespace CityBuilder.Core
             ardenXp2 = I("m2_arden_xp2", ardenXp2);
             ardenXp3 = I("m2_arden_xp3", ardenXp3);
             ardenXp4 = I("m2_arden_xp4", ardenXp4);
+            ardenRespawnSeconds = F("m2_arden_respawn_sec", ardenRespawnSeconds);
             cryCooldownSeconds = F("m2_cry_cooldown_sec", cryCooldownSeconds);
             cryRadius = F("m2_cry_radius", cryRadius);
             crySeconds = F("m2_cry_sec", crySeconds);
@@ -2971,8 +2984,6 @@ namespace CityBuilder.Core
             healFxSeconds = F("m2_heal_fx_sec", healFxSeconds);
             wallPatrolCells = Mathf.RoundToInt(F("m2_wall_patrol_cells", wallPatrolCells));
             wallPatrolSeconds = F("m2_wall_patrol_sec", wallPatrolSeconds);
-            ramEvery = Mathf.RoundToInt(F("m2_ram_every", ramEvery));
-            towerEvery = Mathf.RoundToInt(F("m2_tower_every", towerEvery));
             ramHealthMult = F("m2_ram_health_mult", ramHealthMult);
             ramDamageMult = F("m2_ram_damage_mult", ramDamageMult);
             towerHealthMult = F("m2_tower_health_mult", towerHealthMult);
@@ -2980,6 +2991,10 @@ namespace CityBuilder.Core
             towerCrew = Mathf.RoundToInt(F("m2_tower_crew", towerCrew));
             towerDockCells = F("m2_tower_dock_cells", towerDockCells);
             towerStaySeconds = F("m2_tower_stay_sec", towerStaySeconds);
+            towerWallFromCells = F("m2_tower_wall_from_cells", towerWallFromCells);
+            towerWallToCells = F("m2_tower_wall_to_cells", towerWallToCells);
+            towerClimbSeconds = F("m2_tower_climb_sec", towerClimbSeconds);
+            towerClimbGapSeconds = F("m2_tower_climb_gap_sec", towerClimbGapSeconds);
         }
     }
 }

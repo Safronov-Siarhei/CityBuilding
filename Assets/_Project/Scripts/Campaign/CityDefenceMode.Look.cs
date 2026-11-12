@@ -68,7 +68,9 @@ namespace CityBuilder.Campaign
         private static float GroundAt(Vector3 at)
         {
             var from = new Vector3(at.x, at.y + 30f, at.z);
-            var hits = Physics.RaycastAll(from, Vector3.down, 60f, ~0, QueryTriggerInteraction.Ignore);
+            // the map's ground layer only: a ruin's box, a tree or a wheat slab once lifted the haystacks into the air
+            // (the user's third playtest)
+            var hits = Physics.RaycastAll(from, Vector3.down, 60f, 1 << TerrainPhysicsLayer.Layer, QueryTriggerInteraction.Ignore);
             var best = float.MinValue;
             foreach (var hit in hits)
             {
@@ -87,7 +89,7 @@ namespace CityBuilder.Campaign
             var v = new List<Vector3>();
             var uv = new List<Vector2>();
             var tri = new List<int>();
-            var gates = new[] { World(28.5f, 40.5f), World(50.5f, 34.5f), World(72.5f, 40.5f) };
+            var gate = World(50.5f, 34.5f);   // the one gate all three roads come to
             for (var lane = 0; lane < 3 && lane < _plan.lanes.Count; lane++)
             {
                 var p = _plan.lanes[lane].points;
@@ -96,7 +98,7 @@ namespace CityBuilder.Campaign
                 {
                     var at = World(p[k], p[k + 1]);
                     pts.Add(at);
-                    if (Flat(at - gates[lane]) < 1f) break;
+                    if (Flat(at - gate) < 1f) break;
                 }
                 // finely, so the ribbon follows the ground
                 var fine = new List<Vector3>();
@@ -117,8 +119,9 @@ namespace CityBuilder.Campaign
                     if (k > 0) along += Flat(fine[k] - fine[k - 1]);
                     var l = fine[k] - side;
                     var r = fine[k] + side;
-                    l.y = GroundAt(l) + 0.03f;
-                    r.y = GroundAt(r) + 0.03f;
+                    // each road a hair over the last where they run together before the gate (no flicker)
+                    l.y = GroundAt(l) + 0.03f + lane * 0.006f;
+                    r.y = GroundAt(r) + 0.03f + lane * 0.006f;
                     v.Add(l);
                     v.Add(r);
                     uv.Add(new Vector2(along / width, -0.5f));

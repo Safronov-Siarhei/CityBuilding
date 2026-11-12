@@ -74,7 +74,11 @@ namespace CityBuilder.Campaign
 
         public int Wave { get; private set; }
 
-        /// <summary>The gates in lane order W, N, E (null once broken).</summary>
+        /// <summary>How long the town has held in this part (the end window's numbers).</summary>
+        public float HeldSeconds => Mathf.Max(0f, (Current == Stage.Part2 || (Current != Stage.Part1 && PlayerPrefs.GetInt(Part2Key, 0) == 1) ? B.part2Seconds : B.part1Seconds) - TimeLeft);
+
+        /// <summary>The gates by lane (W, N, E). Since the user's third playtest the castle has ONE gate in each ring,
+        /// so every lane's entry is that same gate (null once broken).</summary>
         public BuildingInstance[] OuterGates { get; } = new BuildingInstance[3];
         public BuildingInstance[] InnerGates { get; } = new BuildingInstance[3];
 
@@ -137,6 +141,8 @@ namespace CityBuilder.Campaign
             if (!_active) return;
             foreach (var behaviour in notInAMission)
                 if (behaviour != null) behaviour.enabled = false;
+            // fighters close in to strike (the user's third playtest: «подходили вплотную»)
+            MeleeReach.Factor = B.meleeReachMult;
             // no residents grow in the houses (their bars stood over every roof, the user's first playtest)
             var people = GetComponent<Citizens.HousePeople>();
             if (people != null) people.enabled = false;
@@ -147,9 +153,14 @@ namespace CityBuilder.Campaign
             if (Instance == this) Instance = null;
             BuildingInstance.OnDestroyedInCombat -= OnBuildingDown;
             OrcUnit.Died -= OnOrcDied;
+            OrcUnit.Wounded -= OnOrcWounded;
             SoldierUnit.Healed -= OnHealed;
             ForgetDarkness();
-            if (_active) RTSCameraController.GesturesLocked = false;
+            if (_active)
+            {
+                RTSCameraController.GesturesLocked = false;
+                MeleeReach.Factor = 1f;
+            }
         }
 
         private IEnumerator Start()
@@ -188,6 +199,7 @@ namespace CityBuilder.Campaign
             DressTheSiege();
             BuildingInstance.OnDestroyedInCombat += OnBuildingDown;
             OrcUnit.Died += OnOrcDied;
+            OrcUnit.Wounded += OnOrcWounded;
             RTSCameraController.GesturesLocked = true;
             SetUpView();
             Darkness();
@@ -254,9 +266,8 @@ namespace CityBuilder.Campaign
             if (data.buildingName == BuildingIds.TownHall) Castle = building;
             if (data.isGate)
             {
-                var lane = piece.y == 34 || piece.y == 51 ? 1 : piece.x < 50 ? 0 : 2;
-                if (OnOuterRing(piece)) OuterGates[lane] = building;
-                else InnerGates[lane] = building;
+                var gates = OnOuterRing(piece) ? OuterGates : InnerGates;
+                for (var lane = 0; lane < gates.Length; lane++) gates[lane] = building;
                 return;
             }
             if (data.connectsToFences)
@@ -293,6 +304,7 @@ namespace CityBuilder.Campaign
             TimeLeft = B.part1Seconds;
             Late = false;
             Wave = 0;
+            _waveBeaten = false;
             _nextWave = B.firstWaveSeconds;
             Man(outer: true);
             RaisePatrols();
@@ -328,8 +340,7 @@ namespace CityBuilder.Campaign
             {
                 if (piece == null) continue;
                 var near = false;
-                foreach (var spot in new[] { World(28.5f, 40.5f), World(50.5f, 34.5f), World(72.5f, 40.5f) })
-                    if (Flat(piece.transform.position - spot) < 4.5f) near = true;
+                if (Flat(piece.transform.position - World(50.5f, 34.5f)) < 4.5f) near = true;
                 if (near || Random.value < 0.25f) piece.TryDamage(piece.CurrentHealth);
             }
             var burnt = Mathf.RoundToInt(_lowerTown.Count * Mathf.Clamp01(B.part2Burnt));
@@ -351,6 +362,7 @@ namespace CityBuilder.Campaign
             TimeLeft = B.part2Seconds;
             Late = false;
             Wave = 0;
+            _waveBeaten = false;
             _nextWave = atOnce ? B.firstWaveSeconds : B.firstWaveSeconds * 0.5f;
             PartBegan?.Invoke(2);
         }
@@ -360,6 +372,7 @@ namespace CityBuilder.Campaign
             if (!_active || Current == Stage.Setup || Current == Stage.Won || Current == Stage.Lost) return;
             var dt = Time.deltaTime;
             TickArden(dt);
+            TickFx(dt);
             TickHealers(dt);
             TickGarrison(dt);
             TickTownsfolk(dt);
@@ -390,12 +403,46 @@ namespace CityBuilder.Campaign
                 lane.RemoveAll(o => o == null || o.CurrentHealth <= 0);
                 alive += lane.Count;
             }
-            var pause = Late ? B.wavePauseLateSeconds : B.wavePauseSeconds;
-            if (Wave > 0 && alive == 0 && _nextWave > pause) _nextWave = pause;
+            LetThemLoose();
+            // the next wave only once this one is beaten to the last orc (the user's third playtest), after its pause
+            if (alive > 0) return;
+            if (_waveBeaten)
+            {
+                _waveBeaten = false;
+                var row = BalanceConfig.Instance.M2Wave(Current == Stage.Part2 ? 2 : 1, Wave);
+                _nextWave = Mathf.Max(_nextWave, row != null ? row.pause : 0f);
+            }
             _nextWave -= dt;
             if (_nextWave > 0f) return;
             SendWave();
-            _nextWave = Mathf.Max(pause, B.waveMaxSeconds);
+            _nextWave = 0f;
+            _waveBeaten = true;
+        }
+
+        private bool _waveBeaten;
+        private float _looseCheck;
+
+        /// <summary>
+        /// The gate is down: every orc inside the walls leaves its road and razes the town, house by house, the
+        /// inner line last as it comes nearest (the user's third playtest: «после уничтожения ворот орки должны идти
+        /// разрушать весь город, после этого нападать на вторую линию»).
+        /// </summary>
+        private void LetThemLoose()
+        {
+            _looseCheck -= Time.deltaTime;
+            if (_looseCheck > 0f) return;
+            _looseCheck = 0.5f;
+            if (OuterGates[0] != null || Current != Stage.Part1) return;
+            var town = PenOf(true);
+            foreach (var lane in _laneOrcs)
+                foreach (var orc in lane)
+                {
+                    if (orc == null || orc.Lane == null || orc.IgnoresSoldiers) continue;
+                    var at = orc.transform.position;
+                    if (!town.Contains(new Vector2(at.x, at.z))) continue;
+                    orc.LaneOnly = false;
+                    orc.FollowLane(null);
+                }
         }
 
         private void SendWave()
@@ -403,21 +450,19 @@ namespace CityBuilder.Campaign
             var raids = OrcRaidManager.Instance;
             if (raids == null) return;
             Wave++;
+            // the m2waves tab's row (the user's third playtest): its orcs over the three roads in turn, its machines too
+            var row = BalanceConfig.Instance.M2Wave(Current == Stage.Part2 ? 2 : 1, Wave);
+            if (row == null) return;
             var b = B;
-            var count = Mathf.Min(b.waveOrcsMax, b.waveOrcs + (b.waveOrcsGrowEvery > 0 ? (Wave - 1) / b.waveOrcsGrowEvery : 0));
-            if (Late) count = Mathf.CeilToInt(count * Mathf.Max(1f, b.lateOrcsMult));
-            var level = Current == Stage.Part2 ? b.orcLevelPart2 : Late ? b.lateOrcLevel : b.orcLevel;
-            var bruteEvery = Late ? b.lateBruteEvery : b.bruteEvery;
-            for (var lane = 0; lane < 3; lane++)
+            var next = Wave;   // the road the next one takes
+            void Send(OrcKind kind, int count)
             {
-                if (_lanes[lane] == null) continue;
                 for (var i = 0; i < count; i++)
                 {
-                    var kind = OrcKind.Raider;
-                    if (i == 0 && bruteEvery > 0 && Wave % bruteEvery == 0) kind = OrcKind.Brute;
-                    else if (i == 1 && b.throwerEvery > 0 && Wave % b.throwerEvery == 0) kind = OrcKind.Thrower;
+                    var lane = next++ % 3;
+                    if (_lanes[lane] == null) continue;
                     var at = _spawns[lane] + new Vector3(Random.Range(-1.5f, 1.5f), 0f, Random.Range(-1.5f, 1.5f));
-                    var orc = raids.SpawnOrcOfKind(at, level, kind);
+                    var orc = raids.SpawnOrcOfKind(at, row.level, kind);
                     if (orc == null) continue;
                     orc.Toughen(b.orcHealthMult, b.orcDamageMult);
                     orc.FollowLane(_lanes[lane]);
@@ -425,7 +470,11 @@ namespace CityBuilder.Campaign
                     _laneOrcs[lane].Add(orc);
                 }
             }
-            if (Late) SendSiege(level);
+            Send(OrcKind.Brute, row.brutes);
+            Send(OrcKind.Raider, row.raiders);
+            Send(OrcKind.Thrower, row.throwers);
+            for (var i = 0; i < row.rams; i++) SpawnMachine(true, next++ % 3, row.level);
+            for (var i = 0; i < row.towers; i++) SpawnMachine(false, next++ % 3, row.level);
         }
 
         /// <summary>The foremost orc of a lane's wave (nearest the castle) -- the minimap's «!».</summary>

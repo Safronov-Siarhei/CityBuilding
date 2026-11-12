@@ -29,7 +29,7 @@ namespace CityBuilder.Combat
 
         private bool InReachOfPen(Vector3 at)
         {
-            var reach = UnitAttackRange + 0.3f;
+            var reach = IsRanged ? UnitAttackRange + 0.3f : 0.1f;   // melee: only what stands at the pen's edge
             return at.x >= Pen.xMin - reach && at.x <= Pen.xMax + reach && at.z >= Pen.yMin - reach && at.z <= Pen.yMax + reach;
         }
 

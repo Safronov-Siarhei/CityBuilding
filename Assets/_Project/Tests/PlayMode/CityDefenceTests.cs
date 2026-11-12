@@ -60,16 +60,17 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsNotNull(mode.Arden, "Ардан vanished.");
         }
 
-        /// <summary>Ардан is mortal (the user's first playtest, 2026-11-12): his death is the mission lost.</summary>
+        /// <summary>Ардан falls and RISES AGAIN (the user's third playtest, 2026-11-12; he was mortal before): the
+        /// mission goes on, the respawn clock runs.</summary>
         [UnityTest]
-        public IEnumerator ArdenDying_LosesTheMission()
+        public IEnumerator ArdenDying_RisesAgain_TheMissionGoesOn()
         {
             var mode = CityDefenceMode.Instance;
             Assert.IsNotNull(mode.Arden, "No Ардан.");
             mode.Arden.TakeDamage(mode.Arden.MaxHealth * 10);
-            for (var frame = 0; frame < 30 && mode.Current != CityDefenceMode.Stage.Lost; frame++) yield return null;
-            Assert.AreEqual(CityDefenceMode.Stage.Lost, mode.Current, "Ардан died and the mission went on.");
-            Assert.AreEqual(CityDefenceMode.LossReason.Arden, mode.Loss);
+            for (var frame = 0; frame < 30; frame++) yield return null;
+            Assert.AreEqual(CityDefenceMode.Stage.Part1, mode.Current, "Ардан died and the mission ended.");
+            Assert.Greater(mode.RespawnLeft, 0f, "No respawn clock after his fall.");
         }
     }
 }
