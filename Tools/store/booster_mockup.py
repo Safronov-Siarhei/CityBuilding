@@ -351,9 +351,14 @@ def hud():
         d = ImageDraw.Draw(img)
         x += cw
 
-    # the active boosters: a row of medallions with a ring of time left under the top bar
+    # the game's «День N» plaque stays where it is (SetupProjectHud.BuildDayLabel: 360 x 50, 114 under the top)
+    pq = (W / 2 - 180, 114 - 25, W / 2 + 180, 114 + 25)
+    m.over(img, lambda g: g.rounded_rectangle(pq, 18, fill=(250, 236, 204, 240), outline=(120, 80, 40, 255), width=3))
+    d = ImageDraw.Draw(img)
+    m.text(d, (W / 2, 114), 'День 12', 30, INK)
+    # the active boosters: a row of smaller medallions with a ring of time left UNDER the day plaque
     for k, (b, left, frac) in enumerate(((BOOSTERS[0], '3:30', 0.70), (BOOSTERS[1], '0:50', 0.17), (BOOSTERS[5], '1:40', 0.55))):
-        cx, cy, r = W / 2 - 110 + k * 110, 140, 42
+        cx, cy, r = W / 2 - 96 + k * 96, 196, 34
         ring = Image.new('RGBA', img.size, (0, 0, 0, 0))
         rd = ImageDraw.Draw(ring)
         rd.ellipse((cx - r - 8, cy - r - 8, cx + r + 8, cy + r + 8), fill=(40, 30, 20, 200))
@@ -361,8 +366,8 @@ def hud():
         img.alpha_composite(ring)
         img.alpha_composite(medallion(2 * r, b[5], b[6], arrow=False), (int(cx - r), int(cy - r)))
         d = ImageDraw.Draw(img)
-        m.text(d, (cx, cy + r + 26), left, 26, 'white', stroke=3, stroke_fill=(30, 20, 10))
-    m.text(d, (W / 2 + 290, 140), '— активные бустеры: тап открывает «Запасы»', 26, 'white', anchor='lm', stroke=3,
+        m.text(d, (cx, cy + r + 24), left, 24, 'white', stroke=3, stroke_fill=(30, 20, 10))
+    m.text(d, (W / 2 + 200, 196), '— активные бустеры под «День»: тап открывает «Запасы»', 26, 'white', anchor='lm', stroke=3,
            stroke_fill=(30, 40, 20), path=med)
 
     # the hint at the right moment: a raid starts and «Боевой дух» is in stock
