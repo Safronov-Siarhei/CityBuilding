@@ -155,10 +155,14 @@ namespace CityBuilder.Combat
         /// <summary>Health back, never past the most he can have (the potion of healing).</summary>
         public void Heal(int amount)
         {
-            if (amount <= 0 || CurrentHealth <= 0) return;
+            if (amount <= 0 || CurrentHealth <= 0 || CurrentHealth >= MaxHealth) return;
             CurrentHealth = Mathf.Min(MaxHealth, CurrentHealth + amount);
             if (_healthBar != null) _healthBar.Report(CurrentHealth / (float)Mathf.Max(1, MaxHealth));
+            Healed?.Invoke(this);
         }
+
+        /// <summary>Someone got health back (campaign mission 2 shows it: the user, 2026-11-12).</summary>
+        public static event System.Action<SoldierUnit> Healed;
         // the Captain's Сила round him adds to every blow struck near him (HeroAuras)
         // Боевой дух: the player's army hits harder while it runs (the user, 2026-11-12)
         private int StrikeDamage => Mathf.RoundToInt(_attackDamage * RageFactor * HeroAuras.MightAt(transform.position) * Shop.Boosters.ArmyDamageFactor);
@@ -462,6 +466,8 @@ namespace CityBuilder.Combat
                 // «Наступать» answers a shooter however far; the rest a short way (the user, 2026-11-05)
                 var answer = Group.Behaviour == SquadBehaviour.Advance ? float.MaxValue : EngageRadius * 2.5f;
                 if (distance > EngageRadius && !(candidate is OrcUnit striker && StrikesGroup(striker) && distance <= answer)) continue;
+                // kept inside a pen: nothing further out than a blow (or a shot) from its edge
+                if (Pen.width > 0f && !InReachOfPen(candidate.Transform.position)) continue;
                 // below, no shooting or running at what stands behind the rock (the Queen did)
                 if (dungeon && UnityEngine.AI.NavMesh.Raycast(transform.position, candidate.Transform.position, out _, UnityEngine.AI.NavMesh.AllAreas)) continue;
 
@@ -652,6 +658,8 @@ namespace CityBuilder.Combat
         /// <summary>Routes to a destination, replanning when the destination has moved or the plan has gone stale. Movement itself is one step along the current route.</summary>
         private void WalkTowards(Vector3 destination)
         {
+            // kept inside (campaign mission 2: the garrison never leaves the town's walls, the user 2026-11-12)
+            if (Pen.width > 0f) destination = new Vector3(Mathf.Clamp(destination.x, Pen.xMin, Pen.xMax), destination.y, Mathf.Clamp(destination.z, Pen.yMin, Pen.yMax));
             // wedged inside something (two buildings put up round him): through it to free ground first
             if (_escape.Step(transform, _controller, _walkSpeed)) return;
             _routeRefreshTimer -= Time.deltaTime;
@@ -752,6 +760,8 @@ namespace CityBuilder.Combat
         /// </summary>
         private void ShowHealth()
         {
+            // campaign mission 2: only the hurt show it (the user, 2026-11-12: «только у тех что получают урон»)
+            if (Campaign.CityDefenceMode.IsActive && CurrentHealth >= MaxHealth) return;
             if (_healthBar == null)
             {
                 var feet = transform.position.y;

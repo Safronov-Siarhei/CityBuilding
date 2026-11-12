@@ -94,11 +94,14 @@ namespace CityBuilder.Campaign
             public float[] origin;
             public List<Lane> lanes = new List<Lane>();
             public List<Piece> buildings = new List<Piece>();
+            public List<Field> fields = new List<Field>();
+            public List<Spot> fires = new List<Spot>();
+            public List<Prop> decor = new List<Prop>();
         }
 
         [System.Serializable] private class Lane { public float[] points; }
 
-        [System.Serializable] private class Piece { public string id; public int x, y, w, h, rot, level; }
+        [System.Serializable] private class Piece { public string id; public int x, y, w, h, rot, level; public string state; }
 
         private Blueprint _plan;
         private Vector2 _origin;
@@ -111,6 +114,9 @@ namespace CityBuilder.Campaign
         private readonly List<OrcUnit>[] _laneOrcs = { new List<OrcUnit>(), new List<OrcUnit>(), new List<OrcUnit>() };
         private float _nextWave;
         private Vector3 _square;
+        // where Ардан stands at the start: north of the square, the castle behind the camera (the user's
+        // second playtest: «замок мешает обзору»)
+        private Vector3 _start;
 
         /// <summary>The campaign map's «Играть» on level 2: the gameplay scene on this mission's map.</summary>
         public static void Begin()
@@ -141,6 +147,8 @@ namespace CityBuilder.Campaign
             if (Instance == this) Instance = null;
             BuildingInstance.OnDestroyedInCombat -= OnBuildingDown;
             OrcUnit.Died -= OnOrcDied;
+            SoldierUnit.Healed -= OnHealed;
+            ForgetDarkness();
             if (_active) RTSCameraController.GesturesLocked = false;
         }
 
@@ -176,6 +184,8 @@ namespace CityBuilder.Campaign
             Resources.ResourceManager.Instance?.SetInfiniteResources(true);
             LayLanes();
             _square = World(50.5f, 59.5f);
+            _start = World(50.5f, 55.5f);
+            DressTheSiege();
             BuildingInstance.OnDestroyedInCombat += OnBuildingDown;
             OrcUnit.Died += OnOrcDied;
             RTSCameraController.GesturesLocked = true;
@@ -220,6 +230,11 @@ namespace CityBuilder.Campaign
                 building.Initialize(data, origin, steps);
                 if (piece.level > 1) building.SetLevel(piece.level);
                 grid.SetAreaOccupied(origin, footprint, true);
+                if (piece.state == "ruin")
+                {
+                    Ruin(building);
+                    continue;
+                }
                 if (data.isRoad && RoadNetwork.Instance != null)
                     for (var x = 0; x < footprint.x; x++)
                     for (var z = 0; z < footprint.y; z++)
@@ -404,6 +419,7 @@ namespace CityBuilder.Campaign
                     if (orc == null) continue;
                     orc.Toughen(b.orcHealthMult, b.orcDamageMult);
                     orc.FollowLane(_lanes[lane]);
+                    orc.LaneOnly = true;
                     _laneOrcs[lane].Add(orc);
                 }
             }

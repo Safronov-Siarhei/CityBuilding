@@ -1283,7 +1283,7 @@ namespace CityBuilder.Combat
             {
                 var atTheEnd = _lane.Length - _lane.Project(transform.position, out _) <= LaneEndMeters;
                 if (nearest == null && atTheEnd) nearest = castle;
-                if (nearest != null && !atTheEnd && !WithinADetour(nearest)) nearest = null;
+                if (nearest != null && !atTheEnd && (LaneOnly || !WithinADetour(nearest))) nearest = null;
                 _target = nearest;
                 _routeIndex = 0;
                 _routeBlocked = false;
@@ -1405,6 +1405,10 @@ namespace CityBuilder.Combat
 
         /// <summary>The portal's way this orc keeps to, or null (a sandbox raid, a camp's guard).</summary>
         public OrcLane Lane => _lane;
+
+        /// <summary>Keeps to its way and turns aside for no building (campaign mission 2: the orcs go for the gates,
+        /// not the walls beside their road -- the user, 2026-11-12); what stands ON the way it still breaks.</summary>
+        public bool LaneOnly { get; set; }
 
         /// <summary>
         /// Sends this orc down a portal's way (the user, 2026-10-24): it keeps to it, breaks what is

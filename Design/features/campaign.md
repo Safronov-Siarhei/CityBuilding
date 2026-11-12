@@ -423,6 +423,31 @@
 - **Traps:** `FogOfWarManager.DisabledCheat` is an INSTANCE property. Regenerating the map: rerun
   `mission2_town.py` FIRST (it writes mission2-plan.json), then Blender, then export.
 - **Open:** both cutscenes (to discuss before building them); the user's playtest of v1.
+- **PLAYTEST 2 (the user, 2026-11-12) -> v3 BUILT the same day (setup green, CityDefenceTests 2/2; not seen).**
+  - Start: Ардан at plan (50.5, 55.5) north of the square (`_start`), the castle behind the camera; healers stay on the square.
+  - Minimap was black: the darkness quad rendered in the minimap camera too (no depth texture) -> the renderer is
+    switched on only for the main camera (`RenderPipelineManager.beginCameraRendering`, World.cs). TRAP for any
+    fullscreen quad on Camera.main.
+  - Garrison: `SoldierUnit.Pen` (world rect, walk destinations clamped, no target past the pen's edge + a blow) =
+    the outer walls (part 1) / inner walls (part 2) -- nobody leaves the gates. Wall shooters face out
+    (`SoldierUnit.WallLookout`) and walk between two posts m2_wall_patrol_cells apart (`IdleOnWall`, TickWallPatrol).
+  - HP bars of soldiers only when hurt in this mode (`ShowHealth`); `Heal` at full health does nothing; static
+    `SoldierUnit.Healed` -> green sparks (m2_heal_fx_sec throttle).
+  - Orcs: `OrcUnit.LaneOnly` -- no turning aside for buildings beside the way, only what stands ON it (the gate);
+    numbers raised (4 orcs/lane, +1 each wave, max 12, levels 2/3/3, x1.5 health and damage, brutes every 2nd /
+    every wave late, throwers every wave, pauses 8/5 s, max 35 s).
+  - Roads give no speed in this mode (`CitizenAgent.CurrentWalkSpeed`; soldiers never had road speed).
+  - Town (mission2_town.py): every plain Tower -> Fence (only the gates' own towers); 14 ruined farmsteads outside
+    (piece `state: "ruin"` -> `BuildingRuin.LeaveOf` quietly), `fields` (4 burnt = ash furrows), `fires` (10),
+    `decor` (haystacks, bales, carts in free yards; Cinematic props x 1/1.6). CityDefenceMode.Look.cs draws them:
+    wheat slab (CineGround mode 5) + CineWheat ears along edges (cap m2_wheat_ears_max), SAND ROADS = a dirt
+    ribbon (mode 2) along each lane up to its gate (m2_sand_road_width), particle fires. Ore deposits and
+    iron/coal/gold nodes removed at start.
+  - HUD: skills 70 px (was 104); the portrait is a COPY of the sandbox King's widget (`HeroPortraitController.Of`).
+  - Drafts for approval (not in the game): orc ram + siege tower (Tools/blender/orc_siege_drafts.py), Ардан with
+    a sword and 7 key poses (Tools/blender/cinematic/ardan_sword.py). After approval: export, orc machines enter at
+    half time, Ардан's figure replaces the Man-at-Arms. OPEN: closed gate leaves (orcs already cannot pass a gate;
+    the leaves are drawn open in the FortifiedGate mesh) -- a door piece still to model.
 - **PLAYTEST 1 (the user, 2026-11-12) -> v2 BUILT the same day (not seen).** The v1 never started: the HUD's
   `GetComponent<CanvasGroup>() ?? AddComponent` threw (Unity's fake null) inside Setup, so the sandbox HUD
   stayed and no part began -- TRAP, never `??` on a Unity component. The user's decisions (part 1 now; part 2

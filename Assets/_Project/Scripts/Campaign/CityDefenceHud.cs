@@ -136,6 +136,7 @@ namespace CityBuilder.Campaign
         /// <summary>Ардан top right, as a sandbox hero: the face in a round frame, his level, health and experience under it.</summary>
         private void BuildPortrait(RectTransform safe, MissionHud.Art art)
         {
+            if (CopyHeroPortrait(safe, art)) return;
             var portrait = MissionSkin.Image(safe, "Arden", "round_value", new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-18f, -12f), new Vector2(92f, 92f));
             portrait.raycastTarget = false;
             if (art.portrait != null)
@@ -158,10 +159,51 @@ namespace CityBuilder.Campaign
             _xpBar.color = UiTheme.Gold;
         }
 
+        /// <summary>The sandbox King's portrait block copied for Ардан (the user's second playtest: the same form as in the
+        /// sandbox): the round frame, the level badge, the health and experience bars on their plaque.</summary>
+        private bool CopyHeroPortrait(RectTransform safe, MissionHud.Art art)
+        {
+            var king = HeroPortraitController.Of(Combat.SoldierType.King);
+            if (king == null || king.Widget == null || king.LevelText == null || king.HealthFill == null || king.XpFill == null) return false;
+            var source = king.Widget.transform;
+            var copy = Instantiate(king.Widget, safe, false);
+            copy.name = "ArdenPortrait";
+            copy.SetActive(true);
+            var rect = (RectTransform)copy.transform;
+            var from = (RectTransform)source;
+            rect.anchorMin = from.anchorMin;
+            rect.anchorMax = from.anchorMax;
+            rect.pivot = from.pivot;
+            rect.anchoredPosition = from.anchoredPosition;
+            rect.sizeDelta = from.sizeDelta;
+            foreach (var button in copy.GetComponentsInChildren<Button>(true)) button.interactable = false;
+            foreach (var g in copy.GetComponentsInChildren<Graphic>(true)) g.raycastTarget = false;
+            var selected = copy.transform.Find("Selected");
+            if (selected != null) selected.gameObject.SetActive(false);
+            var fallen = copy.transform.Find("Portrait/Fallen");
+            if (fallen != null) fallen.gameObject.SetActive(false);
+            var face = copy.transform.Find("Portrait/Mask/Face");
+            if (face != null && art.portrait != null) face.GetComponent<Image>().sprite = art.portrait;
+            _level = copy.transform.Find(PathUnder(source, king.LevelText.transform))?.GetComponent<Text>();
+            _ardenBar = copy.transform.Find(PathUnder(source, king.HealthFill))?.GetComponent<Image>();
+            _xpBar = copy.transform.Find(PathUnder(source, king.XpFill))?.GetComponent<Image>();
+            if (_level != null && _ardenBar != null && _xpBar != null) return true;
+            Destroy(copy);
+            return false;
+        }
+
+        private static string PathUnder(Transform root, Transform t)
+        {
+            var path = t.name;
+            for (var p = t.parent; p != null && p != root; p = p.parent) path = p.name + "/" + path;
+            return path;
+        }
+
         /// <summary>The four skills bottom middle: a picture each, no text.</summary>
         private void BuildSkills(RectTransform safe, MissionHud.Art art)
         {
-            const float size = 104f, gap = 14f;
+            // 1.5 times smaller than at first (the user's second playtest)
+            const float size = 70f, gap = 12f;
             var width = CityDefenceMode.SkillCount * size + (CityDefenceMode.SkillCount - 1) * gap;
             for (var i = 0; i < CityDefenceMode.SkillCount; i++)
             {
@@ -284,12 +326,12 @@ namespace CityBuilder.Campaign
             var arden = _mode.Arden;
             var alive = arden != null && arden.CurrentHealth > 0;
             var hk = alive && arden.MaxHealth > 0 ? Mathf.Clamp01((float)arden.CurrentHealth / arden.MaxHealth) : 0f;
-            _ardenBar.rectTransform.anchorMax = new Vector2(hk, 1f);
+            _ardenBar.rectTransform.anchorMax = new Vector2(hk, _ardenBar.rectTransform.anchorMax.y);
             _ardenBar.color = _mode.BeingHealed ? UiTheme.Gold : hk > 0.5f ? UiTheme.Good : hk > 0.25f ? UiTheme.Warning : UiTheme.Danger;
             var next = _mode.XpForNext;
             var from = _mode.XpOfLevel;
             var xk = next > from ? Mathf.Clamp01((_mode.ArdenXp - from) / (float)(next - from)) : 1f;
-            _xpBar.rectTransform.anchorMax = new Vector2(xk, 1f);
+            _xpBar.rectTransform.anchorMax = new Vector2(xk, _xpBar.rectTransform.anchorMax.y);
             _level.text = _mode.ArdenLevel.ToString();
 
             for (var i = 0; i < CityDefenceMode.SkillCount; i++)

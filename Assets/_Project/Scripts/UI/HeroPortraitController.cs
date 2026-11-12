@@ -47,6 +47,20 @@ namespace CityBuilder.UI
 
         public SoldierType HeroType => heroType;
 
+        /// <summary>The portrait's own widget and parts (campaign mission 2 copies the King's for Ардан, the user 2026-11-12:
+        /// «форма блока ... не похожа на такую же как в песочнице»).</summary>
+        public GameObject Widget => widget;
+        public Text LevelText => levelText;
+        public RectTransform HealthFill => healthFill;
+        public RectTransform XpFill => xpFill;
+
+        public static HeroPortraitController Of(SoldierType type)
+        {
+            foreach (var c in Instances)
+                if (c != null && c.heroType == type) return c;
+            return null;
+        }
+
         private Hero CurrentHero => HeroRoster.Instance != null ? HeroRoster.Instance.HeroOf(heroType) : null;
 
         private void Awake() => Instances.Add(this);

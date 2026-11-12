@@ -616,7 +616,8 @@ namespace CityBuilder.Citizens
         {
             var grid = GridManager.Instance;
             var roads = RoadNetwork.Instance;
-            if (grid != null && roads != null && roads.IsRoad(grid.WorldToCell(transform.position)))
+            // campaign mission 2: the town's roads are only its look (the user, 2026-11-12)
+            if (grid != null && roads != null && !Campaign.CityDefenceMode.IsActive && roads.IsRoad(grid.WorldToCell(transform.position)))
             {
                 return WalkSpeed * RoadSpeedMultiplier;
             }

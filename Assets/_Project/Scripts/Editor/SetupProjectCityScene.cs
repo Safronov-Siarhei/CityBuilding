@@ -618,6 +618,27 @@ namespace CityBuilder.EditorTools
             for (var i = 0; i < skillFiles.Length; i++)
                 DefenceSprite(skillGlyphs.GetArrayElementAtIndex(i), UiTextureImport.GlyphsFolder + "/" + skillFiles[i] + ".png");
             DefenceSprite(cityDefenceSO.FindProperty("lockGlyph"), UiTextureImport.GlyphsFolder + "/Hud_Lock.png");
+            // the siege's look (the user's second playtest): fires, smoke, the healing sparks, the wheat, the sand roads, props
+            var defenceDot = SoftDot();
+            cityDefenceSO.FindProperty("fxGlow").objectReferenceValue = ParticleMaterial("DefenceGlow", defenceDot, true);
+            cityDefenceSO.FindProperty("fxSmoke").objectReferenceValue = ParticleMaterial("DefenceSmoke", defenceDot, false);
+            cityDefenceSO.FindProperty("wheatMaterial").objectReferenceValue = GroundMaterial("DefenceWheat", 5f);
+            var ash = GroundMaterial("DefenceAsh", 3f);
+            ash.SetVector("_Dir", new Vector4(1f, 0f, 0f, 0f));
+            EditorUtility.SetDirty(ash);
+            cityDefenceSO.FindProperty("ashMaterial").objectReferenceValue = ash;
+            cityDefenceSO.FindProperty("sandMaterial").objectReferenceValue = GroundMaterial("DefenceSand", 2f);
+            const string cine = "Assets/_Project/Models/Cinematic/";
+            cityDefenceSO.FindProperty("wheatEars").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(cine + "CineWheat.fbx");
+            var propNames = new[] { "CineHaystack", "CineHayBales", "CineCartBody" };
+            var propList = new System.Collections.Generic.List<Object>();
+            foreach (var n in propNames)
+            {
+                var model = AssetDatabase.LoadAssetAtPath<GameObject>(cine + n + ".fbx");
+                if (model == null) Debug.LogError($"[CityDefence] prop {n} not found");
+                else propList.Add(model);
+            }
+            WriteArray(cityDefenceSO.FindProperty("props"), propList.ToArray());
             cityDefenceSO.ApplyModifiedPropertiesWithoutUndo();
 
             // The dungeon (Dungeon/DungeonMode): idle in a town; when DungeonTravel sent the heroes

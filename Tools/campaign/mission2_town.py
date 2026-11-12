@@ -123,7 +123,56 @@ def build_town():
     # barns by the fields (props; the fields themselves are the ground's colour)
     for x, y in ((29, 25), (70, 25), (14, 61), (85, 61)):
         put(t, "Granary", x, y, 2, "fields")
+
+    # no plain towers on the walls: only the gates' own (the user's second playtest, 2026-11-12)
+    for it in t.items:
+        if it["id"] == "Tower":
+            it["id"] = "Fence"
+
+    # the farmsteads outside the walls the orcs went through (the user: «пожары, руины -- видно, что
+    # нашествие»): every one a ruin, some still burning
+    for i, (x, y) in enumerate(FARMSTEADS):
+        bid = "Cottage" if i % 3 == 0 else "Hovel"
+        if put(t, bid, x, y, 1, "farmstead"):
+            t.items[-1]["state"] = "ruin"
     return t
+
+
+# farmsteads under the walls (plan cells, top-left), all ruined
+FARMSTEADS = [(22, 32), (31, 22), (41, 29), (58, 29), (68, 22), (77, 32), (9, 40), (89, 40),
+              (24, 44), (75, 44), (20, 60), (78, 60), (35, 24), (63, 25)]
+# fields that burnt (index into FIELDS): furrows of ash, smoke over them
+BURNT_FIELDS = (0, 3, 5, 6)
+# where it still burns: the ruined farmsteads' middles and spots in the burnt fields
+FIRES = [(23, 33), (42, 30), (69, 23), (90, 41), (25, 45), (79, 61), (24, 26), (72, 27), (84, 39), (16, 62)]
+DECOR_KINDS = ("CineHaystack", "CineHayBales", "CineHaystack", "CineCartBody")
+
+
+def decor(town):
+    """Props in the town's free yards and by the fields (the user: «в самом городе не хватает декораций, добавь
+    стоги сена и другое»): haystacks, hay bales, a cart -- looks only, nothing walks round them."""
+    rnd = town.rng
+    out = []
+    ol, ot, or_, ob = OUTER
+    il, it, ir, ib = INNER
+    near_road = set()
+    for item in town.items:
+        if item["id"] == "Road":
+            near_road.add((item["x"], item["y"]))
+    for y in range(ot + 2, ob - 1):
+        for x in range(ol + 2, or_ - 1):
+            if (x, y) in town.taken or (il - 1 <= x <= ir + 1 and y >= it - 1):
+                continue
+            # a free cell with free cells round it (a yard), not on a street
+            if any((x + dx, y + dy) in town.taken for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
+                continue
+            if rnd.random() < 0.45:
+                out.append({"id": rnd.choice(DECOR_KINDS), "x": x + 0.5, "y": y + 0.5, "rot": rnd.randrange(360)})
+    # by the fields: haystacks
+    for (l, tp, r, b) in FIELDS:
+        for _ in range(2):
+            out.append({"id": "CineHaystack", "x": round(rnd.uniform(l, r), 2), "y": round(b + 0.8, 2), "rot": rnd.randrange(360)})
+    return out
 
 
 def spots():
@@ -166,6 +215,9 @@ def main():
     blueprint = {"format": "citybuilder-base/1", "name": "Mission 2 town", "width": W, "height": H,
                  "origin": [-50, 46],
                  "lanes": [{"points": [v for xy in l for v in xy]} for l in lanes],
+                 "fields": [{"box": list(f), "burnt": i in BURNT_FIELDS} for i, f in enumerate(FIELDS)],
+                 "fires": [{"x": x + 0.5, "y": y + 0.5} for x, y in FIRES],
+                 "decor": decor(town),
                  "buildings": [{k: v for k, v in it.items() if k != "district"} for it in town.items]}
     out = os.path.join(ROOT, 'Assets', '_Project', 'Campaign', 'Mission2Town.json')
     with open(out, 'w', encoding='utf-8') as f:

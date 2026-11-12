@@ -70,7 +70,7 @@ namespace CityBuilder.Campaign
         {
             var army = ArmyManager.Instance;
             if (army == null) return;
-            var at = _square;
+            var at = _start;
             if (NavMesh.SamplePosition(at, out var hit, 4f, NavMesh.AllAreas)) at = hit.position;
             _ardenGroup = new ArmyGroup(SoldierType.ManAtArms, at);
             Arden = army.SpawnHireling(SoldierType.ManAtArms, at, _ardenGroup);

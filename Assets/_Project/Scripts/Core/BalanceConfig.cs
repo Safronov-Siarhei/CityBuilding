@@ -2874,6 +2874,12 @@ namespace CityBuilder.Core
         public float cameraDistance = 6f, cameraPitch = 50f, minimapRadius = 22f;
         public float litX0 = 8f, litY0 = 6f, litX1 = 92f, litY1 = 70f, darkSoft = 4f;
         public float part2Burnt = 0.5f;
+        // the look of the siege (the user's second playtest): the orcs' sand roads, the wheat, the fires, the healing glow
+        public float sandRoadWidth = 2f, wheatHeight = 0.17f, fireSize = 1f, healFxSeconds = 0.8f;
+        public int wheatEarsMax = 300;
+        // the shooters on the walls walk between two posts this many cells apart, now and then
+        public int wallPatrolCells = 3;
+        public float wallPatrolSeconds = 8f;
 
         public void Read(System.Func<string, float?> get)
         {
@@ -2948,6 +2954,13 @@ namespace CityBuilder.Core
             litY1 = F("m2_lit_y1", litY1);
             darkSoft = F("m2_dark_soft", darkSoft);
             part2Burnt = F("m2_part2_burnt", part2Burnt);
+            sandRoadWidth = F("m2_sand_road_width", sandRoadWidth);
+            wheatHeight = F("m2_wheat_height", wheatHeight);
+            wheatEarsMax = Mathf.RoundToInt(F("m2_wheat_ears_max", wheatEarsMax));
+            fireSize = F("m2_fire_size", fireSize);
+            healFxSeconds = F("m2_heal_fx_sec", healFxSeconds);
+            wallPatrolCells = Mathf.RoundToInt(F("m2_wall_patrol_cells", wallPatrolCells));
+            wallPatrolSeconds = F("m2_wall_patrol_sec", wallPatrolSeconds);
         }
     }
 }

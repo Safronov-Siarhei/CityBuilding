@@ -13,6 +13,20 @@ namespace CityBuilder.Campaign
     public partial class CityDefenceMode
     {
         private Texture2D _darkMask;
+        private MeshRenderer _darkRenderer;
+        private Camera _darkCamera;
+
+        /// <summary>The darkness is the main camera's only: drawn by the minimap's camera too (no depth texture
+        /// there) it turned the whole minimap black (the user's second playtest, 2026-11-12).</summary>
+        private void OnCameraRendering(UnityEngine.Rendering.ScriptableRenderContext context, Camera cam)
+        {
+            if (_darkRenderer != null) _darkRenderer.enabled = cam == _darkCamera;
+        }
+
+        private void ForgetDarkness()
+        {
+            UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering -= OnCameraRendering;
+        }
 
         private void SetUpView()
         {
@@ -80,6 +94,9 @@ namespace CityBuilder.Campaign
             r.sharedMaterial = material;
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             r.receiveShadows = false;
+            _darkRenderer = r;
+            _darkCamera = cam;
+            UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering += OnCameraRendering;
         }
     }
 }

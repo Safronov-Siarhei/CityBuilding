@@ -24,6 +24,15 @@ namespace CityBuilder.Combat
         /// <summary>World x/z rectangle he may not leave while steered or dashing (zero size = anywhere).</summary>
         public Rect SteerArea { get; set; }
 
+        /// <summary>World XZ rect he never walks out of, whatever he chases (campaign mission 2's garrison); empty = free.</summary>
+        public Rect Pen { get; set; }
+
+        private bool InReachOfPen(Vector3 at)
+        {
+            var reach = UnitAttackRange + 0.3f;
+            return at.x >= Pen.xMin - reach && at.x <= Pen.xMax + reach && at.z >= Pen.yMin - reach && at.z <= Pen.yMax + reach;
+        }
+
         private Vector3 _dashDir;
         private float _dashSpeed, _dashLeft;
 

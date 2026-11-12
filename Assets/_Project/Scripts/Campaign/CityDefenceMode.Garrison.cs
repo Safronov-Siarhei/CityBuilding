@@ -20,6 +20,12 @@ namespace CityBuilder.Campaign
         private readonly List<SoldierUnit> _garrison = new List<SoldierUnit>();
         private readonly List<(ArmyGroup group, Vector3[] route, int step)> _patrols = new List<(ArmyGroup, Vector3[], int)>();
         private float _patrolCheck;
+        // the shooters on the walls: two posts each, walked between (the user's second playtest: «патрулировать стену»)
+        private readonly List<(SoldierUnit unit, Vector2Int a, Vector2Int b, bool atB)> _wallmen = new List<(SoldierUnit, Vector2Int, Vector2Int, bool)>();
+        private float _wallPatrolIn;
+        // the garrison's pen: the town inside the outer walls (part 1) / the inner walls (part 2) -- nobody goes
+        // out of the gates after the orcs (the user's second playtest)
+        private Rect _pen;
 
         public int Guards => _garrison.Count;
 
@@ -32,6 +38,7 @@ namespace CityBuilder.Campaign
             if (unit == null) return null;
             unit.SetHeroStats(stats.maxHealth, stats.attackDamage);
             unit.SetCurrentHealth(stats.maxHealth);
+            unit.Pen = _pen;
             _garrison.Add(unit);
             return unit;
         }
@@ -47,12 +54,14 @@ namespace CityBuilder.Campaign
                 if (unit != null) Destroy(unit.gameObject);
             _garrison.Clear();
             _patrols.Clear();
+            _wallmen.Clear();
         }
 
         /// <summary>The gates' squads and the shooters on the walls beside them (outer: part 1; inner: part 2).</summary>
         private void Man(bool outer)
         {
             var b = B;
+            _pen = PenOf(outer);
             // each gate (plan) and the way into the town from it
             var gates = outer
                 ? new[] { (World(28.5f, 40.5f), new Vector3(1f, 0f, 0f)), (World(50.5f, 34.5f), new Vector3(0f, 0f, -1f)), (World(72.5f, 40.5f), new Vector3(-1f, 0f, 0f)) }
@@ -79,7 +88,11 @@ namespace CityBuilder.Campaign
                     var type = outer && i >= b.wallArchers ? SoldierType.Crossbowman : SoldierType.Archer;
                     var post = OnMesh(gate + inward * 2f);
                     var unit = Hire(type, post, new ArmyGroup(type, post));
-                    if (unit != null) unit.GoToWall(cells[i]);
+                    if (unit == null) continue;
+                    // facing out, towards the orcs (the user's second playtest)
+                    unit.WallLookout = -inward;
+                    unit.GoToWall(cells[i].a);
+                    _wallmen.Add((unit, cells[i].a, cells[i].b, false));
                 }
             }
         }
@@ -93,12 +106,22 @@ namespace CityBuilder.Campaign
             group.OrderMoveTo(post);
         }
 
-        /// <summary>`count` wall cells on the gate's side, spread either side of it (not the gate's own three).</summary>
-        private List<Vector2Int> WallCellsBeside(int lane, bool outer, int count)
+        /// <summary>The town inside the outer (or the inner) walls, walls included, in world x/z.</summary>
+        private Rect PenOf(bool outer)
         {
-            var found = new List<Vector2Int>();
+            var a = outer ? World(28f, 67f) : World(41f, 67f);
+            var c = outer ? World(73f, 34f) : World(60f, 51f);
+            return Rect.MinMaxRect(Mathf.Min(a.x, c.x), Mathf.Min(a.z, c.z), Mathf.Max(a.x, c.x), Mathf.Max(a.z, c.z));
+        }
+
+        /// <summary>`count` wall posts on the gate's side, spread either side of it (not the gate's own three):
+        /// each a cell and a second one m2_wall_patrol_cells further from the gate, walked between.</summary>
+        private List<(Vector2Int a, Vector2Int b)> WallCellsBeside(int lane, bool outer, int count)
+        {
+            var found = new List<(Vector2Int, Vector2Int)>();
             if (count <= 0) return found;
-            var candidates = new List<Vector2Int>();
+            var candidates = new List<(Vector2Int, Vector2Int)>();
+            var walk = Mathf.Max(1, B.wallPatrolCells);
             int fixedC, from, to, gateAt;
             bool vertical;
             if (outer)
@@ -119,7 +142,8 @@ namespace CityBuilder.Campaign
                 foreach (var a in new[] { gateAt - d, gateAt + d })
                 {
                     if (a < from || a > to) continue;
-                    candidates.Add(vertical ? CellOf(fixedC, a) : CellOf(a, fixedC));
+                    var further = Mathf.Clamp(a < gateAt ? a - walk : a + walk, from, to);
+                    candidates.Add(vertical ? (CellOf(fixedC, a), CellOf(fixedC, further)) : (CellOf(a, fixedC), CellOf(further, fixedC)));
                 }
             }
             for (var i = 0; i < candidates.Count && found.Count < count; i += 2) found.Add(candidates[i]);
@@ -153,9 +177,29 @@ namespace CityBuilder.Campaign
             }
         }
 
+        /// <summary>The shooters walk to their other post now and then while nobody is in reach.</summary>
+        private void TickWallPatrol(float dt)
+        {
+            _wallPatrolIn -= dt;
+            if (_wallPatrolIn > 0f) return;
+            _wallPatrolIn = Mathf.Max(1f, B.wallPatrolSeconds) * Random.Range(0.4f, 0.7f);
+            for (var i = _wallmen.Count - 1; i >= 0; i--)
+            {
+                var (unit, a, b, atB) = _wallmen[i];
+                if (unit == null || unit.CurrentHealth <= 0)
+                {
+                    _wallmen.RemoveAt(i);
+                    continue;
+                }
+                if (!unit.IdleOnWall || Random.value > 0.5f) continue;
+                if (unit.GoToWall(atB ? a : b)) _wallmen[i] = (unit, a, b, !atB);
+            }
+        }
+
         private void TickGarrison(float dt)
         {
             _garrison.RemoveAll(u => u == null || u.CurrentHealth <= 0);
+            TickWallPatrol(dt);
             _patrolCheck -= dt;
             if (_patrolCheck > 0f) return;
             _patrolCheck = 0.5f;
