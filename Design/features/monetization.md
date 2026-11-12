@@ -253,6 +253,13 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   time), tapping one opens its window («Включить», or «Продлить» while it runs). v3: compact tiles, SIX a
   row (icon, ×N, name; time instead of the name while running), the effect only in the window, so all 11
   fit two rows (`Booster_Inventory_Full.png`).
+- **Decided 2026-11-12:** booster time runs ONLY while playing; «Продлить» adds one more full duration;
+  prices: the user sets them in the sheet; Новосёлы may exceed the houses' places (the user expects a
+  housing shortage to send people away -- NOT TRUE in the sandbox today: people above capacity just stay,
+  houses stop making more; only the starving leave; asked whether to add it).
+- **Sheet tab «Песочница (Лавка): Бустеры»** (gid 2000065, target `boosters`, repo `Balance/boosters.csv`,
+  2026-11-12): a `booster` table (effect, duration_sec, price_crystals empty, ad) + a `key` table (slots,
+  recharge, every hint number). Not read by the game yet (no importer): implementation to come.
 - **Town HUD (2026-11-12):** the active boosters' row (medallion + time ring) under the resource bar, where
   «День N» was; «День N» moves onto the minimap's ring foot (the user's idea) -- SANDBOX ONLY; Invasion and
   the campaign keep their HUD as it is (their «Волна N» on top, the run clock on the ring foot). Building look APPROVED 2026-11-12: a VIOLET «magic» wind stream winding up round every
