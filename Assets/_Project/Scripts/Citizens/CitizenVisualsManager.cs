@@ -657,6 +657,36 @@ namespace CityBuilder.Citizens
             return agent;
         }
 
+        /// <summary>
+        /// A townsman who is nobody's: not counted, not housed, not given work -- a figure for a scene to
+        /// run about (campaign mission 2: the people running for their houses, the user 2026-11-12).
+        /// The caller moves him (CitizenAgent.MoveTo) and destroys him.
+        /// </summary>
+        public CitizenAgent SpawnLoose(Vector3 at)
+        {
+            EnsureMaterials();
+            var root = new GameObject("Townsman");
+            root.transform.SetParent(transform, false);
+            root.transform.localScale = Vector3.one * UnitSize.Scale;
+            var pick = villagerModels != null && villagerModels.Length > 0 ? UnityEngine.Random.Range(0, villagerModels.Length) : -1;
+            if (pick >= 0 && villagerModels[pick] != null) AddFigure(root.transform, villagerModels[pick]);
+            else
+            {
+                var clothing = _clothingMaterials[UnityEngine.Random.Range(0, _clothingMaterials.Length)];
+                AddCubePart(root.transform, "Body", new Vector3(0f, 0.25f, 0f), new Vector3(0.3f, 0.5f, 0.3f), clothing);
+                AddCubePart(root.transform, "Head", new Vector3(0f, 0.61f, 0f), new Vector3(0.22f, 0.22f, 0.22f), _skinMaterial);
+            }
+            var controller = root.AddComponent<CharacterController>();
+            controller.height = 0.72f;
+            controller.radius = 0.15f;
+            controller.center = new Vector3(0f, 0.36f, 0f);
+            controller.skinWidth = 0.02f;
+            controller.minMoveDistance = 0f;
+            var agent = root.AddComponent<CitizenAgent>();
+            agent.Initialize(at, at);
+            return agent;
+        }
+
         private Vector3? ResolveTownCenter()
         {
             if (_townCenter.HasValue) return _townCenter;

@@ -611,8 +611,13 @@ namespace CityBuilder.EditorTools
             DefenceSprite(defenceArt.FindPropertyRelative("rim"), UiTextureImport.SkinFolder + "/event_rim.png");
             DefenceSprite(defenceArt.FindPropertyRelative("mask"), UiTextureImport.SkinFolder + "/circle_mask.png");
             DefenceSprite(defenceArt.FindPropertyRelative("portrait"), UiTextureImport.IconsFolder + "/PortraitArdan.png");
-            DefenceSprite(cityDefenceSO.FindProperty("cryGlyph"), UiTextureImport.GlyphsFolder + "/Skill_captain_might.png");
-            DefenceSprite(cityDefenceSO.FindProperty("gateIcon"), UiTextureImport.IconsFolder + "/FortifiedGate.png");
+            // Ардан's four skills (the user, 2026-11-12): cry, whirl, dash, second wind -- the heroes' pictures for now
+            var skillGlyphs = cityDefenceSO.FindProperty("skillGlyphs");
+            var skillFiles = new[] { "Skill_captain_might", "Skill_king_rage", "Skill_captain_rescue", "Skill_king_heal" };
+            skillGlyphs.arraySize = skillFiles.Length;
+            for (var i = 0; i < skillFiles.Length; i++)
+                DefenceSprite(skillGlyphs.GetArrayElementAtIndex(i), UiTextureImport.GlyphsFolder + "/" + skillFiles[i] + ".png");
+            DefenceSprite(cityDefenceSO.FindProperty("lockGlyph"), UiTextureImport.GlyphsFolder + "/Hud_Lock.png");
             cityDefenceSO.ApplyModifiedPropertiesWithoutUndo();
 
             // The dungeon (Dungeon/DungeonMode): idle in a town; when DungeonTravel sent the heroes

@@ -344,7 +344,7 @@
   4. Only after that is the cutscene video made.
 - Model renders go to the user for approval before anything enters the game.
 
-## Mission 2 «Оборона города» (the user, 2026-11-12; GAMEPLAY v1 BUILT the same day, not seen, untested)
+## Mission 2 «Оборона города» (the user, 2026-11-12; GAMEPLAY v2 after playtest 1 BUILT the same day, not seen)
 - **Cutscene before it (to be discussed in detail):** Ардан runs in through the gates; the captain of the guard
   stands there; Ардан starts telling him big creatures attacked his village; a soldier on the wall shouts the
   enemy is coming; the alarm, the gates close; the captain calls a CAVALRYMAN and orders him to ride to the
@@ -423,6 +423,42 @@
 - **Traps:** `FogOfWarManager.DisabledCheat` is an INSTANCE property. Regenerating the map: rerun
   `mission2_town.py` FIRST (it writes mission2-plan.json), then Blender, then export.
 - **Open:** both cutscenes (to discuss before building them); the user's playtest of v1.
+- **PLAYTEST 1 (the user, 2026-11-12) -> v2 BUILT the same day (not seen).** The v1 never started: the HUD's
+  `GetComponent<CanvasGroup>() ?? AddComponent` threw (Unity's fake null) inside Setup, so the sandbox HUD
+  stayed and no part began -- TRAP, never `??` on a Unity component. The user's decisions (part 1 now; part 2
+  "уточним позже"):
+  - **HUD:** only the menu button (top left), Ардан top right as a sandbox hero (face, level badge, health
+    bar gold while healed, xp bar), the goal top middle, the FOUR SKILLS bottom middle, the minimap kept but
+    framed close (m2_minimap_radius) with the part's clock on its plaque (SettlementStatusController, as an
+    Invasion run's wave) and «!» per attacking side (MinimapAttackAlerts.PlaceDefence, all three at once).
+    No gate bars: a gate shows its own health bar once hit (BuildingInstance). HousePeople switched off
+    (its resident bars stood over every roof).
+  - **Ардан:** starts on the central square, camera on him at mission 1's distance (`LockView`
+    m2_camera_distance/pitch, no zoom), always centred. MORTAL: dead = lost (LossReason.Arden). Levels on his
+    OWN kills (OrcUnit.Died + KilledBy; xp = the orc's max health; m2_arden_xp2/3/4 cumulative), each level
+    +health/+damage and opens a skill: 1 Боевой клич (Enrage self + garrison in radius, orcs stunned),
+    2 Круговой удар (damage round him + `OrcUnit.Knock` push), 3 Натиск (`SoldierUnit.Dash` the stick's
+    way / facing, damage + stun along it), 4 Второе дыхание (heals self over seconds + allies near). Icons:
+    the heroes' Skill_captain_might / king_rage / captain_rescue / king_heal (placeholders), Hud_Lock over a
+    closed one. Healers: m2_square_healers monks on the square + a green ring; inside m2_heal_radius he mends
+    m2_heal_per_sec of his health a second.
+  - **Living town** (`CityDefenceMode.Garrison.cs`): inside each outer gate a squad (m2_squad_infantry men-
+    at-arms, m2_squad_crossbows crossbowmen, m2_squad_monks monk), archers + crossbowmen on the walls beside
+    each gate, m2_patrols spearman patrols looping the lower town's streets (corners in `PatrolLoops`), and
+    m2_townsfolk townsfolk (`CitizenVisualsManager.SpawnLoose`: uncounted figures) running from house door to
+    house door, vanishing in and another coming out elsewhere after m2_townsfolk_respawn_sec.
+  - **Time & waves:** EACH part 8 minutes (480 s). Waves on all three lanes at once, growing (+1 per lane every
+    m2_wave_orcs_grow_every, cap m2_wave_orcs_max); the next comes m2_wave_pause_sec after the last is beaten
+    (or m2_wave_max_sec whatever); past HALF the part: x m2_late_orcs_mult orcs, m2_late_orc_level, brutes
+    every m2_late_brute_every, pause m2_wave_pause_late_sec.
+  - **Edge:** dark past the fields and the fords (the dungeon darkness shader over a mask of the rectangle
+    m2_lit_x0..x1, y0..y1 in plan cells, soft m2_dark_soft) -- `CityDefenceMode.World.cs`; Ардан's
+    `SoldierUnit.SteerArea` keeps him inside (1 cell in). The orcs spawn in the dark beyond the fords.
+  - Files: the mode is now partial -- `CityDefenceMode.cs` (setup, parts, waves), `.Arden.cs`, `.Garrison.cs`,
+    `.World.cs`; `CityDefenceHud.cs` rewritten. Sheet tab 2000066 now 69 m2_* keys; texts: gate/arden-rises
+    keys removed, #m2_lost_castle/#m2_lost_arden/#m2_level_up added, #m2_lost = «Поражение». Test:
+    `Tests/PlayMode/CityDefenceTests.cs` (the mission starts; Ардан dying loses it). Cheat window: «Ардан:
+    +уровень».
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right
   (IMGUI in `CampaignMapScreen.OnGUI`); in mission 2 the cheat window's «Служебное» tab has «Закончить часть»

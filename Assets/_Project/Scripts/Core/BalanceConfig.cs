@@ -2846,15 +2846,33 @@ namespace CityBuilder.Core
     [System.Serializable]
     public class CityDefenceBalance
     {
-        public float part1Seconds = 240f, part2Seconds = 240f;
-        public float firstWaveSeconds = 12f, waveEverySeconds = 22f;
-        public int waveOrcs = 3, waveOrcsGrowEvery = 2, waveOrcsMax = 8;
-        public int orcLevel = 1, orcLevelPart2 = 2, bruteEvery = 3, throwerEvery = 2;
+        // the parts and the waves (the user's first playtest, 2026-11-12: 8 minutes EACH part; waves from
+        // all three sides at once, growing, short pauses; past half the part much harder)
+        public float part1Seconds = 480f, part2Seconds = 480f;
+        public float firstWaveSeconds = 10f, wavePauseSeconds = 12f, wavePauseLateSeconds = 8f, waveMaxSeconds = 45f;
+        public int waveOrcs = 2, waveOrcsGrowEvery = 2, waveOrcsMax = 6;
+        public float lateOrcsMult = 1.6f;
+        public int orcLevel = 1, lateOrcLevel = 2, orcLevelPart2 = 2, bruteEvery = 3, lateBruteEvery = 2, throwerEvery = 2;
         public float orcHealthMult = 1f, orcDamageMult = 1f;
-        public int gateGuards = 3, wallArchers = 4, innerGuards = 2, innerArchers = 2, guardLevel = 2;
-        public int ardenHealth = 400, ardenDamage = 30;
-        public float ardenRiseSeconds = 8f;
+        // the garrison: a squad inside each gate, shooters on the walls, patrols on the streets
+        public int squadInfantry = 4, squadCrossbows = 3, squadMonks = 1, wallArchers = 3, wallCrossbows = 2;
+        public int patrols = 2, patrolSize = 3, innerGuards = 2, innerArchers = 2, guardLevel = 2;
+        // the town's people running for their houses
+        public int townsfolk = 24;
+        public float townsfolkRespawnSeconds = 4f;
+        // Ардан: mortal (dies = lost), levels on his own kills, four skills opened by level
+        public int ardenHealth = 400, ardenDamage = 30, ardenHealthPerLevel = 60, ardenDamagePerLevel = 6;
+        public int ardenXp2 = 300, ardenXp3 = 900, ardenXp4 = 1800;
         public float cryCooldownSeconds = 20f, cryRadius = 7f, crySeconds = 6f, cryDamageMult = 1.5f, cryStunSeconds = 1.5f;
+        public float whirlCooldownSeconds = 12f, whirlRadius = 3f, whirlDamageMult = 2f, whirlPush = 2.5f;
+        public float dashCooldownSeconds = 14f, dashDistance = 7f, dashSeconds = 0.35f, dashWidth = 1.5f, dashDamageMult = 1.5f, dashStunSeconds = 1.5f;
+        public float breathCooldownSeconds = 40f, breathHeal = 0.5f, breathSeconds = 3f, breathRadius = 6f, breathAllyHeal = 0.4f;
+        // the healers on the square
+        public int squareHealers = 2;
+        public float healRadius = 3f, healPerSecond = 0.08f;
+        // the view, the minimap, the dark past the fields and the fords (plan cells)
+        public float cameraDistance = 6f, cameraPitch = 50f, minimapRadius = 22f;
+        public float litX0 = 8f, litY0 = 6f, litX1 = 92f, litY1 = 70f, darkSoft = 4f;
         public float part2Burnt = 0.5f;
 
         public void Read(System.Func<string, float?> get)
@@ -2864,29 +2882,71 @@ namespace CityBuilder.Core
             part1Seconds = F("m2_part1_sec", part1Seconds);
             part2Seconds = F("m2_part2_sec", part2Seconds);
             firstWaveSeconds = F("m2_first_wave_sec", firstWaveSeconds);
-            waveEverySeconds = F("m2_wave_every_sec", waveEverySeconds);
+            wavePauseSeconds = F("m2_wave_pause_sec", wavePauseSeconds);
+            wavePauseLateSeconds = F("m2_wave_pause_late_sec", wavePauseLateSeconds);
+            waveMaxSeconds = F("m2_wave_max_sec", waveMaxSeconds);
             waveOrcs = I("m2_wave_orcs", waveOrcs);
             waveOrcsGrowEvery = I("m2_wave_orcs_grow_every", waveOrcsGrowEvery);
             waveOrcsMax = I("m2_wave_orcs_max", waveOrcsMax);
+            lateOrcsMult = F("m2_late_orcs_mult", lateOrcsMult);
             orcLevel = I("m2_orc_level", orcLevel);
+            lateOrcLevel = I("m2_late_orc_level", lateOrcLevel);
             orcLevelPart2 = I("m2_orc_level_part2", orcLevelPart2);
             bruteEvery = I("m2_brute_every", bruteEvery);
+            lateBruteEvery = I("m2_late_brute_every", lateBruteEvery);
             throwerEvery = I("m2_thrower_every", throwerEvery);
             orcHealthMult = F("m2_orc_health_mult", orcHealthMult);
             orcDamageMult = F("m2_orc_damage_mult", orcDamageMult);
-            gateGuards = I("m2_gate_guards", gateGuards);
+            squadInfantry = I("m2_squad_infantry", squadInfantry);
+            squadCrossbows = I("m2_squad_crossbows", squadCrossbows);
+            squadMonks = I("m2_squad_monks", squadMonks);
             wallArchers = I("m2_wall_archers", wallArchers);
+            wallCrossbows = I("m2_wall_crossbows", wallCrossbows);
+            patrols = I("m2_patrols", patrols);
+            patrolSize = I("m2_patrol_size", patrolSize);
             innerGuards = I("m2_inner_guards", innerGuards);
             innerArchers = I("m2_inner_archers", innerArchers);
             guardLevel = I("m2_guard_level", guardLevel);
+            townsfolk = I("m2_townsfolk", townsfolk);
+            townsfolkRespawnSeconds = F("m2_townsfolk_respawn_sec", townsfolkRespawnSeconds);
             ardenHealth = I("m2_arden_health", ardenHealth);
             ardenDamage = I("m2_arden_damage", ardenDamage);
-            ardenRiseSeconds = F("m2_arden_rise_sec", ardenRiseSeconds);
+            ardenHealthPerLevel = I("m2_arden_health_per_level", ardenHealthPerLevel);
+            ardenDamagePerLevel = I("m2_arden_damage_per_level", ardenDamagePerLevel);
+            ardenXp2 = I("m2_arden_xp2", ardenXp2);
+            ardenXp3 = I("m2_arden_xp3", ardenXp3);
+            ardenXp4 = I("m2_arden_xp4", ardenXp4);
             cryCooldownSeconds = F("m2_cry_cooldown_sec", cryCooldownSeconds);
             cryRadius = F("m2_cry_radius", cryRadius);
             crySeconds = F("m2_cry_sec", crySeconds);
             cryDamageMult = F("m2_cry_damage_mult", cryDamageMult);
             cryStunSeconds = F("m2_cry_stun_sec", cryStunSeconds);
+            whirlCooldownSeconds = F("m2_whirl_cooldown_sec", whirlCooldownSeconds);
+            whirlRadius = F("m2_whirl_radius", whirlRadius);
+            whirlDamageMult = F("m2_whirl_damage_mult", whirlDamageMult);
+            whirlPush = F("m2_whirl_push", whirlPush);
+            dashCooldownSeconds = F("m2_dash_cooldown_sec", dashCooldownSeconds);
+            dashDistance = F("m2_dash_distance", dashDistance);
+            dashSeconds = F("m2_dash_sec", dashSeconds);
+            dashWidth = F("m2_dash_width", dashWidth);
+            dashDamageMult = F("m2_dash_damage_mult", dashDamageMult);
+            dashStunSeconds = F("m2_dash_stun_sec", dashStunSeconds);
+            breathCooldownSeconds = F("m2_breath_cooldown_sec", breathCooldownSeconds);
+            breathHeal = F("m2_breath_heal", breathHeal);
+            breathSeconds = F("m2_breath_sec", breathSeconds);
+            breathRadius = F("m2_breath_radius", breathRadius);
+            breathAllyHeal = F("m2_breath_ally_heal", breathAllyHeal);
+            squareHealers = I("m2_square_healers", squareHealers);
+            healRadius = F("m2_heal_radius", healRadius);
+            healPerSecond = F("m2_heal_per_sec", healPerSecond);
+            cameraDistance = F("m2_camera_distance", cameraDistance);
+            cameraPitch = F("m2_camera_pitch", cameraPitch);
+            minimapRadius = F("m2_minimap_radius", minimapRadius);
+            litX0 = F("m2_lit_x0", litX0);
+            litY0 = F("m2_lit_y0", litY0);
+            litX1 = F("m2_lit_x1", litX1);
+            litY1 = F("m2_lit_y1", litY1);
+            darkSoft = F("m2_dark_soft", darkSoft);
             part2Burnt = F("m2_part2_burnt", part2Burnt);
         }
     }

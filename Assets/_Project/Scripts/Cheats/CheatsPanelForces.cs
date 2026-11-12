@@ -324,6 +324,7 @@ namespace CityBuilder.Cheats
                 if (Button("Закончить часть")) { SetOpen(false); defence.CheatEndPart(); }
                 if (Button("Пройти уровень")) { SetOpen(false); defence.CheatWin(); }
                 GUILayout.EndHorizontal();
+                if (Button($"Ардан: +уровень (сейчас {defence.ArdenLevel})")) defence.CheatLevelUp();
             }
 
             Header("Сохранение");

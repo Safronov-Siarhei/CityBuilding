@@ -477,9 +477,32 @@ namespace CityBuilder.Combat
             if (direction.sqrMagnitude > 0.0001f) transform.rotation = Quaternion.LookRotation(direction);
         }
 
+        private Vector3 _knock;
+        private float _knockLeft;
+
+        /// <summary>
+        /// Thrown `offset` away over `seconds` and down for the time (campaign mission 2: Ардан's
+        /// «Круговой удар», the user 2026-11-12). Stopped by whatever its body runs into.
+        /// </summary>
+        public void Knock(Vector3 offset, float seconds)
+        {
+            offset.y = 0f;
+            _knockLeft = Mathf.Max(0.05f, seconds);
+            _knock = offset / _knockLeft;
+            BusyFor = Mathf.Max(BusyFor, _knockLeft);
+        }
+
         private void Update()
         {
             if (Steered || Asleep) return;
+            if (_knockLeft > 0f)
+            {
+                _knockLeft -= Time.deltaTime;
+                var step = _knock * Time.deltaTime;
+                if (UnityEngine.AI.NavMesh.Raycast(transform.position, transform.position + step, out var edge, UnityEngine.AI.NavMesh.AllAreas)) _knockLeft = 0f;
+                else if (_controller != null && _controller.enabled) _controller.Move(step);
+                else transform.position += step;
+            }
             // sealed in a cocoon, down on the ground: nothing to do until it is over
             if (BusyFor > 0f)
             {

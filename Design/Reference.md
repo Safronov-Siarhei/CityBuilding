@@ -528,7 +528,7 @@
 |---|---|---|---|---|---|
 | | ![Shipyard 1](../Assets/_Project/UI/Icons/Shipyard.png) | ![Shipyard 2](../Assets/_Project/UI/Icons/Shipyard_L2.png) | ![Shipyard 3](../Assets/_Project/UI/Icons/Shipyard_L3.png) | ![Shipyard 4](../Assets/_Project/UI/Icons/Shipyard_L4.png) | ![Shipyard 5](../Assets/_Project/UI/Icons/Shipyard_L5.png) |
 | Прочность | 160 | 256 | 400 | 576 | 800 |
-| Цена (базовая) | дерево 40, камень 10 |  |  |  |  |
+| Цена (песочница) | дерево 40, камень 10 | дерево 32, камень 13 | дерево 56, камень 22 | дерево 98, камень 38 | дерево 172, камень 67 |
 
 ### Маяк `Lighthouse`
 
@@ -538,7 +538,7 @@
 |---|---|---|---|---|---|
 | | ![Lighthouse 1](../Assets/_Project/UI/Icons/Lighthouse.png) | ![Lighthouse 2](../Assets/_Project/UI/Icons/Lighthouse_L2.png) | ![Lighthouse 3](../Assets/_Project/UI/Icons/Lighthouse_L3.png) | ![Lighthouse 4](../Assets/_Project/UI/Icons/Lighthouse_L4.png) | ![Lighthouse 5](../Assets/_Project/UI/Icons/Lighthouse_L5.png) |
 | Прочность | 150 | 240 | 375 | 540 | 750 |
-| Цена (базовая) | дерево 30, камень 40 |  |  |  |  |
+| Цена (песочница) | дерево 30, камень 40 | дерево 32, камень 13 | дерево 56, камень 22 | дерево 98, камень 38 | дерево 172, камень 67 |
 
 ## Развлечения и украшения
 
@@ -657,7 +657,7 @@
 | Цена (песочница) | дерево 50, камень 35 | дерево 80, камень 56 | дерево 140, камень 98 | дерево 245, камень 172 | дерево 429, камень 300 |
 | Стройка, с (песочница) | 25 | 26 | 42 | 69 | 115 |
 
-### Коллизей `Colosseum`
+### Колизей `Colosseum`
 
 Колизей: самое сильное развлечение; самый большой денежный бонус жителям домов в самом широком радиусе.
 

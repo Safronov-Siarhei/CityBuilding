@@ -90,7 +90,10 @@ namespace CityBuilder.UI
             if (SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Null) minimapCamera = null;
             _follow = cameraRig != null && minimapCamera != null;
             if (!_follow) return;
-            _radius = BalanceConfig.Instance.MinimapRadius;
+            // campaign mission 2 frames close round Ардан (the user, 2026-11-12: «приблизь»)
+            _radius = Campaign.CityDefenceMode.Pending || Campaign.CityDefenceMode.IsActive
+                ? BalanceConfig.Instance.CityDefence.minimapRadius
+                : BalanceConfig.Instance.MinimapRadius;
             minimapCamera.orthographicSize = _radius * Margin;
         }
 
