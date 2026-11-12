@@ -327,7 +327,6 @@ def hud():
     building(img, 'Icons/Quarry.png', 1000, 620, 290, 'A', stone[5], stone[6])
     building(img, 'Icons/Laboratory.png', 1380, 560, 300, 'B', lab[5], lab[6])
     building(img, 'Icons/Cottage.png', 1700, 900, 240)
-    building(img, 'Icons/Cottage.png', 520, 980, 240)
     d = ImageDraw.Draw(img)
     med = m.R + 'Assets/_Project/Resources/Fonts/Rubik-Medium.ttf'
     m.text(d, (820, 640), 'Вид А: золотое кольцо, искры, значок', 30, 'white', stroke=3, stroke_fill=(30, 40, 20), path=med)
@@ -351,14 +350,25 @@ def hud():
         d = ImageDraw.Draw(img)
         x += cw
 
-    # the game's «День N» plaque stays where it is (SetupProjectHud.BuildDayLabel: 360 x 50, 114 under the top)
-    pq = (W / 2 - 180, 114 - 25, W / 2 + 180, 114 + 25)
-    m.over(img, lambda g: g.rounded_rectangle(pq, 18, fill=(250, 236, 204, 240), outline=(120, 80, 40, 255), width=3))
+    # the minimap bottom-left as in the game (SetupProjectGameplayUI.BuildMinimap: 224 round at x 126, y 954
+    # in the 1920 x 1080 reference), and «День N» moved onto its ring's foot (the user, 2026-11-12) -- the
+    # spot the run clock uses in a run
+    mx, my, mr = 126, 954, 112
     d = ImageDraw.Draw(img)
-    m.text(d, (W / 2, 114), 'День 12', 30, INK)
-    # the active boosters: a row of smaller medallions with a ring of time left UNDER the day plaque
+    d.ellipse((mx - mr - 6, my - mr - 6, mx + mr + 6, my + mr + 6), fill=(120, 80, 40))
+    d.ellipse((mx - mr, my - mr, mx + mr, my + mr), fill=(150, 196, 104))
+    d.ellipse((mx - 40, my - 30, mx + 10, my + 20), fill=(196, 120, 80))
+    d.ellipse((mx + 20, my + 10, mx + 70, my + 50), fill=(80, 140, 200))
+    d.ellipse((mx - mr - 6, my - mr - 6, mx + mr + 6, my + mr + 6), outline=(214, 170, 70), width=5)
+    pq = (mx - 90, my + mr - 22 - 23, mx + 90, my + mr - 22 + 23)
+    m.over(img, lambda g: g.rounded_rectangle(pq, 18, fill=(250, 236, 204, 245), outline=(120, 80, 40, 255), width=3))
+    d = ImageDraw.Draw(img)
+    m.text(d, (mx, my + mr - 22), 'День 12', 28, INK)
+    m.text(d, (mx + mr + 24, my + mr - 22), '— «День» теперь на миникарте', 26, 'white', anchor='lm', stroke=3,
+           stroke_fill=(30, 40, 20), path=med)
+    # the active boosters: a row of medallions with a ring of time left under the top bar, where «День» was
     for k, (b, left, frac) in enumerate(((BOOSTERS[0], '3:30', 0.70), (BOOSTERS[1], '0:50', 0.17), (BOOSTERS[5], '1:40', 0.55))):
-        cx, cy, r = W / 2 - 96 + k * 96, 196, 34
+        cx, cy, r = W / 2 - 110 + k * 110, 140, 42
         ring = Image.new('RGBA', img.size, (0, 0, 0, 0))
         rd = ImageDraw.Draw(ring)
         rd.ellipse((cx - r - 8, cy - r - 8, cx + r + 8, cy + r + 8), fill=(40, 30, 20, 200))
@@ -366,8 +376,8 @@ def hud():
         img.alpha_composite(ring)
         img.alpha_composite(medallion(2 * r, b[5], b[6], arrow=False), (int(cx - r), int(cy - r)))
         d = ImageDraw.Draw(img)
-        m.text(d, (cx, cy + r + 24), left, 24, 'white', stroke=3, stroke_fill=(30, 20, 10))
-    m.text(d, (W / 2 + 200, 196), '— активные бустеры под «День»: тап открывает «Запасы»', 26, 'white', anchor='lm', stroke=3,
+        m.text(d, (cx, cy + r + 26), left, 26, 'white', stroke=3, stroke_fill=(30, 20, 10))
+    m.text(d, (W / 2 + 230, 140), '— активные бустеры: тап открывает «Запасы»', 26, 'white', anchor='lm', stroke=3,
            stroke_fill=(30, 40, 20), path=med)
 
     # the hint at the right moment: a raid starts and «Боевой дух» is in stock
