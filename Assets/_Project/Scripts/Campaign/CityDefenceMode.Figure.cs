@@ -16,6 +16,8 @@ namespace CityBuilder.Campaign
         [SerializeField] private CineClips ardenClips;     // its baked clips
 
         private static readonly string[] SkillClip = { "Cry", "Whirl", "Dash", "Breath" };   // by skill index
+        // three strikes in turn (approved 2026-11-12): from the right, the backhand, the overhead -- BlowFx tilts its crescent to match
+        private static readonly string[] StrikeClips = { "Attack", "Attack2", "Attack3" };
         private const float RunFrom = 0.15f;               // m/s: slower than this he stands
         private const float LookFade = 0.12f;
 
@@ -48,7 +50,7 @@ namespace CityBuilder.Campaign
                 go.transform.localScale *= (soldierTop - feet) / (figTop - feet);
             _ardenFig.Play("Idle", 0f);
             _ardenWas = Arden.transform.position;
-            Arden.Struck += () => { Act("Attack"); BlowFx(); };
+            Arden.Struck += () => { Act(StrikeClips[_blow % StrikeClips.Length]); BlowFx(); };
             SkillUsed -= OnArdenSkill;
             SkillUsed += OnArdenSkill;
         }

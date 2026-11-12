@@ -642,6 +642,10 @@ namespace CityBuilder.EditorTools
             // the orcs' ram and siege tower (approved 2026-11-12)
             cityDefenceSO.FindProperty("orcRamModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Orcs/OrcRam.fbx");
             cityDefenceSO.FindProperty("orcTowerModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Orcs/OrcSiegeTower.fbx");
+            // the gate's leaves, portcullis and passage (approved 2026-11-12, Tools/blender/gate_close_drafts.py)
+            cityDefenceSO.FindProperty("gatePassageModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Buildings/FortifiedGate1-Passage.fbx");
+            cityDefenceSO.FindProperty("gateLeafModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Buildings/FortifiedGate1-Leaf.fbx");
+            cityDefenceSO.FindProperty("gateGrilleModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Buildings/FortifiedGate1-Grille.fbx");
             // Ардан with the sword in place of the Латник's look (approved 2026-11-12)
             cityDefenceSO.FindProperty("ardenModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(cine + "Cast/CineArdanSword.fbx");
             cityDefenceSO.FindProperty("ardenClips").objectReferenceValue = AssetDatabase.LoadAssetAtPath<CityBuilder.Campaign.CineClips>("Assets/_Project/Campaign/Cast/CineArdanSwordClips.asset");

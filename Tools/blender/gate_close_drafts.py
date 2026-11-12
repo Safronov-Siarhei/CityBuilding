@@ -2,6 +2,7 @@
 анимацию их закрытия»). DRAFTS for approval before anything goes into the game. Never saves the .blend.
 
     blender --background Buildings-Size1-Models.blend --python gate_close_drafts.py -- <out_dir>
+    blender ... --python gate_close_drafts.py -- <unity project> export     (the approved pieces into the game)
 
 The mission's gate is the level-3 Barbican (FortifiedGate1-lvl3), whose doors are only painted on its faces.
 Three small pieces go over it:
@@ -113,4 +114,29 @@ def main():
         shoot(sc, cam, cam_data, objs, os.path.join(OUT, f"gate_{name}-field.png"), yaw_deg=-120, pitch_deg=22)
 
 
-main()
+def export(project):
+    """APPROVED 2026-11-12 («Утверждаю оба»): the three pieces to Models/Buildings with export_fbx.py's
+    settings for static models (Blender (x, y, z) lands on Unity (x, z, y)). Never saves the .blend."""
+    folder = os.path.join(project, "Assets", "_Project", "Models", "Buildings")
+    blend = os.path.dirname(bpy.data.filepath)
+    img = kit.ensure_palette(os.path.join(blend, "Buildings-Palette.png"))
+    mat = kit.ensure_material(img)
+    for name, fn in (("FortifiedGate1-Passage", passage), ("FortifiedGate1-Leaf", leaf), ("FortifiedGate1-Grille", grille)):
+        obj = make(name, fn, mat)
+        bpy.ops.object.select_all(action='DESELECT')
+        obj.select_set(True)
+        bpy.context.view_layer.objects.active = obj
+        path = os.path.join(folder, name + ".fbx")
+        bpy.ops.export_scene.fbx(
+            filepath=path, use_selection=True, object_types={'MESH'},
+            axis_forward='Z', axis_up='Y', apply_unit_scale=True, apply_scale_options='FBX_SCALE_ALL',
+            bake_space_transform=True, use_mesh_modifiers=True, mesh_smooth_type='FACE',
+            add_leaf_bones=False, bake_anim=False, path_mode='STRIP', embed_textures=False,
+            colors_type='LINEAR', prioritize_active_color=True)
+        print("EXPORTED", path)
+
+
+if len(argv) > 1 and argv[1] == "export":
+    export(argv[0])
+else:
+    main()
