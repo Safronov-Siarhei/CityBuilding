@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Combat;
 using CityBuilder.Core;
@@ -125,6 +125,7 @@ namespace CityBuilder.Citizens
             // what the standing houses still owe the town, shared out one per house at a time
             var shortfall = Mathf.Max(0, Places - People);
             Balance(shortfall);
+            SendOvercrowdedAway();
 
             var seconds = Seconds;
             var paused = PausedByHunger;
@@ -146,6 +147,42 @@ namespace CityBuilder.Citizens
                 house.Owed--;
                 CitizenManager.Instance?.AddCitizens(1);
             }
+        }
+
+        // ---------------------------------------------------------------- overcrowding
+
+        // More people than room -- the Новосёлы booster, a house burnt down -- and they leave ONE AT A TIME,
+        // one every crowded_leave_interval_sec, until everyone has a place (the user, 2026-11-12: a housing
+        // shortage sends people away). The sandbox only: not a run, not the tutorial. Room is the houses'
+        // places plus the Town Hall's founding party (its citizens_on_build), who live in the hall; soldiers
+        // count as people but only townsfolk walk out. Not deaths: RemoveCitizens, not KillCitizens.
+        private float _crowdTimer;
+
+        /// <summary>People above the room the town has (0 when everyone has a place, or where the rule does not apply).</summary>
+        public int Overcrowded
+        {
+            get
+            {
+                var hall = BuildingInstance.TownHall;
+                if (hall == null || hall.Data == null || Invasion.InvasionMode.IsActive || Tutorial.TutorialMode.IsActive) return 0;
+                return Mathf.Max(0, People - Places - Mathf.Max(0, hall.Data.citizensOnBuild));
+            }
+        }
+
+        private void SendOvercrowdedAway()
+        {
+            var citizens = CitizenManager.Instance;
+            if (citizens == null || Overcrowded <= 0)
+            {
+                _crowdTimer = 0f;
+                return;
+            }
+            _crowdTimer += Time.deltaTime;
+            if (_crowdTimer < BalanceConfig.Instance.CrowdedLeaveIntervalSeconds) return;
+            _crowdTimer = 0f;
+            if (citizens.RemoveCitizens(1) <= 0) return;
+            EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Get("#log_crowded"), EventSeverity.Warning,
+                EventGlyph.Sad, "Res_Population"));
         }
 
         /// <summary>Follows BuildingInstance.Houses: a new house joins, a gone one leaves. No allocation unless one did.</summary>

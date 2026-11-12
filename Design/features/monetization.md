@@ -224,7 +224,70 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
 - **Round 4 (the user, the list, in progress):** 12+ boosters; the 4 slots change every 15 min, never
   two of the same; EACH booster its own icon. Tiers: wood / stone / ore boosters speed up gathering by
   sawmill/quarry/mine workers AND by ordinary citizens, in tiers ×1.2 / ×1.5 / ×2; the food booster adds
-  +1 / +2 / +3 to a food building's output. The user continues the list.
+  +1 / +2 / +3 to a food building's output EACH production cycle (all food buildings alike).
+  Tiers are separate boosters in the pool: tier I for an ad OR crystals, tiers II and III for crystals
+  only. One icon per booster kind; the tier is written ON the icon's corner («×1.2», «+2») -- not by
+  rim colour. Gathering boosters speed up only the ACTION on the resource (chopping, quarrying,
+  digging), never walking.
+  Taxes (the user, 2026-11-12): a «Казна» booster, tax ×1.2 / ×1.5 / ×2, lasts 10 MIN (tax comes once per
+  120-s game day, so 5 min is 2-3 payouts); priced like the other boosters' tiers. So the duration is a
+  per-booster sheet column (default 5 min).
+  The rest (the user, 2026-11-12): Зодчий -- 3 min of INSTANT building; Учёный -- 3 min of instant
+  research; Боевой дух -- as proposed (+50% damage to the army and heroes), 3 min; Стойкость -- buildings'
+  HP +20% / +50% / +100%; Вербовка -- hiring at HALF the price; Ремонт -- repairs every damaged
+  building at once; Новосёлы -- +10 citizens at once. Ремесло (workshops) and «Готово!» not named
+  (asked). Open: tiers / durations of these, Новосёлы vs housing.
+- **Round 5 -- NO TIERS (the user, 2026-11-12):** 12 boosters, one strength each, every one for an ad OR
+  crystals, same time either way: Лесоруб / Каменотёс / Рудокоп ×1.5 (the gathering action only);
+  Изобилие +1 food per cycle; Казна tax ×1.2, 10 min; Зодчий 3 min instant building; Учёный 3 min instant
+  research; Боевой дух +50% damage, 3 min; Стойкость buildings' HP +25%; Вербовка hiring at half price;
+  Ремонт repairs all; Новосёлы +10 citizens. No daily ad cap: the slots' 15-min recharge already limits
+  it (4 per 15 min); crystals are for those who do not want an ad.
+  Новосёлы = +20 citizens (the user, 2026-11-12).
+- **OPEN -- Рудокоп NOT built (the user, 2026-11-12):** the mines' mechanics are not thought through yet and
+  their work is in question, so the ore booster waits until the mines are settled. Its intent so far:
+  ×1.5 to the ore-digging action of mine workers and citizens, never walking. 11 boosters are built first.
+- **Inventory (the user's idea, 2026-11-12):** «Запасы» lists only the boosters the player HAS (stock > 0
+  or running); resources: ALL of them, as now (the user: else a player may never learn they exist).
+  Concept v2 `Booster_Inventory.png`: resources, a gap, the owned boosters (running one gold with its
+  time), tapping one opens its window («Включить», or «Продлить» while it runs). v3: compact tiles, SIX a
+  row (icon, ×N, name; time instead of the name while running), the effect only in the window, so all 11
+  fit two rows (`Booster_Inventory_Full.png`).
+- **Decided 2026-11-12:** booster time runs ONLY while playing; «Продлить» adds one more full duration;
+  prices: the user sets them in the sheet; Новосёлы may exceed the houses' places (the user expects a
+  housing shortage to send people away -- BUILT 2026-11-12, see sandbox-run-systems.md).
+- **Sheet tab «Песочница (Лавка): Бустеры»** (gid 2000065, target `boosters`, repo `Balance/boosters.csv`,
+  2026-11-12): a `booster` table (effect, duration_sec, price_crystals empty, ad) + a `key` table (slots,
+  recharge, every hint number). Not read by the game yet (no importer): implementation to come.
+- **Icons v1 (2026-11-12, FOR APPROVAL, not in the game):** `Tools/blender/booster_icons.py` (stand-alone,
+  low-poly sign on a gold-rimmed enamel medallion) -> `Design/store/booster_icons/Booster_<id>.png`, sheet
+  `Design/store/Booster_Icons.png`.
+  v1 REJECTED (the user: round icons do not look like the game). **v2 (`bare` mode):** the sign alone from the
+  resource icons' angle + a VIOLET glow added afterwards (variant Б chosen 2026-11-12) -> `Design/store/booster_icons_v2/`,
+  sheet `Booster_Icons_v2.png`; Новосёлы redone with the game's own villager FBX (Peasant1 + Woman2, palette
+  texture), `Booster_Settlers_v2.png`. The glow is not in the PNGs yet (PIL in the contact-sheet script).
+  **APPROVED 2026-11-12** (icons v2 + the inventory with them, `Booster_Inventory(_Full).png`). Design phase of the
+  boosters is complete; next: implementation (importer for the `boosters` tab, shop tab, «Запасы», HUD row, stream, hints).
+- **Town HUD (2026-11-12):** the active boosters' row (medallion + time ring) under the resource bar, where
+  «День N» was; «День N» moves onto the minimap's ring foot (the user's idea) -- SANDBOX ONLY; Invasion and
+  the campaign keep their HUD as it is (their «Волна N» on top, the run clock on the ring foot). Building look APPROVED 2026-11-12: a VIOLET «magic» wind stream winding up round every
+  boosted building (one colour for all; the user's idea after a well-known town builder) + the booster's
+  badge over the roof; to build as one ribbon mesh with a scrolling texture (one draw, no particles).
+- **Hints at the right moment (the user, 2026-11-12)** -- shown only when the booster is IN STOCK (case A,
+  «Включить»); triggers:
+  - Боевой дух: orcs or the bot's army LANDED on the player's Town Hall island (not merely sailing);
+  - Ремонт: damaged buildings after a fight; Стойкость: enemies coming; Вербовка: barracks/hire opened;
+    Зодчий: a long build/upgrade started; Учёный: a long research started;
+  - Новосёлы: 10+ citizens left and the houses have room for them (not refilling yet); or free places;
+  - Казна: coins below 50;
+  - Лесоруб / Каменотёс / Изобилие: that resource below 5 AND working extraction buildings with 3+
+    workers in all;
+  - frequency (agreed): fades by itself in 8 s (a bar on its foot) or a swipe; one hint on screen; the
+    same hint once per 10 min; none in the first 7 min; ignored 3 times in a row -> quiet till next session;
+    all numbers in the sheet.
+  - Case B (agreed 2026-11-12): not in stock but in one of the shop's 4 slots right now -> the same hint
+    with «▶ Смотреть» (ad, then it is switched on at once; the slot goes to its 15-min recharge). Any
+    trigger, but its OWN rarer limit: at most one shop offer per 20 min (sheet). No crystals on the hint. Concept `Booster_Hints.png`.
 - **Concepts:** `Tools/store/booster_mockup.py` -> `Design/store/Booster_Shop.png`, `Booster_Inventory.png`,
   `Booster_Hud.png` (icons are placeholder medallions; real ones rendered for approval).
 

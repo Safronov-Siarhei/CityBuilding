@@ -659,6 +659,7 @@ namespace CityBuilder.Core
         [SerializeField] private float foodPerMouthPerDay = 0.5f;
         [SerializeField] private int hungryDaysBeforeDeaths = 2;
         [SerializeField] private float starveLeaveIntervalSeconds = 20f;
+        [SerializeField] private float crowdedLeaveIntervalSeconds = 20f;
         [SerializeField] private float eventCaptionSeconds = 4f;
         [SerializeField] private int foodVarietyTarget = 2;
         [SerializeField] private int deathsMemoryDays = 3;
@@ -1473,6 +1474,8 @@ namespace CityBuilder.Core
         public int HungryDaysBeforeDeaths => hungryDaysBeforeDeaths;
         /// <summary>Past the hungry grace with no food: one person leaves every this many seconds (the user, 2026-11-10).</summary>
         public float StarveLeaveIntervalSeconds => Mathf.Max(1f, starveLeaveIntervalSeconds);
+        /// <summary>The sandbox: more people than room, one leaves every this many seconds (HousePeople).</summary>
+        public float CrowdedLeaveIntervalSeconds => Mathf.Max(1f, crowdedLeaveIntervalSeconds);
         /// <summary>A tapped event icon shows its line this many seconds (the user, 2026-11-10).</summary>
         public float EventCaptionSeconds => Mathf.Max(0.5f, eventCaptionSeconds);
         public int FoodVarietyTarget => foodVarietyTarget;
@@ -2297,6 +2300,7 @@ namespace CityBuilder.Core
             foodPerMouthPerDay = Read(economy, "food_per_mouth_per_day", foodPerMouthPerDay);
             hungryDaysBeforeDeaths = (int)Read(economy, "hungry_days_before_deaths", hungryDaysBeforeDeaths);
             starveLeaveIntervalSeconds = Read(economy, "starve_leave_interval_sec", starveLeaveIntervalSeconds);
+            crowdedLeaveIntervalSeconds = Read(economy, "crowded_leave_interval_sec", crowdedLeaveIntervalSeconds);
             eventCaptionSeconds = Read(economy, "event_caption_sec", eventCaptionSeconds);
             foodVarietyTarget = (int)Read(economy, "food_variety_target", foodVarietyTarget);
             deathsMemoryDays = (int)Read(economy, "deaths_memory_days", deathsMemoryDays);

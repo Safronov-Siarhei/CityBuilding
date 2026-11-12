@@ -25,17 +25,49 @@ INK = (84, 50, 24)
 CREAM = (255, 246, 222)
 
 # name, effect line, minutes, crystals, ad minutes, colours (top, bottom), inner icons
-BOOSTERS = [
-    ('Урожай', '+50% дерева, камня', 15, 20, 5, ((120, 200, 90), (40, 110, 40)), ['Icons/Res_Wood.png', 'Icons/Res_Stone.png']),
-    ('Ремесло', 'Мастерские +50%', 15, 20, 5, ((255, 180, 90), (180, 90, 20)), ['Icons/Res_IronBar.png']),
-    ('Зодчий', 'Стройка ×2 быстрее', 15, 30, 5, ((120, 180, 255), (40, 80, 180)), ['Glyphs/Hammer.png']),
-    ('Учёный', 'Исследования ×2', 15, 30, 5, ((200, 150, 255), (100, 50, 180)), ['Icons/Laboratory.png']),
-    ('Боевой дух', '+25% урона армии', 10, 25, 3, ((255, 120, 110), (160, 30, 30)), ['Glyphs/Swords.png']),
-    ('Готово!', 'Достроить сразу', 0, 40, 0, ((255, 230, 120), (210, 140, 20)), ['Glyphs/Upgrade.png']),
+BOOSTERS = [   # the user's list, round 5 (2026-11-12): no tiers, an ad OR crystals for the same time
+    ('Лесоруб', 'Рубка дерева ×1,5', 5, 20, 5, ((120, 200, 90), (40, 110, 40)), ['Icons/Res_Wood.png']),
+    ('Каменотёс', 'Добыча камня ×1,5', 5, 20, 5, ((190, 190, 180), (100, 100, 96)), ['Icons/Res_Stone.png']),
+    ('Изобилие', 'Еда +1 за цикл', 5, 20, 5, ((255, 200, 110), (200, 110, 30)), ['Icons/Res_Food.png']),
+    ('Казна', 'Налог ×1,2', 10, 20, 10, ((255, 230, 120), (200, 140, 20)), ['Icons/Res_Coins.png']),
+    ('Зодчий', 'Стройка мгновенно', 3, 20, 3, ((120, 180, 255), (40, 80, 180)), ['Glyphs/Hammer.png']),
+    ('Учёный', 'Исследования мгновенно', 3, 20, 3, ((200, 150, 255), (100, 50, 180)), ['Icons/Laboratory.png']),
+    ('Боевой дух', '+50% урона армии', 3, 20, 3, ((255, 120, 110), (160, 30, 30)), ['Glyphs/Swords.png']),
+    ('Стойкость', 'Прочность зданий +25%', 5, 20, 5, ((150, 170, 200), (60, 80, 120)), ['Glyphs/Hud_Shield.png']),
+    ('Вербовка', 'Найм в 2 раза дешевле', 5, 20, 5, ((240, 150, 90), (150, 70, 30)), ['Icons/PortraitSpearman.png']),
+    ('Ремонт', 'Чинит все здания', 0, 20, 1, ((140, 220, 200), (30, 120, 110)), ['Glyphs/Heal.png']),
+    ('Новосёлы', '+20 жителей', 0, 20, 1, ((255, 170, 190), (180, 70, 100)), ['Icons/Res_Population.png']),
 ]
 
 
+IDS = ['lumberjack', 'stonecutter', 'abundance', 'treasury', 'architect', 'scholar', 'battle_spirit', 'fortitude',
+       'recruit', 'repair', 'settlers']
+ICONS = m.R + 'Design/store/booster_icons_v2/'
+
+
 def medallion(size, colours, icons, arrow=True):
+    """A booster's icon: the approved v2 render (the sign alone + a violet glow, the user 2026-11-12) when the
+    booster is known, else the old placeholder disc."""
+    for i, b in enumerate(BOOSTERS):
+        if b[5] is colours and b[6] is icons and os.path.exists(ICONS + 'Booster_' + IDS[i] + '.png'):
+            return booster_icon(size, IDS[i])
+    return old_medallion(size, colours, icons, arrow)
+
+
+def booster_icon(size, key):
+    from PIL import ImageFilter
+    ic = Image.open(ICONS + 'Booster_' + key + '.png').convert('RGBA').resize((size, size), Image.LANCZOS)
+    k = max(3, size // 28)
+    a = ic.getchannel('A').filter(ImageFilter.MaxFilter(k | 1)).filter(ImageFilter.GaussianBlur(k))
+    g = Image.new('RGBA', ic.size, (190, 110, 255, 0))
+    g.putalpha(a.point(lambda v: min(255, int(v * 1.6))))
+    out = Image.new('RGBA', ic.size, (0, 0, 0, 0))
+    out.alpha_composite(g)
+    out.alpha_composite(ic)
+    return out
+
+
+def old_medallion(size, colours, icons, arrow=True):
     """A booster's placeholder icon: a gold rim, a coloured disc, the game's icon, a green arrow badge."""
     S = 2
     n = size * S
@@ -179,12 +211,15 @@ def shop():
 PANEL = (41, 46, 38)
 
 
-def inventory():
+OWNED = [(0, 1, '3:30'), (4, 1, None), (6, 3, None), (9, 1, None)]
+
+
+def inventory(out='Booster_Inventory.png'):
     W, H = 1920, 1080
     img = backdrop(W, H)
     d = ImageDraw.Draw(img)
     # the inventory card as in the game (dark, three columns), a little wider for the boosters
-    pw, ph = 1080, 870
+    pw, ph = 1080, 690 + 188 * ((len(OWNED) + 5) // 6)
     x0, y0 = (W - pw) // 2 - 330, (H - ph) // 2
     d.rounded_rectangle((x0, y0, x0 + pw, y0 + ph), 24, fill=PANEL, outline=(120, 130, 110), width=3)
     m.text(d, (x0 + pw / 2, y0 + 52), 'Запасы', 44, 'white')
@@ -211,53 +246,50 @@ def inventory():
     # the gap, then «Бустеры»: one cell per booster, ×N, the running one with its time, an empty one «Купить»
     by = y0 + 150 + 3 * (rh + 10) + 50
     label(by, 'Бустеры')
-    stocks = [2, 0, 1, 0, 3, 0]
-    running = {0: '12:30'}
-    bw, bh = (pw - 80 - 24) / 3, 150
-    for i, (name, effect, mins, price, ad, colours, icons) in enumerate(BOOSTERS):
-        cx0 = x0 + 40 + (i % 3) * (bw + 12)
-        cy0 = by + 34 + (i // 3) * (bh + 12)
-        on = i in running
+    # only the boosters the player HAS (the user, 2026-11-12): stock > 0, or running. Compact tiles, six a
+    # row, so even all of them fit two rows; the effect is in the activation window.
+    owned = [(i, n, t) for i, n, t in OWNED]
+    cols = 6
+    bw, bh = (pw - 80 - (cols - 1) * 12) / cols, 176
+    for k, (i, n, t) in enumerate(owned):
+        name, effect, mins, price, ad, colours, icons = BOOSTERS[i]
+        cx0 = x0 + 40 + (k % cols) * (bw + 12)
+        cy0 = by + 30 + (k // cols) * (bh + 12)
+        on = t is not None
         m.over(img, lambda g: g.rounded_rectangle((cx0, cy0, cx0 + bw, cy0 + bh), 14,
                                                   fill=(255, 220, 120, 40) if on else (255, 255, 255, 14),
                                                   outline=(255, 210, 90, 255) if on else None, width=3))
         d = ImageDraw.Draw(img)
-        med = medallion(110, colours, icons, arrow=mins > 0)
-        if not stocks[i]:
-            med.putalpha(med.getchannel('A').point(lambda a: int(a * 0.45)))
-        img.alpha_composite(med, (int(cx0 + 14), int(cy0 + 20)))
+        img.alpha_composite(medallion(104, colours, icons, arrow=False), (int(cx0 + bw / 2 - 52), int(cy0 + 12)))
         d = ImageDraw.Draw(img)
-        m.text(d, (cx0 + 138, cy0 + 40), name, 28, 'white' if stocks[i] else (150, 150, 140), anchor='lm')
+        m.text(d, (cx0 + bw - 10, cy0 + 100), f'×{n}', 30, 'white', anchor='rm', stroke=3, stroke_fill=(20, 20, 10))
         if on:
-            m.text(d, (cx0 + 138, cy0 + 82), 'Работает', 24, (255, 214, 110), anchor='lm', path=m.R + 'Assets/_Project/Resources/Fonts/Rubik-Medium.ttf')
-            m.text(d, (cx0 + 138, cy0 + 116), running[i], 30, (255, 230, 150), anchor='lm')
-        if stocks[i]:
-            m.text(d, (cx0 + bw - 16, cy0 + bh - 26), f'×{stocks[i]}', 34, 'white', anchor='rm', stroke=3, stroke_fill=(20, 20, 10))
+            m.text(d, (cx0 + bw / 2, cy0 + 146), t, 26, (255, 220, 120), stroke=2, stroke_fill=(30, 20, 10))
         else:
-            m.text(d, (cx0 + 138, cy0 + 92), 'Купить', 28, (120, 190, 255), anchor='lm')
+            m.text(d, (cx0 + bw / 2, cy0 + 146), name, 21, 'white')
 
-    # the activation window, opened by tapping «Урожай»
+    # the activation window, opened by tapping «Зодчий»
     ax0, ay0, aw, ah = x0 + pw + 60, 170, 660, 740
     m.over(img, lambda g: g.rounded_rectangle((ax0 + 6, ay0 + 12, ax0 + aw + 6, ay0 + ah + 12), 30, fill=(0, 0, 0, 120)))
     d = ImageDraw.Draw(img)
     d.rounded_rectangle((ax0, ay0, ax0 + aw, ay0 + ah), 30, fill=(250, 236, 204), outline=(150, 100, 46), width=6)
-    name, effect, mins, price, ad, colours, icons = BOOSTERS[0]
-    img.alpha_composite(medallion(220, colours, icons), (ax0 + aw // 2 - 110, ay0 + 40))
+    name, effect, mins, price, ad, colours, icons = BOOSTERS[4]
+    img.alpha_composite(medallion(220, colours, icons, arrow=False), (ax0 + aw // 2 - 110, ay0 + 40))
     d = ImageDraw.Draw(img)
     m.text(d, (ax0 + aw / 2, ay0 + 300), name, 54, INK)
     med = m.R + 'Assets/_Project/Resources/Fonts/Rubik-Medium.ttf'
-    m.text(d, (ax0 + aw / 2, ay0 + 360), 'Сборщики приносят на 50% больше', 30, (110, 72, 36), path=med)
-    m.text(d, (ax0 + aw / 2, ay0 + 400), 'дерева и камня', 30, (110, 72, 36), path=med)
-    m.text(d, (ax0 + aw / 2, ay0 + 456), 'Работает: ещё 12:30  ·  в запасе ×2', 30, (60, 130, 50))
+    m.text(d, (ax0 + aw / 2, ay0 + 360), 'Всё, что начнёшь строить или улучшать', 30, (110, 72, 36), path=med)
+    m.text(d, (ax0 + aw / 2, ay0 + 400), '3 минуты, достраивается сразу', 30, (110, 72, 36), path=med)
+    m.text(d, (ax0 + aw / 2, ay0 + 456), 'В запасе ×1', 30, (60, 130, 50))
     gb = (ax0 + 60, ay0 + 510, ax0 + aw - 60, ay0 + 619)
     m.paste(img, m.SHOP + 'ButtonGreenWide.png', gb, keep=False)
     d = ImageDraw.Draw(img)
-    m.text(d, ((gb[0] + gb[2]) / 2, (gb[1] + gb[3]) / 2 - 4), 'Продлить +15 мин', 44, 'white', stroke=3, stroke_fill=(20, 80, 20))
+    m.text(d, ((gb[0] + gb[2]) / 2, (gb[1] + gb[3]) / 2 - 4), 'Включить', 48, 'white', stroke=3, stroke_fill=(20, 80, 20))
     m.text(d, (ax0 + aw / 2, ay0 + 672), 'Время идёт только во время игры', 26, (140, 100, 60), path=med)
     m.paste(img, m.SHOP + 'Close.png', (ax0 + aw - 70, ay0 - 30, ax0 + aw + 40, ay0 + 80))
     d = ImageDraw.Draw(img)
-    m.text(d, (ax0 + aw / 2, ay0 + ah + 60), 'с нулём в запасе — кнопка «Купить» (ведёт в лавку)', 26, (230, 220, 200), path=med)
-    img.convert('RGB').save(OUT + 'Booster_Inventory.png')
+    m.text(d, (ax0 + aw / 2, ay0 + ah + 60), 'если бустер уже работает — «Продлить»', 26, (230, 220, 200), path=med)
+    img.convert('RGB').save(OUT + out)
 
 
 # ------------------------------------------------------------------ 3. the town: the HUD row, boosted buildings, the hint
@@ -276,7 +308,36 @@ def ground(W, H):
     return img
 
 
-def building(img, path, cx, base_y, size, look=None, colours=None, icons=None, t=0.0):
+def swirl(img, cx, base_y, size, colour, front):
+    """Look C (the user, 2026-11-12, after a well-known town builder): streams of wind winding up round
+    the building. Each streak is a tapering arc on a tilted ellipse; `front` draws the halves in front of
+    the building, else the halves behind it."""
+    import math
+    layer = Image.new('RGBA', img.size, (0, 0, 0, 0))
+    g = ImageDraw.Draw(layer)
+    rw, rh = size * 0.58, size * 0.17
+    for k, (h, a0, span) in enumerate(((0.02, 200, 230), (0.20, 20, 220), (0.38, 250, 200), (0.56, 60, 170))):
+        cy = base_y - 20 - size * h
+        n = 40
+        for i in range(n):
+            t0 = a0 + span * i / n
+            t1 = a0 + span * (i + 1) / n
+            ang = math.radians((t0 + t1) / 2)
+            is_front = math.sin(ang) > 0
+            if is_front != front:
+                continue
+            f = i / n                             # thin at the tail, thick and bright at the head
+            w = 2 + 8 * f
+            al = int(40 + 160 * f)
+            p0 = (cx + rw * math.cos(math.radians(t0)), cy + rh * math.sin(math.radians(t0)) - size * 0.12 * (t0 - a0) / span)
+            p1 = (cx + rw * math.cos(math.radians(t1)), cy + rh * math.sin(math.radians(t1)) - size * 0.12 * (t1 - a0) / span)
+            g.line([p0, p1], fill=colour + (al,), width=int(w))
+    glow = layer.filter(ImageFilter.GaussianBlur(5))
+    img.alpha_composite(glow)
+    img.alpha_composite(layer)
+
+
+def building(img, path, cx, base_y, size, look=None, colours=None, icons=None, t=0.0, wind=(190, 110, 255)):
     """A building's picture standing on `base_y`. look 'A': a gold ring + rising motes + a badge;
     look 'B': a gold outline glow + the badge."""
     pic = Image.open(UI + path).convert('RGBA')
@@ -296,7 +357,11 @@ def building(img, path, cx, base_y, size, look=None, colours=None, icons=None, t
         glow.putalpha(a.filter(ImageFilter.MaxFilter(13)).filter(ImageFilter.GaussianBlur(7)))
         img.alpha_composite(glow, (x0, y0))
         img.alpha_composite(glow, (x0, y0))
+    if look == 'C':
+        swirl(img, cx, base_y, size, wind, False)
     img.alpha_composite(pic, (x0, y0))
+    if look == 'C':
+        swirl(img, cx, base_y, size, wind, True)
     if look == 'A':
         d = ImageDraw.Draw(img)
         import random
@@ -315,17 +380,17 @@ def hud():
     W, H = 1920, 1080
     img = ground(W, H).convert('RGBA')
     sawmill = BOOSTERS[0]
-    lab = BOOSTERS[3]
+    stone = BOOSTERS[1]
+    lab = BOOSTERS[5]
     building(img, 'Icons/Cottage.png', 300, 600, 260)
-    building(img, 'Icons/Sawmill.png', 640, 560, 300, 'A', sawmill[5], sawmill[6])
-    building(img, 'Icons/Quarry.png', 1000, 620, 290, 'A', sawmill[5], sawmill[6])
-    building(img, 'Icons/Laboratory.png', 1380, 560, 300, 'B', lab[5], lab[6])
+    building(img, 'Icons/Sawmill.png', 640, 560, 300, 'C', sawmill[5], sawmill[6])
+    building(img, 'Icons/Quarry.png', 1000, 620, 290, 'C', stone[5], stone[6])
+    building(img, 'Icons/Laboratory.png', 1380, 560, 300, 'C', lab[5], lab[6])
     building(img, 'Icons/Cottage.png', 1700, 900, 240)
-    building(img, 'Icons/Cottage.png', 520, 980, 240)
     d = ImageDraw.Draw(img)
     med = m.R + 'Assets/_Project/Resources/Fonts/Rubik-Medium.ttf'
-    m.text(d, (820, 640), 'Вид А: золотое кольцо, искры, значок', 30, 'white', stroke=3, stroke_fill=(30, 40, 20), path=med)
-    m.text(d, (1380, 640), 'Вид Б: золотой контур, значок', 30, 'white', stroke=3, stroke_fill=(30, 40, 20), path=med)
+    m.text(d, (1000, 660), 'Фиолетовый магический поток на всех ускоренных зданиях', 30, 'white', stroke=3,
+           stroke_fill=(30, 40, 20), path=med)
 
     # the top bar (schematic: the game's own chips), crystals number-then-icon
     chips = [('Res_Wood', '120'), ('Res_Stone', '80'), ('Res_Coins', '350'), ('Res_UpgradeCrystal', '989'),
@@ -345,9 +410,25 @@ def hud():
         d = ImageDraw.Draw(img)
         x += cw
 
-    # the active boosters: a row of medallions with a ring of time left under the top bar
-    for k, (b, left, frac) in enumerate(((BOOSTERS[0], '12:30', 0.83), (BOOSTERS[3], '4:05', 0.27))):
-        cx, cy, r = W / 2 - 50 + k * 110, 140, 42
+    # the minimap bottom-left as in the game (SetupProjectGameplayUI.BuildMinimap: 224 round at x 126, y 954
+    # in the 1920 x 1080 reference), and «День N» moved onto its ring's foot (the user, 2026-11-12) -- the
+    # spot the run clock uses in a run
+    mx, my, mr = 126, 954, 112
+    d = ImageDraw.Draw(img)
+    d.ellipse((mx - mr - 6, my - mr - 6, mx + mr + 6, my + mr + 6), fill=(120, 80, 40))
+    d.ellipse((mx - mr, my - mr, mx + mr, my + mr), fill=(150, 196, 104))
+    d.ellipse((mx - 40, my - 30, mx + 10, my + 20), fill=(196, 120, 80))
+    d.ellipse((mx + 20, my + 10, mx + 70, my + 50), fill=(80, 140, 200))
+    d.ellipse((mx - mr - 6, my - mr - 6, mx + mr + 6, my + mr + 6), outline=(214, 170, 70), width=5)
+    pq = (mx - 90, my + mr - 22 - 23, mx + 90, my + mr - 22 + 23)
+    m.over(img, lambda g: g.rounded_rectangle(pq, 18, fill=(250, 236, 204, 245), outline=(120, 80, 40, 255), width=3))
+    d = ImageDraw.Draw(img)
+    m.text(d, (mx, my + mr - 22), 'День 12', 28, INK)
+    m.text(d, (mx + mr + 24, my + mr - 22), '— «День» теперь на миникарте', 26, 'white', anchor='lm', stroke=3,
+           stroke_fill=(30, 40, 20), path=med)
+    # the active boosters: a row of medallions with a ring of time left under the top bar, where «День» was
+    for k, (b, left, frac) in enumerate(((BOOSTERS[0], '3:30', 0.70), (BOOSTERS[1], '0:50', 0.17), (BOOSTERS[5], '1:40', 0.55))):
+        cx, cy, r = W / 2 - 110 + k * 110, 140, 42
         ring = Image.new('RGBA', img.size, (0, 0, 0, 0))
         rd = ImageDraw.Draw(ring)
         rd.ellipse((cx - r - 8, cy - r - 8, cx + r + 8, cy + r + 8), fill=(40, 30, 20, 200))
@@ -360,7 +441,7 @@ def hud():
            stroke_fill=(30, 40, 20), path=med)
 
     # the hint at the right moment: a raid starts and «Боевой дух» is in stock
-    b = BOOSTERS[4]
+    b = BOOSTERS[6]
     hx0, hy0, hw, hh = 520, 912, 880, 130
     m.over(img, lambda g: g.rounded_rectangle((hx0 + 4, hy0 + 8, hx0 + hw + 4, hy0 + hh + 8), 30, fill=(0, 0, 0, 110)))
     d = ImageDraw.Draw(img)
@@ -368,7 +449,7 @@ def hud():
     img.alpha_composite(medallion(100, b[5], b[6]), (hx0 + 16, hy0 + 15))
     d = ImageDraw.Draw(img)
     m.text(d, (hx0 + 136, hy0 + 44), 'Набег орков!', 34, (170, 40, 30), anchor='lm')
-    m.text(d, (hx0 + 136, hy0 + 88), 'Боевой дух: +25% урона на 10 мин', 28, (110, 72, 36), anchor='lm', path=med)
+    m.text(d, (hx0 + 136, hy0 + 88), 'Боевой дух: +50% урона, 3 мин', 28, (110, 72, 36), anchor='lm', path=med)
     gb = (hx0 + hw - 250, hy0 + 18, hx0 + hw - 18, hy0 + hh - 18)
     m.paste(img, m.SHOP + 'ButtonGreen.png', gb, keep=False)
     d = ImageDraw.Draw(img)
@@ -378,8 +459,66 @@ def hud():
     img.convert('RGB').save(OUT + 'Booster_Hud.png')
 
 
+# ------------------------------------------------------------------ 4. the hints at the right moment
+
+def hint(img, y0, b, title, line, stock, ad, edge):
+    """One hint plaque, bottom centre: the booster's medallion (its stock badge if held), the reason, the
+    effect, and «Включить» (held) or «▶ Смотреть» (taken from the shop's slot and switched on at once)."""
+    W = img.width
+    med = m.R + 'Assets/_Project/Resources/Fonts/Rubik-Medium.ttf'
+    hw, hh = 1000, 136
+    hx0 = (W - hw) // 2
+    m.over(img, lambda g: g.rounded_rectangle((hx0 + 4, y0 + 8, hx0 + hw + 4, y0 + hh + 8), 30, fill=(0, 0, 0, 110)))
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle((hx0, y0, hx0 + hw, y0 + hh), 30, fill=(250, 236, 204), outline=edge, width=5)
+    img.alpha_composite(medallion(104, b[5], b[6], arrow=False), (hx0 + 16, y0 + 16))
+    d = ImageDraw.Draw(img)
+    if stock:
+        bx, by = hx0 + 104, y0 + 104
+        d.ellipse((bx - 24, by - 24, bx + 24, by + 24), fill=(60, 130, 50), outline='white', width=4)
+        m.text(d, (bx, by), f'×{stock}', 22, 'white')
+    m.text(d, (hx0 + 142, y0 + 46), title, 34, edge, anchor='lm')
+    m.text(d, (hx0 + 142, y0 + 92), line, 27, (110, 72, 36), anchor='lm', path=med)
+    gb = (hx0 + hw - 290, y0 + 18, hx0 + hw - 18, y0 + hh - 18)
+    m.paste(img, m.SHOP + 'ButtonGreen.png', gb, keep=False)
+    cy = (gb[1] + gb[3]) / 2 - 4
+    if ad:
+        m.paste(img, m.SHOP + 'Play.png', (gb[0] + 20, int(cy - 28), gb[0] + 76, int(cy + 28)))
+        d = ImageDraw.Draw(img)
+        m.text(d, ((gb[0] + 76 + gb[2]) / 2, cy), 'Смотреть', 34, 'white', stroke=3, stroke_fill=(20, 80, 20))
+    else:
+        d = ImageDraw.Draw(img)
+        m.text(d, ((gb[0] + gb[2]) / 2, cy), 'Включить', 36, 'white', stroke=3, stroke_fill=(20, 80, 20))
+    # the time it has left before it fades by itself (8 s): a thin bar along the plaque's foot
+    m.over(img, lambda g: g.rounded_rectangle((hx0 + 30, y0 + hh - 12, hx0 + 30 + (hw - 60) * 0.6, y0 + hh - 6), 3,
+                                              fill=edge + (200,)))
+
+
+def hints():
+    W, H = 1920, 1080
+    img = ground(W, H).convert('RGBA')
+    building(img, 'Icons/Cottage.png', 300, 420, 240)
+    building(img, 'Icons/Sawmill.png', 960, 380, 260)
+    building(img, 'Icons/Cottage.png', 1620, 430, 240)
+    d = ImageDraw.Draw(img)
+    med = m.R + 'Assets/_Project/Resources/Fonts/Rubik-Medium.ttf'
+    m.text(d, (960, 520), 'А. Бустер есть в запасе: «Включить» берёт его из «Запасов»', 30, 'white', stroke=3,
+           stroke_fill=(30, 40, 20), path=med)
+    hint(img, 560, BOOSTERS[6], 'Орки высадились на остров!', 'Боевой дух: +50% урона, 3 мин', 1, False, (170, 40, 30))
+    d = ImageDraw.Draw(img)
+    m.text(d, (960, 780), 'Б. В запасе нет, но он сейчас в слоте Лавки: реклама — и он сразу включён', 30, 'white',
+           stroke=3, stroke_fill=(30, 40, 20), path=med)
+    hint(img, 820, BOOSTERS[9], 'После боя повреждены здания', 'Ремонт есть в Лавке: чинит все здания', 0, True,
+         (150, 92, 30))
+    d = ImageDraw.Draw(img)
+    m.text(d, (960, 1010), 'полоска внизу плашки — сколько осталось до того, как она погаснет сама (8 с)', 24,
+           'white', stroke=3, stroke_fill=(30, 40, 20), path=med)
+    img.convert('RGB').save(OUT + 'Booster_Hints.png')
+
+
 if __name__ == '__main__':
     shop()
     inventory()
     hud()
+    hints()
     print('ok')
