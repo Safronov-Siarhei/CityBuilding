@@ -9,7 +9,7 @@
 
 Активных зданий: **53** (скрыто: 5).
 
-⚠ Нет иконки: Shipyard ур.2, Shipyard ур.3, Shipyard ур.4, Shipyard ур.5, Lighthouse ур.2, Lighthouse ур.3, Lighthouse ур.4, Lighthouse ур.5, TaxHouse ур.2, TaxHouse ур.3, TaxHouse ур.4, TaxHouse ур.5.
+⚠ Нет иконки: Lighthouse ур.2, Lighthouse ур.3, Lighthouse ур.4, Lighthouse ур.5, TaxHouse ур.2, TaxHouse ур.3, TaxHouse ур.4, TaxHouse ур.5.
 
 ## Город
 
@@ -526,7 +526,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | ![Shipyard 1](../Assets/_Project/UI/Icons/Shipyard.png) | нет иконки | нет иконки | нет иконки | нет иконки |
+| | ![Shipyard 1](../Assets/_Project/UI/Icons/Shipyard.png) | ![Shipyard 2](../Assets/_Project/UI/Icons/Shipyard_L2.png) | ![Shipyard 3](../Assets/_Project/UI/Icons/Shipyard_L3.png) | ![Shipyard 4](../Assets/_Project/UI/Icons/Shipyard_L4.png) | ![Shipyard 5](../Assets/_Project/UI/Icons/Shipyard_L5.png) |
 | Прочность | 160 | 256 | 400 | 576 | 800 |
 | Цена (базовая) | дерево 40, камень 10 |  |  |  |  |
 

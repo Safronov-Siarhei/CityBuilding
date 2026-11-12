@@ -81,7 +81,7 @@ choice; then levels 1-5 and icons (it has no level 2-5 icons yet).
   a transport-size ship, taller crane; L3 stone ground floor with quoins, finials + weathervane, paved quay,
   a gantry at the slip's landward end, a two-masted warship with furled sails, two banners; L4 glazed roof +
   pennant; L5 gilded), 1.4-2.8k tris; review renders `render_shipyard_levels.py` -> `Design/shipyard_levels.png`,
-  SENT for approval. NOT in the game: after the yes, ships.py builds Shipyard1-lvl1..5 from it, export,
+  SENT for approval (done below: in the game since 2026-11-12), export,
   BuildingData level models, icons (render_icons.py).
 - **The ship redone (the user, 2026-11-12: building liked, ship «скучный»).** `ship()` in shipyard1.py
   replaces the stepped `hull()` on the slip: 15 stations, fine bow / full stern, dark planking below + mid
@@ -92,6 +92,10 @@ choice; then levels 1-5 and icons (it has no level 2-5 icons yet).
   Re-rendered `Design/shipyard_levels.png`, SENT for approval.
   - Fixed 2026-11-12: L4/L5 roof diamonds + crest floated 0.5 above the roof -- the masthead-pennant loop
     reused the name `top` and overwrote the workshop's roof height. TRAP: never reuse `top`/`hs` in level code.
+- **APPROVED and IN THE GAME 2026-11-12** («Подходит, ставь»): `ships.py` MODELS take Shipyard1-lvl1..5 from
+  `shipyard1.LEVELS` (L5 built with OVERRIDE gold = TILES, set `GILDED`); the old `shipyard()` stays unused.
+  Exported to Models/Buildings, picked up by name into the prefab's levels; icons `Shipyard.png`,
+  `Shipyard_L2..L5.png` (render_icons with the lvl names, renamed). Setup green; not seen in the game.
 
 ## Placing the Shipyard (fixed 2026-10-29)
 - 2026-11-05 (the user, whole game): the Shipyard floated over a low beach (every building stands at the

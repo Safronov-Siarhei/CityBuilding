@@ -321,7 +321,12 @@ def shipyard():
 
 MODELS = {"ShipScout": ship_scout, "ShipTransport": ship_transport, "ShipWar": ship_war, "ShipBattleship": ship_battleship,
           "ShipOrcTransport": ship_orc_transport, "ShipOrcWar": ship_orc_war, "OrcShipyard1": orc_shipyard,
-          "Shipyard1-lvl1": shipyard, "Lighthouse1-lvl1": lighthouse}
+          "Lighthouse1-lvl1": lighthouse}
+# The player's Shipyard levels 1-5: the «Стапель» model (shipyard1.py, approved by the user 2026-11-12)
+# replaced the old bare slipway `shipyard()` above, which is kept only as the record of the old look.
+import shipyard1  # noqa: E402
+MODELS.update({f"Shipyard1-lvl{n}": build for n, build in enumerate(shipyard1.LEVELS, 1)})
+GILDED = {"Shipyard1-lvl5"}   # level 5's gold roofs take the tile pattern (detail.OVERRIDE), like gen_lvl5
 
 
 def main():
@@ -335,9 +340,14 @@ def main():
     atlas = detail.ensure_atlas(os.path.join(folder, detail.ATLAS_FILE))
     detail.build_material_nodes(mat, img, atlas)
     for i, (name, build) in enumerate(MODELS.items()):
+        saved = dict(detail.OVERRIDE)
+        if name in GILDED:
+            detail.OVERRIDE['gold'] = detail.TILES
         me = build().to_mesh(name)
         me.materials.append(mat)
         detail.add_layers(me, kit.NAMES, kit.COLS, kit.ROWS)
+        detail.OVERRIDE.clear()
+        detail.OVERRIDE.update(saved)
         obj = bpy.data.objects.get(name)
         if obj is None:
             obj = bpy.data.objects.new(name, me)
