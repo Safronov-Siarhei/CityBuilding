@@ -310,6 +310,8 @@ namespace CityBuilder.Campaign
             RaisePatrols();
             StartTownsfolk();
             RaiseArden();
+            HangDoors(OuterGates[0]);
+            HangDoors(InnerGates[0]);
             PartBegan?.Invoke(1);
         }
 
@@ -364,6 +366,7 @@ namespace CityBuilder.Campaign
             Wave = 0;
             _waveBeaten = false;
             _nextWave = atOnce ? B.firstWaveSeconds : B.firstWaveSeconds * 0.5f;
+            HangDoors(InnerGates[0]);
             PartBegan?.Invoke(2);
         }
 
@@ -377,6 +380,7 @@ namespace CityBuilder.Campaign
             TickGarrison(dt);
             TickTownsfolk(dt);
             TickSiege(dt);
+            TickGates(dt);
             if (Current == Stage.Courier || Current == Stage.Lost) return;
 
             TimeLeft -= dt;
@@ -450,6 +454,8 @@ namespace CityBuilder.Campaign
             var raids = OrcRaidManager.Instance;
             if (raids == null) return;
             Wave++;
+            // the part's first wave shuts its gate (the user's third playtest)
+            if (Wave == 1) ShutGate(Current == Stage.Part2 ? InnerGates[0] : OuterGates[0]);
             // the m2waves tab's row (the user's third playtest): its orcs over the three roads in turn, its machines too
             var row = BalanceConfig.Instance.M2Wave(Current == Stage.Part2 ? 2 : 1, Wave);
             if (row == null) return;

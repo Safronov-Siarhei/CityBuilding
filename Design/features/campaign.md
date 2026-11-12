@@ -426,14 +426,14 @@
 - **PLAYTEST 3 (the user, 2026-11-12, after SWORD + SIEGE) -- ALL BUILT (setup green, CityDefenceTests green), sheet synced, NOT SEEN by the user; 3 strikes + gate closing await approval:**
   1. Green ring round the square looks cheap -> effects instead of a line. [code] HealersMotes: rising green motes on the circle edge (fxGlow), brighter while healing
   2. Ардан is child-sized -> as big as the other soldiers. [code] figure scaled to the soldier renderer height (Figure.cs)
-  3. Closed gate model + closing animation (render for approval first). [RENDERS SENT, awaiting approval] Tools/blender/gate_close_drafts.py: FortifiedGate1-Passage (dark arch), -Leaf (oak leaf on its hinge, two mirrored on the town face), -Grille (portcullis on the field face); closing in code
+  3. Closed gate model + closing animation (render for approval first). [APPROVED + IN THE GAME 2026-11-12] FortifiedGate1-Passage/-Leaf/-Grille.fbx in Models/Buildings (gate_close_drafts.py ... export); CityDefenceMode.Gates.cs hangs them on both gates OPEN at part start, the part's first wave shuts its gate over m2_gate_close_sec (leaves swing, portcullis drops in the second half); town face found by gate.transform.right vs south
   4. Ардан strikes from far off -> almost touching. [code] MeleeReach.Factor = m2_melee_reach_mult (0,6) for both sides in the mission
   5. Burnt building texture flickers (z-fight). [code] ruins are now RUBBLE ON THE GROUND (low cut, ash plate raised, trigger box) -- the user (2026-11-12) wanted rubble, not the shell; ruins.md
   6. Haystacks float -> on the ground. [code] GroundAt rays only the terrain layer
   7. Orcs broke the gate but cannot pass the ruined one. [code] the ruin box is a trigger; part-2 breach only at the gate
   8. Defeat window cheap -> richer, in the skin; the game must PAUSE after defeat. [code] BuildEndPanel: dim, parchment card, wood ribbon title, stats strip (#m2_end_stats), glyph buttons, pop-in; Time.timeScale = 0
   9. XP to Ардан for the death of any enemy he wounded at least once. [code] OrcUnit.Wounded event; _woundedByArden pays on death
-  10. Attacks boring -> 3 strike variants alternating + slash trail + hit sparks + an effect per skill (renders first). [code FX done + RENDERS SENT] CityDefenceMode.Fx.cs: crescent slash (3 tilts in turn) + sparks per blow, Cry gold ring + embers, Whirl spinning ring, Dash dust, Breath green spiral; Blender poses wind_up2/strike2 (backhand), wind_up3/strike3 (overhead) in ardan_sword.py await approval, then Attack2/Attack3 clips
+  10. Attacks boring -> 3 strike variants alternating + slash trail + hit sparks + an effect per skill (renders first). [APPROVED + IN THE GAME 2026-11-12] clips Attack/Attack2 (backhand)/Attack3 (overhead) in CineArdanSword (export_ardan_sword.py), played in turn (StrikeClips) with the matching crescent in CityDefenceMode.Fx.cs; sparks per blow; Cry ring, Whirl ring, Dash dust, Breath spiral
   11. Holding a skill button shows what the skill is. [code] SkillHold (0.35 s) -> hint #m2_skill_{i} / _line / _locked
   12. Soldiers must NOT leave through the gates (said before). [code] PenOf boxes for the single gate; Man inward
   13. Hero RESPAWN: on the square after N s (sheet), level/xp kept; loss only by gate/centre. [code] m2_arden_respawn_sec 15, #m2_respawn on the HUD; test ArdenDying_RisesAgain_TheMissionGoesOn

@@ -10,7 +10,7 @@ which gives each clip's length and looping (read by the importer and by CineFigu
 The clips go between ardan_sword.py's approved poses:
   Idle   -- the ready stance, breathing (loop);
   Run    -- the run's legs, the sword held ready (loop, a2.RUN_CYCLE);
-  Attack -- ready -> wind-up -> strike -> ready;
+  Attack -- ready -> wind-up -> strike -> ready; Attack2 the backhand, Attack3 the overhead (in turn in the game);
   Whirl  -- «Круговой удар»: the whirl pose spun round once;
   Cry    -- «Боевой клич»: the sword up, shouting;
   Dash   -- «Натиск»: the lunge;
@@ -80,6 +80,16 @@ def attack(t):
     return through(t, [(0.0, sw.ready), (0.2, sw.wind_up), (0.32, sw.strike), (0.55, sw.ready)])
 
 
+def attack2(t):
+    """The backhand (approved 2026-11-12 with the three-strike sheet)."""
+    return through(t, [(0.0, sw.ready), (0.2, sw.wind_up2), (0.32, sw.strike2), (0.55, sw.ready)])
+
+
+def attack3(t):
+    """The overhead blow, a touch slower."""
+    return through(t, [(0.0, sw.ready), (0.24, sw.wind_up3), (0.36, sw.strike3), (0.6, sw.ready)])
+
+
 def whirl(t, seconds=0.6):
     spin = sw.whirl()
     spin["hips"][2] += 360 * ease(t / seconds)
@@ -110,6 +120,8 @@ CLIPS = {
     "Idle": dict(fn=idle, seconds=3.2, loop=True),
     "Run": dict(fn=lambda t: run((t / a2.RUN_CYCLE) % 1.0), seconds=a2.RUN_CYCLE, loop=True),
     "Attack": dict(fn=attack, seconds=0.55, loop=False),
+    "Attack2": dict(fn=attack2, seconds=0.55, loop=False),
+    "Attack3": dict(fn=attack3, seconds=0.6, loop=False),
     "Whirl": dict(fn=whirl, seconds=0.6, loop=False),
     "Cry": dict(fn=held(sw.cry, 1.0, 0.2, 0.2, cry_shake), seconds=1.0, loop=False),
     "Dash": dict(fn=held(sw.dash, 0.45, 0.12, 0.15), seconds=0.45, loop=False),

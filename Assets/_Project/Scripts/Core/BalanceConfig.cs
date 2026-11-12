@@ -2914,6 +2914,7 @@ namespace CityBuilder.Core
         public float towerDockCells = 3.5f;
         public float towerStaySeconds = 20f;
         public float towerWallFromCells = 4f, towerWallToCells = 12f, towerClimbSeconds = 1.2f, towerClimbGapSeconds = 0.8f;
+        public float gateCloseSeconds = 2.5f;
 
         public void Read(System.Func<string, float?> get)
         {
@@ -2995,6 +2996,7 @@ namespace CityBuilder.Core
             towerWallToCells = F("m2_tower_wall_to_cells", towerWallToCells);
             towerClimbSeconds = F("m2_tower_climb_sec", towerClimbSeconds);
             towerClimbGapSeconds = F("m2_tower_climb_gap_sec", towerClimbGapSeconds);
+            gateCloseSeconds = F("m2_gate_close_sec", gateCloseSeconds);
         }
     }
 }
