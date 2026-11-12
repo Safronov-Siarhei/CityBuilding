@@ -376,6 +376,18 @@ namespace CityBuilder.Campaign
             }
         }
 
+        /// <summary>Cheat (the user, 2026-11-12): the running part's clock runs out now.</summary>
+        public void CheatEndPart()
+        {
+            if (_active && (Current == Stage.Part1 || Current == Stage.Part2)) TimeLeft = 0.01f;
+        }
+
+        /// <summary>Cheat (the user, 2026-11-12): the level won on the spot.</summary>
+        public void CheatWin()
+        {
+            if (_active && Current != Stage.Won && Current != Stage.Setup) Win();
+        }
+
         private void Win()
         {
             Current = Stage.Won;

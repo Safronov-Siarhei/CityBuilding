@@ -239,7 +239,7 @@
   says «Скоро» / «Сначала пройди…» the same way BOTTOM CENTRE in place of «Играть»; the film-replay button
   removed (the user: pointless next to «Играть»), so level 1 replays the mission, and the film has
   «Пропустить» bottom right instead (`FilmSkip.cs`: dip to black, the film run to its end in one go -- the
-  director's end stops the sounds and starts the mission -- fade in; `#film_skip`, sheet row 61); Back
+  director's end stops the sounds and starts the mission -- fade in; `#film_skip`, sheet row 61; HALVED 2026-11-12 to 125x39 at 20 from the corner, the user); Back
   goes to the CHOICE OF MODE (`MainMenuController.OpenOnModes`); in mission 1 the clock and splits hide
   while the mage scene plays (`MissionHud.ClockShown`; it covered his line).
 
@@ -423,6 +423,10 @@
 - **Traps:** `FogOfWarManager.DisabledCheat` is an INSTANCE property. Regenerating the map: rerun
   `mission2_town.py` FIRST (it writes mission2-plan.json), then Blender, then export.
 - **Open:** both cutscenes (to discuss before building them); the user's playtest of v1.
+- **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
+  уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right
+  (IMGUI in `CampaignMapScreen.OnGUI`); in mission 2 the cheat window's «Служебное» tab has «Закончить часть»
+  (`CityDefenceMode.CheatEndPart`: the clock to zero -> courier / win) and «Пройти уровень» (`CheatWin`).
 
 ## Ардан (the model)
 `CineArdan`, about 1 750 tris, in the «Кино» collection of `Buildings-Size1-Models.blend`.

@@ -223,6 +223,36 @@ namespace CityBuilder.Campaign
             _bar.interactable = _bar.blocksRaycasts = true;
         }
 
+#if !CB_RELEASE
+        // Cheat (the user, 2026-11-12): skip levels. Marks the picked level done (the next one opens) and
+        // redraws the map; «все» marks every level. Left out of a release build like the cheat window.
+        private void OnGUI()
+        {
+            var s = Screen.height / 720f;
+            var w = 230f * s;
+            var h = 40f * s;
+            var area = Screen.safeArea;
+            var x = area.xMax - w - 10f * s;
+            var y = Screen.height - area.yMax + 10f * s;
+            if (_picked >= 0 && GUI.Button(new Rect(x, y, w, h), "Чит: пройти уровень"))
+            {
+                CampaignProgress.MarkDone(_levels[_picked].id);
+                Reopen();
+            }
+            if (GUI.Button(new Rect(x, y + h + 6f * s, w, h), "Чит: пройти все"))
+            {
+                foreach (var lv in _levels) CampaignProgress.MarkDone(lv.id);
+                Reopen();
+            }
+        }
+
+        private static void Reopen()
+        {
+            PlayerPrefs.Save();
+            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
+        }
+#endif
+
         private void Enter()
         {
             Debug.Log($"[CampaignMap] play {(_picked >= 0 ? _levels[_picked].id : "-")}");
