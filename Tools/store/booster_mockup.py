@@ -320,10 +320,11 @@ def hud():
     W, H = 1920, 1080
     img = ground(W, H).convert('RGBA')
     sawmill = BOOSTERS[0]
-    lab = BOOSTERS[3]
+    stone = BOOSTERS[1]
+    lab = BOOSTERS[5]
     building(img, 'Icons/Cottage.png', 300, 600, 260)
     building(img, 'Icons/Sawmill.png', 640, 560, 300, 'A', sawmill[5], sawmill[6])
-    building(img, 'Icons/Quarry.png', 1000, 620, 290, 'A', sawmill[5], sawmill[6])
+    building(img, 'Icons/Quarry.png', 1000, 620, 290, 'A', stone[5], stone[6])
     building(img, 'Icons/Laboratory.png', 1380, 560, 300, 'B', lab[5], lab[6])
     building(img, 'Icons/Cottage.png', 1700, 900, 240)
     building(img, 'Icons/Cottage.png', 520, 980, 240)
@@ -351,8 +352,8 @@ def hud():
         x += cw
 
     # the active boosters: a row of medallions with a ring of time left under the top bar
-    for k, (b, left, frac) in enumerate(((BOOSTERS[0], '12:30', 0.83), (BOOSTERS[3], '4:05', 0.27))):
-        cx, cy, r = W / 2 - 50 + k * 110, 140, 42
+    for k, (b, left, frac) in enumerate(((BOOSTERS[0], '3:30', 0.70), (BOOSTERS[1], '0:50', 0.17), (BOOSTERS[5], '1:40', 0.55))):
+        cx, cy, r = W / 2 - 110 + k * 110, 140, 42
         ring = Image.new('RGBA', img.size, (0, 0, 0, 0))
         rd = ImageDraw.Draw(ring)
         rd.ellipse((cx - r - 8, cy - r - 8, cx + r + 8, cy + r + 8), fill=(40, 30, 20, 200))
@@ -361,11 +362,11 @@ def hud():
         img.alpha_composite(medallion(2 * r, b[5], b[6], arrow=False), (int(cx - r), int(cy - r)))
         d = ImageDraw.Draw(img)
         m.text(d, (cx, cy + r + 26), left, 26, 'white', stroke=3, stroke_fill=(30, 20, 10))
-    m.text(d, (W / 2 + 230, 140), '— активные бустеры: тап открывает «Запасы»', 26, 'white', anchor='lm', stroke=3,
+    m.text(d, (W / 2 + 290, 140), '— активные бустеры: тап открывает «Запасы»', 26, 'white', anchor='lm', stroke=3,
            stroke_fill=(30, 40, 20), path=med)
 
     # the hint at the right moment: a raid starts and «Боевой дух» is in stock
-    b = BOOSTERS[4]
+    b = BOOSTERS[6]
     hx0, hy0, hw, hh = 520, 912, 880, 130
     m.over(img, lambda g: g.rounded_rectangle((hx0 + 4, hy0 + 8, hx0 + hw + 4, hy0 + hh + 8), 30, fill=(0, 0, 0, 110)))
     d = ImageDraw.Draw(img)
@@ -373,7 +374,7 @@ def hud():
     img.alpha_composite(medallion(100, b[5], b[6]), (hx0 + 16, hy0 + 15))
     d = ImageDraw.Draw(img)
     m.text(d, (hx0 + 136, hy0 + 44), 'Набег орков!', 34, (170, 40, 30), anchor='lm')
-    m.text(d, (hx0 + 136, hy0 + 88), 'Боевой дух: +25% урона на 10 мин', 28, (110, 72, 36), anchor='lm', path=med)
+    m.text(d, (hx0 + 136, hy0 + 88), 'Боевой дух: +50% урона, 3 мин', 28, (110, 72, 36), anchor='lm', path=med)
     gb = (hx0 + hw - 250, hy0 + 18, hx0 + hw - 18, hy0 + hh - 18)
     m.paste(img, m.SHOP + 'ButtonGreen.png', gb, keep=False)
     d = ImageDraw.Draw(img)
