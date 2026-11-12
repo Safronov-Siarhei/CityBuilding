@@ -16,4 +16,4 @@ A soldier whose house is destroyed leaves AT ONCE with its residents (the user's
 **How to apply:** build only when the user says go; every rule is settled.
 
 
-**Built 2026-11-12:** HousePeople ledger beside the CitizenManager pool (reconciled every frame, not saved), island checks in ProductionBuilding.TryAssignWorker + ArmyManager.TryRecruit, figures bound to homes in CitizenVisualsManager; texts #log_house_lost, #log_no_people_on_island, #army_no_citizens_island on the sheet. Next: setup (needs the user's Unity closed) to compile, then the user's playtest. Details in Design/features/citizens-and-workforce.md.
+**Built 2026-11-12:** HousePeople ledger beside the CitizenManager pool (reconciled every frame, not saved), island checks in ProductionBuilding.TryAssignWorker + ArmyManager.TryRecruit, figures bound to homes in CitizenVisualsManager; texts #log_house_lost, #log_no_people_on_island, #army_no_citizens_island on the sheet. Compiled, setup green 2026-11-12; next: the user's playtest. Details in Design/features/citizens-and-workforce.md.

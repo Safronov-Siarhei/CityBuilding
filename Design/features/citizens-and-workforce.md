@@ -70,7 +70,7 @@ citizen selects it; a tap on the world orders it to walk/gather.
   (user, 2026-10-14). A campaign with tiers as milestones was floated, not decided.
 - Units drawn at `UnitSize.Scale` = 0.625 (a citizen is 0.45 m, fits 0.5 m doors).
 
-## Residents bound to houses, work by island (the user, 2026-11-12) -- BUILT, NOT COMPILED YET (Unity was open), not seen
+## Residents bound to houses, work by island (the user, 2026-11-12) -- BUILT, setup green 2026-11-12, not seen
 Why: with houses on several islands the town-wide pool would let one island's people outnumber the
 others when the main island's houses burn; work on another island had no way to get there.
 - A house makes ITS OWN residents up to its places, then stops; they appear beside it (so on its island).

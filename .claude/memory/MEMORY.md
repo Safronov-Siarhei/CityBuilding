@@ -83,4 +83,4 @@
 - [Everything in the repo](feedback_everything_in_repo.md) — all knowledge must be on the fork: run Tools/memory_sync.py after memory edits, rules in Design/WORKING_RULES.md, AGENTS.md for other AIs.
 - [Reference: buildings + army (2026-11-12)](project_buildings_reference.md) — Design/Reference.html/.md is GENERATED (renamed from Buildings.*; army section with soldier level pictures added) after every setup (level icons, numbers, notes); new building = line in Design/buildings/descriptions.tsv.
 - [Decor's money (2026-11-12)](project_decor_bonus.md) — decor pays coins to residents of houses in its radius (adds up) + gift bubbles; sandbox building tabs split into 7 by kind; BUILT, not seen.
-- [Island residents (2026-11-12)](project_island_residents.md) — BUILT 2026-11-12, NOT COMPILED (Unity was open), not seen: residents bound to houses, work/hire by island, Town Hall hidden residents; soldier leaves when his house burns.
+- [Island residents (2026-11-12)](project_island_residents.md) — BUILT 2026-11-12, setup green, not seen: residents bound to houses, work/hire by island, Town Hall hidden residents; soldier leaves when his house burns.

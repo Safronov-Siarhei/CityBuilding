@@ -2,6 +2,7 @@
 using CityBuilder.Buildings;
 using CityBuilder.Combat;
 using CityBuilder.Core;
+using CityBuilder.Grid;
 using CityBuilder.Maps;
 using CityBuilder.Resources;
 using UnityEngine;
