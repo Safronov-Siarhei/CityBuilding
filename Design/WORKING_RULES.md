@@ -67,11 +67,11 @@ see the map at the bottom.
 - Invasion-mode changes and decisions are also logged in `Design/Invasion.md`.
 - After Blender work: `python Tools/blend_sync.py` (the Drive working folder -> `Blender/` in the repo)
   and commit `Blender/` — the repo holds the sources too (outside Assets/, never in a build).
-- **The buildings reference `Design/Buildings.md` keeps the ACTIVE roster** (the user, 2026-11-12): every
+- **The buildings reference `Design/Buildings.html` (+ `.md`) keeps the ACTIVE roster** (the user, 2026-11-12): every
   level's icon, numbers per level, sandbox prices, a short note. It is GENERATED
   (`Tools/docs/buildings_reference.py`, run by `run.ps1` after every `setup`, or by hand) — never edit it.
   A new or changed building: add/fix its line in `Design/buildings/descriptions.tsv` (id, note, optional
-  level count); hiding one = `BuildingIds.Hidden`. Commit `Design/Buildings.md` with the task when it changed.
+  level count); hiding one = `BuildingIds.Hidden`. Commit `Design/Buildings.html` + `.md` with the task when they changed.
 
 ## Where everything is (map)
 | What | Where |

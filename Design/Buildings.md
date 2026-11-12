@@ -1,16 +1,15 @@
 # Здания: активный состав
 
-> Файл СОБИРАЕТСЯ САМ (`Tools/docs/buildings_reference.py`, после каждого `setup` в `run.ps1`): не правь его руками.
-> Состав и числа — лист «Здания» (`buildings.csv`), еда — `economy.csv`, скрытые — `BuildingIds.Hidden`,
-> иконки — `UI/Icons`, описания — `Design/buildings/descriptions.tsv` (новое здание: добавь туда строку).
-> Цены и время стройки — песочницы (лист «Песочница: здания», `sandbox.csv`; ур.1 = постройка, дальше — улучшение);
-> остальные числа — базовые; Нашествие переопределяет своё своим листом.
+> Файл СОБИРАЕТСЯ САМ (Tools/docs/buildings_reference.py, после каждого setup в run.ps1): не правь его руками.
+> Состав и числа — лист «Здания» (buildings.csv), еда — economy.csv, скрытые — BuildingIds.Hidden, иконки — UI/Icons,
+> описания — Design/buildings/descriptions.tsv (новое здание: добавь туда строку).
+> Цены и время стройки — песочницы (sandbox.csv; ур.1 = постройка, дальше — улучшение); остальные числа — базовые.
+
+> Картинки удобнее смотреть в Design/Buildings.html (иконки внутри файла).
 
 Активных зданий: **53** (скрыто: 5).
 
 ⚠ Нет иконки: Shipyard ур.2, Shipyard ур.3, Shipyard ур.4, Shipyard ур.5, Lighthouse ур.2, Lighthouse ур.3, Lighthouse ур.4, Lighthouse ур.5, TaxHouse ур.2, TaxHouse ур.3, TaxHouse ур.4, TaxHouse ур.5.
-
-**Разделы:** [Город](#город) · [Склады](#склады) · [Производство](#производство) · [Еда](#еда) · [Оборона](#оборона) · [Водные](#водные) · [Развлечения и украшения](#развлечения-и-украшения)
 
 ## Город
 
@@ -20,7 +19,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Hovel.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Hovel_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Hovel_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Hovel_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Hovel_L5.png" width="72"> |
+| | ![Hovel 1](../Assets/_Project/UI/Icons/Hovel.png) | ![Hovel 2](../Assets/_Project/UI/Icons/Hovel_L2.png) | ![Hovel 3](../Assets/_Project/UI/Icons/Hovel_L3.png) | ![Hovel 4](../Assets/_Project/UI/Icons/Hovel_L4.png) | ![Hovel 5](../Assets/_Project/UI/Icons/Hovel_L5.png) |
 | Прочность | 80 | 128 | 200 | 288 | 400 |
 | Жильё | 5 | 8 | 10 | 12 | 14 |
 | Цена (песочница) | дерево 7 | дерево 16 | дерево 28 | дерево 49 | дерево 86 |
@@ -32,7 +31,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Cottage.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Cottage_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Cottage_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Cottage_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Cottage_L5.png" width="72"> |
+| | ![Cottage 1](../Assets/_Project/UI/Icons/Cottage.png) | ![Cottage 2](../Assets/_Project/UI/Icons/Cottage_L2.png) | ![Cottage 3](../Assets/_Project/UI/Icons/Cottage_L3.png) | ![Cottage 4](../Assets/_Project/UI/Icons/Cottage_L4.png) | ![Cottage 5](../Assets/_Project/UI/Icons/Cottage_L5.png) |
 | Прочность | 120 | 192 | 300 | 432 | 600 |
 | Жильё | 8 | 12 | 16 | 20 | 24 |
 | Цена (песочница) | дерево 25, камень 8 | дерево 40, камень 13 | дерево 70, камень 22 | дерево 122, камень 38 | дерево 214, камень 67 |
@@ -44,7 +43,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Manor.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Manor_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Manor_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Manor_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Manor_L5.png" width="72"> |
+| | ![Manor 1](../Assets/_Project/UI/Icons/Manor.png) | ![Manor 2](../Assets/_Project/UI/Icons/Manor_L2.png) | ![Manor 3](../Assets/_Project/UI/Icons/Manor_L3.png) | ![Manor 4](../Assets/_Project/UI/Icons/Manor_L4.png) | ![Manor 5](../Assets/_Project/UI/Icons/Manor_L5.png) |
 | Прочность | 200 | 320 | 500 | 720 | 1000 |
 | Жильё | 14 | 20 | 28 | 36 | 44 |
 | Цена (песочница) | дерево 55, камень 25 | дерево 88, камень 40 | дерево 154, камень 70 | дерево 270, камень 122 | дерево 472, камень 214 |
@@ -56,7 +55,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Castle.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Castle_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Castle_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Castle_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Castle_L5.png" width="72"> |
+| | ![Castle 1](../Assets/_Project/UI/Icons/Castle.png) | ![Castle 2](../Assets/_Project/UI/Icons/Castle_L2.png) | ![Castle 3](../Assets/_Project/UI/Icons/Castle_L3.png) | ![Castle 4](../Assets/_Project/UI/Icons/Castle_L4.png) | ![Castle 5](../Assets/_Project/UI/Icons/Castle_L5.png) |
 | Прочность | 400 | 640 | 1000 | 1440 | 2000 |
 | Защита | 20 | 32 | 50 | 72 | 100 |
 | Жильё | 7 | 7 | 7 | 7 | 7 |
@@ -69,7 +68,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Road.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Road_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Road_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Road_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Road_L5.png" width="72"> |
+| | ![Road 1](../Assets/_Project/UI/Icons/Road.png) | ![Road 2](../Assets/_Project/UI/Icons/Road_L2.png) | ![Road 3](../Assets/_Project/UI/Icons/Road_L3.png) | ![Road 4](../Assets/_Project/UI/Icons/Road_L4.png) | ![Road 5](../Assets/_Project/UI/Icons/Road_L5.png) |
 | Прочность | 40 | 64 | 100 | 144 | 200 |
 | Цена (песочница) | камень 1 | камень 5 | камень 8 | камень 14 | камень 24 |
 | Стройка, с (песочница) | 1 | 7 | 7 | 8 | 10 |
@@ -80,7 +79,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Laboratory.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Laboratory_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Laboratory_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Laboratory_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Laboratory_L5.png" width="72"> |
+| | ![Laboratory 1](../Assets/_Project/UI/Icons/Laboratory.png) | ![Laboratory 2](../Assets/_Project/UI/Icons/Laboratory_L2.png) | ![Laboratory 3](../Assets/_Project/UI/Icons/Laboratory_L3.png) | ![Laboratory 4](../Assets/_Project/UI/Icons/Laboratory_L4.png) | ![Laboratory 5](../Assets/_Project/UI/Icons/Laboratory_L5.png) |
 | Прочность | 160 | 256 | 400 | 576 | 800 |
 | Рабочие | 10 | 10 | 10 | 10 | 10 |
 | Цена (песочница) | дерево 40, камень 30 | дерево 64, камень 48, железо 16 | дерево 112, камень 84, железо 28 | дерево 196, камень 147, железо 49 | дерево 343, камень 257, железо 86 |
@@ -92,7 +91,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/HealerHouse.png" width="72"> | <img src="../Assets/_Project/UI/Icons/HealerHouse_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/HealerHouse_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/HealerHouse_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/HealerHouse_L5.png" width="72"> |
+| | ![HealerHouse 1](../Assets/_Project/UI/Icons/HealerHouse.png) | ![HealerHouse 2](../Assets/_Project/UI/Icons/HealerHouse_L2.png) | ![HealerHouse 3](../Assets/_Project/UI/Icons/HealerHouse_L3.png) | ![HealerHouse 4](../Assets/_Project/UI/Icons/HealerHouse_L4.png) | ![HealerHouse 5](../Assets/_Project/UI/Icons/HealerHouse_L5.png) |
 | Прочность | 130 | 208 | 325 | 468 | 650 |
 | Рабочие | 2 | 3 | 4 | 5 | 6 |
 | Радиус | 16 | 20 | 26 | 31 | 37 |
@@ -105,7 +104,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/FireBrigade.png" width="72"> | <img src="../Assets/_Project/UI/Icons/FireBrigade_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/FireBrigade_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/FireBrigade_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/FireBrigade_L5.png" width="72"> |
+| | ![FireBrigade 1](../Assets/_Project/UI/Icons/FireBrigade.png) | ![FireBrigade 2](../Assets/_Project/UI/Icons/FireBrigade_L2.png) | ![FireBrigade 3](../Assets/_Project/UI/Icons/FireBrigade_L3.png) | ![FireBrigade 4](../Assets/_Project/UI/Icons/FireBrigade_L4.png) | ![FireBrigade 5](../Assets/_Project/UI/Icons/FireBrigade_L5.png) |
 | Прочность | 130 | 208 | 325 | 468 | 650 |
 | Рабочие | 2 | 3 | 4 | 5 | 6 |
 | Радиус | 18 | 24 | 30 | 36 | 43 |
@@ -118,7 +117,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Well.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Well_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Well_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Well_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Well_L5.png" width="72"> |
+| | ![Well 1](../Assets/_Project/UI/Icons/Well.png) | ![Well 2](../Assets/_Project/UI/Icons/Well_L2.png) | ![Well 3](../Assets/_Project/UI/Icons/Well_L3.png) | ![Well 4](../Assets/_Project/UI/Icons/Well_L4.png) | ![Well 5](../Assets/_Project/UI/Icons/Well_L5.png) |
 | Прочность | 60 | 96 | 150 | 216 | 300 |
 | Радиус | 14 | 18 | 24 | 29 | 35 |
 | Цена (песочница) | дерево 5, камень 2 | дерево 8, камень 16 | дерево 14, камень 28 | дерево 24, камень 49 | дерево 43, камень 86 |
@@ -130,7 +129,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/TaxHouse.png" width="72"> | — | — | — | — |
+| | ![TaxHouse 1](../Assets/_Project/UI/Icons/TaxHouse.png) | нет иконки | нет иконки | нет иконки | нет иконки |
 | Прочность | 160 | 256 | 400 | 576 | 800 |
 | Цена (песочница) | дерево 150, камень 200 | — | — | — | — |
 | Стройка, с (песочница) | 20 | 15 | 20 | 25 | 30 |
@@ -141,7 +140,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/DiplomacyHall.png" width="72"> | <img src="../Assets/_Project/UI/Icons/DiplomacyHall_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/DiplomacyHall_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/DiplomacyHall_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/DiplomacyHall_L5.png" width="72"> |
+| | ![DiplomacyHall 1](../Assets/_Project/UI/Icons/DiplomacyHall.png) | ![DiplomacyHall 2](../Assets/_Project/UI/Icons/DiplomacyHall_L2.png) | ![DiplomacyHall 3](../Assets/_Project/UI/Icons/DiplomacyHall_L3.png) | ![DiplomacyHall 4](../Assets/_Project/UI/Icons/DiplomacyHall_L4.png) | ![DiplomacyHall 5](../Assets/_Project/UI/Icons/DiplomacyHall_L5.png) |
 | Прочность | 200 | 320 | 500 | 720 | 1000 |
 | Цена (песочница) | дерево 40, камень 30 | дерево 64, камень 48, железо 16 | дерево 112, камень 84, железо 28 | дерево 196, камень 147, железо 49 | дерево 343, камень 257, железо 86 |
 | Стройка, с (песочница) | 22 | 25 | 40 | 65 | 109 |
@@ -154,7 +153,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Warehouse.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Warehouse_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Warehouse_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Warehouse_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Warehouse_L5.png" width="72"> |
+| | ![Warehouse 1](../Assets/_Project/UI/Icons/Warehouse.png) | ![Warehouse 2](../Assets/_Project/UI/Icons/Warehouse_L2.png) | ![Warehouse 3](../Assets/_Project/UI/Icons/Warehouse_L3.png) | ![Warehouse 4](../Assets/_Project/UI/Icons/Warehouse_L4.png) | ![Warehouse 5](../Assets/_Project/UI/Icons/Warehouse_L5.png) |
 | Прочность | 120 | 192 | 300 | 432 | 600 |
 | Склад | 300 | 600 | 1000 | 1450 | 2000 |
 | Цена (песочница) | дерево 18, камень 5 | дерево 48, камень 16 | дерево 84, камень 28 | дерево 147, камень 49 | дерево 257, камень 86 |
@@ -166,7 +165,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Treasury.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Treasury_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Treasury_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Treasury_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Treasury_L5.png" width="72"> |
+| | ![Treasury 1](../Assets/_Project/UI/Icons/Treasury.png) | ![Treasury 2](../Assets/_Project/UI/Icons/Treasury_L2.png) | ![Treasury 3](../Assets/_Project/UI/Icons/Treasury_L3.png) | ![Treasury 4](../Assets/_Project/UI/Icons/Treasury_L4.png) | ![Treasury 5](../Assets/_Project/UI/Icons/Treasury_L5.png) |
 | Прочность | 200 | 320 | 500 | 720 | 1000 |
 | Склад | 500 | 1000 | 1800 | 2600 | 3600 |
 | Цена (песочница) | дерево 10, камень 40 | дерево 16, камень 64 | дерево 28, камень 112 | дерево 49, камень 196 | дерево 86, камень 343 |
@@ -178,7 +177,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/BigWarehouse.png" width="72"> | <img src="../Assets/_Project/UI/Icons/BigWarehouse_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/BigWarehouse_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/BigWarehouse_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/BigWarehouse_L5.png" width="72"> |
+| | ![BigWarehouse 1](../Assets/_Project/UI/Icons/BigWarehouse.png) | ![BigWarehouse 2](../Assets/_Project/UI/Icons/BigWarehouse_L2.png) | ![BigWarehouse 3](../Assets/_Project/UI/Icons/BigWarehouse_L3.png) | ![BigWarehouse 4](../Assets/_Project/UI/Icons/BigWarehouse_L4.png) | ![BigWarehouse 5](../Assets/_Project/UI/Icons/BigWarehouse_L5.png) |
 | Прочность | 260 | 416 | 650 | 936 | 1300 |
 | Склад | 800 | 1600 | 2600 | 3750 | 5200 |
 | Цена (песочница) | дерево 80, камень 40 | дерево 128, камень 64 | дерево 224, камень 112 | дерево 392, камень 196 | дерево 686, камень 343 |
@@ -190,7 +189,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/BigTreasury.png" width="72"> | <img src="../Assets/_Project/UI/Icons/BigTreasury_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/BigTreasury_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/BigTreasury_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/BigTreasury_L5.png" width="72"> |
+| | ![BigTreasury 1](../Assets/_Project/UI/Icons/BigTreasury.png) | ![BigTreasury 2](../Assets/_Project/UI/Icons/BigTreasury_L2.png) | ![BigTreasury 3](../Assets/_Project/UI/Icons/BigTreasury_L3.png) | ![BigTreasury 4](../Assets/_Project/UI/Icons/BigTreasury_L4.png) | ![BigTreasury 5](../Assets/_Project/UI/Icons/BigTreasury_L5.png) |
 | Прочность | 420 | 672 | 1050 | 1512 | 2100 |
 | Склад | 1300 | 2600 | 4600 | 6600 | 9150 |
 | Цена (песочница) | дерево 30, камень 110 | дерево 48, камень 176 | дерево 84, камень 308 | дерево 147, камень 539 | дерево 257, камень 943 |
@@ -202,7 +201,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Granary.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Granary_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Granary_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Granary_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Granary_L5.png" width="72"> |
+| | ![Granary 1](../Assets/_Project/UI/Icons/Granary.png) | ![Granary 2](../Assets/_Project/UI/Icons/Granary_L2.png) | ![Granary 3](../Assets/_Project/UI/Icons/Granary_L3.png) | ![Granary 4](../Assets/_Project/UI/Icons/Granary_L4.png) | ![Granary 5](../Assets/_Project/UI/Icons/Granary_L5.png) |
 | Прочность | 110 | 176 | 275 | 396 | 550 |
 | Склад | 200 | 400 | 700 | 1000 | 1400 |
 | Цена (песочница) | дерево 15, камень 3 | дерево 40, камень 8 | дерево 70, камень 14 | дерево 122, камень 24 | дерево 214, камень 43 |
@@ -214,7 +213,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/BigGranary.png" width="72"> | <img src="../Assets/_Project/UI/Icons/BigGranary_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/BigGranary_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/BigGranary_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/BigGranary_L5.png" width="72"> |
+| | ![BigGranary 1](../Assets/_Project/UI/Icons/BigGranary.png) | ![BigGranary 2](../Assets/_Project/UI/Icons/BigGranary_L2.png) | ![BigGranary 3](../Assets/_Project/UI/Icons/BigGranary_L3.png) | ![BigGranary 4](../Assets/_Project/UI/Icons/BigGranary_L4.png) | ![BigGranary 5](../Assets/_Project/UI/Icons/BigGranary_L5.png) |
 | Прочность | 230 | 368 | 575 | 828 | 1150 |
 | Склад | 550 | 1100 | 1900 | 2750 | 3800 |
 | Цена (песочница) | дерево 70, камень 30 | дерево 112, камень 48 | дерево 196, камень 84 | дерево 343, камень 147 | дерево 600, камень 257 |
@@ -228,7 +227,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Sawmill.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Sawmill_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Sawmill_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Sawmill_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Sawmill_L5.png" width="72"> |
+| | ![Sawmill 1](../Assets/_Project/UI/Icons/Sawmill.png) | ![Sawmill 2](../Assets/_Project/UI/Icons/Sawmill_L2.png) | ![Sawmill 3](../Assets/_Project/UI/Icons/Sawmill_L3.png) | ![Sawmill 4](../Assets/_Project/UI/Icons/Sawmill_L4.png) | ![Sawmill 5](../Assets/_Project/UI/Icons/Sawmill_L5.png) |
 | Прочность | 100 | 160 | 250 | 360 | 500 |
 | Рабочие | 1 | 2 | 3 | 4 | 5 |
 | Радиус сбора | 12 | 17 | 24 | 29 | 35 |
@@ -241,7 +240,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Quarry.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Quarry_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Quarry_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Quarry_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Quarry_L5.png" width="72"> |
+| | ![Quarry 1](../Assets/_Project/UI/Icons/Quarry.png) | ![Quarry 2](../Assets/_Project/UI/Icons/Quarry_L2.png) | ![Quarry 3](../Assets/_Project/UI/Icons/Quarry_L3.png) | ![Quarry 4](../Assets/_Project/UI/Icons/Quarry_L4.png) | ![Quarry 5](../Assets/_Project/UI/Icons/Quarry_L5.png) |
 | Прочность | 110 | 176 | 275 | 396 | 550 |
 | Рабочие | 1 | 2 | 3 | 4 | 5 |
 | Радиус сбора | 20 | 28 | 38 | 46 | 55 |
@@ -254,7 +253,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/IronMine.png" width="72"> | <img src="../Assets/_Project/UI/Icons/IronMine_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/IronMine_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/IronMine_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/IronMine_L5.png" width="72"> |
+| | ![IronMine 1](../Assets/_Project/UI/Icons/IronMine.png) | ![IronMine 2](../Assets/_Project/UI/Icons/IronMine_L2.png) | ![IronMine 3](../Assets/_Project/UI/Icons/IronMine_L3.png) | ![IronMine 4](../Assets/_Project/UI/Icons/IronMine_L4.png) | ![IronMine 5](../Assets/_Project/UI/Icons/IronMine_L5.png) |
 | Прочность | 110 | 176 | 275 | 396 | 550 |
 | Рабочие | 3 | 4 | 5 | 6 | 7 |
 | Цена (песочница) | дерево 25, камень 15 | дерево 40, камень 24, уголь 10 | дерево 70, камень 42, уголь 22 | дерево 122, камень 74, уголь 38 | дерево 214, камень 129, уголь 67 |
@@ -266,7 +265,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/CoalMine.png" width="72"> | <img src="../Assets/_Project/UI/Icons/CoalMine_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/CoalMine_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/CoalMine_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/CoalMine_L5.png" width="72"> |
+| | ![CoalMine 1](../Assets/_Project/UI/Icons/CoalMine.png) | ![CoalMine 2](../Assets/_Project/UI/Icons/CoalMine_L2.png) | ![CoalMine 3](../Assets/_Project/UI/Icons/CoalMine_L3.png) | ![CoalMine 4](../Assets/_Project/UI/Icons/CoalMine_L4.png) | ![CoalMine 5](../Assets/_Project/UI/Icons/CoalMine_L5.png) |
 | Прочность | 100 | 160 | 250 | 360 | 500 |
 | Рабочие | 3 | 4 | 5 | 6 | 7 |
 | Цена (песочница) | дерево 25, камень 10 | дерево 40, камень 16, железо 6 | дерево 70, камень 28, железо 14 | дерево 122, камень 49, железо 24 | дерево 214, камень 86, железо 43 |
@@ -278,7 +277,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Smelter.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Smelter_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Smelter_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Smelter_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Smelter_L5.png" width="72"> |
+| | ![Smelter 1](../Assets/_Project/UI/Icons/Smelter.png) | ![Smelter 2](../Assets/_Project/UI/Icons/Smelter_L2.png) | ![Smelter 3](../Assets/_Project/UI/Icons/Smelter_L3.png) | ![Smelter 4](../Assets/_Project/UI/Icons/Smelter_L4.png) | ![Smelter 5](../Assets/_Project/UI/Icons/Smelter_L5.png) |
 | Прочность | 150 | 240 | 375 | 540 | 750 |
 | Рабочие | 2 | 3 | 4 | 5 | 6 |
 | Цена (песочница) | дерево 35, камень 25 | дерево 56, камень 40 | дерево 98, камень 70 | дерево 172, камень 122 | дерево 300, камень 214 |
@@ -290,7 +289,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/CopperMine.png" width="72"> | <img src="../Assets/_Project/UI/Icons/CopperMine_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/CopperMine_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/CopperMine_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/CopperMine_L5.png" width="72"> |
+| | ![CopperMine 1](../Assets/_Project/UI/Icons/CopperMine.png) | ![CopperMine 2](../Assets/_Project/UI/Icons/CopperMine_L2.png) | ![CopperMine 3](../Assets/_Project/UI/Icons/CopperMine_L3.png) | ![CopperMine 4](../Assets/_Project/UI/Icons/CopperMine_L4.png) | ![CopperMine 5](../Assets/_Project/UI/Icons/CopperMine_L5.png) |
 | Прочность | 110 | 176 | 275 | 396 | 550 |
 | Рабочие | 3 | 4 | 5 | 6 | 7 |
 | Цена (песочница) | дерево 25, камень 15 | дерево 40, камень 24 | дерево 70, камень 42 | дерево 122, камень 74 | дерево 214, камень 129 |
@@ -302,7 +301,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/GoldMine.png" width="72"> | <img src="../Assets/_Project/UI/Icons/GoldMine_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/GoldMine_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/GoldMine_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/GoldMine_L5.png" width="72"> |
+| | ![GoldMine 1](../Assets/_Project/UI/Icons/GoldMine.png) | ![GoldMine 2](../Assets/_Project/UI/Icons/GoldMine_L2.png) | ![GoldMine 3](../Assets/_Project/UI/Icons/GoldMine_L3.png) | ![GoldMine 4](../Assets/_Project/UI/Icons/GoldMine_L4.png) | ![GoldMine 5](../Assets/_Project/UI/Icons/GoldMine_L5.png) |
 | Прочность | 120 | 192 | 300 | 432 | 600 |
 | Рабочие | 3 | 4 | 5 | 6 | 7 |
 | Цена (песочница) | дерево 30, камень 20 | дерево 48, камень 32 | дерево 84, камень 56 | дерево 147, камень 98 | дерево 257, камень 172 |
@@ -316,7 +315,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/FisherHut.png" width="72"> | <img src="../Assets/_Project/UI/Icons/FisherHut_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/FisherHut_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/FisherHut_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/FisherHut_L5.png" width="72"> |
+| | ![FisherHut 1](../Assets/_Project/UI/Icons/FisherHut.png) | ![FisherHut 2](../Assets/_Project/UI/Icons/FisherHut_L2.png) | ![FisherHut 3](../Assets/_Project/UI/Icons/FisherHut_L3.png) | ![FisherHut 4](../Assets/_Project/UI/Icons/FisherHut_L4.png) | ![FisherHut 5](../Assets/_Project/UI/Icons/FisherHut_L5.png) |
 | Прочность | 90 | 144 | 225 | 324 | 450 |
 | Рабочие | 1 | 1 | 1 | 1 | 1 |
 | Еда в день | 3 | 4 | 5 | 6 | 7 |
@@ -329,7 +328,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Farm.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Farm_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Farm_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Farm_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Farm_L5.png" width="72"> |
+| | ![Farm 1](../Assets/_Project/UI/Icons/Farm.png) | ![Farm 2](../Assets/_Project/UI/Icons/Farm_L2.png) | ![Farm 3](../Assets/_Project/UI/Icons/Farm_L3.png) | ![Farm 4](../Assets/_Project/UI/Icons/Farm_L4.png) | ![Farm 5](../Assets/_Project/UI/Icons/Farm_L5.png) |
 | Прочность | 70 | 112 | 175 | 252 | 350 |
 | Рабочие | 1 | 1 | 1 | 1 | 1 |
 | Еда в день | 3 | 4 | 5 | 6 | 7 |
@@ -342,7 +341,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Baker.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Baker_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Baker_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Baker_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Baker_L5.png" width="72"> |
+| | ![Baker 1](../Assets/_Project/UI/Icons/Baker.png) | ![Baker 2](../Assets/_Project/UI/Icons/Baker_L2.png) | ![Baker 3](../Assets/_Project/UI/Icons/Baker_L3.png) | ![Baker 4](../Assets/_Project/UI/Icons/Baker_L4.png) | ![Baker 5](../Assets/_Project/UI/Icons/Baker_L5.png) |
 | Прочность | 110 | 176 | 275 | 396 | 550 |
 | Рабочие | 1 | 1 | 1 | 1 | 1 |
 | Радиус | 6 | 6 | 6 | 6 | 6 |
@@ -356,7 +355,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Smokehouse.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Smokehouse_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Smokehouse_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Smokehouse_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Smokehouse_L5.png" width="72"> |
+| | ![Smokehouse 1](../Assets/_Project/UI/Icons/Smokehouse.png) | ![Smokehouse 2](../Assets/_Project/UI/Icons/Smokehouse_L2.png) | ![Smokehouse 3](../Assets/_Project/UI/Icons/Smokehouse_L3.png) | ![Smokehouse 4](../Assets/_Project/UI/Icons/Smokehouse_L4.png) | ![Smokehouse 5](../Assets/_Project/UI/Icons/Smokehouse_L5.png) |
 | Прочность | 110 | 176 | 275 | 396 | 550 |
 | Рабочие | 1 | 1 | 1 | 1 | 1 |
 | Радиус | 6 | 6 | 6 | 6 | 6 |
@@ -370,7 +369,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/PigFarm.png" width="72"> | <img src="../Assets/_Project/UI/Icons/PigFarm_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/PigFarm_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/PigFarm_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/PigFarm_L5.png" width="72"> |
+| | ![PigFarm 1](../Assets/_Project/UI/Icons/PigFarm.png) | ![PigFarm 2](../Assets/_Project/UI/Icons/PigFarm_L2.png) | ![PigFarm 3](../Assets/_Project/UI/Icons/PigFarm_L3.png) | ![PigFarm 4](../Assets/_Project/UI/Icons/PigFarm_L4.png) | ![PigFarm 5](../Assets/_Project/UI/Icons/PigFarm_L5.png) |
 | Прочность | 120 | 192 | 300 | 432 | 600 |
 | Рабочие | 1 | 1 | 1 | 1 | 1 |
 | Еда в день | 5 | 10 | 15 | 20 | 25 |
@@ -383,7 +382,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Orchard.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Orchard_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Orchard_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Orchard_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Orchard_L5.png" width="72"> |
+| | ![Orchard 1](../Assets/_Project/UI/Icons/Orchard.png) | ![Orchard 2](../Assets/_Project/UI/Icons/Orchard_L2.png) | ![Orchard 3](../Assets/_Project/UI/Icons/Orchard_L3.png) | ![Orchard 4](../Assets/_Project/UI/Icons/Orchard_L4.png) | ![Orchard 5](../Assets/_Project/UI/Icons/Orchard_L5.png) |
 | Прочность | 80 | 128 | 200 | 288 | 400 |
 | Рабочие | 1 | 1 | 1 | 1 | 1 |
 | Еда в день | 5 | 10 | 15 | 20 | 25 |
@@ -398,7 +397,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Tower.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Tower_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Tower_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Tower_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Tower_L5.png" width="72"> |
+| | ![Tower 1](../Assets/_Project/UI/Icons/Tower.png) | ![Tower 2](../Assets/_Project/UI/Icons/Tower_L2.png) | ![Tower 3](../Assets/_Project/UI/Icons/Tower_L3.png) | ![Tower 4](../Assets/_Project/UI/Icons/Tower_L4.png) | ![Tower 5](../Assets/_Project/UI/Icons/Tower_L5.png) |
 | Прочность | 220 | 352 | 550 | 792 | 1100 |
 | Защита | 25 | 40 | 63 | 91 | 126 |
 | Цена (песочница) | дерево 5, камень 15 | дерево 8, камень 24, железо 12 | дерево 14, камень 42, железо 26 | дерево 24, камень 74, железо 46 | дерево 43, камень 129, железо 80 |
@@ -410,7 +409,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Barracks.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Barracks_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Barracks_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Barracks_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Barracks_L5.png" width="72"> |
+| | ![Barracks 1](../Assets/_Project/UI/Icons/Barracks.png) | ![Barracks 2](../Assets/_Project/UI/Icons/Barracks_L2.png) | ![Barracks 3](../Assets/_Project/UI/Icons/Barracks_L3.png) | ![Barracks 4](../Assets/_Project/UI/Icons/Barracks_L4.png) | ![Barracks 5](../Assets/_Project/UI/Icons/Barracks_L5.png) |
 | Прочность | 180 | 288 | 450 | 648 | 900 |
 | Защита | 10 | 16 | 25 | 36 | 50 |
 | Цена (песочница) | дерево 15, камень 30 | дерево 24, камень 48, железо 15 | дерево 42, камень 84, железо 32 | дерево 74, камень 147, железо 56 | дерево 129, камень 257, железо 98 |
@@ -422,7 +421,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Stable.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Stable_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Stable_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Stable_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Stable_L5.png" width="72"> |
+| | ![Stable 1](../Assets/_Project/UI/Icons/Stable.png) | ![Stable 2](../Assets/_Project/UI/Icons/Stable_L2.png) | ![Stable 3](../Assets/_Project/UI/Icons/Stable_L3.png) | ![Stable 4](../Assets/_Project/UI/Icons/Stable_L4.png) | ![Stable 5](../Assets/_Project/UI/Icons/Stable_L5.png) |
 | Прочность | 220 | 350 | 550 | 790 | 1100 |
 | Защита | 10 | 16 | 25 | 36 | 50 |
 | Цена (песочница) | дерево 40, камень 20, железо 5 | дерево 64, камень 32, железо 10 | дерево 112, камень 56, железо 20 | дерево 196, камень 98, железо 35 | дерево 343, камень 172, железо 60 |
@@ -434,7 +433,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Workshop.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Workshop_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Workshop_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Workshop_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Workshop_L5.png" width="72"> |
+| | ![Workshop 1](../Assets/_Project/UI/Icons/Workshop.png) | ![Workshop 2](../Assets/_Project/UI/Icons/Workshop_L2.png) | ![Workshop 3](../Assets/_Project/UI/Icons/Workshop_L3.png) | ![Workshop 4](../Assets/_Project/UI/Icons/Workshop_L4.png) | ![Workshop 5](../Assets/_Project/UI/Icons/Workshop_L5.png) |
 | Прочность | 220 | 350 | 550 | 790 | 1100 |
 | Защита | 10 | 16 | 25 | 36 | 50 |
 | Цена (песочница) | дерево 40, камень 30, железо 10 | дерево 64, камень 48, железо 20 | дерево 112, камень 84, железо 40 | дерево 196, камень 147, железо 70 | дерево 343, камень 257, железо 120 |
@@ -446,7 +445,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Gate.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Gate_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Gate_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Gate_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Gate_L5.png" width="72"> |
+| | ![Gate 1](../Assets/_Project/UI/Icons/Gate.png) | ![Gate 2](../Assets/_Project/UI/Icons/Gate_L2.png) | ![Gate 3](../Assets/_Project/UI/Icons/Gate_L3.png) | ![Gate 4](../Assets/_Project/UI/Icons/Gate_L4.png) | ![Gate 5](../Assets/_Project/UI/Icons/Gate_L5.png) |
 | Прочность | 160 | 256 | 400 | 576 | 800 |
 | Цена (песочница) | дерево 5, камень 12 | дерево 8, камень 19, железо 8 | дерево 14, камень 34, железо 18 | дерево 24, камень 60, железо 32 | дерево 43, камень 104, железо 55 |
 | Стройка, с (песочница) | 8 | 11 | 16 | 23 | 36 |
@@ -457,7 +456,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/FortifiedTower.png" width="72"> | <img src="../Assets/_Project/UI/Icons/FortifiedTower_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/FortifiedTower_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/FortifiedTower_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/FortifiedTower_L5.png" width="72"> |
+| | ![FortifiedTower 1](../Assets/_Project/UI/Icons/FortifiedTower.png) | ![FortifiedTower 2](../Assets/_Project/UI/Icons/FortifiedTower_L2.png) | ![FortifiedTower 3](../Assets/_Project/UI/Icons/FortifiedTower_L3.png) | ![FortifiedTower 4](../Assets/_Project/UI/Icons/FortifiedTower_L4.png) | ![FortifiedTower 5](../Assets/_Project/UI/Icons/FortifiedTower_L5.png) |
 | Прочность | 480 | 768 | 1200 | 1728 | 2400 |
 | Защита | 55 | 88 | 138 | 199 | 276 |
 | Цена (песочница) | дерево 10, камень 40 | дерево 16, камень 64, железо 13 | дерево 28, камень 112, железо 22 | дерево 49, камень 196, железо 38 | дерево 86, камень 343, железо 67 |
@@ -469,7 +468,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/FortifiedGate.png" width="72"> | <img src="../Assets/_Project/UI/Icons/FortifiedGate_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/FortifiedGate_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/FortifiedGate_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/FortifiedGate_L5.png" width="72"> |
+| | ![FortifiedGate 1](../Assets/_Project/UI/Icons/FortifiedGate.png) | ![FortifiedGate 2](../Assets/_Project/UI/Icons/FortifiedGate_L2.png) | ![FortifiedGate 3](../Assets/_Project/UI/Icons/FortifiedGate_L3.png) | ![FortifiedGate 4](../Assets/_Project/UI/Icons/FortifiedGate_L4.png) | ![FortifiedGate 5](../Assets/_Project/UI/Icons/FortifiedGate_L5.png) |
 | Прочность | 340 | 544 | 850 | 1224 | 1700 |
 | Защита | 26 | 42 | 65 | 94 | 131 |
 | Цена (песочница) | дерево 10, камень 30 | дерево 16, камень 48, железо 10 | дерево 28, камень 84, железо 17 | дерево 49, камень 147, железо 30 | дерево 86, камень 257, железо 52 |
@@ -481,7 +480,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Moat.png" width="72"> | нет | нет | нет | нет |
+| | ![Moat 1](../Assets/_Project/UI/Icons/Moat.png) | нет | нет | нет | нет |
 | Прочность | 100 | 100 | 100 | 100 | 100 |
 | Цена (песочница) | монеты 25 | нет | нет | нет | нет |
 | Стройка, с (песочница) | 1 | нет | нет | нет | нет |
@@ -492,7 +491,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Drawbridge.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Drawbridge_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Drawbridge_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Drawbridge_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Drawbridge_L5.png" width="72"> |
+| | ![Drawbridge 1](../Assets/_Project/UI/Icons/Drawbridge.png) | ![Drawbridge 2](../Assets/_Project/UI/Icons/Drawbridge_L2.png) | ![Drawbridge 3](../Assets/_Project/UI/Icons/Drawbridge_L3.png) | ![Drawbridge 4](../Assets/_Project/UI/Icons/Drawbridge_L4.png) | ![Drawbridge 5](../Assets/_Project/UI/Icons/Drawbridge_L5.png) |
 | Прочность | 200 | 320 | 500 | 720 | 1000 |
 | Цена (песочница) | дерево 20 | дерево 30 | дерево 10, камень 40 | камень 60, железо 20 | камень 100, железо 40 |
 | Стройка, с (песочница) | 10 | 12 | 18 | 25 | 40 |
@@ -503,7 +502,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Fence.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Fence_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Fence_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Fence_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Fence_L5.png" width="72"> |
+| | ![Fence 1](../Assets/_Project/UI/Icons/Fence.png) | ![Fence 2](../Assets/_Project/UI/Icons/Fence_L2.png) | ![Fence 3](../Assets/_Project/UI/Icons/Fence_L3.png) | ![Fence 4](../Assets/_Project/UI/Icons/Fence_L4.png) | ![Fence 5](../Assets/_Project/UI/Icons/Fence_L5.png) |
 | Прочность | 50 | 80 | 125 | 180 | 250 |
 | Цена (песочница) | дерево 2 | камень 8 | камень 20 | камень 35 | камень 61 |
 | Стройка, с (песочница) | 4 | 7 | 9 | 11 | 15 |
@@ -516,7 +515,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Bridge.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Bridge_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Bridge_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Bridge_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Bridge_L5.png" width="72"> |
+| | ![Bridge 1](../Assets/_Project/UI/Icons/Bridge.png) | ![Bridge 2](../Assets/_Project/UI/Icons/Bridge_L2.png) | ![Bridge 3](../Assets/_Project/UI/Icons/Bridge_L3.png) | ![Bridge 4](../Assets/_Project/UI/Icons/Bridge_L4.png) | ![Bridge 5](../Assets/_Project/UI/Icons/Bridge_L5.png) |
 | Прочность | 40 | 64 | 100 | 144 | 200 |
 | Цена (песочница) | дерево 8 | дерево 13 | камень 22 | камень 38 | камень 67 |
 | Стройка, с (песочница) | 6 | 8 | 9 | 12 | 16 |
@@ -527,9 +526,9 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Shipyard.png" width="72"> | — | — | — | — |
+| | ![Shipyard 1](../Assets/_Project/UI/Icons/Shipyard.png) | нет иконки | нет иконки | нет иконки | нет иконки |
 | Прочность | 160 | 256 | 400 | 576 | 800 |
-| Цена (базовая) | дерево 40, камень 10 | | | | |
+| Цена (базовая) | дерево 40, камень 10 |  |  |  |  |
 
 ### Маяк `Lighthouse`
 
@@ -537,9 +536,9 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Lighthouse.png" width="72"> | — | — | — | — |
+| | ![Lighthouse 1](../Assets/_Project/UI/Icons/Lighthouse.png) | нет иконки | нет иконки | нет иконки | нет иконки |
 | Прочность | 150 | 240 | 375 | 540 | 750 |
-| Цена (базовая) | дерево 30, камень 40 | | | | |
+| Цена (базовая) | дерево 30, камень 40 |  |  |  |  |
 
 ## Развлечения и украшения
 
@@ -549,7 +548,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/TownSquare.png" width="72"> | <img src="../Assets/_Project/UI/Icons/TownSquare_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/TownSquare_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/TownSquare_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/TownSquare_L5.png" width="72"> |
+| | ![TownSquare 1](../Assets/_Project/UI/Icons/TownSquare.png) | ![TownSquare 2](../Assets/_Project/UI/Icons/TownSquare_L2.png) | ![TownSquare 3](../Assets/_Project/UI/Icons/TownSquare_L3.png) | ![TownSquare 4](../Assets/_Project/UI/Icons/TownSquare_L4.png) | ![TownSquare 5](../Assets/_Project/UI/Icons/TownSquare_L5.png) |
 | Прочность | 90 | 144 | 225 | 324 | 450 |
 | Цена (песочница) | дерево 5, камень 20 | дерево 8, камень 32 | дерево 14, камень 56 | дерево 24, камень 98 | дерево 43, камень 172 |
 | Стройка, с (песочница) | 10 | 12 | 16 | 24 | 38 |
@@ -560,7 +559,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Flag.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Flag_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Flag_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Flag_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Flag_L5.png" width="72"> |
+| | ![Flag 1](../Assets/_Project/UI/Icons/Flag.png) | ![Flag 2](../Assets/_Project/UI/Icons/Flag_L2.png) | ![Flag 3](../Assets/_Project/UI/Icons/Flag_L3.png) | ![Flag 4](../Assets/_Project/UI/Icons/Flag_L4.png) | ![Flag 5](../Assets/_Project/UI/Icons/Flag_L5.png) |
 | Прочность | 40 | 64 | 100 | 144 | 200 |
 | Цена (песочница) | дерево 4, камень 1 | дерево 6, камень 2 | дерево 11, камень 3 | дерево 19, камень 5 | дерево 34, камень 9 |
 | Стройка, с (песочница) | 5 | 7 | 8 | 10 | 12 |
@@ -571,7 +570,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/DecTree.png" width="72"> | <img src="../Assets/_Project/UI/Icons/DecTree_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/DecTree_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/DecTree_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/DecTree_L5.png" width="72"> |
+| | ![DecTree 1](../Assets/_Project/UI/Icons/DecTree.png) | ![DecTree 2](../Assets/_Project/UI/Icons/DecTree_L2.png) | ![DecTree 3](../Assets/_Project/UI/Icons/DecTree_L3.png) | ![DecTree 4](../Assets/_Project/UI/Icons/DecTree_L4.png) | ![DecTree 5](../Assets/_Project/UI/Icons/DecTree_L5.png) |
 | Прочность | 40 | 64 | 100 | 144 | 200 |
 | Цена (песочница) | дерево 3 | дерево 5 | дерево 8 | дерево 14 | дерево 24 |
 | Стройка, с (песочница) | 5 | 7 | 7 | 8 | 10 |
@@ -582,7 +581,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/DecBush.png" width="72"> | <img src="../Assets/_Project/UI/Icons/DecBush_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/DecBush_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/DecBush_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/DecBush_L5.png" width="72"> |
+| | ![DecBush 1](../Assets/_Project/UI/Icons/DecBush.png) | ![DecBush 2](../Assets/_Project/UI/Icons/DecBush_L2.png) | ![DecBush 3](../Assets/_Project/UI/Icons/DecBush_L3.png) | ![DecBush 4](../Assets/_Project/UI/Icons/DecBush_L4.png) | ![DecBush 5](../Assets/_Project/UI/Icons/DecBush_L5.png) |
 | Прочность | 30 | 48 | 75 | 108 | 150 |
 | Цена (песочница) | дерево 2 | дерево 3 | дерево 6 | дерево 10 | дерево 18 |
 | Стройка, с (песочница) | 4 | 6 | 7 | 8 | 9 |
@@ -593,7 +592,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/DecGarden.png" width="72"> | <img src="../Assets/_Project/UI/Icons/DecGarden_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/DecGarden_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/DecGarden_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/DecGarden_L5.png" width="72"> |
+| | ![DecGarden 1](../Assets/_Project/UI/Icons/DecGarden.png) | ![DecGarden 2](../Assets/_Project/UI/Icons/DecGarden_L2.png) | ![DecGarden 3](../Assets/_Project/UI/Icons/DecGarden_L3.png) | ![DecGarden 4](../Assets/_Project/UI/Icons/DecGarden_L4.png) | ![DecGarden 5](../Assets/_Project/UI/Icons/DecGarden_L5.png) |
 | Прочность | 60 | 96 | 150 | 216 | 300 |
 | Цена (песочница) | дерево 5, камень 2 | дерево 8, камень 3 | дерево 14, камень 6 | дерево 24, камень 10 | дерево 43, камень 18 |
 | Стройка, с (песочница) | 6 | 8 | 9 | 11 | 15 |
@@ -604,7 +603,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Square.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Square_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Square_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Square_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Square_L5.png" width="72"> |
+| | ![Square 1](../Assets/_Project/UI/Icons/Square.png) | ![Square 2](../Assets/_Project/UI/Icons/Square_L2.png) | ![Square 3](../Assets/_Project/UI/Icons/Square_L3.png) | ![Square 4](../Assets/_Project/UI/Icons/Square_L4.png) | ![Square 5](../Assets/_Project/UI/Icons/Square_L5.png) |
 | Прочность | 40 | 64 | 100 | 144 | 200 |
 | Цена (песочница) | камень 4 | камень 20 | камень 32 | камень 56 | камень 96 |
 | Стройка, с (песочница) | 2 | 10 | 12 | 14 | 18 |
@@ -615,7 +614,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Church.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Church_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Church_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Church_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Church_L5.png" width="72"> |
+| | ![Church 1](../Assets/_Project/UI/Icons/Church.png) | ![Church 2](../Assets/_Project/UI/Icons/Church_L2.png) | ![Church 3](../Assets/_Project/UI/Icons/Church_L3.png) | ![Church 4](../Assets/_Project/UI/Icons/Church_L4.png) | ![Church 5](../Assets/_Project/UI/Icons/Church_L5.png) |
 | Прочность | 180 | 288 | 450 | 648 | 900 |
 | Цена (песочница) | дерево 40, камень 30 | дерево 64, камень 48 | дерево 112, камень 84 | дерево 196, камень 147 | дерево 343, камень 257 |
 | Стройка, с (песочница) | 22 | 23 | 35 | 57 | 96 |
@@ -626,7 +625,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Tavern.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Tavern_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Tavern_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Tavern_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Tavern_L5.png" width="72"> |
+| | ![Tavern 1](../Assets/_Project/UI/Icons/Tavern.png) | ![Tavern 2](../Assets/_Project/UI/Icons/Tavern_L2.png) | ![Tavern 3](../Assets/_Project/UI/Icons/Tavern_L3.png) | ![Tavern 4](../Assets/_Project/UI/Icons/Tavern_L4.png) | ![Tavern 5](../Assets/_Project/UI/Icons/Tavern_L5.png) |
 | Прочность | 150 | 240 | 375 | 540 | 750 |
 | Цена (песочница) | дерево 35, камень 15 | дерево 56, камень 24 | дерево 98, камень 42 | дерево 172, камень 74 | дерево 300, камень 129 |
 | Стройка, с (песочница) | 16 | 18 | 27 | 43 | 70 |
@@ -637,7 +636,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Theater.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Theater_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Theater_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Theater_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Theater_L5.png" width="72"> |
+| | ![Theater 1](../Assets/_Project/UI/Icons/Theater.png) | ![Theater 2](../Assets/_Project/UI/Icons/Theater_L2.png) | ![Theater 3](../Assets/_Project/UI/Icons/Theater_L3.png) | ![Theater 4](../Assets/_Project/UI/Icons/Theater_L4.png) | ![Theater 5](../Assets/_Project/UI/Icons/Theater_L5.png) |
 | Прочность | 180 | 288 | 450 | 648 | 900 |
 | Цена (песочница) | дерево 50, камень 35 | дерево 80, камень 56 | дерево 140, камень 98 | дерево 245, камень 172 | дерево 429, камень 300 |
 | Стройка, с (песочница) | 25 | 26 | 42 | 69 | 115 |
@@ -648,7 +647,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | <img src="../Assets/_Project/UI/Icons/Colosseum.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Colosseum_L2.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Colosseum_L3.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Colosseum_L4.png" width="72"> | <img src="../Assets/_Project/UI/Icons/Colosseum_L5.png" width="72"> |
+| | ![Colosseum 1](../Assets/_Project/UI/Icons/Colosseum.png) | ![Colosseum 2](../Assets/_Project/UI/Icons/Colosseum_L2.png) | ![Colosseum 3](../Assets/_Project/UI/Icons/Colosseum_L3.png) | ![Colosseum 4](../Assets/_Project/UI/Icons/Colosseum_L4.png) | ![Colosseum 5](../Assets/_Project/UI/Icons/Colosseum_L5.png) |
 | Прочность | 320 | 512 | 800 | 1152 | 1600 |
 | Цена (песочница) | дерево 90, камень 80 | дерево 144, камень 128 | дерево 252, камень 224 | дерево 441, камень 392 | дерево 772, камень 686 |
 | Стройка, с (песочница) | 46 | 47 | 77 | 131 | 225 |

@@ -31,7 +31,7 @@
   `python Tools/memory_sync.py` (two-way, newer wins; `--to-local` restores a fresh machine) and
   commit `.claude/memory/` with the task. The `.blend` sources are in `Blender/` (outside Assets/, never
   in a build): after Blender work run `python Tools/blend_sync.py` and commit `Blender/`.
-- `Design/Buildings.md` (buildings with level icons and notes) is generated after every `setup`: a new or
+- `Design/Buildings.html` + `.md` (buildings with level icons and notes) are generated after every `setup`: a new or
   changed building gets its note in `Design/buildings/descriptions.tsv`; commit the regenerated file.
 - The user's other standing rules (full list in WORKING_RULES): new models/animations go to the user
   as renders for approval BEFORE entering the game; cutscenes are discussed before they are built;

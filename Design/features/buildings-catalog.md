@@ -5,7 +5,7 @@
 > **Read with:** [building-placement](building-placement.md), [building-levels-and-decay](building-levels-and-decay.md),
 > [art-pipeline](art-pipeline.md), [research-laboratory](research-laboratory.md).
 
-> **2026-11-12 (the user): the illustrated reference `Design/Buildings.md`** — the ACTIVE roster (not
+> **2026-11-12 (the user): the illustrated reference `Design/Buildings.html`** (icons embedded as 80 px PNG, opens anywhere; the app viewer showed no `<img>` in markdown) **+ `Design/Buildings.md`** — the ACTIVE roster (not
 > `BuildingIds.Hidden`) by category, each with its level 1-5 icons (`UI/Icons/<Id>[_L<N>].png`), per-level
 > numbers (buildings.csv; an empty level cell repeats the one below), sandbox price/build time per level
 > (sandbox.csv), food a day / bakery bonus (economy.csv) and a short note (`Design/buildings/descriptions.tsv`,

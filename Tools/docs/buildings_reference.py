@@ -1,4 +1,4 @@
-"""Writes Design/Buildings.md: the ACTIVE building roster with every level's icon, its numbers per
+"""Writes Design/Buildings.md and Design/Buildings.html (the icons inside, opens anywhere): the ACTIVE building roster with every level's icon, its numbers per
 level and a short note on what it does (the user, 2026-11-12: «файл, где будут расписаны здания,
 их иконки для каждого уровня ... постоянное обновление, чтобы поддерживать активный состав»).
 
@@ -14,7 +14,9 @@ Everything comes from the project, so the file follows the game by itself:
 
 Run by Tools/research/run.ps1 after every `setup` step, and by hand:  python Tools/docs/buildings_reference.py
 """
+import base64
 import csv
+import html
 import io
 import os
 import re
@@ -26,8 +28,9 @@ ICONS = os.path.join(ROOT, "Assets", "_Project", "UI", "Icons")
 IDS = os.path.join(ROOT, "Assets", "_Project", "Scripts", "Buildings", "BuildingIds.cs")
 NOTES = os.path.join(ROOT, "Design", "buildings", "descriptions.tsv")
 OUT = os.path.join(ROOT, "Design", "Buildings.md")
+OUT_HTML = os.path.join(ROOT, "Design", "Buildings.html")
 LEVELS = 5
-ICON_PX = 72
+THUMB = 80
 
 CATEGORIES = [
     ("City", "Город"), ("Storage", "Склады"), ("Production", "Производство"), ("Food", "Еда"),
@@ -119,7 +122,17 @@ def icon(bid, lv):
     return name if os.path.exists(os.path.join(ICONS, name)) else None
 
 
-def main():
+def thumb(name):
+    """The icon shrunk to THUMB px as a base64 PNG, for the self-contained HTML."""
+    from PIL import Image
+    im = Image.open(os.path.join(ICONS, name)).convert("RGBA")
+    im.thumbnail((THUMB, THUMB), Image.LANCZOS)
+    buf = io.BytesIO()
+    im.save(buf, "PNG", optimize=True)
+    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
+
+
+def collect():
     table = read_csv("buildings.csv")
     header = table[0]
     known = {cat for cat, _ in CATEGORIES}
@@ -136,90 +149,154 @@ def main():
                     levels[r[0].strip()] = int(r[2])
 
     active = [r for r in rows if r["id"] not in hidden]
-    missing_notes = [r["id"] for r in active if r["id"] not in notes]
-    missing_icons = [f'{r["id"]} ур.{lv}' for r in active for lv in range(1, levels.get(r["id"], LEVELS) + 1) if icon(r["id"], lv) is None]
-
-    out = []
-    w = out.append
-    w("# Здания: активный состав")
-    w("")
-    w("> Файл СОБИРАЕТСЯ САМ (`Tools/docs/buildings_reference.py`, после каждого `setup` в `run.ps1`): не правь его руками.")
-    w("> Состав и числа — лист «Здания» (`buildings.csv`), еда — `economy.csv`, скрытые — `BuildingIds.Hidden`,")
-    w("> иконки — `UI/Icons`, описания — `Design/buildings/descriptions.tsv` (новое здание: добавь туда строку).")
-    w("> Цены и время стройки — песочницы (лист «Песочница: здания», `sandbox.csv`; ур.1 = постройка, дальше — улучшение);")
-    w("> остальные числа — базовые; Нашествие переопределяет своё своим листом.")
-    w("")
-    w(f"Активных зданий: **{len(active)}** (скрыто: {len(hidden & {r['id'] for r in rows})}).")
-    w("")
-    if missing_notes:
-        w(f"⚠ Без описания: {', '.join(missing_notes)}.")
-        w("")
-    if missing_icons:
-        w(f"⚠ Нет иконки: {', '.join(missing_icons)}.")
-        w("")
-    w("**Разделы:** " + " · ".join(f"[{ru}](#{ru.lower().replace(' ', '-')})" for cat, ru in CATEGORIES if any(r["category"] == cat for r in active)))
-    w("")
-
+    data = {
+        "active": len(active),
+        "hidden_count": len(hidden & {r["id"] for r in rows}),
+        "missing_notes": [r["id"] for r in active if r["id"] not in notes],
+        "missing_icons": [f'{r["id"]} ур.{lv}' for r in active for lv in range(1, levels.get(r["id"], LEVELS) + 1) if icon(r["id"], lv) is None],
+        "groups": [],
+        "hidden": [(r["display_name"], r["id"], notes.get(r["id"], "скрыто")) for r in sorted((r for r in rows if r["id"] in hidden), key=lambda r: r["id"])],
+    }
     for cat, ru in CATEGORIES:
         group = [r for r in active if r["category"] == cat]
         if not group:
             continue
-        w(f"## {ru}")
-        w("")
+        items = []
         for r in group:
             bid = r["id"]
-            w(f"### {r['display_name']} `{bid}`")
-            w("")
-            w(notes.get(bid, "⚠ *описание не написано — добавь строку в `Design/buildings/descriptions.tsv`*"))
-            w("")
-            heads = "| | " + " | ".join(f"ур. {lv}" for lv in range(1, LEVELS + 1)) + " |"
-            w(heads)
-            w("|---|" + "---|" * LEVELS)
-            cells = []
             top = levels.get(bid, LEVELS)
-            for lv in range(1, LEVELS + 1):
-                if lv > top:
-                    cells.append("нет")
-                    continue
-                name = icon(bid, lv)
-                cells.append(f'<img src="../Assets/_Project/UI/Icons/{name}" width="{ICON_PX}">' if name else "—")
-            w("| | " + " | ".join(cells) + " |")
+            icons = [("нет" if lv > top else icon(bid, lv)) for lv in range(1, LEVELS + 1)]
+            table_rows = []
             for column, label in STATS:
                 vals = per_level(r, column)
                 if all(v in (None, 0) for v in vals):
                     continue
-                w(f"| {label} | " + " | ".join(fmt(v) if v is not None else "—" for v in vals) + " |")
+                table_rows.append((label, [fmt(v) if v is not None else "—" for v in vals]))
             low = bid.lower()
             for key, label in ((f"food_day_{low}", "Еда в день"), (f"food_boost_{low}", "Бонус еды соседям")):
                 vals = [eco.get(f"{key}_{lv}") for lv in range(1, LEVELS + 1)]
                 if any(v is not None for v in vals):
-                    w(f"| {label} | " + " | ".join(fmt(v) if v is not None else "—" for v in vals) + " |")
+                    table_rows.append((label, [fmt(v) if v is not None else "—" for v in vals]))
             sb = sand.get(bid)
             if sb:
-                w("| Цена (песочница) | " + " | ".join(price(sb, lv) if lv <= top else "нет" for lv in range(1, LEVELS + 1)) + " |")
+                table_rows.append(("Цена (песочница)", [price(sb, lv) if lv <= top else "нет" for lv in range(1, LEVELS + 1)]))
                 secs = per_level(sb, "build_sec")
                 if any(secs):
-                    w("| Стройка, с (песочница) | " + " | ".join(fmt(v) if v is not None and lv <= top else ("нет" if lv > top else "—")
-                                                       for lv, v in zip(range(1, LEVELS + 1), secs)) + " |")
+                    table_rows.append(("Стройка, с (песочница)", [("нет" if lv > top else fmt(v) if v is not None else "—")
+                                                                  for lv, v in zip(range(1, LEVELS + 1), secs)]))
             else:
-                w("| Цена (базовая) | " + price(r, 1) + " | | | | |")
-            w("")
+                table_rows.append(("Цена (базовая)", [price(r, 1)] + [""] * (LEVELS - 1)))
+            items.append({"name": r["display_name"], "id": bid, "note": notes.get(bid), "icons": icons, "rows": table_rows})
+        data["groups"].append((ru, items))
+    return data
 
-    if any(r["id"] in hidden for r in rows):
-        w("## Скрыты (данные и модели есть, в игре не строятся)")
-        w("")
-        for r in sorted((r for r in rows if r["id"] in hidden), key=lambda r: r["id"]):
-            w(f"- {r['display_name']} `{r['id']}` — {notes.get(r['id'], 'скрыто')}")
-        w("")
 
-    text = "\n".join(out)
-    old = io.open(OUT, encoding="utf-8").read() if os.path.exists(OUT) else None
+HEAD_LINES = [
+    "Файл СОБИРАЕТСЯ САМ (Tools/docs/buildings_reference.py, после каждого setup в run.ps1): не правь его руками.",
+    "Состав и числа — лист «Здания» (buildings.csv), еда — economy.csv, скрытые — BuildingIds.Hidden, иконки — UI/Icons,",
+    "описания — Design/buildings/descriptions.tsv (новое здание: добавь туда строку).",
+    "Цены и время стройки — песочницы (sandbox.csv; ур.1 = постройка, дальше — улучшение); остальные числа — базовые.",
+]
+NO_NOTE = "⚠ описание не написано — добавь строку в Design/buildings/descriptions.tsv"
+
+
+def render_md(d):
+    out = ["# Здания: активный состав", ""] + ["> " + line for line in HEAD_LINES] + [
+        "", "> Картинки удобнее смотреть в Design/Buildings.html (иконки внутри файла).", "",
+        f"Активных зданий: **{d['active']}** (скрыто: {d['hidden_count']}).", ""]
+    if d["missing_notes"]:
+        out += [f"⚠ Без описания: {', '.join(d['missing_notes'])}.", ""]
+    if d["missing_icons"]:
+        out += [f"⚠ Нет иконки: {', '.join(d['missing_icons'])}.", ""]
+    for ru, items in d["groups"]:
+        out += [f"## {ru}", ""]
+        for b in items:
+            out += [f"### {b['name']} `{b['id']}`", "", b["note"] or NO_NOTE, ""]
+            out.append("| | " + " | ".join(f"ур. {lv}" for lv in range(1, LEVELS + 1)) + " |")
+            out.append("|---|" + "---|" * LEVELS)
+            cells = []
+            for lv, c in enumerate(b["icons"], 1):
+                if c == "нет":
+                    cells.append("нет")
+                elif c is None:
+                    cells.append("нет иконки")
+                else:
+                    cells.append(f"![{b['id']} {lv}](../Assets/_Project/UI/Icons/{c})")
+            out.append("| | " + " | ".join(cells) + " |")
+            for label, vals in b["rows"]:
+                out.append(f"| {label} | " + " | ".join(vals) + " |")
+            out.append("")
+    if d["hidden"]:
+        out += ["## Скрыты (данные и модели есть, в игре не строятся)", ""]
+        out += [f"- {n} `{i}` — {note}" for n, i, note in d["hidden"]] + [""]
+    return "\n".join(out)
+
+
+CSS = """body{font-family:Segoe UI,Arial,sans-serif;background:#f6efe0;color:#3a2a1a;margin:24px;max-width:1100px}
+h1{margin:0 0 8px}h2{margin:32px 0 8px;border-bottom:2px solid #c9a96b;padding-bottom:4px}
+.head{background:#efe2c4;border-left:4px solid #c9a96b;padding:8px 12px;font-size:13px}
+.warn{color:#a33;font-size:14px}.toc a{margin-right:12px}
+.b{background:#fffaf0;border:1px solid #e0cfa8;border-radius:10px;padding:12px 14px;margin:12px 0}
+.b h3{margin:0 0 4px}.id{font:12px Consolas,monospace;color:#8a7350}.note{margin:4px 0 10px}
+table{border-collapse:collapse;font-size:13px}td,th{padding:4px 10px;text-align:center;border-bottom:1px solid #eadbb8}
+td:first-child,th:first-child{text-align:left;white-space:nowrap;color:#6b5434}
+img{width:THUMBpx;height:THUMBpx;display:block;margin:auto}.none{color:#b9a27a}"""
+
+
+def render_html(d):
+    esc = html.escape
+    p = ['<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><title>Здания: активный состав</title>',
+         "<style>" + CSS.replace("THUMB", str(THUMB)) + "</style></head><body>",
+         "<h1>Здания: активный состав</h1>",
+         '<div class="head">' + "<br>".join(esc(line) for line in HEAD_LINES) + "</div>",
+         f"<p>Активных зданий: <b>{d['active']}</b> (скрыто: {d['hidden_count']}).</p>"]
+    if d["missing_notes"]:
+        p.append('<p class="warn">⚠ Без описания: ' + esc(", ".join(d["missing_notes"])) + ".</p>")
+    if d["missing_icons"]:
+        p.append('<p class="warn">⚠ Нет иконки: ' + esc(", ".join(d["missing_icons"])) + ".</p>")
+    p.append('<p class="toc">' + "".join(f'<a href="#g{i}">{esc(ru)}</a>' for i, (ru, _) in enumerate(d["groups"])) + "</p>")
+    for i, (ru, items) in enumerate(d["groups"]):
+        p.append(f'<h2 id="g{i}">{esc(ru)}</h2>')
+        for b in items:
+            p.append(f'<div class="b"><h3>{esc(b["name"])} <span class="id">{b["id"]}</span></h3>')
+            p.append('<div class="note">' + esc(b["note"] or NO_NOTE) + "</div><table>")
+            p.append("<tr><th></th>" + "".join(f"<th>ур. {lv}</th>" for lv in range(1, LEVELS + 1)) + "</tr>")
+            cells = []
+            for c in b["icons"]:
+                if c == "нет":
+                    cells.append('<td class="none">нет</td>')
+                elif c is None:
+                    cells.append('<td class="none">нет иконки</td>')
+                else:
+                    cells.append(f'<td><img src="{thumb(c)}" alt=""></td>')
+            p.append("<tr><td></td>" + "".join(cells) + "</tr>")
+            for label, vals in b["rows"]:
+                p.append("<tr><td>" + esc(label) + "</td>" + "".join("<td>" + esc(v) + "</td>" for v in vals) + "</tr>")
+            p.append("</table></div>")
+    if d["hidden"]:
+        p.append("<h2>Скрыты (данные и модели есть, в игре не строятся)</h2><ul>")
+        for n, i, note in d["hidden"]:
+            p.append("<li>" + esc(n) + f' <span class="id">{i}</span> — ' + esc(note) + "</li>")
+        p.append("</ul>")
+    p.append("</body></html>")
+    return "\n".join(p)
+
+
+def write(path, text):
+    old = io.open(path, encoding="utf-8").read() if os.path.exists(path) else None
     if old != text:
-        with io.open(OUT, "w", encoding="utf-8", newline="\n") as f:
+        with io.open(path, "w", encoding="utf-8", newline="\n") as f:
             f.write(text)
-    print(f"buildings reference: {len(active)} active, {'updated' if old != text else 'unchanged'}"
-          + (f"; NO NOTE: {', '.join(missing_notes)}" if missing_notes else "")
-          + (f"; NO ICON: {len(missing_icons)}" if missing_icons else ""))
+    return old != text
+
+
+def main():
+    d = collect()
+    changed = write(OUT, render_md(d))
+    changed = write(OUT_HTML, render_html(d)) or changed
+    print(f"buildings reference: {d['active']} active, {'updated' if changed else 'unchanged'}"
+          + (f"; NO NOTE: {', '.join(d['missing_notes'])}" if d["missing_notes"] else "")
+          + (f"; NO ICON: {len(d['missing_icons'])}" if d["missing_icons"] else ""))
     return 0
 
 
