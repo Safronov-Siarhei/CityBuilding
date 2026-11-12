@@ -266,6 +266,8 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   resource icons' angle + a VIOLET glow added afterwards (variant Б chosen 2026-11-12) -> `Design/store/booster_icons_v2/`,
   sheet `Booster_Icons_v2.png`; Новосёлы redone with the game's own villager FBX (Peasant1 + Woman2, palette
   texture), `Booster_Settlers_v2.png`. The glow is not in the PNGs yet (PIL in the contact-sheet script).
+  **APPROVED 2026-11-12** (icons v2 + the inventory with them, `Booster_Inventory(_Full).png`). Design phase of the
+  boosters is complete; next: implementation (importer for the `boosters` tab, shop tab, «Запасы», HUD row, stream, hints).
 - **Town HUD (2026-11-12):** the active boosters' row (medallion + time ring) under the resource bar, where
   «День N» was; «День N» moves onto the minimap's ring foot (the user's idea) -- SANDBOX ONLY; Invasion and
   the campaign keep their HUD as it is (their «Волна N» on top, the run clock on the ring foot). Building look APPROVED 2026-11-12: a VIOLET «magic» wind stream winding up round every
