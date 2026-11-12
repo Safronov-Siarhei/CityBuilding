@@ -234,3 +234,10 @@ Splitting a type into several squads; equipment buildings; `#unit_militia_flavou
 the three newer tiers have no flavour keys; melee has no swing effect.
 
 Trap (2026-10-25): `OrcsFightBack_AndAKilledSoldierCostsAPermanentCitizen` failed once in a full run (the militiaman lived past 25 s) and passed 3/3 alone -- order-dependent, not chased; since 2026-10-25 a melee soldier strikes the orc at hand while chasing (`SoldierUnit.OrcAtHand`), which may lengthen a lone soldier's fight.
+
+## In the reference (2026-11-12)
+`Design/Reference.html` part «Армия» shows every player unit with a picture per level (soldiers and machines
+1-3, ships 1) and its units.csv numbers. Pictures: `Tools/blender/render_unit_cards.py -- Design/reference/units 160`
+on the Models .blend (every root Soldier*/Siege* object, `-size` boxes skipped) -- re-run after soldiers.py or a
+siege model changes; machines have one model for all levels. A new unit: a row in `ARMY` in
+`Tools/docs/reference.py` + a note in `Design/reference/units.tsv`.
