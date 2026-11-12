@@ -344,7 +344,7 @@
   4. Only after that is the cutscene video made.
 - Model renders go to the user for approval before anything enters the game.
 
-## Mission 2 «Оборона города» (the user, 2026-11-12; DESIGN, nothing built)
+## Mission 2 «Оборона города» (the user, 2026-11-12; GAMEPLAY v1 BUILT the same day, not seen, untested)
 - **Cutscene before it (to be discussed in detail):** Ардан runs in through the gates; the captain of the guard
   stands there; Ардан starts telling him big creatures attacked his village; a soldier on the wall shouts the
   enemy is coming; the alarm, the gates close; the captain calls a CAVALRYMAN and orders him to ride to the
@@ -381,7 +381,48 @@
   inner 18 x 15 (~12 cells gate to gate), a street along the inside of each wall; outside: wheat fields with
   barns/haystacks and pastures under the walls, forest between and on the flanks, the orcs' roads from the three
   fords through the forest and the fields; castle on the cliff, the capital road over the lake.
-- **Open:** both cutscenes (to discuss before building them); the build itself.
+- **The user's order (2026-11-12):** gameplay FIRST, the cutscenes LAST.
+- **Gameplay v1 BUILT 2026-11-12 (not seen, no tests):**
+  - **Map** `Mission2` (prefix `Map-M2`): `Tools/blender/mission2.py` = map4.py's generator with the land read from
+    `Tools/blender/mission2-plan.json`; `.blend` in `Blender/Map-M2.blend`; exported by
+    `export_map.py -- D:/Fork/CityBuilding Mission2 Map-M2` to `Models/Mission2/`; `CreateMeshMapDefinition` in
+    SetupProjectCityScene. 200x200 cells, the land ~120 x 80 (17% buildable, 71% water): the river with three fords,
+    the far forest, forests on the flanks and between the fields, wheat fields (grass_dry with furrows), the town
+    pad, a low cliff over the lake, the causeway south to the far shore. Plan point (px, py; y south) = map
+    (px - 50, 46 - py). No "zone" spots (the town stands from the start).
+  - **Town** `Assets/_Project/Campaign/Mission2Town.json` (bot template format + `origin` + `lanes`), written with
+    the plan JSON by `Tools/campaign/mission2_town.py` (uses `Design/bot_town_common.Town`, `free` patched to the plan
+    frame): 543 pieces: outer wall lvl 3 (Fence/Tower every 6/FortifiedGate W N E), inner lvl 4, 262 Road, 36 Cottage +
+    23 Hovel in the lower town, Church, Barracks, HealerHouse, Cottages lvl 4 in the centre, Castle (Town Hall) on the
+    cliff, Square, 4 Granary barns by the fields. Placed as the PLAYER's buildings (Initialize + SetLevel).
+  - **Mode** `Scripts/Campaign/CityDefenceMode.cs` on GameManagers (`CityDefenceMode.Begin()` from the campaign map's
+    level 2; `Pending` -> `IsActive`): switches off raids, illness, fire, food, tax, happiness, migration (as Invasion);
+    fog off; infinite resources; no autosave / shop / build hints / boosters / save entry. Lanes (W, N, E) are the
+    JSON's: spawn beyond the ford -> the plan's way -> outer gate -> streets -> inner gate -> square (`OrcLane` from
+    corners; orcs break what stands on the line). Waves on all three lanes every m2_wave_every_sec, growing.
+    Guards = hirelings (`SpawnHireling`, not selectable): men-at-arms just inside each gate, archers sent up the
+    walls (`GoToWall`) beside each gate. Part 1 clock -> «Гонец...» line 3 s (the future cutscene) -> PlayerPrefs
+    `m2_part2_saved` -> part 2: orcs cleared, outer gates + wall by the gates + 25% of the rest + m2_part2_burnt of
+    the lower town's houses collapse into RUINS (BuildingRuin), guards re-manned at the inner gates. Lost: any inner
+    gate or the castle destroyed. Won: part 2 clock -> every orc dies (the future help scene), MarkDone("m2"),
+    the save key cleared. «Заново» = Begin() again (part 2 if saved).
+  - **Ардан** = a ManAtArms hireling with m2_arden_health/damage (look: man-at-arms for now -- his own model later);
+    the stick (`FloatingJoystick`, `NotOver` = the cry button) drives `SoldierUnit.Steer` (new `SoldierUnitSteer.cs`:
+    NavMesh slide, no fighting while steered; let go = his group holds there and he fights). Camera
+    `FocusOn` him every frame, gestures locked. Fallen: rises on the square after m2_arden_rise_sec.
+    Battle cry: Enrage(m2_cry_damage_mult, m2_cry_sec) on him + guards within m2_cry_radius; orcs there `BusyFor`
+    m2_cry_stun_sec; cooldown m2_cry_cooldown_sec.
+  - **HUD** `Scripts/Campaign/CityDefenceHud.cs` (code-built canvas, order 40): goal + clock top, the three gates'
+    bars left (outer in part 1, inner in part 2), Ардан's portrait + bar bottom left, the cry button bottom right
+    (Skill_captain_might, radial cooldown), part banner, middle line (courier / Ардан rises), end panel (won: «К
+    карте»; lost: «Заново» + «К карте»). Sandbox HUD hidden by NAME (CanvasGroup), list in the class.
+  - **Numbers** economy tab «Кампания: оборона города» (gid 2000066, `sheet_tabs.csv`, rows at the END of economy.csv),
+    `BalanceConfig.CityDefence` (`CityDefenceBalance`, m2_* x 27). **Texts** #m2_* x 19 in «Тексты: обучение и сюжет».
+  - **Not yet:** the burning (fields, houses -- ruins only now), Ардан's model, the minimap «!» not checked, the
+    fields as real wheat (ground colour only), tuning, and the three cutscenes.
+- **Traps:** `FogOfWarManager.DisabledCheat` is an INSTANCE property. Regenerating the map: rerun
+  `mission2_town.py` FIRST (it writes mission2-plan.json), then Blender, then export.
+- **Open:** both cutscenes (to discuss before building them); the user's playtest of v1.
 
 ## Ардан (the model)
 `CineArdan`, about 1 750 tris, in the «Кино» collection of `Buildings-Size1-Models.blend`.

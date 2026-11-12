@@ -325,6 +325,8 @@ namespace CityBuilder.Combat
 
             // up on a wall, on the way up or coming down (SoldierUnitWalls)
             if (TickWall()) return;
+            // run by the stick (SoldierUnitSteer: campaign mission 2's Ардан)
+            if (TickSteer()) return;
             TrackRun();
 
             if (_retreatLeft > 0f)

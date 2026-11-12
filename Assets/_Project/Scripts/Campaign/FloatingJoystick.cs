@@ -92,6 +92,17 @@ namespace CityBuilder.Campaign
 
         private bool _locked;
 
+        /// <summary>Buttons over which a touch is theirs, not the stick's (mission 2's battle cry): a press that lands on one is ignored until it lifts.</summary>
+        public System.Collections.Generic.List<RectTransform> NotOver { get; } = new System.Collections.Generic.List<RectTransform>();
+        private bool _ignoring;
+
+        private bool OverAButton(Vector2 at)
+        {
+            foreach (var r in NotOver)
+                if (r != null && r.gameObject.activeInHierarchy && RectTransformUtility.RectangleContainsScreenPoint(r, at, null)) return true;
+            return false;
+        }
+
         private void Update()
         {
             if (_locked) return;
@@ -112,6 +123,9 @@ namespace CityBuilder.Campaign
             }
             var scale = _canvas.scaleFactor > 0f ? _canvas.scaleFactor : 1f;
             var v = Vector2.zero;
+            if (pressed && _stick.alpha < 0.5f && !_ignoring && OverAButton(at)) _ignoring = true;
+            if (!pressed) _ignoring = false;
+            if (_ignoring) pressed = false;
             if (pressed)
             {
                 if (_stick.alpha < 0.5f) _origin = at;                 // the stick appears where the finger lands

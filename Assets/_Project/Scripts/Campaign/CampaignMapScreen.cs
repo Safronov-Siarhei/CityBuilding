@@ -229,6 +229,12 @@ namespace CityBuilder.Campaign
             if (_picked < 0 || !Playable(_picked)) return;
             // level 1: the film the first time; after that straight into the mission (the film has its own «Пропустить»)
             if (_picked == 0) MissionOne.SkipFilm = CampaignProgress.FilmSeen;
+            // level 2 is played on the gameplay scene, on its own map (CityDefenceMode)
+            if (_levels[_picked].id == CityDefenceMode.LevelId)
+            {
+                CityDefenceMode.Begin();
+                return;
+            }
             LoadingScreen.IntoGame(_levels[_picked].scene);
         }
 

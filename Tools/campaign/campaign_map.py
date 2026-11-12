@@ -78,7 +78,7 @@ ROAD = [VILLAGE, (560, 720), FIELD, (800, 690), (880, 600), FOREST, (1060, 590),
 # the level points: what the game shows; name keys are the localization's
 LEVELS = [
     {"id": "m1", "at": VILLAGE, "titleKey": "#campaign_level_1", "scene": "CampaignOpening", "bestKey": "m1_best"},
-    {"id": "m2", "at": TOWN, "titleKey": "#campaign_level_2", "scene": "", "bestKey": ""},
+    {"id": "m2", "at": TOWN, "titleKey": "#campaign_level_2", "scene": "CityBuilder", "bestKey": ""},
     {"id": "m3", "at": CASTLE, "titleKey": "#campaign_level_3", "scene": "", "bestKey": ""},
 ]
 FOG_FROM = 1960  # x where the unknown lands begin

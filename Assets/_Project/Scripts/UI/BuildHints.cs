@@ -19,7 +19,7 @@ namespace CityBuilder.UI
 
         /// <summary>The hints work here: a sandbox game, not a run, the tutorial or a dungeon.</summary>
         public static bool Allowed =>
-            !Invasion.InvasionMode.IsActive && !Invasion.InvasionRules.Active && !Tutorial.TutorialMode.IsActive && !Dungeon.DungeonMode.IsActive;
+            !Invasion.InvasionMode.IsActive && !Invasion.InvasionRules.Active && !Tutorial.TutorialMode.IsActive && !Dungeon.DungeonMode.IsActive && !Campaign.CityDefenceMode.IsActive;
 
         /// <summary>A build-menu card under a padlock: not researched, or waiting on a building not yet standing.</summary>
         public static bool IsLocked(BuildingData data)
