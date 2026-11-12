@@ -255,14 +255,17 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   fit two rows (`Booster_Inventory_Full.png`).
 - **Decided 2026-11-12:** booster time runs ONLY while playing; «Продлить» adds one more full duration;
   prices: the user sets them in the sheet; Новосёлы may exceed the houses' places (the user expects a
-  housing shortage to send people away -- NOT TRUE in the sandbox today: people above capacity just stay,
-  houses stop making more; only the starving leave; asked whether to add it).
+  housing shortage to send people away -- BUILT 2026-11-12, see sandbox-run-systems.md).
 - **Sheet tab «Песочница (Лавка): Бустеры»** (gid 2000065, target `boosters`, repo `Balance/boosters.csv`,
   2026-11-12): a `booster` table (effect, duration_sec, price_crystals empty, ad) + a `key` table (slots,
   recharge, every hint number). Not read by the game yet (no importer): implementation to come.
 - **Icons v1 (2026-11-12, FOR APPROVAL, not in the game):** `Tools/blender/booster_icons.py` (stand-alone,
   low-poly sign on a gold-rimmed enamel medallion) -> `Design/store/booster_icons/Booster_<id>.png`, sheet
   `Design/store/Booster_Icons.png`.
+  v1 REJECTED (the user: round icons do not look like the game). **v2 (`bare` mode):** the sign alone from the
+  resource icons' angle + a VIOLET glow added afterwards (variant Б chosen 2026-11-12) -> `Design/store/booster_icons_v2/`,
+  sheet `Booster_Icons_v2.png`; Новосёлы redone with the game's own villager FBX (Peasant1 + Woman2, palette
+  texture), `Booster_Settlers_v2.png`. The glow is not in the PNGs yet (PIL in the contact-sheet script).
 - **Town HUD (2026-11-12):** the active boosters' row (medallion + time ring) under the resource bar, where
   «День N» was; «День N» moves onto the minimap's ring foot (the user's idea) -- SANDBOX ONLY; Invasion and
   the campaign keep their HUD as it is (their «Волна N» on top, the run clock on the ring foot). Building look APPROVED 2026-11-12: a VIOLET «magic» wind stream winding up round every

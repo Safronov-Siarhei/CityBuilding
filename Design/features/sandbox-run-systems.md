@@ -18,6 +18,12 @@
   every `person_respawn_sec`; **not the Town Hall** (its founding party just lives there; its
   housing_capacity is 0 on the sandbox tab). Migration moves nobody (`MigrationManager.MovesPeople`
   = false; the settling-in grace still runs -- sickness waits on it).
+- **Housing shortage sends people away** (the user, 2026-11-12, for the Новосёлы booster): more people
+  (citizens + soldiers) than the houses' places + the Town Hall's founding party (`citizens_on_build`)
+  -> one townsman leaves every `crowded_leave_interval_sec` (20, economy, tab «Еда и голод») till all fit;
+  log `#log_crowded`; not deaths (`RemoveCitizens`). Sandbox only (not Invasion, not the tutorial, needs
+  a Town Hall). `HousePeople.Overcrowded` / `SendOvercrowdedAway`. A house burnt in a raid now also sends
+  its people away. Built (compiles), not seen, no test.
 - Decay is gone (`BuildingInstance.DecayEnabled` = false); repair = what the building is worth
   (price + paid upgrades, every material but coins) × `repair_cost_fraction` × missing health share.
 - **All three heroes are bought for coins** in the Town Hall, the King too (`king_price`,
