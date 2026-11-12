@@ -254,8 +254,8 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   row (icon, ×N, name; time instead of the name while running), the effect only in the window, so all 11
   fit two rows (`Booster_Inventory_Full.png`).
 - **Town HUD (2026-11-12):** the active boosters' row (medallion + time ring) under the resource bar, where
-  «День N» was; «День N» moves onto the minimap's ring foot (the user's idea; in a run the run clock
-  uses that spot -- how the two share it is open). Building look A/B and hint rules still open.
+  «День N» was; «День N» moves onto the minimap's ring foot (the user's idea) -- SANDBOX ONLY; Invasion and
+  the campaign keep their HUD as it is (their «Волна N» on top, the run clock on the ring foot). Building look A/B and hint rules still open.
 - **Concepts:** `Tools/store/booster_mockup.py` -> `Design/store/Booster_Shop.png`, `Booster_Inventory.png`,
   `Booster_Hud.png` (icons are placeholder medallions; real ones rendered for approval).
 
