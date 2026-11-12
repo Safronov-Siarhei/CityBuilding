@@ -6,7 +6,8 @@ metadata:
   type: reference
 ---
 
-`D:\K&C\kingdoms_and_castles_architecture.md` and `D:\K&C\farthest_frontier_architecture.md`
+`Design/reference/competitors/kingdoms_and_castles_architecture.md` and `Design/reference/competitors/farthest_frontier_architecture.md`
+(copied into the repo 2026-11-12 from D:\K&C so they survive a machine or agent change)
 (written 2026-08-28/29, in Russian, same structure both). Each has: layered architecture
 reconstruction, subsystem-by-subsystem behaviour, full building catalogue with costs/workers,
 concrete balance figures, critic scores AND the recurring criticisms, and a "what to borrow"
