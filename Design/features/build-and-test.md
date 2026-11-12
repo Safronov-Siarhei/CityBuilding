@@ -85,9 +85,15 @@ category" and the APK's own entries (`data.unity3d`, `libil2cpp.so`, `libunity.s
 (`Editor/BuildWindows.cs`) → `D:\Builds CB` (previous build deleted first) → Telegram via
 `send_build_to_telegram.py` (token from `TELEGRAM_BOT_TOKEN`; 50 MB cap). Identifier
 `com.depigogames.citybuilding`. The repo is PUBLIC — nothing secret in it.
-**This machine (2026-11-12): Unity 6000.5.4f1 in D:\unity has NO Android Build Support** (PlaybackEngines
-holds only Windows): no APK until the module is added in Unity Hub (Android Build Support + OpenJDK + SDK/NDK).
-`build_android.ps1` now finds the project and the editor like run.ps1 and stops with that message.
+**This machine (2026-11-12): Unity 6000.5.4f1 with Android Build Support is in
+`C:\Program Files\Unity\Hub\Editor\6000.5.4f1`** (build_android.ps1 finds it); a release APK takes ~4.5 min.
+**APK size audit 2026-11-12: 193,3 MB** (from 46 in October; Telegram refuses it; Google Play's base
+module limit is 200 MB). `data.unity3d` 170 MB of it, engine + code ~20 MB. Build log «Uncompressed
+usage»: meshes 242 MB (73 %), textures 64, other 19, audio 2,6. Meshes by folder: Models/Dungeon* 147 MB
+(12 variants × Relief/Props/Ground/Water, 3-6 MB each), Models/Islands 46, Models/Buildings 27, Map*/Inv*
+12; textures: UI/Icons 19,6 (319), UI/Loading 14,8 (6 maps 2048 px ASTC 4x4, 3 MB each). Every FBX
+imports tangents (`tangentImportMode: 3`) though no shader of ours reads them -- the first lever
+(ModelImportDefaults: `importTangents = None`, bump GetVersion). Not yet acted on (the user to decide).
 
 ## Cheats / debug
 `Cheats/CheatsPanel*.cs` (2026-10-31, was DebugPanel): a «Читы» button top-right opens a plain draggable IMGUI
