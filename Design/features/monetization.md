@@ -270,8 +270,9 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   - frequency (agreed): fades by itself in 8 s (a bar on its foot) or a swipe; one hint on screen; the
     same hint once per 10 min; none in the first 7 min; ignored 3 times in a row -> quiet till next session;
     all numbers in the sheet.
-  - OPEN: case B -- not in stock but in a shop slot right now: sometimes offer it («▶ Смотреть», taken and
-    switched on at once); how often/which triggers still to discuss. Concept `Booster_Hints.png`.
+  - Case B (agreed 2026-11-12): not in stock but in one of the shop's 4 slots right now -> the same hint
+    with «▶ Смотреть» (ad, then it is switched on at once; the slot goes to its 15-min recharge). Any
+    trigger, but its OWN rarer limit: at most one shop offer per 20 min (sheet). No crystals on the hint. Concept `Booster_Hints.png`.
 - **Concepts:** `Tools/store/booster_mockup.py` -> `Design/store/Booster_Shop.png`, `Booster_Inventory.png`,
   `Booster_Hud.png` (icons are placeholder medallions; real ones rendered for approval).
 
