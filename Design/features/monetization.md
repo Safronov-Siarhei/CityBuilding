@@ -237,6 +237,12 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   HP +20% / +50% / +100%; Вербовка -- hiring at HALF the price; Ремонт -- repairs every damaged
   building at once; Новосёлы -- +10 citizens at once. Ремесло (workshops) and «Готово!» not named
   (asked). Open: tiers / durations of these, Новосёлы vs housing.
+- **Round 5 -- NO TIERS (the user, 2026-11-12):** 12 boosters, one strength each, every one for an ad OR
+  crystals, same time either way: Лесоруб / Каменотёс / Рудокоп ×1.5 (the gathering action only);
+  Изобилие +1 food per cycle; Казна tax ×1.2, 10 min; Зодчий 3 min instant building; Учёный 3 min instant
+  research; Боевой дух +50% damage, 3 min; Стойкость buildings' HP +25%; Вербовка hiring at half price;
+  Ремонт repairs all; Новосёлы +10 citizens. No daily ad cap: the slots' 15-min recharge already limits
+  it (4 per 15 min); crystals are for those who do not want an ad.
 - **Concepts:** `Tools/store/booster_mockup.py` -> `Design/store/Booster_Shop.png`, `Booster_Inventory.png`,
   `Booster_Hud.png` (icons are placeholder medallions; real ones rendered for approval).
 
