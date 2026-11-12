@@ -18,5 +18,4 @@
 
 Competitor research the ideas lean on: `.claude/memory/kc_reference_analysis.md` and
 `.claude/memory/reference_competitor_analyses.md` (the two long teardowns, Kingdoms and Castles and
-Farthest Frontier, were files in `D:\K&C` on the user's old machine and in the claude.ai project
-«Kingdom and Castles» — not in this repo).
+Farthest Frontier, are in this repo since 2026-11-12: `Design/reference/competitors/`).
