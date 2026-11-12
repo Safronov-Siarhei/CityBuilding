@@ -88,7 +88,8 @@ def fetch_target(name):
     merged = []
     for gid in sheet_tabs()[name]:
         table = rows(fetch(gid))
-        if merged and table and table[0][0] == merged[0][0]:
+        # a building/unit table keeps its header (the sandbox's buildings are several tabs since 2026-11-12)
+        if merged and table and table[0][0] == merged[0][0] and table[0][0] not in ("building", "unit"):
             table = table[1:]
         merged.extend(table)
     return merged

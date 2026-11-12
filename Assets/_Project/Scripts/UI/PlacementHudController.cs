@@ -77,6 +77,7 @@ namespace CityBuilder.UI
             if (bonusLabel == null) return;
             var data = selecting ? buildingPlacer.SelectedBuilding : null;
             var show = false;
+            if (data != null && UpdateDecorBonus(data)) return;
             if (data != null && Citizens.FoodOutput.IsFood(data.buildingName) && buildingPlacer.TryGetGhostCentre(out var centre))
             {
                 int bonus, reached = 0;
@@ -109,6 +110,51 @@ namespace CityBuilder.UI
                 }
             }
             if (bonusLabel.gameObject.activeSelf != show) bonusLabel.gameObject.SetActive(show);
+        }
+
+        private string _shownDecor;
+
+        /// <summary>
+        /// Decor's money while placing (the user, 2026-11-12): a decoration aimed shows «+0,08 x N» --
+        /// its coins a day to each resident and the houses it would reach; a house shows the coins a
+        /// day each of its residents would get from the decor round that spot. False when neither.
+        /// </summary>
+        private bool UpdateDecorBonus(Buildings.BuildingData data)
+        {
+            var decor = data.LevelStats(1).residentCoins;
+            var house = Buildings.BuildingInstance.IsHouse(data);
+            if ((decor <= 0f && !house) || !buildingPlacer.TryGetGhostCentre(out var centre)) return false;
+            string text = null;
+            if (decor > 0f)
+            {
+                var reached = Citizens.DecorBonus.HousesReachedFrom(centre, data.LevelStats(1).serviceRadius);
+                if (reached > 0) text = Localization.Format("#place_decor_gives", Citizens.DecorBonus.Coins(decor), reached);
+            }
+            else
+            {
+                var bonus = Citizens.DecorBonus.PerResidentAt(centre);
+                if (bonus > 0f) text = Localization.Format("#place_decor_house", Citizens.DecorBonus.Coins(bonus));
+            }
+            var show = text != null;
+            if (show)
+            {
+                if (text != _shownDecor)
+                {
+                    _shownDecor = text;
+                    bonusLabel.text = text;
+                    _shownBonus = _shownReached = -1;
+                }
+                var camera = UnityEngine.Camera.main;
+                if (camera != null)
+                {
+                    var height = data.footprintSize.x * 0.9f + 1.6f;
+                    bonusLabel.rectTransform.position = camera.WorldToScreenPoint(centre + Vector3.up * height)
+                        + Vector3.up * (6f * Mathf.Sin(Time.unscaledTime * 3f));
+                }
+            }
+            else _shownDecor = null;
+            if (bonusLabel.gameObject.activeSelf != show) bonusLabel.gameObject.SetActive(show);
+            return true;
         }
 
         /// <summary>The confirm button: places the building (or the road or fence piece) in hand.</summary>

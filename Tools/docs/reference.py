@@ -109,6 +109,9 @@ def sandbox():
             continue
         if r[0].strip() in ("unit", "key"):
             break
+        if r[0].strip() == "building":   # the next tab of buildings (one per kind since 2026-11-12), its own columns
+            header = r
+            continue
         out[r[0].strip()] = dict(zip(header, r))
     return out
 
@@ -202,6 +205,9 @@ def collect():
                 if any(v is not None for v in vals):
                     table_rows.append((label, [fmt(v) if v is not None else "—" for v in vals]))
             sb = sand.get(bid)
+            if sb and any(per_level(sb, "resident_coins")):   # decor's money (2026-11-12): the sandbox's decor tab
+                table_rows.append(("Радиус бонуса, клеток", [fmt(v) if v is not None else "—" for v in per_level(sb, "service_radius")]))
+                table_rows.append(("Монет в день жителю", [fmt(v) if v is not None else "—" for v in per_level(sb, "resident_coins")]))
             if sb:
                 table_rows.append(("Цена (песочница)", [price(sb, lv) if lv <= top else "нет" for lv in range(1, LEVELS + 1)]))
                 secs = per_level(sb, "build_sec")

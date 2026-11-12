@@ -157,7 +157,7 @@ namespace CityBuilder.UI
         }
 
         /// <summary>A parchment disc with an ink rim, drawn once.</summary>
-        private static Sprite CircleSprite()
+        internal static Sprite CircleSprite()
         {
             const int size = 64;
             var texture = new Texture2D(size, size, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp };

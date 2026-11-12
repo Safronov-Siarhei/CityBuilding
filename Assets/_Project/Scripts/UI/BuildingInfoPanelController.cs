@@ -245,7 +245,7 @@ namespace CityBuilder.UI
                 }
                 var empty = _currentProduction != null && _currentProduction.NothingLeftInReach;
                 var choice = _currentProduction != null && _currentProduction.HasRecipeChoice;
-                runCard.ShowBand(empty ? Localization.Format("#building_nothing_in_reach", ResourceNames.Of(_currentProduction.ProducesResource)) : ProductionLine(data), empty, choice);
+                runCard.ShowBand(empty ? Localization.Format("#building_nothing_in_reach", ResourceNames.Of(_currentProduction.ProducesResource)) : ProductionLine(data) ?? DecorLine(), empty, choice);
                 if (choice) RefreshRecipeControls(null, runCard.RecipeRow);
                 return;
             }
@@ -327,6 +327,22 @@ namespace CityBuilder.UI
             if (!hasProduction) return null;
             var line = FoodLine() ?? ProductionSummary(_currentProduction.SelectedRecipe, _currentProduction.BatchesPerWorkerPerTick, data.productionIntervalSeconds);
             return string.IsNullOrEmpty(line) ? null : line;
+        }
+
+        /// <summary>
+        /// Decor's money (the user, 2026-11-12): a decoration says what it gives each resident of the
+        /// houses in its reach and how far that is; a house says what its residents get from the decor
+        /// round it. Null for anything else, and for a house no decor reaches.
+        /// </summary>
+        private string DecorLine()
+        {
+            if (_currentInstance == null || _currentInstance.Data == null) return null;
+            var stats = _currentInstance.Data.LevelStats(_currentInstance.Level);
+            if (stats.residentCoins > 0f)
+                return Localization.Format("#decor_card_gives", Citizens.DecorBonus.Coins(stats.residentCoins), stats.serviceRadius);
+            if (!BuildingInstance.IsHouse(_currentInstance.Data)) return null;
+            var bonus = Citizens.DecorBonus.PerResident(_currentInstance);
+            return bonus > 0f ? Localization.Format("#decor_card_house", Citizens.DecorBonus.Coins(bonus)) : null;
         }
 
         /// <summary>

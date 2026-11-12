@@ -512,6 +512,12 @@ namespace CityBuilder.EditorTools
             // (migration no longer moves anyone); and the heroes, bought in the Town Hall.
             managers.AddComponent<HousePeople>();
             managers.AddComponent<CityBuilder.Combat.HeroRoster>();
+            // gift bubbles over houses the decor reaches (the user, 2026-11-12; DecorBonus, sheet decor_*)
+            var decorGifts = managers.AddComponent<CityBuilder.UI.DecorGifts>();
+            var decorGiftsSO = new SerializedObject(decorGifts);
+            decorGiftsSO.FindProperty("coinIcon").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>(UiTextureImport.IconsFolder + "/Res_Coins.png");
+            decorGiftsSO.FindProperty("crystalIcon").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>(UiTextureImport.IconsFolder + "/Res_UpgradeCrystal.png");
+            decorGiftsSO.ApplyModifiedPropertiesWithoutUndo();
 
             // What contentment is finally FOR: it sets how fast people find their way here, or
             // away. Needs the placer as well as the citizens, because the settling-in grace period

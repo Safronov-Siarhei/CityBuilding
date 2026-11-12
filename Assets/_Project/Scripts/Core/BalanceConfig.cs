@@ -512,6 +512,16 @@ namespace CityBuilder.Core
         // pays this), and what each level of the Tax House adds to it
         [SerializeField] private float coinsPerCitizenPerDay = 1f;
         [SerializeField] private float taxHouseBonusPerLevel = 0.2f;
+        // decor's money (the user, 2026-11-12): the most one resident can get a day from all the decor
+        // round his house, and the gift bubbles over decorated houses (decor_* keys, DecorBonus/DecorGifts)
+        [SerializeField] private float decorCoinsCapPerResident = 1f;
+        [SerializeField] private float decorGiftSeconds = 240f;
+        [SerializeField] private float decorGiftBonusRef = 0.2f;
+        [SerializeField] private float decorGiftMinSeconds = 60f;
+        [SerializeField] private float decorGiftCoinsBase = 3f;
+        [SerializeField] private float decorGiftCoinsPerBonus = 5f;
+        [SerializeField] private float decorGiftCrystalChance = 0.03f;
+        [SerializeField] private int decorGiftCrystals = 1;
         // the Tax House's research in the Laboratory: its opening and levels 2..5 cost these upgrade
         // crystals (tax_house_research_crystals_<1..5>; the user, 2026-11-02)
         [SerializeField] private int[] taxHouseResearchCrystals = { 3, 5, 7, 9, 11 };
@@ -1240,6 +1250,14 @@ namespace CityBuilder.Core
         public float DayLengthSeconds => dayLengthSeconds;
         public float CoinsPerCitizenPerDay => coinsPerCitizenPerDay;
         public float TaxHouseBonusPerLevel => taxHouseBonusPerLevel;
+        public float DecorCoinsCapPerResident => decorCoinsCapPerResident;
+        public float DecorGiftSeconds => decorGiftSeconds;
+        public float DecorGiftBonusRef => decorGiftBonusRef;
+        public float DecorGiftMinSeconds => decorGiftMinSeconds;
+        public float DecorGiftCoinsBase => decorGiftCoinsBase;
+        public float DecorGiftCoinsPerBonus => decorGiftCoinsPerBonus;
+        public float DecorGiftCrystalChance => decorGiftCrystalChance;
+        public int DecorGiftCrystals => decorGiftCrystals;
         public int IslandStartRocks => islandStartRocks;
         public int TutorialRewardCrystals => tutorialRewardCrystals;
         public float ShopSlotSeconds => shopSlotSeconds;
@@ -2243,6 +2261,14 @@ namespace CityBuilder.Core
             dayLengthSeconds = Read(economy, "day_length_seconds", dayLengthSeconds);
             coinsPerCitizenPerDay = Read(economy, "coins_per_citizen_per_day", coinsPerCitizenPerDay);
             taxHouseBonusPerLevel = Read(economy, "tax_house_bonus_per_level", taxHouseBonusPerLevel);
+            decorCoinsCapPerResident = Read(economy, "decor_coins_cap_per_resident", decorCoinsCapPerResident);
+            decorGiftSeconds = Read(economy, "decor_gift_seconds", decorGiftSeconds);
+            decorGiftBonusRef = Read(economy, "decor_gift_bonus_ref", decorGiftBonusRef);
+            decorGiftMinSeconds = Read(economy, "decor_gift_min_seconds", decorGiftMinSeconds);
+            decorGiftCoinsBase = Read(economy, "decor_gift_coins_base", decorGiftCoinsBase);
+            decorGiftCoinsPerBonus = Read(economy, "decor_gift_coins_per_bonus", decorGiftCoinsPerBonus);
+            decorGiftCrystalChance = Read(economy, "decor_gift_crystal_chance", decorGiftCrystalChance);
+            decorGiftCrystals = (int)Read(economy, "decor_gift_crystals", decorGiftCrystals);
             for (var l = 0; l < taxHouseResearchCrystals.Length; l++) taxHouseResearchCrystals[l] = (int)Read(economy, $"tax_house_research_crystals_{l + 1}", taxHouseResearchCrystals[l]);
             islandStartRocks = (int)Read(economy, "island_start_rocks", islandStartRocks);
             loadingSecondsEnter = Read(economy, "loading_seconds_enter", loadingSecondsEnter);

@@ -35,6 +35,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | [happiness-and-migration](happiness-and-migration.md) | 6-factor happiness, arrivals/departures | довольство, миграция |
 | [hazards-fire-sickness](hazards-fire-sickness.md) | fire from decay, brigade, illness, well, healer | пожар, болезнь, колодец, лекарь |
 | **Buildings** | | |
+| [decor-bonus](decor-bonus.md) | decor gives coins a day to residents of houses in its radius (adds up), gift bubbles over decorated houses; sheet tab «Песочница: Здания (Декор)» (2026-11-12) | декор, украшения, уют, подарки, пузыри, бонус жителям |
 | [buildings-catalog](buildings-catalog.md) | the 49-building roster, categories, ids, BuildingData, model contract | здания, ростер, категории |
 | [building-placement](building-placement.md) | placing, pen-sketch ghost, rotation, roads/fences piece by piece, gates on roads, demolition, no-build, start zone | установка, призрак, вид на телефоне, клетки, точка в центре, забор, дорога, ворота, снос |
 | [building-levels-and-decay](building-levels-and-decay.md) | levels 1–5, upgrade rules, level models, decay, repair | уровни, улучшение, ветхость, ремонт |

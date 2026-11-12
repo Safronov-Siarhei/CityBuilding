@@ -68,6 +68,14 @@ namespace CityBuilder.Buildings
         public int serviceRadius;
 
         /// <summary>
+        /// Coins a day this decoration adds to EVERY person living in a house inside its serviceRadius
+        /// (cells), the sheet's resident_coins(_N) (the user, 2026-11-12: «здания декора имеют разный
+        /// радиус действия и приносят разный денежный бонус людям, которые живут в домах в радиусе»).
+        /// Bonuses of several decorations add up (DecorBonus). Zero for everything that is not decor.
+        /// </summary>
+        public float residentCoins;
+
+        /// <summary>
         /// What standing here does for the settlement's mood -- the design's third happiness factor,
         /// "each entertainment building contributes its own happiness value". Zero for everything
         /// outside the Развлечения category, which is most of the roster.
@@ -272,6 +280,7 @@ namespace CityBuilder.Buildings
                     happiness = level.happiness,
                     harvestRadius = level.harvestRadius,
                     serviceRadius = level.serviceRadius,
+                    residentCoins = level.residentCoins,
                     buildSeconds = level.buildSeconds,
                 });
             }

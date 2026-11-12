@@ -62,7 +62,8 @@ namespace CityBuilder.Resources
         {
             var population = citizenManager != null ? citizenManager.TotalPopulation : 0;
             // Казна multiplies the day's tax (the user, 2026-11-12)
-            var due = population * PerCitizen * Shop.Boosters.TaxFactor + _carry;
+            // + the decor's coins to the people living round it (the user, 2026-11-12; DecorBonus)
+            var due = (population * PerCitizen + DecorBonus.DailyCoins()) * Shop.Boosters.TaxFactor + _carry;
             var income = Mathf.FloorToInt(due + 0.0001f);
             _carry = Mathf.Max(0f, due - income);
             if (income > 0) ResourceManager.Instance?.Add(ResourceType.Coins, income);

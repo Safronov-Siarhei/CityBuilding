@@ -86,9 +86,9 @@ namespace CityBuilder.EditorTools
                 foreach (var pair in ReadEconomy(ReadCsv(TutorialCsvPath), TutorialCsvPath)) sandboxEconomy[pair.Key] = pair.Value;
             var sandboxUnits = sandbox.Units.Count > 0 ? ReadUnits(sandbox.LayOver(unitRows, sandbox.Units, SandboxCsvPath), SandboxCsvPath) : units;
             var sandboxBuildings = buildings;
-            if (sandbox.Buildings.Count > 0)
+            if (sandbox.BuildingRows > 0)
             {
-                sandboxBuildings = ReadBuildings(sandbox.LayOver(buildingRows, sandbox.Buildings, SandboxCsvPath), SandboxCsvPath);
+                sandboxBuildings = ReadBuildings(sandbox.LayOverBuildings(buildingRows, SandboxCsvPath), SandboxCsvPath);
                 AttachRecipes(sandboxBuildings, recipes);
             }
             // the boosters tab: its keys are the sandbox's (slots, recharge, the hints), its rows the boosters
@@ -105,7 +105,7 @@ namespace CityBuilder.EditorTools
 
             // The run's config: the same tabs with the invasion tab's cells laid over them.
             var runUnits = ReadUnits(invasion.LayOver(unitRows, invasion.Units, InvasionCsvPath), InvasionCsvPath);
-            var runBuildings = ReadBuildings(invasion.LayOver(buildingRows, invasion.Buildings, InvasionCsvPath, wholeRow: true), InvasionCsvPath);
+            var runBuildings = ReadBuildings(invasion.LayOverBuildings(buildingRows, InvasionCsvPath, wholeRow: true), InvasionCsvPath);
             AttachRecipes(runBuildings, recipes);
             var runEconomy = new Dictionary<string, float>(economy);
             foreach (var pair in invasion.Keys) runEconomy[pair.Key] = pair.Value;
@@ -116,9 +116,9 @@ namespace CityBuilder.EditorTools
 
             Debug.Log($"BalanceImporter: {units.Count} units, {buildings.Count} buildings, {economy.Count} economy keys " +
                       $"and {localizationKeys} localization keys -> {ConfigAssetPath}; the invasion tab's " +
-                      $"{Math.Max(0, invasion.Buildings.Count - 1)} buildings, {Math.Max(0, invasion.Units.Count - 1)} units " +
+                      $"{invasion.BuildingRows} buildings, {Math.Max(0, invasion.Units.Count - 1)} units " +
                       $"and {invasion.Keys.Count} keys -> {RunConfigAssetPath}; the sandbox tab's " +
-                      $"{Math.Max(0, sandbox.Buildings.Count - 1)} buildings and {sandbox.Keys.Count} keys over {ConfigAssetPath}");
+                      $"{sandbox.BuildingRows} buildings and {sandbox.Keys.Count} keys over {ConfigAssetPath}");
             return config;
         }
 
@@ -330,8 +330,32 @@ namespace CityBuilder.EditorTools
         /// </summary>
         private class OverlayTab
         {
+            /// <summary>
+            /// The building tables, each header first, as the tabs have them: since 2026-11-12 the sandbox's
+            /// buildings are split over several tabs by kind (the user: «Песочница: Здания (Город)»,
+            /// «(Оборона)», «(Декор)»...), each with only the columns it needs -- each is laid over on its
+            /// own, so a column one tab lacks keeps the buildings tab's value for its rows.
+            /// </summary>
+            public readonly List<List<List<string>>> BuildingTables = new List<List<List<string>>>();
+
+            public int BuildingRows
+            {
+                get
+                {
+                    var n = 0;
+                    foreach (var t in BuildingTables) n += Math.Max(0, t.Count - 1);
+                    return n;
+                }
+            }
+
+            /// <summary>The buildings tab's rows with every building table laid over in turn.</summary>
+            public List<List<string>> LayOverBuildings(List<List<string>> rows, string path, bool wholeRow = false)
+            {
+                foreach (var t in BuildingTables) rows = LayOver(rows, t, path, wholeRow);
+                return rows;
+            }
+
             /// <summary>Each table header first, as the tab has it; empty when the tab has no such table.</summary>
-            public readonly List<List<string>> Buildings = new List<List<string>>();
             public readonly List<List<string>> Units = new List<List<string>>();
             public readonly Dictionary<string, float> Keys = new Dictionary<string, float>();
 
@@ -354,7 +378,7 @@ namespace CityBuilder.EditorTools
                     var first = row.Count > 0 ? row[0].Trim().TrimStart('\uFEFF') : string.Empty;
                     switch (first)
                     {
-                        case "building": table = tab.Buildings; table.Clear(); table.Add(Trimmed(row)); continue;
+                        case "building": table = new List<List<string>> { Trimmed(row) }; tab.BuildingTables.Add(table); continue;
                         case "unit": table = tab.Units; table.Clear(); table.Add(Trimmed(row)); continue;
                         case "key": keys = new List<List<string>> { Trimmed(row) }; table = keys; continue;
                     }
@@ -603,7 +627,9 @@ namespace CityBuilder.EditorTools
             for (var i = 1; i < tabs.Count; i++)
             {
                 var tab = tabs[i].TrimEnd('\r', '\n');
-                if (FirstCell(tab) == header)
+                // a building/unit table keeps its header even when the first tab opens with the same
+                // name: the sandbox's buildings are several tabs with columns of their own (2026-11-12)
+                if (FirstCell(tab) == header && header != "building" && header != "unit")
                 {
                     var lineEnd = tab.IndexOf('\n');
                     if (lineEnd < 0) continue;
@@ -1029,6 +1055,9 @@ namespace CityBuilder.EditorTools
                     happiness = LevelNumber(header, row, "happiness", level, previous?.happiness, path),
                     harvestRadius = LevelNumber(header, row, "harvest_radius", level, previous?.harvestRadius, path),
                     serviceRadius = LevelNumber(header, row, "service_radius", level, previous?.serviceRadius, path),
+                    // optional (only decor has it): blank level 1 = 0, a blank higher level repeats the one below
+                    residentCoins = level == 1 ? OptionalNumber(header, row, "resident_coins", path)
+                        : LevelFloat(header, row, "resident_coins", level, previous?.residentCoins, path),
                     buildSeconds = LevelNumber(header, row, "build_sec", level, previous?.buildSeconds, path),
                 });
             }
