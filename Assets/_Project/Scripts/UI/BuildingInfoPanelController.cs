@@ -281,7 +281,7 @@ namespace CityBuilder.UI
             else if (productionLabel != null)
             {
                 productionLabel.text = hasProduction
-                    ? FoodLine() ?? ProductionSummary(_currentProduction.SelectedRecipe, _currentProduction.BatchesPerWorkerPerTick, data.productionIntervalSeconds)
+                    ? FoodLine() ?? ProductionSummary(_currentProduction.SelectedRecipe, _currentProduction.BatchesPerWorkerPerTick, _currentProduction.IntervalSeconds)
                     : string.Empty;
             }
             RefreshRecipeControls();
@@ -331,7 +331,7 @@ namespace CityBuilder.UI
         {
             var hasProduction = _currentProduction != null && _currentProduction.MaxWorkers > 0;
             if (!hasProduction) return null;
-            var line = FoodLine() ?? ProductionSummary(_currentProduction.SelectedRecipe, _currentProduction.BatchesPerWorkerPerTick, data.productionIntervalSeconds);
+            var line = FoodLine() ?? ProductionSummary(_currentProduction.SelectedRecipe, _currentProduction.BatchesPerWorkerPerTick, _currentProduction.IntervalSeconds);
             return string.IsNullOrEmpty(line) ? null : line;
         }
 

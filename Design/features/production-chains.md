@@ -46,6 +46,10 @@ picker (iron / copper / gold bar / coins). A starved converter logs once; a full
   or when the last tick was short of an input).
 - Minting is removed. OPEN: gold bars are now spent on NOTHING (a trophy) until the user picks their
   use (proposals: level-5 upgrades -- the golden roofs --, diplomacy ransom/gifts/deals, elite units).
+- Smelt time PER METAL (the user, 2026-11-12): copper 10 s, iron 20 s, gold 30 s -- recipes tab column
+  `seconds` (`BuildingRecipe.seconds`; blank = the building's production_interval_sec), read through
+  `ProductionBuilding.IntervalSeconds` (tick, smelt bar, card line). One tick = every worker's
+  batches_per_tick batches. L1 (2 workers x 2): copper 48 bars/day, iron 24, gold 16 (a day = 120 s).
 - Concepts: `Tools/ui/smelter_bar_concepts.py` (A/B/C sheet, `final` -> `Design/ui/Smelter_Final_Concept.png`).
 
 ## Planned (agreed in talk 2026-11-12, NOT built)

@@ -100,6 +100,17 @@ namespace CityBuilder.Citizens
         /// <summary>Whether the player is offered a choice at all -- one recipe is not a decision, and a card with a single button on it is just noise.</summary>
         public bool HasRecipeChoice => Recipes.Count > 1;
 
+        /// <summary>Seconds a production tick takes now: the selected recipe's own `seconds`, else the building's interval.</summary>
+        public float IntervalSeconds
+        {
+            get
+            {
+                var recipe = SelectedRecipe;
+                if (recipe != null && recipe.seconds > 0f) return recipe.seconds;
+                return Data != null ? Data.productionIntervalSeconds : 0f;
+            }
+        }
+
         /// <summary>
         /// What the selected recipe makes. Wood or Stone here is what sends a worker walking out to
         /// a tree or a rock rather than staying on the plot (see CitizenVisualsManager) -- it is
@@ -247,7 +258,7 @@ namespace CityBuilder.Citizens
                 if (FoodOutput.IsProducer(data.buildingName)) TickFood();
                 return;
             }
-            var working = data != null && AssignedWorkers > 0 && data.productionIntervalSeconds > 0f
+            var working = data != null && AssignedWorkers > 0 && IntervalSeconds > 0f
                 && (_buildingInstance == null || _buildingInstance.IsOperational);   // not while built or upgraded (ConstructionSite)
             ShowSmeltBar(working && !_starved, data);
             if (!working) return;
@@ -258,8 +269,9 @@ namespace CityBuilder.Citizens
             if (GathersFromNodes) return;
 
             _timer += Time.deltaTime;
-            if (_timer < data.productionIntervalSeconds) return;
-            _timer -= data.productionIntervalSeconds;
+            var interval = IntervalSeconds;
+            if (_timer < interval) return;
+            _timer -= interval;
 
             var recipe = SelectedRecipe;
             if (recipe == null) return;
@@ -320,7 +332,7 @@ namespace CityBuilder.Citizens
         private void ShowSmeltBar(bool on, BuildingData data)
         {
             var recipe = SelectedRecipe;
-            if (!on || recipe == null || !recipe.HasInputs || data == null || data.productionIntervalSeconds <= 0f)
+            if (!on || recipe == null || !recipe.HasInputs || data == null || IntervalSeconds <= 0f)
             {
                 if (_smeltBar != null) _smeltBar.Hide();
                 return;
@@ -331,7 +343,7 @@ namespace CityBuilder.Citizens
                 _smeltBar = HarvestProgressBar.CreateFor(transform, recipe.output);
                 _smeltBarFor = recipe.output;
             }
-            _smeltBar.Report(_timer / data.productionIntervalSeconds);
+            _smeltBar.Report(_timer / IntervalSeconds);
         }
 
         /// <summary>

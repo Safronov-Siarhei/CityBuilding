@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Smelter
   displayName: "\u041F\u043B\u0430\u0432\u0438\u043B\u044C\u043D\u044F"
-  prefab: {fileID: 952035756003840244, guid: 49fda4ff8ea35f64a9cc461038721348, type: 3}
+  prefab: {fileID: 7142057821913539322, guid: 49fda4ff8ea35f64a9cc461038721348, type: 3}
   footprintSize: {x: 2, y: 3}
   cost:
   - type: 0
@@ -39,6 +39,7 @@ MonoBehaviour:
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
+    residentCoins: 0
     happiness: 0
     buildSeconds: 19
   - maxHealth: 240
@@ -49,6 +50,7 @@ MonoBehaviour:
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
+    residentCoins: 0
     happiness: 0
     buildSeconds: 20
   - maxHealth: 375
@@ -59,6 +61,7 @@ MonoBehaviour:
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
+    residentCoins: 0
     happiness: 0
     buildSeconds: 31
   - maxHealth: 540
@@ -69,6 +72,7 @@ MonoBehaviour:
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
+    residentCoins: 0
     happiness: 0
     buildSeconds: 50
   - maxHealth: 750
@@ -79,6 +83,7 @@ MonoBehaviour:
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
+    residentCoins: 0
     happiness: 0
     buildSeconds: 83
   recipes:
@@ -91,6 +96,7 @@ MonoBehaviour:
       amount: 1
     output: 12
     outputAmount: 1
+    seconds: 20
   - id: copper_bar
     displayName: "\u041C\u0435\u0434\u043D\u044B\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
     inputs:
@@ -100,6 +106,7 @@ MonoBehaviour:
       amount: 1
     output: 13
     outputAmount: 1
+    seconds: 10
   - id: gold_bar
     displayName: "\u0417\u043E\u043B\u043E\u0442\u043E\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
     inputs:
@@ -109,15 +116,7 @@ MonoBehaviour:
       amount: 1
     output: 14
     outputAmount: 1
-  - id: coins
-    displayName: "\u041C\u043E\u043D\u0435\u0442\u044B"
-    inputs:
-    - type: 14
-      amount: 1
-    - type: 6
-      amount: 1
-    output: 7
-    outputAmount: 4
+    seconds: 30
   productionIntervalSeconds: 12
   storageGroup: 0
   upgradeToLevel2Cost:

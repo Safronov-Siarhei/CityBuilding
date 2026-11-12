@@ -40,6 +40,13 @@ namespace CityBuilder.Buildings
         public ResourceType output = ResourceType.Wood;
         public int outputAmount = 1;
 
+        /// <summary>
+        /// Seconds one tick of THIS recipe takes (the recipes tab's `seconds`); 0 = the building's own
+        /// production_interval_sec. The Плавильня's metals smelt at their own pace (the user,
+        /// 2026-11-12: copper 10 s, iron 20 s, gold 30 s).
+        /// </summary>
+        public float seconds;
+
         public bool HasInputs => inputs != null && inputs.Count > 0;
 
         /// <summary>

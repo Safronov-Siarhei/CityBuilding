@@ -302,6 +302,7 @@ namespace CityBuilder.Buildings
                     inputs = CopyCost(recipe.inputs),
                     output = recipe.output,
                     outputAmount = recipe.outputAmount,
+                    seconds = recipe.seconds,
                 });
             }
             return copy;

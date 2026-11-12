@@ -955,6 +955,7 @@ namespace CityBuilder.EditorTools
                     displayName = Text(header, row, "display_name"),
                     output = ParseEnum(header, row, "out", ResourceType.Wood, path),
                     outputAmount = (int)Number(header, row, "out_amount", path),
+                    seconds = Mathf.Max(0f, OptionalNumber(header, row, "seconds", 0f, path)),
                     inputs = ReadRecipeInputs(header, row, path),
                 };
 
