@@ -3,6 +3,7 @@
 DRAFTS rendered for approval before anything goes into the game. Never saves the .blend.
 
     blender --background Buildings-Size1-Models.blend --python orc_siege_drafts.py -- <out_dir>
+    blender ... --python orc_siege_drafts.py -- <unity project> export     (the approved models into the game)
 
 The kingdom's machines (siege_drafts.py, approved 2026-11-05) rebuilt rough, in the orcs' colours: dark
 timber, hides, rust rags, bone horns and skulls, iron spikes; the crew are orc grunts (orcgrunt.py) at the
@@ -32,9 +33,9 @@ import orcs as o  # noqa: E402
 
 # the grunt's build() only: orcgrunt.py rebuilds and SAVES the .blend when imported
 _g = open(os.path.join(HERE, "orcgrunt.py"), encoding="utf-8").read()
-_g = _g[:_g.index("
-o.ensure_collection()")]
+_g = _g[:_g.index("\no.ensure_collection()")]
 orcgrunt = type(sys)("orcgrunt_build")
+orcgrunt.__file__ = os.path.join(HERE, "orcgrunt.py")
 exec(compile(_g, "orcgrunt.py", "exec"), orcgrunt.__dict__)
 
 GRUNT = 0.625           # an orc figure in the game, like the soldiers'
@@ -217,4 +218,32 @@ def orc_main():
     shoot(sc, cam, cam_data, row, os.path.join(OUT, "0-lineup.png"), w=1800, h=700, yaw_deg=-20, pitch_deg=28)
 
 
-orc_main()
+
+def orc_export(project):
+    """APPROVED 2026-11-12 («Утверждаю, ставь»): both machines, their parts inside, to Models/Orcs with
+    export_fbx.py's settings for static models. Never saves the .blend."""
+    folder = os.path.join(project, "Assets", "_Project", "Models", "Orcs")
+    blend = os.path.dirname(bpy.data.filepath)
+    img = kit.ensure_palette(os.path.join(blend, "Buildings-Palette.png"))
+    mat = kit.ensure_material(img)
+    for name, fn in ORC_MACHINES:
+        obj = make(name, fn, mat)
+        bpy.ops.object.select_all(action='DESELECT')
+        obj.select_set(True)
+        for child in obj.children_recursive:
+            child.select_set(True)
+        bpy.context.view_layer.objects.active = obj
+        path = os.path.join(folder, name + ".fbx")
+        bpy.ops.export_scene.fbx(
+            filepath=path, use_selection=True, object_types={'MESH'},
+            axis_forward='Z', axis_up='Y', apply_unit_scale=True, apply_scale_options='FBX_SCALE_ALL',
+            bake_space_transform=True, use_mesh_modifiers=True, mesh_smooth_type='FACE',
+            add_leaf_bones=False, bake_anim=False, path_mode='STRIP', embed_textures=False,
+            colors_type='LINEAR', prioritize_active_color=True)
+        print("EXPORTED", path)
+
+
+if len(argv) > 1 and argv[1] == "export":
+    orc_export(argv[0])
+else:
+    orc_main()

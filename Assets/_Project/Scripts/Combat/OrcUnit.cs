@@ -529,6 +529,7 @@ namespace CityBuilder.Combat
                     _retaliating = false;
                     _soldierTarget = FindNearestSoldierInAggroRange();
                 }
+                if (IgnoresSoldiers) _soldierTarget = null;
             }
 
             if (_soldierTarget != null)
@@ -712,7 +713,7 @@ namespace CityBuilder.Combat
         /// </summary>
         public void NotifyAttackedBy(SoldierUnit attacker)
         {
-            if (attacker == null || attacker.CurrentHealth <= 0 || CurrentHealth <= 0) return;
+            if (attacker == null || attacker.CurrentHealth <= 0 || CurrentHealth <= 0 || IgnoresSoldiers) return;
             if (_soldierTarget != null && _soldierTarget.CurrentHealth > 0) return;
             // a melee orc cannot reach a fighter on the walls (the user, 2026-11-02); a thrower can
             if (!CanReach(attacker)) return;
@@ -1409,6 +1410,13 @@ namespace CityBuilder.Combat
         /// <summary>Keeps to its way and turns aside for no building (campaign mission 2: the orcs go for the gates,
         /// not the walls beside their road -- the user, 2026-11-12); what stands ON the way it still breaks.</summary>
         public bool LaneOnly { get; set; }
+
+        /// <summary>A siege machine (campaign mission 2): it never turns on the fighters around it, only rolls on
+        /// to what its lane ends at.</summary>
+        public bool IgnoresSoldiers { get; set; }
+
+        /// <summary>Its pace times `factor` (a siege machine rolls slower than an orc walks).</summary>
+        public void Slow(float factor) => _walkSpeed *= Mathf.Max(0.05f, factor);
 
         /// <summary>
         /// Sends this orc down a portal's way (the user, 2026-10-24): it keeps to it, breaks what is

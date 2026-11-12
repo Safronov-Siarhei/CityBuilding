@@ -423,6 +423,22 @@
 - **Traps:** `FogOfWarManager.DisabledCheat` is an INSTANCE property. Regenerating the map: rerun
   `mission2_town.py` FIRST (it writes mission2-plan.json), then Blender, then export.
 - **Open:** both cutscenes (to discuss before building them); the user's playtest of v1.
+- **SWORD + SIEGE (approved by the user 2026-11-12, «Утверждаю, ставь») -> IN THE GAME (not seen).**
+  - Ардан WITH THE SWORD replaces the Латник's look: CineArdanSword.fbx from
+    Tools/blender/cinematic/export_ardan_sword.py (poses from ardan_sword.py; clips Idle, Run, Attack, Whirl, Cry,
+    Dash, Breath; entry in OpeningCast.json). CityDefenceMode.Figure.cs hides the ManAtArms renderers, rides the
+    figure (x 1/1.6) on the SoldierUnit: Run/Idle by measured speed (rate = speed / runSpeed), Attack on
+    `Struck`, a clip per skill via `SkillUsed`. Fighting/health still the SoldierUnit's.
+  - ORC RAM + SIEGE TOWER (Models/Orcs, `orc_siege_drafts.py -- <project> export`): CityDefenceMode.Siege.cs.
+    Only while `Late` (second half of a part): every m2_ram_every-th wave a ram, every m2_tower_every-th a tower,
+    one road in turn. Both = a Brute with its figure hidden + the model, Toughen x m2_*_health_mult,
+    `Slow(m2_siege_speed)`, `IgnoresSoldiers` (new OrcUnit flag: never targets/retaliates), LaneOnly. Ram hits
+    x m2_ram_damage_mult (breaks the gate). Tower: within m2_tower_dock_cells of its outer gate (or lane end in
+    part 2) it becomes a standing model for m2_tower_stay_sec and m2_tower_crew raiders land 2.5 cells inside the
+    wall (free raiders, no lane). Killed on the road = nothing.
+  - TRAP: orc_siege_drafts.py had a broken "
+" literal and orcgrunt exec needs `__file__` set -- fixed.
+  - TRAP: run.ps1 via `powershell -File ... -Steps a,b` passes ONE string -> no step runs; call `& run.ps1`.
 - **PLAYTEST 2 (the user, 2026-11-12) -> v3 BUILT the same day (setup green, CityDefenceTests 2/2; not seen).**
   - Start: Ардан at plan (50.5, 55.5) north of the square (`_start`), the castle behind the camera; healers stay on the square.
   - Minimap was black: the darkness quad rendered in the minimap camera too (no depth texture) -> the renderer is
@@ -444,7 +460,7 @@
     ribbon (mode 2) along each lane up to its gate (m2_sand_road_width), particle fires. Ore deposits and
     iron/coal/gold nodes removed at start.
   - HUD: skills 70 px (was 104); the portrait is a COPY of the sandbox King's widget (`HeroPortraitController.Of`).
-  - Drafts for approval (not in the game): orc ram + siege tower (Tools/blender/orc_siege_drafts.py), Ардан with
+  - Drafts (APPROVED + installed, see SWORD + SIEGE above): orc ram + siege tower (Tools/blender/orc_siege_drafts.py), Ардан with
     a sword and 7 key poses (Tools/blender/cinematic/ardan_sword.py). After approval: export, orc machines enter at
     half time, Ардан's figure replaces the Man-at-Arms. OPEN: closed gate leaves (orcs already cannot pass a gate;
     the leaves are drawn open in the FortifiedGate mesh) -- a door piece still to model.

@@ -2880,6 +2880,16 @@ namespace CityBuilder.Core
         // the shooters on the walls walk between two posts this many cells apart, now and then
         public int wallPatrolCells = 3;
         public float wallPatrolSeconds = 8f;
+        // the orcs' siege machines from the second half of a part (approved 2026-11-12)
+        public int ramEvery = 3;
+        public int towerEvery = 4;
+        public float ramHealthMult = 6f;
+        public float ramDamageMult = 8f;
+        public float towerHealthMult = 5f;
+        public float siegeSpeed = 0.6f;
+        public int towerCrew = 4;
+        public float towerDockCells = 3.5f;
+        public float towerStaySeconds = 20f;
 
         public void Read(System.Func<string, float?> get)
         {
@@ -2961,6 +2971,15 @@ namespace CityBuilder.Core
             healFxSeconds = F("m2_heal_fx_sec", healFxSeconds);
             wallPatrolCells = Mathf.RoundToInt(F("m2_wall_patrol_cells", wallPatrolCells));
             wallPatrolSeconds = F("m2_wall_patrol_sec", wallPatrolSeconds);
+            ramEvery = Mathf.RoundToInt(F("m2_ram_every", ramEvery));
+            towerEvery = Mathf.RoundToInt(F("m2_tower_every", towerEvery));
+            ramHealthMult = F("m2_ram_health_mult", ramHealthMult);
+            ramDamageMult = F("m2_ram_damage_mult", ramDamageMult);
+            towerHealthMult = F("m2_tower_health_mult", towerHealthMult);
+            siegeSpeed = F("m2_siege_speed", siegeSpeed);
+            towerCrew = Mathf.RoundToInt(F("m2_tower_crew", towerCrew));
+            towerDockCells = F("m2_tower_dock_cells", towerDockCells);
+            towerStaySeconds = F("m2_tower_stay_sec", towerStaySeconds);
         }
     }
 }

@@ -639,6 +639,12 @@ namespace CityBuilder.EditorTools
                 else propList.Add(model);
             }
             WriteArray(cityDefenceSO.FindProperty("props"), propList.ToArray());
+            // the orcs' ram and siege tower (approved 2026-11-12)
+            cityDefenceSO.FindProperty("orcRamModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Orcs/OrcRam.fbx");
+            cityDefenceSO.FindProperty("orcTowerModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Orcs/OrcSiegeTower.fbx");
+            // Ардан with the sword in place of the Латник's look (approved 2026-11-12)
+            cityDefenceSO.FindProperty("ardenModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(cine + "Cast/CineArdanSword.fbx");
+            cityDefenceSO.FindProperty("ardenClips").objectReferenceValue = AssetDatabase.LoadAssetAtPath<CityBuilder.Campaign.CineClips>("Assets/_Project/Campaign/Cast/CineArdanSwordClips.asset");
             cityDefenceSO.ApplyModifiedPropertiesWithoutUndo();
 
             // The dungeon (Dungeon/DungeonMode): idle in a town; when DungeonTravel sent the heroes

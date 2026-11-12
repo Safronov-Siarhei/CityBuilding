@@ -317,6 +317,7 @@ namespace CityBuilder.Campaign
             foreach (var orc in new List<OrcUnit>(OrcUnit.All))
                 if (orc != null) Destroy(orc.gameObject);
             foreach (var lane in _laneOrcs) lane.Clear();
+            ForgetSiege();
             for (var i = 0; i < 3; i++)
             {
                 if (OuterGates[i] != null) OuterGates[i].TryDamage(OuterGates[i].CurrentHealth);
@@ -362,6 +363,7 @@ namespace CityBuilder.Campaign
             TickHealers(dt);
             TickGarrison(dt);
             TickTownsfolk(dt);
+            TickSiege(dt);
             if (Current == Stage.Courier || Current == Stage.Lost) return;
 
             TimeLeft -= dt;
@@ -423,6 +425,7 @@ namespace CityBuilder.Campaign
                     _laneOrcs[lane].Add(orc);
                 }
             }
+            if (Late) SendSiege(level);
         }
 
         /// <summary>The foremost orc of a lane's wave (nearest the castle) -- the minimap's «!».</summary>

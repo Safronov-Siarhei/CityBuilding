@@ -25,6 +25,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 import bpy  # noqa: E402
 import ardan  # noqa: E402
 import ardan_anim as aa  # noqa: E402
+import ardan_anim2 as a2  # noqa: E402
 import detail  # noqa: E402
 import kit  # noqa: E402
 from kit import Builder  # noqa: E402
@@ -66,83 +67,56 @@ def sword(arm, mat):
     return obj
 
 
-def legs(p, l=(0, 0, 0), r=(0, 0, 0)):
-    for side, (th, sh, ft) in (("L", l), ("R", r)):
-        aa.rot(p["thigh." + side], th)
-        aa.rot(p["shin." + side], sh)
-        aa.rot(p["foot." + side], ft)
+def _pose(hips=(0, 0, 0), chest=(0, 0, 0), head=(0, 0, 0), arm_r=((0, 0, 0), 0), arm_l=((0, 0, 0), 0),
+          leg_l=(0, 0, 0), leg_r=(0, 0, 0), drop=0.0):
+    """A pose as ardan_anim2's dict of (rx, ry, rz) per bone: easy to mix (a2.mix) into clips."""
+    q = a2.blank()
+    q["hips"] = list(hips)
+    q["chest"] = list(chest)
+    q["head"] = list(head)
+    q["upper_arm.R"], q["forearm.R"] = list(arm_r[0]), [arm_r[1], 0, 0]
+    q["upper_arm.L"], q["forearm.L"] = list(arm_l[0]), [arm_l[1], 0, 0]
+    for side, (th, sh, ft) in (("L", leg_l), ("R", leg_r)):
+        q["thigh." + side], q["shin." + side], q["foot." + side] = [th, 0, 0], [sh, 0, 0], [ft, 0, 0]
+    q["hips_loc"] = [0, -drop, 0]
+    return q
 
 
-def ready(p):
-    legs(p, (-12, 14, -2), (10, 8, -18))
-    aa.rot(p["chest"], 6, 0, 10)
-    aa.rot(p["upper_arm.R"], -25, 10, 0)
-    aa.rot(p["forearm.R"], -45)
-    aa.rot(p["upper_arm.L"], -10, -12, 0)
-    aa.rot(p["forearm.L"], -40)
+def ready():
+    return _pose(chest=(6, 0, 10), arm_r=((-25, 10, 0), -45), arm_l=((-10, -12, 0), -40),
+                 leg_l=(-12, 14, -2), leg_r=(10, 8, -18), drop=0.004)
 
 
-def wind_up(p):
-    legs(p, (-16, 18, -2), (14, 10, -24))
-    aa.rot(p["hips"], 0, 0, 15)
-    aa.rot(p["chest"], -4, 6, 30)
-    aa.rot(p["head"], 0, 0, -20)
-    aa.rot(p["upper_arm.R"], -160, -30, 0)
-    aa.rot(p["forearm.R"], -70)
-    aa.rot(p["upper_arm.L"], -45, -20, 0)
-    aa.rot(p["forearm.L"], -50)
+def wind_up():
+    return _pose(hips=(0, 0, 15), chest=(-4, 6, 30), head=(0, 0, -20), arm_r=((-160, -30, 0), -70),
+                 arm_l=((-45, -20, 0), -50), leg_l=(-16, 18, -2), leg_r=(14, 10, -24), drop=0.006)
 
 
-def strike(p):
-    legs(p, (-30, 30, 0), (20, 12, -30))
-    aa.rot(p["hips"], 0, 0, -15)
-    aa.rot(p["chest"], 18, -6, -30)
-    aa.rot(p["head"], -10, 0, 20)
-    aa.rot(p["upper_arm.R"], -70, 30, 0)
-    aa.rot(p["forearm.R"], -5)
-    aa.rot(p["upper_arm.L"], 10, -25, 0)
-    aa.rot(p["forearm.L"], -30)
+def strike():
+    return _pose(hips=(0, 0, -15), chest=(18, -6, -30), head=(-10, 0, 20), arm_r=((-70, 30, 0), -5),
+                 arm_l=((10, -25, 0), -30), leg_l=(-30, 30, 0), leg_r=(20, 12, -30), drop=0.012)
 
 
-def whirl(p):
-    legs(p, (-20, 25, 0), (20, 25, -20))
-    aa.rot(p["hips"], 0, 0, 70)
-    aa.rot(p["chest"], 10, 0, 30)
-    aa.rot(p["upper_arm.R"], -10, 85, 0)
-    aa.rot(p["forearm.R"], -10)
-    aa.rot(p["upper_arm.L"], -10, -70, 0)
-    aa.rot(p["forearm.L"], -20)
+def whirl():
+    return _pose(hips=(0, 0, 70), chest=(10, 0, 30), arm_r=((-10, 85, 0), -10), arm_l=((-10, -70, 0), -20),
+                 leg_l=(-20, 25, 0), leg_r=(20, 25, -20), drop=0.01)
 
 
-def cry(p):
-    legs(p, (-14, 6, 0), (14, 6, -14))
-    aa.rot(p["chest"], -10, 0, 0)
-    aa.rot(p["head"], -22, 0, 0)
-    aa.rot(p["upper_arm.R"], -175, 10, 0)
-    aa.rot(p["forearm.R"], -15)
-    aa.rot(p["upper_arm.L"], -20, -35, 0)
-    aa.rot(p["forearm.L"], -95)
+def cry():
+    return _pose(chest=(-10, 0, 0), head=(-22, 0, 0), arm_r=((-175, 10, 0), -15), arm_l=((-20, -35, 0), -95),
+                 leg_l=(-14, 6, 0), leg_r=(14, 6, -14))
 
 
-def dash(p):
-    legs(p, (-60, 55, 5), (40, 10, -30))
-    p["hips"].location = (0, 0, -0.03 * S)
-    aa.rot(p["chest"], 28, 0, -10)
-    aa.rot(p["head"], -20, 0, 0)
-    aa.rot(p["upper_arm.R"], -95, 5, 0)
-    aa.rot(p["forearm.R"], 0)
-    aa.rot(p["upper_arm.L"], 40, -15, 0)
-    aa.rot(p["forearm.L"], -20)
+def dash():
+    return _pose(chest=(28, 0, -10), head=(-20, 0, 0), arm_r=((-95, 5, 0), 0), arm_l=((40, -15, 0), -20),
+                 leg_l=(-60, 55, 5), leg_r=(40, 10, -30), drop=0.03)
 
 
-def breath(p):
-    legs(p, (-6, 10, 0), (6, 10, -6))
-    aa.rot(p["chest"], 8, 0, 0)
-    aa.rot(p["head"], 12, 0, 0)
-    aa.rot(p["upper_arm.R"], 8, 8, 0)
-    aa.rot(p["forearm.R"], -15)
-    aa.rot(p["upper_arm.L"], -35, -10, 0)
-    aa.rot(p["forearm.L"], -120, 0, 20)
+def breath():
+    q = _pose(chest=(8, 0, 0), head=(12, 0, 0), arm_r=((8, 8, 0), -15), arm_l=((-35, -10, 0), -120),
+              leg_l=(-6, 10, 0), leg_r=(6, 10, -6))
+    q["forearm.L"] = [-120, 0, 20]
+    return q
 
 
 POSES = [("1-Ready", ready), ("2-WindUp", wind_up), ("3-Strike", strike), ("4-Whirl", whirl),
@@ -163,7 +137,7 @@ def main():
     cam.data.lens = 60
     for name, pose in POSES:
         aa.rest(arm)
-        pose(arm.pose.bones)
+        a2.apply(arm, pose())
         bpy.context.view_layer.update()
         for view, offset in (("", Vector((-1.25, -1.55, 0.55))), ("-side", Vector((1.9, -0.35, 0.4)))):
             cam.location = at + offset
@@ -173,4 +147,5 @@ def main():
         print("RENDERED", name)
 
 
-main()
+if __name__ == "__main__":
+    main()

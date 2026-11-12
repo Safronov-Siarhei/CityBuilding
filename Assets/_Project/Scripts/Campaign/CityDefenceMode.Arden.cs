@@ -78,6 +78,7 @@ namespace CityBuilder.Campaign
             Arden.name = "Arden";
             Arden.SteerArea = LitArea(1f);
             ApplyLevel(fullHealth: true);
+            DressArden();
             JumpToArden();
         }
 
@@ -131,6 +132,7 @@ namespace CityBuilder.Campaign
                 return;
             }
             // the camera looks north: the stick's up is +z
+            TickArdenFigure(dt);
             var steer = new Vector3(Stick.x, 0f, Stick.y);
             var was = Arden.IsSteered;
             Arden.Steer = steer;
