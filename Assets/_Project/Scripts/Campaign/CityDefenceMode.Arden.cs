@@ -8,8 +8,9 @@ using UnityEngine.AI;
 namespace CityBuilder.Campaign
 {
     /// <summary>
-    /// Mission 2's Ардан (the user's first playtest, 2026-11-12): run by the stick, MORTAL (dead = the
-    /// mission lost), he levels on the orcs he fells himself (experience = the orc's health) and each level
+    /// Mission 2's Ардан (the user's first playtest, 2026-11-12): run by the stick; fallen, he RISES AGAIN on the
+    /// square after m2_arden_respawn_sec, his level kept (the user's third playtest: «слишком тяжело удерживать его
+    /// живым»). He levels on every orc that dies after he wounded it (experience = the orc's health) and each level
     /// opens a skill: 1 «Боевой клич» (he and the allies near strike harder, the orcs near stagger),
     /// 2 «Круговой удар» (a blow round him that throws them back), 3 «Натиск» (a dash the stick's way,
     /// striking and staggering all on the line), 4 «Второе дыхание» (he and the allies near heal fast).
@@ -66,11 +67,18 @@ namespace CityBuilder.Campaign
 
         private bool ArdenAlive => Arden != null && Arden.CurrentHealth > 0;
 
-        private void RaiseArden()
+        /// <summary>Seconds until the fallen Ардан rises on the square; 0 while he stands.</summary>
+        public float RespawnLeft { get; private set; }
+
+        // the orcs he has wounded: their death pays him, whoever dealt the last blow (the user's third playtest)
+        private readonly HashSet<OrcUnit> _woundedByArden = new HashSet<OrcUnit>();
+
+        private void RaiseArden() => RaiseArden(_start);
+
+        private void RaiseArden(Vector3 at)
         {
             var army = ArmyManager.Instance;
             if (army == null) return;
-            var at = _start;
             if (NavMesh.SamplePosition(at, out var hit, 4f, NavMesh.AllAreas)) at = hit.position;
             _ardenGroup = new ArmyGroup(SoldierType.ManAtArms, at);
             Arden = army.SpawnHireling(SoldierType.ManAtArms, at, _ardenGroup);
@@ -98,9 +106,16 @@ namespace CityBuilder.Campaign
             Arden.SetCurrentHealth(Mathf.Max(1, Mathf.RoundToInt(max * share)));
         }
 
+        private void OnOrcWounded(OrcUnit orc, SoldierUnit by)
+        {
+            if (orc != null && by != null && by == Arden) _woundedByArden.Add(orc);
+        }
+
         private void OnOrcDied(OrcUnit orc)
         {
-            if (orc == null || Arden == null || orc.KilledBy != Arden || ArdenLevel >= SkillCount) return;
+            if (orc == null) return;
+            var his = _woundedByArden.Remove(orc) || (Arden != null && orc.KilledBy == Arden);
+            if (!his || ArdenLevel >= SkillCount) return;
             ArdenXp += Mathf.Max(1, orc.MaxHealth);
             while (ArdenLevel < SkillCount && XpForNext > 0 && ArdenXp >= XpForNext)
             {
@@ -127,8 +142,21 @@ namespace CityBuilder.Campaign
             if (Current == Stage.Courier) return;
             if (!ArdenAlive)
             {
-                // mortal: his fall is the mission's (the user's first playtest)
-                if (Current == Stage.Part1 || Current == Stage.Part2) Lose(LossReason.Arden);
+                // fallen: he rises on the square a while later, his level and skills kept (the user's third playtest)
+                if (Current != Stage.Part1 && Current != Stage.Part2) return;
+                if (RespawnLeft <= 0f)
+                {
+                    RespawnLeft = Mathf.Max(1f, B.ardenRespawnSeconds);
+                    if (_ardenFig != null) _ardenFig.gameObject.SetActive(false);   // no death clip: he is gone from the field
+                    _woundedByArden.RemoveWhere(o => o == null);
+                    return;
+                }
+                RespawnLeft -= dt;
+                if (RespawnLeft > 0f) return;
+                RespawnLeft = 0f;
+                if (Arden != null) Destroy(Arden.gameObject);
+                _ardenFig = null;
+                RaiseArden(_square);
                 return;
             }
             // the camera looks north: the stick's up is +z
@@ -227,7 +255,7 @@ namespace CityBuilder.Campaign
 
         // ------------------------------------------------------------------ the healers on the square
 
-        private LineRenderer _healRing;
+        private ParticleSystem _healRing;
 
         private void RaiseHealers()
         {
@@ -249,35 +277,72 @@ namespace CityBuilder.Campaign
                     group.OrderMoveTo(at);
                 }
             }
-            // where they mend him: a soft green ring on the square
-            var go = new GameObject("HealersRing", typeof(LineRenderer));
+            // where they mend him (the user's third playtest: the green line «выглядит дёшево»): soft green motes
+            // rising slowly all round the circle's edge, brighter while he is being healed
+            _healRing = HealersMotes(b.healRadius);
+        }
+
+        private ParticleSystem HealersMotes(float radius)
+        {
+            var go = new GameObject("HealersMotes", typeof(ParticleSystem));
             go.transform.SetParent(transform, false);
-            _healRing = go.GetComponent<LineRenderer>();
-            const int points = 48;
-            _healRing.positionCount = points;
-            _healRing.loop = true;
-            _healRing.useWorldSpace = true;
-            _healRing.widthMultiplier = 0.08f;
-            _healRing.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            _healRing.receiveShadows = false;
-            _healRing.material = new Material(Shader.Find("Sprites/Default"));
-            _healRing.startColor = _healRing.endColor = new Color(0.45f, 1f, 0.5f, 0.75f);
-            for (var i = 0; i < points; i++)
-            {
-                var a = i / (float)points * Mathf.PI * 2f;
-                _healRing.SetPosition(i, _square + new Vector3(Mathf.Cos(a) * b.healRadius, 0.06f, Mathf.Sin(a) * b.healRadius));
-            }
+            go.transform.position = _square + Vector3.up * 0.05f;
+            go.transform.rotation = Quaternion.Euler(-90f, 0f, 0f);
+            var ps = go.GetComponent<ParticleSystem>();
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            var main = ps.main;
+            main.loop = true;
+            main.duration = 4f;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(1.4f, 2.2f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.25f, 0.5f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.08f, 0.16f);
+            main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.55f, 1f, 0.55f, 0.85f), new Color(0.85f, 1f, 0.6f, 0.85f));
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.maxParticles = 160;
+            var em = ps.emission;
+            em.rateOverTime = 28f;
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Circle;
+            shape.radius = radius;
+            shape.radiusThickness = 0f;   // the edge only
+            var sol = ps.sizeOverLifetime;
+            sol.enabled = true;
+            sol.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.EaseInOut(0f, 0.6f, 1f, 0f));
+            var col = ps.colorOverLifetime;
+            col.enabled = true;
+            var g = new Gradient();
+            g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.25f), new GradientAlphaKey(0f, 1f) });
+            col.color = new ParticleSystem.MinMaxGradient(g);
+            var noise = ps.noise;
+            noise.enabled = true;
+            noise.strength = 0.15f;
+            noise.frequency = 0.6f;
+            var r = go.GetComponent<ParticleSystemRenderer>();
+            r.sharedMaterial = fxGlow;
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            r.receiveShadows = false;
+            ps.Play();
+            return ps;
         }
 
         /// <summary>He stands among the healers: he mends (m2_heal_per_sec of his health a second).</summary>
         public bool BeingHealed { get; private set; }
+        private bool _healWas;
 
         private void TickHealers(float dt)
         {
             BeingHealed = false;
+            if (_healRing != null)
+            {
+                var em = _healRing.emission;
+                em.rateOverTime = _healWas ? 70f : 28f;
+            }
+            _healWas = false;
             if (!ArdenAlive || Arden.CurrentHealth >= Arden.MaxHealth) return;
             if (Flat(Arden.transform.position - _square) > B.healRadius) return;
             BeingHealed = true;
+            _healWas = true;
             _healCarry += Arden.MaxHealth * B.healPerSecond * dt;
             var whole = Mathf.FloorToInt(_healCarry);
             if (whole <= 0) return;

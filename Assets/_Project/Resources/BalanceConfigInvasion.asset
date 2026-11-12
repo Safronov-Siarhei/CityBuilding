@@ -7411,7 +7411,7 @@ MonoBehaviour:
     - coins: 375
       seconds: 240
   - id: Colosseum
-    displayName: "\u041A\u043E\u043B\u043B\u0438\u0437\u0435\u0439"
+    displayName: "\u041A\u043E\u043B\u0438\u0437\u0435\u0439"
     category: 2
     cost:
     - type: 0
@@ -7915,6 +7915,83 @@ MonoBehaviour:
   loadingSecondsEnter: 10
   loadingSecondsExit: 5
   loadingSecondsCampaignMap: 5
+  cityDefence:
+    part1Seconds: 480
+    part2Seconds: 480
+    firstWaveSeconds: 10
+    meleeReachMult: 0.6
+    orcHealthMult: 1.2
+    orcDamageMult: 1.2
+    squadInfantry: 6
+    squadCrossbows: 4
+    squadMonks: 2
+    wallArchers: 5
+    wallCrossbows: 3
+    patrols: 2
+    patrolSize: 3
+    innerGuards: 2
+    innerArchers: 2
+    guardLevel: 2
+    townsfolk: 24
+    townsfolkRespawnSeconds: 4
+    ardenHealth: 400
+    ardenDamage: 30
+    ardenHealthPerLevel: 60
+    ardenDamagePerLevel: 6
+    ardenXp2: 300
+    ardenXp3: 900
+    ardenXp4: 1800
+    cryCooldownSeconds: 20
+    cryRadius: 7
+    crySeconds: 6
+    cryDamageMult: 1.5
+    cryStunSeconds: 1.5
+    whirlCooldownSeconds: 12
+    whirlRadius: 3
+    whirlDamageMult: 2
+    whirlPush: 2.5
+    dashCooldownSeconds: 14
+    dashDistance: 7
+    dashSeconds: 0.35
+    dashWidth: 1.5
+    dashDamageMult: 1.5
+    dashStunSeconds: 1.5
+    breathCooldownSeconds: 40
+    breathHeal: 0.5
+    breathSeconds: 3
+    breathRadius: 6
+    breathAllyHeal: 0.4
+    squareHealers: 2
+    healRadius: 3
+    healPerSecond: 0.08
+    ardenRespawnSeconds: 15
+    cameraDistance: 6
+    cameraPitch: 50
+    minimapRadius: 22
+    litX0: 8
+    litY0: 6
+    litX1: 92
+    litY1: 70
+    darkSoft: 4
+    part2Burnt: 0.5
+    sandRoadWidth: 2
+    wheatHeight: 0.17
+    fireSize: 1
+    healFxSeconds: 0.8
+    wheatEarsMax: 300
+    wallPatrolCells: 3
+    wallPatrolSeconds: 8
+    ramHealthMult: 6
+    ramDamageMult: 8
+    towerHealthMult: 5
+    siegeSpeed: 0.6
+    towerCrew: 4
+    towerDockCells: 0.8
+    towerStaySeconds: 20
+    towerWallFromCells: 4
+    towerWallToCells: 12
+    towerClimbSeconds: 1.2
+    towerClimbGapSeconds: 0.8
   tutorialBuildSeconds: 5
   tutorialStartPeople: 3
   tutorialKingHealBelow: 0.25
@@ -8664,6 +8741,7 @@ MonoBehaviour:
   baseCapacityValuables: 300
   baseCapacityGrain: 150
   botWaves: []
+  m2Waves: []
   boosters: []
   offerBundles: []
   offerLevels: []

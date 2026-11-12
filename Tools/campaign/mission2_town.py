@@ -36,9 +36,10 @@ def river_y(x):
 
 
 FORDS = [(14, river_y(14)), (50, river_y(50)), (86, river_y(86))]
-# the orcs' roads, ford -> outer gate (the plan's ways), then on to the inner gate
-OUTER_GATES = {"W": (28, 40), "N": (50, 34), "E": (72, 40)}
-INNER_GATES = {"W": (41, 56), "N": (50, 51), "E": (59, 56)}
+# ONE gate in each ring, north (the user's third playtest, 2026-11-12: «замок с одними воротами» -- Ардан can
+# help where it is decided); the three roads from the fords all come to it
+OUTER_GATES = {"N": (50, 34)}
+INNER_GATES = {"N": (50, 51)}
 
 FORESTS = [  # boxes (l, t, r, b), plan cells
     (0, 0, W, 5), (0, 13, W, 19), (0, 19, 12, CLIFF_Y - 1), (88, 19, W, CLIFF_Y - 1),
@@ -67,10 +68,8 @@ def build_town():
     put(t, "Square", 49, 58, 4, "street")
 
     # the walls (gates first, so the ring of pieces goes round them)
-    t.wall_rect(il, it, ir, ib, INNER_LEVEL, [("W", INNER_GATES["W"][1]), ("N", INNER_GATES["N"][0]), ("E", INNER_GATES["E"][1])],
-                tower_every=6, district="inner")
-    t.wall_rect(ol, ot, or_, ob, OUTER_LEVEL, [("W", OUTER_GATES["W"][1]), ("N", OUTER_GATES["N"][0]), ("E", OUTER_GATES["E"][1])],
-                tower_every=6, district="wall")
+    t.wall_rect(il, it, ir, ib, INNER_LEVEL, [("N", INNER_GATES["N"][0])], tower_every=6, district="inner")
+    t.wall_rect(ol, ot, or_, ob, OUTER_LEVEL, [("N", OUTER_GATES["N"][0])], tower_every=6, district="wall")
 
     # streets: a ring inside each wall, a street from each outer gate to its inner gate, a cross street
     def road(x0, y0, x1, y1, level=2):
@@ -81,19 +80,13 @@ def build_town():
     road(ol + 2, ot + 2, ol + 2, ob - 1)
     road(ol + 2, ot + 2, or_ - 2, ot + 2)
     road(or_ - 2, ot + 2, or_ - 2, ob - 1)
-    road(ol + 1, OUTER_GATES["W"][1], il - 2, OUTER_GATES["W"][1])
-    road(il - 2, OUTER_GATES["W"][1], il - 2, INNER_GATES["W"][1])
-    road(il - 2, INNER_GATES["W"][1], il - 1, INNER_GATES["W"][1])
-    road(or_ - 1, OUTER_GATES["E"][1], ir + 2, OUTER_GATES["E"][1])
-    road(ir + 2, OUTER_GATES["E"][1], ir + 2, INNER_GATES["E"][1])
-    road(ir + 1, INNER_GATES["E"][1], ir + 2, INNER_GATES["E"][1])
     road(50, ot + 1, 50, it - 1)
     road(ol + 2, 47, or_ - 2, 47)
     # the centre: its ring and the way from each inner gate to the square
     road(il + 2, it + 2, il + 2, ib - 1, 4)
     road(il + 2, it + 2, ir - 2, it + 2, 4)
     road(ir - 2, it + 2, ir - 2, ib - 1, 4)
-    road(il + 1, INNER_GATES["W"][1], ir - 1, INNER_GATES["W"][1], 4)
+    road(il + 1, 56, ir - 1, 56, 4)
     road(50, it + 1, 50, 57, 4)
 
     # the centre's buildings
@@ -180,16 +173,17 @@ def spots():
     for i, (fx, fy) in enumerate(FORDS):
         s.append({"kind": "spawn", "x": fx, "y": fy - 6.0, "lane": i})     # beyond the river, in the far forest
         s.append({"kind": "ford", "x": fx, "y": fy, "lane": i})
-    for i, side in enumerate(("W", "N", "E")):
-        x, y = OUTER_GATES[side]
-        s.append({"kind": "outer_gate", "x": x + 0.5, "y": y + 0.5, "lane": i})
-        x, y = INNER_GATES[side]
-        s.append({"kind": "inner_gate", "x": x + 0.5, "y": y + 0.5, "lane": i})
-    # the plan's ways from each ford to its outer gate (the lane's corners), plan cells
+    x, y = OUTER_GATES["N"]
+    s.append({"kind": "outer_gate", "x": x + 0.5, "y": y + 0.5})
+    x, y = INNER_GATES["N"]
+    s.append({"kind": "inner_gate", "x": x + 0.5, "y": y + 0.5})
+    # the ways from each ford to the one gate (the lane's corners), plan cells: the side roads skirt the
+    # fields and meet the middle road before the gate
+    gate_front = (50.5, OUTER_GATES["N"][1] - 2.4)
     ways = [
-        [FORDS[0], (14, 22), (16, 32), (20, 40), (OUTER_GATES["W"][0] - 2.4, 40.5)],
-        [FORDS[1], (50.5, 20), (50.5, OUTER_GATES["N"][1] - 2.4)],
-        [FORDS[2], (86, 22), (84, 32), (80, 40), (OUTER_GATES["E"][0] + 3.4, 40.5)],
+        [FORDS[0], (16, 22), (24, 32.5), (44, 32.5), gate_front],
+        [FORDS[1], (50.5, 20), gate_front],
+        [FORDS[2], (84, 22), (76, 32.5), (57, 32.5), gate_front],
     ]
     s.append({"kind": "square", "x": SQUARE[0] + 0.5, "y": SQUARE[1] + 0.5})
     s.append({"kind": "castle", "x": 50.5, "y": 63.5})
@@ -202,11 +196,7 @@ def main():
     s, ways = spots()
     # the orcs' three lanes (W, N, E), plan points: out of the far forest, over the ford, the plan's way
     # to the outer gate, along the streets to the inner gate, on to the square
-    inside = [
-        [(28.5, 40.5), (39.5, 40.5), (39.5, 56.5), (41.5, 56.5), (44.5, 56.5), (50.5, 59.5)],
-        [(50.5, 34.5), (50.5, 51.5), (50.5, 57.5)],
-        [(72.5, 40.5), (61.5, 40.5), (61.5, 56.5), (59.5, 56.5), (56.5, 56.5), (50.5, 59.5)],
-    ]
+    inside = [[(50.5, 34.5), (50.5, 51.5), (50.5, 57.5)]] * 3
     lanes = []
     for i, way in enumerate(ways):
         fx, fy = FORDS[i]

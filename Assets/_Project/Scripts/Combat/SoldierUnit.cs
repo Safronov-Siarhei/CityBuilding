@@ -283,7 +283,7 @@ namespace CityBuilder.Combat
 
             var stats = SoldierStats.Row(Type);
             _row = stats;
-            _unitAttackRange = stats.attackRangeUnits;
+            _unitAttackRange = stats.attackRangeUnits * (IsRanged ? 1f : MeleeReach.Factor);
             _structureAttackRange = stats.attackRangeStructures;
             _engageRadius = stats.engageRadius;
 

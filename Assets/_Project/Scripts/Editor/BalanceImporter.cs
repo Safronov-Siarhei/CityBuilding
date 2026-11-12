@@ -43,6 +43,8 @@ namespace CityBuilder.EditorTools
 
         /// <summary>The sheet's botwaves tab (the user, 2026-11-04): the bot's raid waves at war, a row per unit type in a wave.</summary>
         public const string BotWavesCsvPath = BalanceFolder + "/botwaves.csv";
+        /// <summary>The sheet's tab «Кампания: волны обороны» (the user, 2026-11-12): mission 2's waves, a row each.</summary>
+        public const string M2WavesCsvPath = BalanceFolder + "/m2waves.csv";
 
         /// <summary>The sheet's tutorial tab (the user, 2026-11-05): every number of the tutorial, key/value, laid over the economy keys.</summary>
         public const string TutorialCsvPath = BalanceFolder + "/tutorial.csv";
@@ -96,6 +98,7 @@ namespace CityBuilder.EditorTools
             foreach (var pair in boosterTab.Keys) sandboxEconomy[pair.Key] = pair.Value;
             var config = WriteConfig(ConfigAssetPath, sandboxUnits, sandboxBuildings, sandboxEconomy);
             config.EditorSetBotWaves(ReadBotWaves(BotWavesCsvPath));
+            config.EditorSetM2Waves(ReadM2Waves(M2WavesCsvPath));
             var offers = ReadBundles(BundlesCsvPath);
             config.EditorSetOffers(offers.Bundles, offers.Levels);
             bundleNames = offers.Names;
@@ -295,6 +298,39 @@ namespace CityBuilder.EditorTools
                 int.TryParse(Cell(count), System.Globalization.NumberStyles.Integer, culture, out var n);
                 int.TryParse(Cell(level), System.Globalization.NumberStyles.Integer, culture, out var l);
                 result.Add(new BalanceConfig.BotWaveRow { wave = w, unit = Cell(unit), count = Mathf.Max(0, n), level = Mathf.Max(1, l) });
+            }
+            return result;
+        }
+
+        /// <summary>The m2waves tab: part, wave, raiders, brutes, throwers, rams, towers, level, pause_sec, comment.</summary>
+        private static List<BalanceConfig.M2WaveRow> ReadM2Waves(string path)
+        {
+            var result = new List<BalanceConfig.M2WaveRow>();
+            if (!File.Exists(path)) return result;
+            var rows = ReadCsv(path);
+            if (rows.Count == 0) return result;
+            var header = rows[0];
+            int Col(string name) => header.FindIndex(h => h.Trim() == name);
+            int part = Col("part"), wave = Col("wave");
+            if (part < 0 || wave < 0)
+            {
+                Debug.LogError($"BalanceImporter: {path} needs the columns part, wave.");
+                return result;
+            }
+            var culture = System.Globalization.CultureInfo.InvariantCulture;
+            for (var i = 1; i < rows.Count; i++)
+            {
+                var row = rows[i];
+                string Cell(int c) => c >= 0 && c < row.Count ? row[c].Trim().Replace(',', '.') : string.Empty;
+                int Int(string name) => int.TryParse(Cell(Col(name)), System.Globalization.NumberStyles.Integer, culture, out var v) ? Mathf.Max(0, v) : 0;
+                if (!int.TryParse(Cell(part), System.Globalization.NumberStyles.Integer, culture, out var p)) continue;
+                if (!int.TryParse(Cell(wave), System.Globalization.NumberStyles.Integer, culture, out var w)) continue;
+                float.TryParse(Cell(Col("pause_sec")), System.Globalization.NumberStyles.Float, culture, out var pause);
+                result.Add(new BalanceConfig.M2WaveRow
+                {
+                    part = p, wave = w, raiders = Int("raiders"), brutes = Int("brutes"), throwers = Int("throwers"),
+                    rams = Int("rams"), towers = Int("towers"), level = Mathf.Max(1, Int("level")), pause = Mathf.Max(0f, pause)
+                });
             }
             return result;
         }

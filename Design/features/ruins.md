@@ -13,7 +13,8 @@ Status: BUILT 2026-11-05 (look A approved by the user). No tests yet, the user h
 - **Sandbox only**: the Invasion mode stays as it is.
 - **The bot's buildings leave ruins too** (2026-11-06): `IsBot` ruins, not the player's (no card, not saved); the bot raises them itself -- see bot.md.
 - **The Town Hall gives no ruins**: losing it loses the game.
-- **Look A, «обгоревший остов»** (the user's choice).
+- **CHANGED 2026-11-12: RUBBLE ON THE GROUND** (the user: «я вроде утверждал вид обломков на земле, тогда проходящие по обломкам орки будут смотреться логично»): BuildingRuin cuts the shell low, more rubble, the ash plate raised against z-fighting, and its tap box is a TRIGGER (orcs walk over; BuildingSelector rays hit triggers). Everywhere, sandbox too.
+- **Look A, «обгоревший остов»** (the user's choice). -- superseded by the rubble above.
 
 ## How it works (as built)
 - `BuildingInstance.TryDamage` → `BuildingRuin.LeavesRuin` (not bot, not Town Hall, not moat, not Invasion) → the cells it held (minus shared ones: road under a gate, vein, moat under a bridge) are kept; a road's cells leave `RoadNetwork`; the building is destroyed as before; `BuildingRuin.LeaveOf` copies its active meshes that use `CityBuilder/BuildingDetail` (its level, a fence's shape; not bars/markers/scaffolding).

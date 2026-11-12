@@ -27,7 +27,14 @@ namespace CityBuilder.Campaign
         private void DressArden()
         {
             if (Arden == null || ardenModel == null || ardenClips == null) return;
-            foreach (var r in Arden.GetComponentsInChildren<Renderer>(true)) r.enabled = false;
+            // as tall as the soldier he stands in for (the user's third playtest: at the village's 1/1.6 he looked a child)
+            var feet = Arden.transform.position.y;
+            var soldierTop = feet;
+            foreach (var r in Arden.GetComponentsInChildren<Renderer>(true))
+            {
+                if (r.enabled && r is MeshRenderer or SkinnedMeshRenderer) soldierTop = Mathf.Max(soldierTop, r.bounds.max.y);
+                r.enabled = false;
+            }
             var go = Instantiate(ardenModel, Arden.transform, false);
             go.name = "ArdenSword";
             go.transform.localPosition = Vector3.zero;
@@ -35,9 +42,13 @@ namespace CityBuilder.Campaign
             go.transform.localScale = ardenModel.transform.localScale * CineScale / Mathf.Max(0.01f, Arden.transform.lossyScale.x);
             _ardenFig = go.AddComponent<CineFigure>();
             _ardenFig.Init(ardenClips);
+            var figTop = feet;
+            foreach (var r in go.GetComponentsInChildren<Renderer>()) figTop = Mathf.Max(figTop, r.bounds.max.y);
+            if (soldierTop - feet > 0.1f && figTop - feet > 0.05f)
+                go.transform.localScale *= (soldierTop - feet) / (figTop - feet);
             _ardenFig.Play("Idle", 0f);
             _ardenWas = Arden.transform.position;
-            Arden.Struck += () => Act("Attack");
+            Arden.Struck += () => { Act("Attack"); BlowFx(); };
             SkillUsed -= OnArdenSkill;
             SkillUsed += OnArdenSkill;
         }
@@ -45,6 +56,7 @@ namespace CityBuilder.Campaign
         private void OnArdenSkill(int skill)
         {
             if (skill >= 0 && skill < SkillClip.Length) Act(SkillClip[skill]);
+            SkillFx(skill);
         }
 
         private void Act(string clip)

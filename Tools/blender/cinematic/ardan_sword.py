@@ -119,12 +119,40 @@ def breath():
     return q
 
 
+def wind_up2():
+    """Strike 2 (the user's third playtest: «атаки ардана скучные»): the backhand -- the blade drawn across the
+    chest to the left shoulder, the body turned away."""
+    return _pose(hips=(0, 0, -20), chest=(-2, -6, -38), head=(0, 0, 25), arm_r=((-85, -75, 0), -105),
+                 arm_l=((-20, -10, 0), -60), leg_l=(-14, 16, -2), leg_r=(12, 10, -22), drop=0.006)
+
+
+def strike2():
+    """...and the backhand cut out to the right, the arm straight."""
+    return _pose(hips=(0, 0, 18), chest=(12, 6, 34), head=(-6, 0, -22), arm_r=((-80, 75, 0), -8),
+                 arm_l=((15, -30, 0), -35), leg_l=(-26, 26, 0), leg_r=(18, 12, -28), drop=0.012)
+
+
+def wind_up3():
+    """Strike 3: the overhead -- the sword raised straight up and back."""
+    return _pose(chest=(-14, 0, 6), head=(-8, 0, 0), arm_r=((-178, 5, 0), -75), arm_l=((-150, -10, 0), -80),
+                 leg_l=(-10, 12, -2), leg_r=(10, 8, -16), drop=0.002)
+
+
+def strike3():
+    """...and brought straight down in front, a deep lunge."""
+    return _pose(hips=(8, 0, 0), chest=(30, 0, 0), head=(-18, 0, 0), arm_r=((-55, 5, 0), 0),
+                 arm_l=((-40, -10, 0), -20), leg_l=(-45, 45, 0), leg_r=(28, 14, -34), drop=0.03)
+
+
 POSES = [("1-Ready", ready), ("2-WindUp", wind_up), ("3-Strike", strike), ("4-Whirl", whirl),
-         ("5-Cry", cry), ("6-Dash", dash), ("7-Breath", breath)]
+         ("5-Cry", cry), ("6-Dash", dash), ("7-Breath", breath),
+         ("8-WindUp2", wind_up2), ("9-Strike2", strike2), ("10-WindUp3", wind_up3), ("11-Strike3", strike3)]
 
 
 def main():
-    out = sys.argv[sys.argv.index("--") + 1:][0]
+    args = sys.argv[sys.argv.index("--") + 1:]
+    out = args[0]
+    only = set(args[1].split(",")) if len(args) > 1 else None   # e.g. "2-WindUp,3-Strike": just these poses
     os.makedirs(out, exist_ok=True)
     mesh = ardan.make(Vector((0, 0, 0)))
     arm = aa.rig(mesh)
@@ -136,6 +164,8 @@ def main():
     at = Vector((0, 0, 0.28 * S))
     cam.data.lens = 60
     for name, pose in POSES:
+        if only and name not in only:
+            continue
         aa.rest(arm)
         a2.apply(arm, pose())
         bpy.context.view_layer.update()
