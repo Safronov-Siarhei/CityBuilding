@@ -1,6 +1,6 @@
 ---
 name: reference-competitor-analyses
-description: "Two competitor teardowns live in D:\K&C — Kingdoms and Castles and Farthest Frontier: architecture, full building catalogues, balance numbers and the reviews' criticisms. Read before scoping a new system."
+description: "Two competitor teardowns live in the repo, Design/reference/competitors/ — Kingdoms and Castles and Farthest Frontier: architecture, full building catalogues, balance numbers and the reviews' criticisms. Read before scoping a new system."
 metadata:
   node_type: memory
   type: reference
