@@ -321,12 +321,15 @@ def shipyard():
 
 MODELS = {"ShipScout": ship_scout, "ShipTransport": ship_transport, "ShipWar": ship_war, "ShipBattleship": ship_battleship,
           "ShipOrcTransport": ship_orc_transport, "ShipOrcWar": ship_orc_war, "OrcShipyard1": orc_shipyard,
-          "Lighthouse1-lvl1": lighthouse}
+          }
 # The player's Shipyard levels 1-5: the «Стапель» model (shipyard1.py, approved by the user 2026-11-12)
 # replaced the old bare slipway `shipyard()` above, which is kept only as the record of the old look.
 import shipyard1  # noqa: E402
 MODELS.update({f"Shipyard1-lvl{n}": build for n, build in enumerate(shipyard1.LEVELS, 1)})
-GILDED = {"Shipyard1-lvl5"}   # level 5's gold roofs take the tile pattern (detail.OVERRIDE), like gen_lvl5
+# The Lighthouse levels 1-5 (lighthouse1.py, approved 2026-11-12; level 1 = the old `lighthouse()`).
+import lighthouse1  # noqa: E402
+MODELS.update({f"Lighthouse1-lvl{n}": build for n, build in enumerate(lighthouse1.LEVELS, 1)})
+GILDED = {"Shipyard1-lvl5", "Lighthouse1-lvl5"}   # level 5's gold roofs take the tile pattern (detail.OVERRIDE), like gen_lvl5
 
 
 def main():

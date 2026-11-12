@@ -9,8 +9,6 @@
 
 Активных зданий: **53** (скрыто: 5).
 
-⚠ Нет иконки: Lighthouse ур.2, Lighthouse ур.3, Lighthouse ур.4, Lighthouse ур.5.
-
 ## Город
 
 ### Лачуга `Hovel`
@@ -536,7 +534,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | ![Lighthouse 1](../Assets/_Project/UI/Icons/Lighthouse.png) | нет иконки | нет иконки | нет иконки | нет иконки |
+| | ![Lighthouse 1](../Assets/_Project/UI/Icons/Lighthouse.png) | ![Lighthouse 2](../Assets/_Project/UI/Icons/Lighthouse_L2.png) | ![Lighthouse 3](../Assets/_Project/UI/Icons/Lighthouse_L3.png) | ![Lighthouse 4](../Assets/_Project/UI/Icons/Lighthouse_L4.png) | ![Lighthouse 5](../Assets/_Project/UI/Icons/Lighthouse_L5.png) |
 | Прочность | 150 | 240 | 375 | 540 | 750 |
 | Цена (базовая) | дерево 30, камень 40 |  |  |  |  |
 

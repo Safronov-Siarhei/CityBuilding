@@ -97,13 +97,13 @@ choice; then levels 1-5 and icons (it has no level 2-5 icons yet).
   Exported to Models/Buildings, picked up by name into the prefab's levels; icons `Shipyard.png`,
   `Shipyard_L2..L5.png` (render_icons with the lvl names, renamed). Setup green; not seen in the game.
 
-## Lighthouse levels 2-5 (2026-11-12, SENT for approval, not in the game)
+## Lighthouse levels 2-5 (2026-11-12, APPROVED and IN THE GAME same day, not seen in the game)
 It had only Lighthouse1-lvl1 (ships.py `lighthouse()`). `Tools/blender/lighthouse1.py` builds levels 1-5
 (L1 = the old model): L2 a band taller, steps, a mid balcony, blue cap + weathervane; L3 dressed-stone
 base, gold rails, finial, banner, lit windows; L4 gilded ribs + crest ring on the cap, pennant; L5 gold
 cap + gold bands. 0.6-1.3k tris. Review sheet `Design/lighthouse_levels.png` via
 `render_levels.py -- lighthouse1 <out>` (the generic level renderer, was render_shipyard_levels.py).
-After the yes: ships.py MODELS from `lighthouse1.LEVELS` (L5 GILDED), export, icons `Lighthouse_L2..5`.
+Installed: ships.py MODELS from `lighthouse1.LEVELS` (L5 in GILDED), exported, prefab levels by name, icons `Lighthouse_L2..5`; TaxHouse_L2..5 icons in the same build.
 
 ## Placing the Shipyard (fixed 2026-10-29)
 - 2026-11-05 (the user, whole game): the Shipyard floated over a low beach (every building stands at the
