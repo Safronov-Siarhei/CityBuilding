@@ -81,3 +81,4 @@
 - [Mission 1 playtest 2 (2026-11-11)](project_pending_2026_11_11b_mission1.md) — second Unity playtest, 17 items -- ALL BUILT round 58 (church trio, start after 1 m, kill, forest orcs, sandbox HUD kit, run clock + records, restart-darkness bug); not seen.
 - [Feature cards](feedback_feature_cards.md) — project split into Design/features cards (2026-10-21): read the index, then one card; update cards after every task.
 - [Everything in the repo](feedback_everything_in_repo.md) — all knowledge must be on the fork: run Tools/memory_sync.py after memory edits, rules in Design/WORKING_RULES.md, AGENTS.md for other AIs.
+- [Buildings reference (2026-11-12)](project_buildings_reference.md) — Design/Buildings.md is GENERATED after every setup (level icons, numbers, notes); new building = line in Design/buildings/descriptions.tsv.

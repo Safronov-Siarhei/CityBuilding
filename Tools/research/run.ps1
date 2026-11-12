@@ -89,6 +89,9 @@ foreach ($step in $Steps) {
                 '-executeMethod', 'CityBuilder.EditorTools.SetupProject.Run', '-logFile', $log)
             Write-Output "=== setup$i exit $code ($([int]((Get-Date) - $started).TotalSeconds) s)"
             Write-LogProblems $log
+            # the buildings reference (Design/Buildings.md) follows the roster, icons and numbers by itself (the user, 2026-11-12)
+            $env:PYTHONIOENCODING = 'utf-8'
+            python "$project/Tools/docs/buildings_reference.py"
         }
         'film' {
             # the campaign's opening film rendered frame by frame (Editor/CampaignPhotos.Film) into RunLogs/campaign/film/ -- needs graphics
