@@ -84,3 +84,4 @@
 - [Reference: buildings + army (2026-11-12)](project_buildings_reference.md) — Design/Reference.html/.md is GENERATED (renamed from Buildings.*; army section with soldier level pictures added) after every setup (level icons, numbers, notes); new building = line in Design/buildings/descriptions.tsv.
 - [Decor's money (2026-11-12)](project_decor_bonus.md) — decor pays coins to residents of houses in its radius (adds up) + gift bubbles; sandbox building tabs split into 7 by kind; BUILT, not seen.
 - [Island residents (2026-11-12)](project_island_residents.md) — BUILT 2026-11-12, setup green, not seen: residents bound to houses, work/hire by island, Town Hall hidden residents; soldier leaves when his house burns.
+- [Mission 2 playtest 4 (2026-11-12)](project_pending_2026_11_12_mission2.md) — QUEUED for the next session, not built: hay on road, orcs aggro through wall, ranged range /2, 3 roads mixed at the gate, propose a new hp-heart look.

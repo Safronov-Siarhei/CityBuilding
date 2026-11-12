@@ -444,6 +444,12 @@
   18. The next wave starts only once the previous is fully beaten. [code] TickWaves waits for every orc dead, then pause_sec
   19. MAP: remake as a castle with ONE gate (user chose). [code, MAP APPROVED 2026-11-12] plan Design/mission2_map_v3.png (Tools/campaign/mission2_map_v3.py); mission2_town.py one gate per ring, lanes converge at (50.5,31.6); Mission2Town.json regenerated
   20. After the gate falls orcs go raze the whole town, then attack the second line. [code] LetThemLoose: inside the outer pen after the gate falls, lane orcs drop their road and raze
+- **PLAYTEST 4 (the user, 2026-11-12) -- QUEUED, NOT BUILT (the user: do it tomorrow):**
+  1. A haystack stands on the sand road outside: decor must keep off lanes/roads.
+  2. Orcs aggro on soldiers THROUGH the wall and stick against it instead of going on along the road to the gate.
+  3. Ranged soldiers' attack radius too far: about half.
+  4. The three roads mix in front of the main gate (lanes converge at (50.5,31.6), the sand ribbons overlap): looks strange.
+  5. The hp «heart» icon over soldiers/orcs: the user dislikes it -- PROPOSE a new look (pictures) before building.
 - **SWORD + SIEGE (approved by the user 2026-11-12, «Утверждаю, ставь») -> IN THE GAME (not seen).**
   - Ардан WITH THE SWORD replaces the Латник's look: CineArdanSword.fbx from
     Tools/blender/cinematic/export_ardan_sword.py (poses from ardan_sword.py; clips Idle, Run, Attack, Whirl, Cry,
