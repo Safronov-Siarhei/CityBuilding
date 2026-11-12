@@ -243,6 +243,12 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   research; Боевой дух +50% damage, 3 min; Стойкость buildings' HP +25%; Вербовка hiring at half price;
   Ремонт repairs all; Новосёлы +10 citizens. No daily ad cap: the slots' 15-min recharge already limits
   it (4 per 15 min); crystals are for those who do not want an ad.
+  Новосёлы = +20 citizens (the user, 2026-11-12).
+- **OPEN -- Рудокоп NOT built (the user, 2026-11-12):** the mines' mechanics are not thought through yet and
+  their work is in question, so the ore booster waits until the mines are settled. Its intent so far:
+  ×1.5 to the ore-digging action of mine workers and citizens, never walking. 11 boosters are built first.
+- **Inventory (the user's idea, 2026-11-12):** «Запасы» lists only the boosters the player HAS (stock > 0
+  or running); maybe resources too -- under discussion.
 - **Concepts:** `Tools/store/booster_mockup.py` -> `Design/store/Booster_Shop.png`, `Booster_Inventory.png`,
   `Booster_Hud.png` (icons are placeholder medallions; real ones rendered for approval).
 
