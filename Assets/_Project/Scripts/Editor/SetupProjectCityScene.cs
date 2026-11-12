@@ -592,6 +592,29 @@ namespace CityBuilder.EditorTools
             WriteArray(invasionModeSO.FindProperty("notInARun"), new Object[] { raidManager, sicknessManager, fireManager, foodConsumptionManager, taxManager, happinessManager, migrationManager });
             invasionModeSO.ApplyModifiedPropertiesWithoutUndo();
 
+            // Campaign mission 2 «Оборона города» (Campaign/CityDefenceMode): idle unless the campaign
+            // map's level 2 started the game; then the town of Campaign/Mission2Town.json stands on the
+            // Mission2 map, the waves come down three lanes and the player runs Ардан.
+            var cityDefence = managers.AddComponent<CityBuilder.Campaign.CityDefenceMode>();
+            var cityDefenceSO = new SerializedObject(cityDefence);
+            cityDefenceSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
+            cityDefenceSO.FindProperty("town").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Mission2Town.json");
+            WriteArray(cityDefenceSO.FindProperty("notInAMission"), new Object[] { raidManager, sicknessManager, fireManager, foodConsumptionManager, taxManager, happinessManager, migrationManager });
+            var defenceArt = cityDefenceSO.FindProperty("hudArt");
+            void DefenceSprite(SerializedProperty into, string path)
+            {
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite == null) Debug.LogError($"[CityDefence] HUD sprite {path} not found");
+                into.objectReferenceValue = sprite;
+            }
+            DefenceSprite(defenceArt.FindPropertyRelative("disc"), UiTextureImport.SkinFolder + "/event_disc.png");
+            DefenceSprite(defenceArt.FindPropertyRelative("rim"), UiTextureImport.SkinFolder + "/event_rim.png");
+            DefenceSprite(defenceArt.FindPropertyRelative("mask"), UiTextureImport.SkinFolder + "/circle_mask.png");
+            DefenceSprite(defenceArt.FindPropertyRelative("portrait"), UiTextureImport.IconsFolder + "/PortraitArdan.png");
+            DefenceSprite(cityDefenceSO.FindProperty("cryGlyph"), UiTextureImport.GlyphsFolder + "/Skill_captain_might.png");
+            DefenceSprite(cityDefenceSO.FindProperty("gateIcon"), UiTextureImport.IconsFolder + "/FortifiedGate.png");
+            cityDefenceSO.ApplyModifiedPropertiesWithoutUndo();
+
             // The dungeon (Dungeon/DungeonMode): idle in a town; when DungeonTravel sent the heroes
             // down, the scene is the dungeon's map and what a town runs is switched off.
             var dungeonMode = managers.AddComponent<CityBuilder.Dungeon.DungeonMode>();
@@ -684,6 +707,9 @@ namespace CityBuilder.EditorTools
             // always winter, a fir forest only (the conifers of trees1.py), its own New Year rules.
             CreateMeshMapDefinition(CityBuilder.Invasion.InvasionMode.NewYearMapId, "Inv-2", null,
                 MapSeason.Winter, new[] { "Tree2", "Tree5", "Tree6", "Tree9" });
+            // Campaign mission 2's town-defence map (Tools/blender/mission2.py, plan v2 approved
+            // 2026-11-12): only the campaign map's level 2 plays it (Campaign/CityDefenceMode).
+            CreateMeshMapDefinition(CityBuilder.Campaign.CityDefenceMode.MapId, "Map-M2", null);
             // The level-1 dungeons (Tools/blender/dungeon1.py, the approved plan and variants b-d):
             // the labyrinths the heroes walk while the town waits (Dungeon/DungeonMode). Not in any
             // picker -- a mouth on the map opens one (DungeonTravel.LevelOneFor).

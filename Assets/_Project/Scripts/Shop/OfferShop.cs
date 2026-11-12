@@ -49,7 +49,7 @@ namespace CityBuilder.Shop
 
         /// <summary>The shop works here: a sandbox game, not a run, the tutorial or a dungeon.</summary>
         public static bool Allowed =>
-            !Invasion.InvasionMode.IsActive && !Tutorial.TutorialMode.IsActive && !Dungeon.DungeonMode.IsActive;
+            !Invasion.InvasionMode.IsActive && !Tutorial.TutorialMode.IsActive && !Dungeon.DungeonMode.IsActive && !Campaign.CityDefenceMode.IsActive;
 
         private void Awake()
         {

@@ -72,7 +72,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | [balance-and-localization](balance-and-localization.md) | Google Sheet → CSV → BalanceConfig; localization keys | баланс, таблица, локализация |
 | [art-pipeline](art-pipeline.md) | Blender models, standard, levels, export, icons, UI sprites | Blender, модели, иконки |
 | [performance-mobile](performance-mobile.md) | measured CPU/draw budget, triangle budget, device fleet, quality tiers | производительность, FPS, draw calls, качество графики, уровни Низкая/Средняя/Высокая, прозрачность на телефоне |
-| [campaign](campaign.md) | campaign mode: story, cutscenes, mission 1 (Ардан flees the village), cinematic model set | кампания, катсцены, сюжет, Ардан, миссия 1 |
+| [campaign](campaign.md) | campaign mode: story, cutscenes, mission 1 (Ардан flees the village), mission 2 «Оборона города» (CityDefenceMode, map Mission2), cinematic model set | кампания, катсцены, сюжет, Ардан, миссия 1, миссия 2, оборона города |
 | [build-and-test](build-and-test.md) | SetupProject, batchmode loop, tests, APK/Windows builds, cheats | сборка, тесты, APK, читы |
 
 `archive/` holds the long chronological notes these cards were distilled from (2026-10-21). Read an

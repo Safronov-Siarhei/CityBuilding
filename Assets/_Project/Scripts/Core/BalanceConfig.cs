@@ -621,6 +621,8 @@ namespace CityBuilder.Core
         [SerializeField] private float loadingSecondsExit = 5f;
         // the ship from the menu to the campaign map (loading_seconds_campaign_map; the user, 2026-11-12: 5 s)
         [SerializeField] private float loadingSecondsCampaignMap = 5f;
+        // campaign mission 2 «Оборона города» (the economy tab «Кампания: оборона города», m2_*)
+        [SerializeField] private CityDefenceBalance cityDefence = new CityDefenceBalance();
         // the tutorial's rules (tutorial_build_sec, tutorial_start_people, tutorial_king_heal_below)
         [SerializeField] private float tutorialBuildSeconds = 5f;
         [SerializeField] private int tutorialStartPeople = 3;
@@ -1300,6 +1302,8 @@ namespace CityBuilder.Core
         public float TutorialBuildSeconds => tutorialBuildSeconds;
         public int TutorialStartPeople => tutorialStartPeople;
         public float TutorialKingHealBelow => tutorialKingHealBelow;
+        /// <summary>Campaign mission 2's numbers (m2_*: Campaign.CityDefenceMode).</summary>
+        public CityDefenceBalance CityDefence => cityDefence ??= new CityDefenceBalance();
         public float TutorialOrcDamageMult => tutorialOrcDamageMult;
         public int TutorialRaidOrcs => tutorialRaidOrcs;
 
@@ -2315,6 +2319,7 @@ namespace CityBuilder.Core
             tutorialBuildSeconds = Read(economy, "tutorial_build_sec", tutorialBuildSeconds);
             tutorialStartPeople = (int)Read(economy, "tutorial_start_people", tutorialStartPeople);
             tutorialKingHealBelow = Read(economy, "tutorial_king_heal_below", tutorialKingHealBelow);
+            CityDefence.Read(key => economy != null && economy.TryGetValue(key, out var v) ? v : (float?)null);
             tutorialOrcDamageMult = Read(economy, "tutorial_orc_damage_mult", tutorialOrcDamageMult);
             tutorialOrcHealthMult = Read(economy, "tutorial_orc_health_mult", tutorialOrcHealthMult);
             tutorialGatherSeconds = Read(economy, "tutorial_gather_sec", tutorialGatherSeconds);
@@ -2832,6 +2837,57 @@ namespace CityBuilder.Core
 
             Debug.LogError($"BalanceConfig: the balance sheet's economy tab has no key '{key}'. Keeping {fallback}.");
             return fallback;
+        }
+    }
+    /// <summary>
+    /// Campaign mission 2 «Оборона города» (Design/features/campaign.md): the economy tab
+    /// «Кампания: оборона города», keys m2_*. Read by Campaign.CityDefenceMode and its parts.
+    /// </summary>
+    [System.Serializable]
+    public class CityDefenceBalance
+    {
+        public float part1Seconds = 240f, part2Seconds = 240f;
+        public float firstWaveSeconds = 12f, waveEverySeconds = 22f;
+        public int waveOrcs = 3, waveOrcsGrowEvery = 2, waveOrcsMax = 8;
+        public int orcLevel = 1, orcLevelPart2 = 2, bruteEvery = 3, throwerEvery = 2;
+        public float orcHealthMult = 1f, orcDamageMult = 1f;
+        public int gateGuards = 3, wallArchers = 4, innerGuards = 2, innerArchers = 2, guardLevel = 2;
+        public int ardenHealth = 400, ardenDamage = 30;
+        public float ardenRiseSeconds = 8f;
+        public float cryCooldownSeconds = 20f, cryRadius = 7f, crySeconds = 6f, cryDamageMult = 1.5f, cryStunSeconds = 1.5f;
+        public float part2Burnt = 0.5f;
+
+        public void Read(System.Func<string, float?> get)
+        {
+            float F(string key, float d) => get(key) ?? d;
+            int I(string key, int d) => get(key).HasValue ? Mathf.RoundToInt(get(key).Value) : d;
+            part1Seconds = F("m2_part1_sec", part1Seconds);
+            part2Seconds = F("m2_part2_sec", part2Seconds);
+            firstWaveSeconds = F("m2_first_wave_sec", firstWaveSeconds);
+            waveEverySeconds = F("m2_wave_every_sec", waveEverySeconds);
+            waveOrcs = I("m2_wave_orcs", waveOrcs);
+            waveOrcsGrowEvery = I("m2_wave_orcs_grow_every", waveOrcsGrowEvery);
+            waveOrcsMax = I("m2_wave_orcs_max", waveOrcsMax);
+            orcLevel = I("m2_orc_level", orcLevel);
+            orcLevelPart2 = I("m2_orc_level_part2", orcLevelPart2);
+            bruteEvery = I("m2_brute_every", bruteEvery);
+            throwerEvery = I("m2_thrower_every", throwerEvery);
+            orcHealthMult = F("m2_orc_health_mult", orcHealthMult);
+            orcDamageMult = F("m2_orc_damage_mult", orcDamageMult);
+            gateGuards = I("m2_gate_guards", gateGuards);
+            wallArchers = I("m2_wall_archers", wallArchers);
+            innerGuards = I("m2_inner_guards", innerGuards);
+            innerArchers = I("m2_inner_archers", innerArchers);
+            guardLevel = I("m2_guard_level", guardLevel);
+            ardenHealth = I("m2_arden_health", ardenHealth);
+            ardenDamage = I("m2_arden_damage", ardenDamage);
+            ardenRiseSeconds = F("m2_arden_rise_sec", ardenRiseSeconds);
+            cryCooldownSeconds = F("m2_cry_cooldown_sec", cryCooldownSeconds);
+            cryRadius = F("m2_cry_radius", cryRadius);
+            crySeconds = F("m2_cry_sec", crySeconds);
+            cryDamageMult = F("m2_cry_damage_mult", cryDamageMult);
+            cryStunSeconds = F("m2_cry_stun_sec", cryStunSeconds);
+            part2Burnt = F("m2_part2_burnt", part2Burnt);
         }
     }
 }
