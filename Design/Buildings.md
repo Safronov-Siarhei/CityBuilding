@@ -9,7 +9,7 @@
 
 Активных зданий: **53** (скрыто: 5).
 
-⚠ Нет иконки: Lighthouse ур.2, Lighthouse ур.3, Lighthouse ур.4, Lighthouse ур.5, TaxHouse ур.2, TaxHouse ур.3, TaxHouse ур.4, TaxHouse ур.5.
+⚠ Нет иконки: Lighthouse ур.2, Lighthouse ур.3, Lighthouse ур.4, Lighthouse ур.5.
 
 ## Город
 
@@ -129,7 +129,7 @@
 
 | | ур. 1 | ур. 2 | ур. 3 | ур. 4 | ур. 5 |
 |---|---|---|---|---|---|
-| | ![TaxHouse 1](../Assets/_Project/UI/Icons/TaxHouse.png) | нет иконки | нет иконки | нет иконки | нет иконки |
+| | ![TaxHouse 1](../Assets/_Project/UI/Icons/TaxHouse.png) | ![TaxHouse 2](../Assets/_Project/UI/Icons/TaxHouse_L2.png) | ![TaxHouse 3](../Assets/_Project/UI/Icons/TaxHouse_L3.png) | ![TaxHouse 4](../Assets/_Project/UI/Icons/TaxHouse_L4.png) | ![TaxHouse 5](../Assets/_Project/UI/Icons/TaxHouse_L5.png) |
 | Прочность | 160 | 256 | 400 | 576 | 800 |
 | Цена (песочница) | дерево 150, камень 200 | — | — | — | — |
 | Стройка, с (песочница) | 20 | 15 | 20 | 25 | 30 |

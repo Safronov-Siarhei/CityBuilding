@@ -80,7 +80,7 @@ choice; then levels 1-5 and icons (it has no level 2-5 icons yet).
   (L1 workshop + slipway + a scout-size ship half planked + A-frame crane; L2 timber upper storey, walkways,
   a transport-size ship, taller crane; L3 stone ground floor with quoins, finials + weathervane, paved quay,
   a gantry at the slip's landward end, a two-masted warship with furled sails, two banners; L4 glazed roof +
-  pennant; L5 gilded), 1.4-2.8k tris; review renders `render_shipyard_levels.py` -> `Design/shipyard_levels.png`,
+  pennant; L5 gilded), 1.4-2.8k tris; review renders `render_levels.py -- shipyard1` -> `Design/shipyard_levels.png`,
   SENT for approval (done below: in the game since 2026-11-12), export,
   BuildingData level models, icons (render_icons.py).
 - **The ship redone (the user, 2026-11-12: building liked, ship «скучный»).** `ship()` in shipyard1.py
@@ -96,6 +96,14 @@ choice; then levels 1-5 and icons (it has no level 2-5 icons yet).
   `shipyard1.LEVELS` (L5 built with OVERRIDE gold = TILES, set `GILDED`); the old `shipyard()` stays unused.
   Exported to Models/Buildings, picked up by name into the prefab's levels; icons `Shipyard.png`,
   `Shipyard_L2..L5.png` (render_icons with the lvl names, renamed). Setup green; not seen in the game.
+
+## Lighthouse levels 2-5 (2026-11-12, SENT for approval, not in the game)
+It had only Lighthouse1-lvl1 (ships.py `lighthouse()`). `Tools/blender/lighthouse1.py` builds levels 1-5
+(L1 = the old model): L2 a band taller, steps, a mid balcony, blue cap + weathervane; L3 dressed-stone
+base, gold rails, finial, banner, lit windows; L4 gilded ribs + crest ring on the cap, pennant; L5 gold
+cap + gold bands. 0.6-1.3k tris. Review sheet `Design/lighthouse_levels.png` via
+`render_levels.py -- lighthouse1 <out>` (the generic level renderer, was render_shipyard_levels.py).
+After the yes: ships.py MODELS from `lighthouse1.LEVELS` (L5 GILDED), export, icons `Lighthouse_L2..5`.
 
 ## Placing the Shipyard (fixed 2026-10-29)
 - 2026-11-05 (the user, whole game): the Shipyard floated over a low beach (every building stands at the
