@@ -90,6 +90,8 @@ choice; then levels 1-5 and icons (it has no level 2-5 icons yet).
   the band, gilded side rails, lit stern windows + lanterns, gold figurehead, pennants at the mastheads.
   TRAP: band/rail must be SIDE strips -- a full-width box floods the whole deck with the colour. 2-3.8k tris.
   Re-rendered `Design/shipyard_levels.png`, SENT for approval.
+  - Fixed 2026-11-12: L4/L5 roof diamonds + crest floated 0.5 above the roof -- the masthead-pennant loop
+    reused the name `top` and overwrote the workshop's roof height. TRAP: never reuse `top`/`hs` in level code.
 
 ## Placing the Shipyard (fixed 2026-10-29)
 - 2026-11-05 (the user, whole game): the Shipyard floated over a low beach (every building stands at the

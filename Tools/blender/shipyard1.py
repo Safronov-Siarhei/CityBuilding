@@ -280,8 +280,8 @@ def _level3_core():
         b.box(-half, half, my - 0.03, my + 0.03, z, z + 0.05, 'wood_dark')              # the yards
         b.hcylinder('x', (0, my - 0.02, z - 0.05), half - 0.04, 0.055, 'white', sides=6)   # sails furled on them
     b.rod((0, -1.95, 0.8), (0, -2.4, 1.1), 0.035, 'wood_dark')                       # the bowsprit
-    for my, top in ((-0.5, 2.2), (-1.1, 1.75)):                                        # pennants at the mastheads
-        b.prism([(0, 0), (0.32, -0.04), (0, -0.09)], (0.0, my, top), (1, 0, 0), (0, 0, 1), 0.012, 'banner_red', back_cap=True)
+    for my, mz in ((-0.5, 2.2), (-1.1, 1.75)):                                         # pennants at the mastheads
+        b.prism([(0, 0), (0.32, -0.04), (0, -0.09)], (0.0, my, mz), (1, 0, 0), (0, 0, 1), 0.012, 'banner_red', back_cap=True)
     _gantry(b)
     _yard(b)
     d.barrel(b, 1.3, 0.95, r=0.07)
