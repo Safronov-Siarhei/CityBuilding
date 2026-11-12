@@ -32,7 +32,7 @@
   `decor_gift_coins_base` 3 + bonus x residents x `decor_gift_coins_per_bonus` 5,
   `decor_gift_crystal_chance` 0,03 -> `decor_gift_crystals` 1.
 - Texts «Тексты: здания и ресурсы»: `#decor_card_gives`, `#decor_card_house`, `#place_decor_gives`, `#place_decor_house`.
-- Residents of a house = its housing places at its level (`HousePeople.PlacesOf`), not a live count.
+- Residents of a house = its live residents (`HousePeople.CitizensOf`, since 2026-11-12 residents are bound to houses); places only when the ledger is absent.
 
 ## Code
 - `Citizens/DecorBonus.cs` (pure statics: PerResidentAt, DailyCoins, HousesReachedFrom, Coins format).

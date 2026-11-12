@@ -108,6 +108,7 @@ namespace CityBuilder.Citizens
             _nodeRetryTimer -= Time.deltaTime;
             if (_nodeRetryTimer > 0f) return;
             _nodeRetryTimer = NodeRetryIntervalSeconds;
+            Rehome();
 
             foreach (var pair in _workingAgents)
             {
@@ -184,7 +185,11 @@ namespace CityBuilder.Citizens
                 // Prefer removing idle agents first; a mismatched save/load edge case could
                 // otherwise leave a building visually short a worker, which self-heals on the
                 // next SyncBuildingWorkers pass.
-                var agent = _idleAgents.Count > 0 ? _idleAgents[_idleAgents.Count - 1] : _allAgents[_allAgents.Count - 1];
+                // ...and of those, one whose house has more figures than residents (it lost them)
+                CountFigures();
+                CitizenAgent agent = null;
+                for (var i = _idleAgents.Count - 1; i >= 0 && agent == null; i--) if (Surplus(_idleAgents[i])) agent = _idleAgents[i];
+                if (agent == null) agent = _idleAgents.Count > 0 ? _idleAgents[_idleAgents.Count - 1] : _allAgents[_allAgents.Count - 1];
                 RemoveAgent(agent);
             }
         }
@@ -195,7 +200,7 @@ namespace CityBuilder.Citizens
 
             while (agents.Count < building.AssignedWorkers)
             {
-                var agent = PullIdleAgent();
+                var agent = PullIdleAgent(building);
                 if (agent == null) break; // no idle agents available yet
                 agents.Add(agent);
                 AssignAgentToBuilding(agent, building);
@@ -209,12 +214,105 @@ namespace CityBuilder.Citizens
             }
         }
 
-        private CitizenAgent PullIdleAgent()
+        /// <summary>
+        /// An idle figure for this workplace: one living on its island (the user, 2026-11-12: work goes
+        /// by island). The town's ledger already allowed the place (HousePeople.IdleOn), so one should be
+        /// there; if the figures are out of step, any idle one is moved over to the workplace's door.
+        /// </summary>
+        private CitizenAgent PullIdleAgent(ProductionBuilding building)
         {
             if (_idleAgents.Count == 0) return null;
-            var agent = _idleAgents[_idleAgents.Count - 1];
-            _idleAgents.RemoveAt(_idleAgents.Count - 1);
+            var island = building != null ? building.Island : -1;
+            var index = _idleAgents.Count - 1;
+            for (var i = _idleAgents.Count - 1; i >= 0; i--)
+            {
+                if (HousePeople.Same(HomeIsland(_idleAgents[i]), island)) { index = i; break; }
+            }
+            var agent = _idleAgents[index];
+            _idleAgents.RemoveAt(index);
+            if (!HousePeople.Same(HomeIsland(agent), island) && building != null && building.Instance != null)
+                agent.Teleport(DoorOf(building.Instance));
             return agent;
+        }
+
+        private static int HomeIsland(CitizenAgent agent) =>
+            agent != null && agent.Home != null ? HousePeople.IslandOf(agent.Home) : -1;
+
+        // ---------------------------------------------------------------- homes (HousePeople, 2026-11-12)
+
+        private readonly List<KeyValuePair<BuildingInstance, int>> _homes = new List<KeyValuePair<BuildingInstance, int>>();
+        private readonly Dictionary<BuildingInstance, int> _figuresAt = new Dictionary<BuildingInstance, int>();
+
+        /// <summary>Just outside a building's south edge, where its door faces (as the Town Hall's spawn point).</summary>
+        private Vector3 DoorOf(BuildingInstance building)
+        {
+            if (building == null) return Vector3.zero;
+            if (gridManager == null) return building.transform.position;
+            var footprint = building.RotatedFootprint();
+            var centre = gridManager.GetFootprintCenterWorld(building.OriginCell, footprint);
+            return new Vector3(centre.x, centre.y, centre.z - footprint.y * gridManager.CellSize * 0.5f - gridManager.CellSize);
+        }
+
+        private Vector3 CentreOf(BuildingInstance building)
+        {
+            if (building == null) return Vector3.zero;
+            return gridManager == null ? building.transform.position
+                : gridManager.GetFootprintCenterWorld(building.OriginCell, building.RotatedFootprint());
+        }
+
+        private void CountFigures()
+        {
+            _figuresAt.Clear();
+            foreach (var agent in _allAgents)
+            {
+                if (agent == null || agent.Home == null) continue;
+                _figuresAt.TryGetValue(agent.Home, out var n);
+                _figuresAt[agent.Home] = n + 1;
+            }
+        }
+
+        /// <summary>A home with more residents than figures living there, or null (counts from CountFigures).</summary>
+        private BuildingInstance HomeWanting()
+        {
+            var people = HousePeople.Instance;
+            if (people == null) return null;
+            people.Homes(_homes);
+            foreach (var pair in _homes)
+            {
+                if (pair.Key == null) continue;
+                _figuresAt.TryGetValue(pair.Key, out var n);
+                if (pair.Value > n) return pair.Key;
+            }
+            return null;
+        }
+
+        /// <summary>Whether this figure's home has more figures than residents (or is gone): the one to let go first.</summary>
+        private bool Surplus(CitizenAgent agent)
+        {
+            if (agent == null) return false;
+            if (agent.Home == null || agent.Home.CurrentHealth <= 0) return true;
+            var people = HousePeople.Instance;
+            if (people == null) return false;
+            _figuresAt.TryGetValue(agent.Home, out var n);
+            return n > people.CitizensOf(agent.Home);
+        }
+
+        /// <summary>Idle figures whose home has too many move to a home with too few -- straight there when it is on another island.</summary>
+        private void Rehome()
+        {
+            if (HousePeople.Instance == null) return;
+            CountFigures();
+            for (var i = 0; i < _idleAgents.Count; i++)
+            {
+                var agent = _idleAgents[i];
+                if (!Surplus(agent)) continue;
+                var home = HomeWanting();
+                if (home == null) return;
+                if (agent.Home == null || !HousePeople.Same(HomeIsland(agent), HousePeople.IslandOf(home))) agent.Teleport(DoorOf(home));
+                agent.Home = home;
+                agent.SetIdleWander(CentreOf(home));
+                CountFigures();
+            }
         }
 
         private void AssignAgentToBuilding(CitizenAgent agent, ProductionBuilding building)
@@ -433,7 +531,7 @@ namespace CityBuilder.Citizens
                 _claimedNodes.Remove(agent);
             }
 
-            var center = _townCenter ?? agent.transform.position;
+            var center = agent.Home != null && agent.Home.CurrentHealth > 0 ? CentreOf(agent.Home) : (_townCenter ?? agent.transform.position);
             agent.SetIdleWander(center);
             _idleAgents.Add(agent);
         }
@@ -447,6 +545,7 @@ namespace CityBuilder.Citizens
         {
             if (agent == null || !_allAgents.Contains(agent)) return;
             foreach (var pair in _workingAgents) pair.Value.Remove(agent);
+            HousePeople.Instance?.Lose(agent.Home);   // this very one's house is one short
             RemoveAgent(agent);
             citizenManager?.KillCitizens(1);
             RefillShortBuildings();
@@ -540,12 +639,16 @@ namespace CityBuilder.Citizens
             controller.skinWidth = 0.02f;
             controller.minMoveDistance = 0f;
 
-            var spawnBase = _citizenSpawnPoint ?? center.Value;
+            // at his own house's door (the user, 2026-11-12); the hall's for anyone not yet housed
+            CountFigures();
+            var home = HomeWanting();
+            var spawnBase = home != null ? DoorOf(home) : (_citizenSpawnPoint ?? center.Value);
             var jitter = UnityEngine.Random.insideUnitCircle * SpawnJitterRadius;
             var spawnPosition = spawnBase + new Vector3(jitter.x, 0f, jitter.y);
 
             var agent = root.AddComponent<CitizenAgent>();
-            agent.Initialize(spawnPosition, center.Value);
+            agent.Home = home;
+            agent.Initialize(spawnPosition, home != null ? CentreOf(home) : center.Value);
             agent.NameIndex = _namesGiven++;
             agent.Clothes = clothes;
             agent.Portrait = portrait;

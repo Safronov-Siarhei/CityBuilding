@@ -553,6 +553,13 @@ namespace CityBuilder.Combat
         public bool TryRecruit(SoldierType type, Vector3 position, int barracksLevel = int.MaxValue)
         {
             if (DescribeRecruitBlocker(type, barracksLevel) != null) return false;
+            // only the residents of the hiring building's island (the user, 2026-11-12)
+            var homes = HousePeople.Instance;
+            if (homes != null && !homes.CanHire(position, SoldierStats.Crew(type)))
+            {
+                EventLogManager.Instance?.Log(Localization.Get("#army_no_citizens_island"));
+                return false;
+            }
 
             var resources = ResourceManager.Instance;
             if (resources != null && !resources.TrySpend(SoldierStats.RecruitCost(type))) return false;
@@ -576,6 +583,8 @@ namespace CityBuilder.Combat
             var group = RecruitGroup(type, position);
             var unit = SpawnSoldier(type, position, group);
             group.Add(unit);
+            // he keeps his place in the house he came out of (HousePeople)
+            homes?.Enlist(unit, position, crew);
             // a garrison soldier keeps the spot he stepped out at (army-control.md)
             if (group.IsGarrison) group.SetPost(unit, unit.transform.position);
 
@@ -590,7 +599,20 @@ namespace CityBuilder.Combat
             if (unit == null) return;
 
             RemoveFromGroup(unit);
+            HousePeople.Instance?.Discharge(unit);   // home again, in his own house
             for (var i = 0; i < SoldierStats.Crew(unit.Type); i++) CitizenManager.Instance?.ReturnCitizen();
+            Destroy(unit.gameObject);
+            OnArmyChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// A soldier whose house was burnt or pulled down leaves the army at once, with its residents
+        /// (the user, 2026-11-12): gone, no citizen comes back.
+        /// </summary>
+        public void SendAway(SoldierUnit unit)
+        {
+            if (unit == null) return;
+            RemoveFromGroup(unit);
             Destroy(unit.gameObject);
             OnArmyChanged?.Invoke();
         }

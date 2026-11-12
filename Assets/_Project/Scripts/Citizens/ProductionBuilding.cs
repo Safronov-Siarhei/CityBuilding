@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using CityBuilder.Buildings;
+using CityBuilder.Core;
 using CityBuilder.Grid;
 using CityBuilder.Maps;
 using CityBuilder.Resources;
@@ -54,6 +55,14 @@ namespace CityBuilder.Citizens
 
         /// <summary>Wanting hands it does not have: the worker-shortage mark goes up over it (WorkerShortageMarks).</summary>
         public bool ShortOfWorkers => Instance != null && Instance.IsOperational && AssignedWorkers < WantedWorkers;
+
+        private int? _island;
+
+        /// <summary>The archipelago island it stands on (-1 off the archipelago) -- it takes workers only from there (HousePeople.IdleOn).</summary>
+        public int Island => _island ??= HousePeople.IslandOf(transform.position);
+
+        // the «no one free on this island» notice is said once per building (the user, 2026-11-12)
+        private bool _toldNoneOnIsland;
 
         public BuildingInstance Instance => _buildingInstance != null ? _buildingInstance : (_buildingInstance = GetComponent<BuildingInstance>());
 
@@ -462,6 +471,19 @@ namespace CityBuilder.Citizens
         public bool TryAssignWorker()
         {
             if (AssignedWorkers >= MaxWorkers) return false;
+            // only the residents of its own island work here (the user, 2026-11-12)
+            var homes = HousePeople.Instance;
+            if (homes != null && homes.IdleOn(Island) <= 0)
+            {
+                _wanted = Mathf.Max(_wanted, AssignedWorkers + 1);   // wanting a hand: the shortage mark goes up
+                if (!_toldNoneOnIsland && CitizenManager.Instance != null && CitizenManager.Instance.IdlePopulation > 0)
+                {
+                    _toldNoneOnIsland = true;
+                    EventLogManager.Instance?.Post(GameEvent.About(Instance, Localization.Format("#log_no_people_on_island", DisplayName),
+                        EventSeverity.Warning, EventGlyph.Alert));
+                }
+                return false;
+            }
             if (CitizenManager.Instance == null || !CitizenManager.Instance.NotifyWorkerAssigned()) return false;
             AssignedWorkers++;
             _wanted = Mathf.Max(_wanted, AssignedWorkers);

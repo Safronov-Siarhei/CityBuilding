@@ -221,6 +221,18 @@ namespace CityBuilder.Citizens
             SetIdleWander(wanderCenter);
         }
 
+        /// <summary>The house he lives in (HousePeople; the Town Hall for its own people) -- he appears and strolls beside it (the user, 2026-11-12).</summary>
+        public Buildings.BuildingInstance Home { get; set; }
+
+        /// <summary>Moves him at once (a figure re-homed to another island, which he could not walk to).</summary>
+        public void Teleport(Vector3 at)
+        {
+            var controller = GetComponent<CharacterController>();
+            if (controller != null) controller.enabled = false;
+            transform.position = at;
+            if (controller != null) controller.enabled = true;
+        }
+
         /// <summary>Switches (or keeps) the agent to ambient wandering from wherever it currently is.</summary>
         /// <summary>A place to work at and the point to face there (a field's furrow, the water off a shore).</summary>
         public struct WorkSpot

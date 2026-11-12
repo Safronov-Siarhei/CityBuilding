@@ -66,7 +66,7 @@ namespace CityBuilder.Citizens
             {
                 var house = houses[i];
                 if (house == null || house.IsBot) continue;
-                var people = HousePeople.PlacesOf(house);
+                var people = HousePeople.Instance != null ? HousePeople.Instance.CitizensOf(house) : HousePeople.PlacesOf(house);
                 if (people > 0) total += people * PerResident(house);
             }
             return total;

@@ -70,7 +70,7 @@ citizen selects it; a tap on the world orders it to walk/gather.
   (user, 2026-10-14). A campaign with tiers as milestones was floated, not decided.
 - Units drawn at `UnitSize.Scale` = 0.625 (a citizen is 0.45 m, fits 0.5 m doors).
 
-## AGREED, NOT BUILT: residents bound to houses, work by island (the user, 2026-11-12)
+## Residents bound to houses, work by island (the user, 2026-11-12) -- BUILT, NOT COMPILED YET (Unity was open), not seen
 Why: with houses on several islands the town-wide pool would let one island's people outnumber the
 others when the main island's houses burn; work on another island had no way to get there.
 - A house makes ITS OWN residents up to its places, then stops; they appear beside it (so on its island).
@@ -85,6 +85,27 @@ others when the main island's houses burn; work on another island had no way to 
 - Moving people between islands = only by building new houses there (no ferrying of citizens).
 - Hunger takes people one by one from ANY house on the map (no per-island economy).
 - Old saves do not matter (only the user plays).
+
+How it is built: the town-wide headcount pool in `CitizenManager` stays (the economy reads it); beside it
+`Citizens/HousePeople.cs` keeps a LEDGER -- per house (and the hall) its residents and its soldiers --
+and reconciles it to the pool every frame (pool grew -> a house on an island short of people, then any
+house, then the hall, the rest homeless = overcrowded; pool shrank -> homeless first, then the fullest
+house, the hall last). Nothing of it is saved: after a load the reconcile re-homes everyone.
+- A house grows one person every `person_respawn_sec` while it has room (paused by hunger); the hall
+  grows up to `citizens_on_build` with no bar. `HousePeople.IdleOn(island)` = residents - workers there.
+- `ProductionBuilding.TryAssignWorker` refuses when `IdleOn(Island)` is 0: the existing
+  WorkerShortageMarks icon shows, and `#log_no_people_on_island` is posted ONCE per building (only when
+  the town has idle people elsewhere).
+- `ArmyManager.TryRecruit` checks `CanHire(position, crew)` (`#army_no_citizens_island`) and calls
+  `Enlist` (a citizen of the fullest house there becomes its soldier); `Disband` -> `Discharge` (back to
+  the house if it stands). A lost house -> `Abandon`: residents removed from the pool, its soldiers
+  `ArmyManager.SendAway` (gone, nobody returned), `#log_house_lost` with the count.
+- Figures (`CitizenVisualsManager`): `CitizenAgent.Home`; a new figure spawns at the door of a home
+  with fewer figures than residents; an idle figure wanders round its home; a workplace pulls an idle
+  figure from its own island (else any, teleported to its door); removal prefers figures of a house
+  that has too many; `Rehome()` every node-retry pass moves surplus idle figures to homes short of
+  figures (teleport across islands); `KillAgent` -> `HousePeople.Lose(home)`.
+- Decor money and gifts now count a house's LIVE residents (`CitizensOf`), not its places.
 
 ## Code
 `Citizens/CitizenManager.cs`, `Citizens/CitizenAgent.cs` (modes Wandering/Working/ManualMove/Gathering,

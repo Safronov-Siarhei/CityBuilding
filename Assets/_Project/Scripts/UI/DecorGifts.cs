@@ -97,7 +97,7 @@ namespace CityBuilder.UI
             {
                 var house = houses[i];
                 if (house == null || house.IsBot || !house.IsOperational) continue;
-                var people = HousePeople.PlacesOf(house);
+                var people = HousePeople.Instance != null ? HousePeople.Instance.CitizensOf(house) : HousePeople.PlacesOf(house);
                 var bonus = people > 0 ? DecorBonus.PerResident(house) : 0f;
                 _gifts.TryGetValue(house, out var gift);
                 if (bonus <= 0f && (gift == null || !gift.Ready)) continue;
