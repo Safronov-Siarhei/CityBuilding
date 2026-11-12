@@ -27,7 +27,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 |---|---|---|
 | **Economy** | | |
 | [resources-and-storage](resources-and-storage.md) | resource types, storage families, capacity, coins, flat tax + Tax House, lifetime produced | ресурсы, склад, вместимость, налог, налоговый дом, монеты |
-| [production-chains](production-chains.md) | workshops, recipes, grain→flour→bread, ore→bars, minting, recipe picker | производство, рецепт, плавильня, пекарня, чеканка |
+| [production-chains](production-chains.md) | workshops, recipes, grain→flour→bread, ore→bars, Smelter bar buttons (minting removed) | производство, рецепт, плавильня, пекарня, чеканка |
 | [gathering](gathering.md) | trees/rocks stock per node, ore veins, harvest radius, gatherer walk, manual tap-to-gather | лес, камень, сбор, радиус, лесопилка, жила, рудник |
 | [food-and-hunger](food-and-hunger.md) | eating, diet, starvation deaths, food variety | еда, голод, рацион |
 | **Population** | | |

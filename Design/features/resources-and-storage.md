@@ -18,7 +18,7 @@
 > amount, dimmed at 0; no per-row room (a storehouse's room is shared by its group). New `Meat`
 > (Food group, icon `Res_Meat`). Tests PlayMode `FoodAndInventoryTests`.
 
-> **Status (2026-10-21):** shipped and stable. Coins come from tax and from minting
+> **Status (2026-10-21):** shipped and stable. Coins come from tax (minting removed 2026-11-12)
 > ([production-chains](production-chains.md)). Balance of coin income vs research/army still unplayed.
 > **Read with:** [production-chains](production-chains.md), [food-and-hunger](food-and-hunger.md).
 

@@ -24,7 +24,7 @@ picker (iron / copper / gold bar / coins). A starved converter logs once; a full
   Пекарня → хлеб (Кладовая). Stays **1:1:1 at every level**.
 - **Metals (user, 2026-08-17):** ore stays raw (Склад); 2 ore + 1 coal → 1 bar (Сокровищница). The
   player picks the recipe in the Smelter card. One recipe at a time.
-- **Minting (user picked, 2026-08-31):** Smelter recipe `coins`: 1 GoldBar + 1 Coal → 4 Coins.
+- **Minting REMOVED (the user, 2026-11-12: «Убрать чеканку»).** It was (2026-08-31) Smelter recipe `coins`: 1 GoldBar + 1 Coal → 4 Coins; the row, `#recipe_coins` and `MintingTests` are gone.
   ~120 coins/day from one level-1 gold chain.
 - **Пристань and Водяная мельница produce NOTHING** («это бред») until the Water category is designed.
 - Mines stand only on a free ORE VEIN of their ore; veins never run dry ([gathering](gathering.md)).
@@ -44,8 +44,8 @@ picker (iron / copper / gold bar / coins). A starved converter logs once; a full
 - A bar over the building fills towards the next smelt, the bar's icon on it (as a sawmill's over its
   tree): `ProductionBuilding.ShowSmeltBar` (HarvestProgressBar; hidden with no workers, while built,
   or when the last tick was short of an input).
-- MINTING (gold bar -> coins) has NO button now: the recipe stays in the data but cannot be picked.
-  Open: what gold bars are for (the user is deciding; proposals: level-5 upgrades, diplomacy, keep minting).
+- Minting is removed. OPEN: gold bars are now spent on NOTHING (a trophy) until the user picks their
+  use (proposals: level-5 upgrades -- the golden roofs --, diplomacy ransom/gifts/deals, elite units).
 - Concepts: `Tools/ui/smelter_bar_concepts.py` (A/B/C sheet, `final` -> `Design/ui/Smelter_Final_Concept.png`).
 
 ## Planned (agreed in talk 2026-11-12, NOT built)
@@ -71,7 +71,7 @@ UI recipe picker in `UI/BuildingInfoPanelController.cs`. Import: `Editor/Balance
 
 ## Tests
 EditMode `ProcessingChainTests`, `FoodBalanceTests`, `UpgradeBalanceTests`,
-`ProductionBuildingDecayMultiplierTests`; PlayMode `MintingTests`.
+`ProductionBuildingDecayMultiplierTests`; (PlayMode `MintingTests` deleted with minting, 2026-11-12).
 
 ## Traps
 - `per_day` / `payback_days` sheet columns LIE for gatherers (computed from batches they never use).
