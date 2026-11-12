@@ -1,9 +1,13 @@
 """Mission 2 «Оборона города»: the town's plan for the user's approval (concept only, nothing in the game).
 
-Draws Design/mission2_map_v1.png in map cells (1 cell = S px): the river from mission 1 at the top (the
-orcs come from there), the outer wall (part 1) with three gates, the lower town, the inner wall (part 2)
-with three gates, the square where Ардан rises again, the castle on its rock over the lake at the back,
-the capital road (the cavalryman leaves by it, the relief comes by it).
+v2 (the user, 2026-11-12): the walls are SQUARE, laid on the grid from the game's own pieces (stone wall,
+towers, the Barbican for a gate) -- a round wall would need new models; under the outer walls lie FIELDS
+(they will burn) and FORESTS. v1 (round walls) is kept as Design/mission2_map_v1.png.
+
+Draws Design/mission2_map_v2.png in map cells (1 cell = S px): the mission-1 river at the top (the orcs
+come over three fords), forests, then fields round the outer wall (part 1) with three gates, the lower
+town, the inner wall (part 2) with three gates, the square where Ардан rises again, the castle at the back
+over the lake, the capital road.
 
 Run: python -I Tools/campaign/mission2_map.py
 """
@@ -14,22 +18,27 @@ import random
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-OUT = os.path.join(ROOT, 'Design', 'mission2_map_v1.png')
+OUT = os.path.join(ROOT, 'Design', 'mission2_map_v2.png')
 FONTS = os.path.join(ROOT, 'Assets', '_Project', 'Resources', 'Fonts')
 S = 12                       # px per cell
 W, H = 100, 92               # map in cells
 LEGEND = 470
 
-CENTRE = (50.0, 62.0)
-OUTER_R, INNER_R = 28.0, 12.0
-RING_OUT, RING_IN = 24.0, 8.5
-GATE_ANGLES = (195.0, 270.0, 345.0)   # W, N, E (degrees, screen: 270 = up)
-GATE_NAMES = ('Западные', 'Северные', 'Восточные')
-CLIFF_Y = 64.0
+# walls: (left, top, right, bottom) in cells, the bottom side runs along the cliff over the lake
+OUTER = (28, 34, 72, 66)
+INNER = (41, 51, 59, 66)
+OUTER_GATES = ((28, 40), (50, 34), (72, 40))   # W (side wall, near the north corner), N, E
+INNER_GATES = ((41, 56), (50, 51), (59, 56))
+CLIFF_Y = 66.0
+SQUARE = (50.0, 59.0)
 
 GRASS = (148, 178, 98)
 GRASS_DARK = (122, 154, 80)
 FOREST = (70, 112, 58)
+FOREST_DARK = (52, 92, 46)
+WHEAT = (226, 196, 104)
+WHEAT_DARK = (204, 170, 80)
+PASTURE = (170, 196, 112)
 WATER = (92, 150, 196)
 WATER_DARK = (70, 124, 172)
 ROCK = (150, 140, 124)
@@ -42,7 +51,7 @@ ROOF_IN = (150, 70, 92)
 INK = (52, 36, 22)
 ORC = (200, 40, 34)
 GOLD = (236, 186, 60)
-BLUE = (60, 110, 210)
+FIRE = (240, 120, 30)
 
 
 def font(size, bold=True):
@@ -53,31 +62,12 @@ def px(p):
     return (p[0] * S, p[1] * S)
 
 
-def polar(r, deg, centre=CENTRE):
-    a = math.radians(deg)
-    return (centre[0] + r * math.cos(a), centre[1] + r * math.sin(a))
+def rect(d, box, fill, outline=None, width=1):
+    d.rectangle(px(box[:2]) + px(box[2:]), fill=fill, outline=outline, width=width)
 
 
-def arc(r, a0, a1, step=3.0, centre=CENTRE):
-    pts = []
-    a = a0
-    while a <= a1 + 1e-6:
-        pts.append(polar(r, a, centre))
-        a += step
-    return pts
-
-
-def line(d, pts, colour, width, dash=0):
-    pts = [px(p) for p in pts]
-    if not dash:
-        d.line(pts, fill=colour, width=width, joint='curve')
-        return
-    for i in range(len(pts) - 1):
-        (x0, y0), (x1, y1) = pts[i], pts[i + 1]
-        n = max(1, int(math.hypot(x1 - x0, y1 - y0) / dash))
-        for k in range(0, n, 2):
-            t0, t1 = k / n, min(1, (k + 1) / n)
-            d.line([(x0 + (x1 - x0) * t0, y0 + (y1 - y0) * t0), (x0 + (x1 - x0) * t1, y0 + (y1 - y0) * t1)], fill=colour, width=width)
+def line(d, pts, colour, width):
+    d.line([px(p) for p in pts], fill=colour, width=width, joint='curve')
 
 
 def arrow(d, pts, colour, width):
@@ -93,190 +83,226 @@ def label(d, p, text, size=20, colour=INK, anchor='mm', stroke=(250, 244, 226)):
     d.text(px(p), text, font=font(size), fill=colour, anchor=anchor, stroke_width=3, stroke_fill=stroke)
 
 
-def tower(d, p, r=0.9, colour=WALL):
-    x, y = px(p)
-    d.ellipse((x - r * S, y - r * S, x + r * S, y + r * S), fill=colour, outline=INK, width=2)
+def tower(d, p, colour=WALL, r=1.1):
+    rect(d, (p[0] - r, p[1] - r, p[0] + r, p[1] + r), colour, INK, 2)
 
 
-def gate(d, p, colour):
-    x, y = px(p)
-    d.rounded_rectangle((x - 1.6 * S, y - 1.6 * S, x + 1.6 * S, y + 1.6 * S), 6, fill=colour, outline=INK, width=3)
-    d.rectangle((x - 0.6 * S, y - 0.6 * S, x + 0.6 * S, y + 0.6 * S), fill=(70, 46, 26))
+def gate(d, p, colour, horizontal):
+    w, h = (2.2, 1.4) if horizontal else (1.4, 2.2)
+    rect(d, (p[0] - w, p[1] - h, p[0] + w, p[1] + h), colour, INK, 3)
+    rect(d, (p[0] - 0.6, p[1] - 0.6, p[0] + 0.6, p[1] + 0.6), (70, 46, 26))
+
+
+def walls(d, box, gates, colour, every):
+    l, t, r, b = box
+    outline = [(l, b), (l, t), (r, t), (r, b)]
+    line(d, outline, INK, int(1.25 * S))
+    line(d, outline, colour, int(0.9 * S))
+    for x in range(int(l) + every, int(r), every):
+        if all(abs(x - g[0]) > 3 or abs(t - g[1]) > 0.1 for g in gates):
+            tower(d, (x, t), colour, 0.8)
+    for y in range(int(t) + every, int(b), every):
+        for x in (l, r):
+            if all(abs(y - g[1]) > 3 or abs(x - g[0]) > 0.1 for g in gates):
+                tower(d, (x, y), colour, 0.8)
+    for c in ((l, t), (r, t), (l, b), (r, b)):
+        tower(d, c, colour)
+    for g in gates:
+        gate(d, g, colour, horizontal=abs(g[1] - t) < 0.1)
+
+
+def field(d, rnd, box, burning=False):
+    rect(d, box, WHEAT, INK, 1)
+    l, t, r, b = box
+    y = t + 0.7
+    while y < b:
+        line(d, [(l + 0.3, y), (r - 0.3, y)], WHEAT_DARK, 2)
+        y += 1.1
+    if burning:
+        for _ in range(int((r - l) * (b - t) / 10)):
+            x, y = rnd.uniform(l + 1, r - 1), rnd.uniform(t + 1, b - 1)
+            d.ellipse(px((x - 0.5, y - 0.5)) + px((x + 0.5, y + 0.5)), fill=FIRE)
+
+
+def wood(d, rnd, box, density=1.0):
+    l, t, r, b = box
+    for _ in range(int((r - l) * (b - t) * 0.55 * density)):
+        x, y = rnd.uniform(l, r), rnd.uniform(t, b)
+        rr = rnd.uniform(0.8, 1.5)
+        d.ellipse(px((x - rr, y - rr)) + px((x + rr, y + rr)), fill=rnd.choice((FOREST, FOREST, FOREST_DARK)))
 
 
 def main():
     img = Image.new('RGB', (W * S + LEGEND, H * S), (240, 230, 206))
     d = ImageDraw.Draw(img)
-    d.rectangle((0, 0, W * S, H * S), fill=GRASS)
+    rect(d, (0, 0, W, H), GRASS)
     rnd = random.Random(7)
     for _ in range(900):
         x, y = rnd.uniform(0, W), rnd.uniform(0, H)
         d.ellipse(px((x - 0.3, y - 0.3)) + px((x + 0.3, y + 0.3)), fill=GRASS_DARK)
 
-    # forest beyond the river and on the flanks
-    for _ in range(420):
-        x, y = rnd.uniform(0, W), rnd.uniform(0, 7)
-        if abs(x - 50) < 4:
-            continue
-        r = rnd.uniform(0.8, 1.6)
-        d.ellipse(px((x - r, y - r)) + px((x + r, y + r)), fill=FOREST)
-    for _ in range(260):
-        side = rnd.choice((0, 1))
-        x = rnd.uniform(0, 12) if side == 0 else rnd.uniform(88, 100)
-        y = rnd.uniform(14, 66)
-        r = rnd.uniform(0.8, 1.5)
-        d.ellipse(px((x - r, y - r)) + px((x + r, y + r)), fill=FOREST)
-
-    # the river from mission 1 (the mage brought its bridge down) and the fords the orcs take
-    river = [(x, 10 + 1.6 * math.sin(x / 9.0)) for x in range(0, W + 1, 2)]
+    # the river from mission 1, beyond it the forest the orcs come out of
+    river = [(x, 9 + 1.4 * math.sin(x / 9.0)) for x in range(0, W + 1, 2)]
+    wood(d, rnd, (0, 0, W, 6), 1.3)
     line(d, river, WATER, int(4.5 * S))
     line(d, river, WATER_DARK, int(1.2 * S))
-    for fx in (15, 50, 85):
-        fy = 10 + 1.6 * math.sin(fx / 9.0)
+    fords = [(14, 9 + 1.4 * math.sin(14 / 9.0)), (50, 9 + 1.4 * math.sin(50 / 9.0)), (86, 9 + 1.4 * math.sin(86 / 9.0))]
+    for fx, fy in fords:
         d.ellipse(px((fx - 2.6, fy - 1.6)) + px((fx + 2.6, fy + 1.6)), fill=(170, 196, 200))
-    label(d, (50, 10 + 1.6 * math.sin(50 / 9.0) - 3.4), 'обломки моста (миссия 1)', 16)
+    label(d, (50, fords[1][1] - 3.4), 'обломки моста (миссия 1)', 16)
 
-    # the lake and the cliff at the back, the castle's rock
-    d.rectangle(px((0, CLIFF_Y + 2.5)) + px((W, H)), fill=WATER)
-    d.polygon([px(p) for p in [(14, CLIFF_Y), (86, CLIFF_Y), (88, CLIFF_Y + 3), (12, CLIFF_Y + 3)]], fill=ROCK)
-    d.ellipse(px((42, CLIFF_Y - 3)) + px((58, CLIFF_Y + 9)), fill=ROCK, outline=INK, width=2)
+    # the lake and the cliff at the back
+    rect(d, (0, CLIFF_Y + 3, W, H), WATER)
+    rect(d, (8, CLIFF_Y, 92, CLIFF_Y + 3), ROCK)
 
-    # the capital road: a bridge over the lake to the south
-    line(d, [(50, CLIFF_Y + 8), (50, H)], (160, 120, 80), int(2.4 * S))
-    line(d, [(50, CLIFF_Y + 8), (50, H)], ROAD, int(1.6 * S))
-    label(d, (50, H - 3), 'дорога в столицу  (уезжает гонец, приходит подкрепление)', 17)
+    # forests: a band past the river and the far flanks, groves between the fields
+    wood(d, rnd, (0, 13, W, 19), 1.2)
+    wood(d, rnd, (0, 19, 12, CLIFF_Y), 1.2)
+    wood(d, rnd, (88, 19, W, CLIFF_Y), 1.2)
+    wood(d, rnd, (36, 21, 44, 28))
+    wood(d, rnd, (56, 21, 64, 28))
+    wood(d, rnd, (14, 48, 22, 58))
+    wood(d, rnd, (78, 48, 86, 58))
 
-    # roads in from the fords to the outer gates (the orcs' three ways)
-    outer_gates = [polar(OUTER_R, a) for a in GATE_ANGLES]
-    inner_gates = [polar(INNER_R, a) for a in GATE_ANGLES]
+    # the orcs' roads: from the fords through the forest and the fields to the outer gates
     ways = [
-        [(15, 12), (13, 22), (14, 34), outer_gates[0]],
-        [(50, 12), (50, 20), outer_gates[1]],
-        [(85, 12), (87, 22), (86, 34), outer_gates[2]],
+        [fords[0], (14, 22), (16, 32), (20, 40), (OUTER_GATES[0][0] - 2.4, OUTER_GATES[0][1])],
+        [fords[1], (50, 20), (50, OUTER_GATES[1][1] - 2.4)],
+        [fords[2], (86, 22), (84, 32), (80, 40), (OUTER_GATES[2][0] + 2.4, OUTER_GATES[2][1])],
     ]
     for way in ways:
         line(d, way, ROAD, int(1.8 * S))
 
-    # the lower town (part 1): ring street inside the outer wall, streets gate to gate, houses
-    for o, i in zip(outer_gates, inner_gates):
-        line(d, [o, i], STREET, int(1.6 * S))
-    line(d, arc(RING_OUT, 186, 354), STREET, int(1.4 * S))
-    rnd = random.Random(11)
+    # fields under the walls (they burn in part 2) and pasture
+    field(d, rnd, (20, 21, 34, 31))
+    field(d, rnd, (45, 21, 48.5, 31))
+    field(d, rnd, (51.5, 21, 55, 31))
+    field(d, rnd, (66, 21, 80, 31))
+    field(d, rnd, (12, 34, 18, 46))
+    field(d, rnd, (82, 34, 88, 46))
+    field(d, rnd, (12, 58, 26, 65))
+    field(d, rnd, (74, 58, 88, 65))
+    rect(d, (21, 42, 26, 56), PASTURE, INK, 1)
+    rect(d, (74, 42, 79, 56), PASTURE, INK, 1)
+    for p in ((23.5, 46), (24.5, 51), (75.5, 47), (76.5, 52)):
+        d.ellipse(px((p[0] - 0.5, p[1] - 0.4)) + px((p[0] + 0.5, p[1] + 0.4)), fill=(250, 250, 240), outline=INK)
+    for p in ((30, 25.5), (70, 25.5), (15, 61.5), (85, 61.5)):
+        rect(d, (p[0] - 1.2, p[1] - 1.0, p[0] + 1.2, p[1] + 1.0), (160, 120, 80), INK, 1)   # barns / haystacks
+
+    # the lower town: a street along the inside of the outer wall, a street from each gate in, houses on the grid
+    l, t, r, b = OUTER
+    ring = [(l + 2.5, b - 1), (l + 2.5, t + 2.5), (r - 2.5, t + 2.5), (r - 2.5, b - 1)]
+    rect(d, (l + 0.6, t + 0.6, r - 0.6, b), (214, 200, 168))
+    line(d, ring, STREET, int(1.6 * S))
+    line(d, [OUTER_GATES[0], (l + 2.5, OUTER_GATES[0][1]), (INNER_GATES[0][0] - 2, OUTER_GATES[0][1]), (INNER_GATES[0][0] - 2, INNER_GATES[0][1]), INNER_GATES[0]], STREET, int(1.4 * S))
+    line(d, [OUTER_GATES[1], INNER_GATES[1]], STREET, int(1.6 * S))
+    line(d, [OUTER_GATES[2], (r - 2.5, OUTER_GATES[2][1]), (INNER_GATES[2][0] + 2, OUTER_GATES[2][1]), (INNER_GATES[2][0] + 2, INNER_GATES[2][1]), INNER_GATES[2]], STREET, int(1.4 * S))
+    line(d, [(l + 2.5, 47), (r - 2.5, 47)], STREET, int(1.0 * S))
     houses = 0
-    for _ in range(2000):
-        r = rnd.uniform(INNER_R + 2.5, OUTER_R - 2.2)
-        a = rnd.uniform(183, 357)
-        p = polar(r, a)
-        if p[1] > CLIFF_Y - 1.5 or abs(r - RING_OUT) < 1.8:
-            continue
-        if any(min(abs(a - g), 360 - abs(a - g)) < 6.5 for g in GATE_ANGLES):
-            continue
-        w, h = rnd.choice(((2, 1.5), (1.5, 2), (2, 2), (1.5, 1.5)))
-        box = px((p[0] - w / 2, p[1] - h / 2)) + px((p[0] + w / 2, p[1] + h / 2))
-        if any(img.getpixel((int(x), int(y))) in (ROOF, STREET) for x, y in ((box[0], box[1]), (box[2], box[3]), (box[0], box[3]), (box[2], box[1]))):
-            continue
-        d.rectangle(box, fill=ROOF, outline=INK, width=1)
-        houses += 1
-        if houses >= 120:
-            break
+    il, it, ir, ib = INNER
+    for gx in range(int(l) + 4, int(r) - 3, 3):
+        for gy in range(int(t) + 4, int(b) - 1, 3):
+            box = (gx + 0.2, gy + 0.2, gx + 2.2, gy + 2.2)
+            if box[2] > il - 2.5 and box[0] < ir + 2.5 and box[3] > it - 2.5:
+                continue   # the inner wall and its street
+            if abs(gx + 1.2 - 50) < 2.2 or abs(gy + 1.2 - 47) < 1.6:
+                continue   # the north street and the cross street
+            if abs(gy + 1.2 - OUTER_GATES[0][1]) < 1.6 and (gx < il or gx > ir):
+                continue   # the W / E gate streets
+            if (abs(gx + 1.2 - (INNER_GATES[0][0] - 2)) < 1.6 or abs(gx + 1.2 - (INNER_GATES[2][0] + 2)) < 1.6) and gy >= OUTER_GATES[0][1] - 1:
+                continue
+            if rnd.random() < 0.12:
+                continue   # yards
+            rect(d, box, ROOF, INK, 1)
+            houses += 1
 
-    # the outer wall (part 1) with towers and its three gates
-    wall = arc(OUTER_R, 182, 358, 2.0)
-    wall = [(wall[0][0], CLIFF_Y)] + wall + [(wall[-1][0], CLIFF_Y)]
-    line(d, wall, INK, int(1.25 * S))
-    line(d, wall, WALL, int(0.9 * S))
-    for a in range(186, 356, 14):
-        if all(min(abs(a - g), 360 - abs(a - g)) > 6 for g in GATE_ANGLES):
-            tower(d, polar(OUTER_R, a))
-    for p in outer_gates:
-        gate(d, p, WALL)
+    # the centre: inner ring street, the square, the castle on the cliff
+    rect(d, (il + 0.6, it + 0.6, ir - 0.6, ib), (226, 214, 186))
+    line(d, [(il + 2, ib - 1), (il + 2, it + 2), (ir - 2, it + 2), (ir - 2, ib - 1)], STREET, int(1.2 * S))
+    rect(d, (SQUARE[0] - 3.5, SQUARE[1] - 2.5, SQUARE[0] + 3.5, SQUARE[1] + 2.5), (236, 224, 196), INK, 2)
+    for box in ((il + 3.2, 57, il + 6, 60), (ir - 6, 57, ir - 3.2, 60)):
+        rect(d, box, ROOF_IN, INK, 1)
+    rect(d, (46, 62.5, 54, 66), (170, 160, 146), INK, 3)
+    label(d, (50, 64.3), 'Замок', 15)
 
-    # the centre (part 2): inner ring street, the inner wall, the square
-    d.pieslice(px((CENTRE[0] - INNER_R, CENTRE[1] - INNER_R)) + px((CENTRE[0] + INNER_R, CENTRE[1] + INNER_R)), 180, 360, fill=(214, 200, 170))
-    d.rectangle(px((CENTRE[0] - INNER_R, CENTRE[1])) + px((CENTRE[0] + INNER_R, CLIFF_Y)), fill=(214, 200, 170))
-    line(d, arc(RING_IN, 186, 354), STREET, int(1.2 * S))
-    square = (50.0, 58.0)
-    d.ellipse(px((square[0] - 3.6, square[1] - 3.0)) + px((square[0] + 3.6, square[1] + 3.0)), fill=(226, 214, 186), outline=INK, width=2)
-    for p, size in (((41.5, 61.5), (2.6, 2.0)), ((58.5, 61.5), (2.6, 2.0)), ((44, 53.5), (2.0, 1.6)), ((56, 53.5), (2.0, 1.6))):
-        d.rectangle(px((p[0] - size[0] / 2, p[1] - size[1] / 2)) + px((p[0] + size[0] / 2, p[1] + size[1] / 2)), fill=ROOF_IN, outline=INK, width=1)
-    inner = arc(INNER_R, 182, 358, 2.0)
-    inner = [(inner[0][0], CLIFF_Y)] + inner + [(inner[-1][0], CLIFF_Y)]
-    line(d, inner, INK, int(1.2 * S))
-    line(d, inner, WALL_IN, int(0.85 * S))
-    for a in (225, 315):
-        tower(d, polar(INNER_R, a), 0.8, WALL_IN)
-    for p in inner_gates:
-        gate(d, p, WALL_IN)
-    # the castle on its rock
-    d.rectangle(px((46, CLIFF_Y - 1)) + px((54, CLIFF_Y + 5)), fill=(170, 160, 146), outline=INK, width=3)
-    for c in ((46, CLIFF_Y - 1), (54, CLIFF_Y - 1), (46, CLIFF_Y + 5), (54, CLIFF_Y + 5)):
-        tower(d, c, 1.0, (170, 160, 146))
-    label(d, (50, CLIFF_Y + 2), 'Замок', 18)
+    walls(d, OUTER, OUTER_GATES, WALL, 6)
+    walls(d, INNER, INNER_GATES, WALL_IN, 6)
+
+    # the capital road over the lake
+    line(d, [(50, CLIFF_Y + 1), (50, H)], (160, 120, 80), int(2.4 * S))
+    line(d, [(50, CLIFF_Y + 1), (50, H)], ROAD, int(1.6 * S))
+    label(d, (50, H - 3), 'дорога в столицу  (уезжает гонец, приходит подкрепление)', 17)
 
     # Ардан rises here
-    x, y = px(square)
+    x, y = px(SQUARE)
     d.ellipse((x - 14, y - 14, x + 14, y + 14), fill=GOLD, outline=INK, width=3)
     d.text((x, y), 'А', font=font(18), fill=INK, anchor='mm')
 
     # the orcs' three ways
-    for way in ways:
-        arrow(d, [(way[0][0], way[0][1] - 9)] + way[:-1] + [polar(OUTER_R + 3.2, GATE_ANGLES[ways.index(way)])], ORC, 7)
-    for p, t in (((15, 2.5), 'орки'), ((50, 2.5), 'орки'), ((85, 2.5), 'орки')):
-        label(d, p, t, 20, ORC)
+    for i, way in enumerate(ways):
+        tip = {0: (OUTER_GATES[0][0] - 3.4, OUTER_GATES[0][1]), 1: (50, OUTER_GATES[1][1] - 3.4), 2: (OUTER_GATES[2][0] + 3.4, OUTER_GATES[2][1])}[i]
+        arrow(d, [(way[0][0], 1.5)] + way[:-1] + [tip], ORC, 7)
+        label(d, (way[0][0], 2.2), 'орки', 20, ORC)
 
-    # gate names
-    label(d, (outer_gates[0][0] - 1, outer_gates[0][1] - 3.6), 'Западные ворота', 17)
-    label(d, (outer_gates[1][0] + 9.5, outer_gates[1][1] - 0.2), 'Северные ворота', 17)
-    label(d, (outer_gates[2][0] + 1, outer_gates[2][1] - 3.6), 'Восточные ворота', 17)
-    label(d, (50, 44.5), 'Нижний город (часть 1)', 19)
-    
-    label(d, (50, 52.6), 'Центр (часть 2)', 14, stroke=(214, 200, 170))
+    label(d, (OUTER_GATES[0][0] - 7, OUTER_GATES[0][1] - 2.6), 'Западные ворота', 16)
+    label(d, (OUTER_GATES[1][0] + 9.5, OUTER_GATES[1][1] - 2.4), 'Северные ворота', 16)
+    label(d, (OUTER_GATES[2][0] + 7, OUTER_GATES[2][1] - 2.6), 'Восточные ворота', 16)
+    label(d, (50, 44.6), 'Нижний город (часть 1)', 18, stroke=(214, 200, 168))
+    label(d, (50, 54.0), 'Центр (часть 2)', 14, stroke=(226, 214, 186))
+    label(d, (27, 20), 'поля', 16)
+    label(d, (73, 20), 'поля', 16)
+    label(d, (6, 40), 'лес', 16)
+    label(d, (94, 40), 'лес', 16)
 
-    # distances (cells; Ардан ~1 cell/s)
-    run_out = RING_OUT * math.radians(GATE_ANGLES[1] - GATE_ANGLES[0])
-    run_in = RING_IN * math.radians(GATE_ANGLES[1] - GATE_ANGLES[0])
-    to_out = OUTER_R - 3
-    to_in = math.dist(square, inner_gates[1])
+    # distances (cells; Ардан ~1 cell/s), along the streets
+    run_out = (OUTER_GATES[0][1] - (t + 2.5)) + (50 - (l + 2.5)) + 2.5
+    run_in = (INNER_GATES[0][1] - (it + 2)) + (50 - (il + 2)) + 2
+    to_in = abs(SQUARE[1] - INNER_GATES[1][1]) + 1
+    to_out = abs(SQUARE[1] - OUTER_GATES[1][1])
 
-    # scale bar
     sx, sy = 3, H - 6
-    d.rectangle(px((sx, sy)) + px((sx + 10, sy + 0.6)), fill=INK)
+    rect(d, (sx, sy, sx + 10, sy + 0.6), INK)
     label(d, (sx + 5, sy - 1.6), '10 клеток', 15)
 
     # legend
     lx = W * S + 26
-    d.rectangle((W * S, 0, W * S + LEGEND, H * S), fill=(244, 234, 208))
+    rect(d, (W, 0, W + LEGEND / S, H), (244, 234, 208))
     d.text((lx, 24), 'Миссия 2 «Оборона города»', font=font(26), fill=INK)
-    d.text((lx, 60), 'планировка, вариант 1', font=font(19, False), fill=INK)
+    d.text((lx, 60), 'планировка, вариант 2 (стены по сетке)', font=font(19, False), fill=INK)
     rows = [
-        (ORC, 'Три пути орков: через брод выше', 'по реке, у обломков моста и ниже'),
+        (ORC, 'Три пути орков: три брода,', 'дальше через лес и поля'),
+        (WHEAT, 'Поля под стенами: горят', 'во второй части (и стога, амбары)'),
+        (FOREST, 'Леса за полями и по флангам', ''),
         (WALL, 'Внешняя стена, 3 ворот (часть 1):', 'её орки ломают в любом случае'),
         (WALL_IN, 'Внутренняя стена, 3 ворот (часть 2):', 'сломали любые — поражение'),
-        (STREET, 'Кольцевые улицы за каждой стеной:', 'Ардан бегает между сторонами'),
+        (STREET, 'Улица вдоль каждой стены:', 'Ардан бегает между сторонами'),
         (GOLD, 'Площадь: здесь Ардан встаёт', 'снова после падения'),
-        (ROCK, 'Замок на скале над озером: тыл', 'не атакуют, дорога в столицу'),
     ]
-    y = 110
-    for colour, a, b in rows:
+    y = 104
+    for colour, a, b2 in rows:
         d.rounded_rectangle((lx, y + 4, lx + 30, y + 30), 6, fill=colour, outline=INK, width=2)
         d.text((lx + 44, y), a, font=font(18), fill=INK)
-        d.text((lx + 44, y + 24), b, font=font(18, False), fill=INK)
-        y += 64
-    y += 6
-    d.text((lx, y), 'Расстояния (Ардан ≈ 1 клетка/с):', font=font(19), fill=INK)
-    y += 32
-    for t in (f'• между внешними воротами ≈ {run_out:.0f} кл. (~{run_out:.0f} с)',
-              f'• между внутренними воротами ≈ {run_in:.0f} кл. (~{run_in:.0f} с)',
-              f'• от площади до внешних ворота ≈ {to_out:.0f} кл.',
-              f'• от площади до внутренних ворота ≈ {to_in:.0f} кл.',
-              f'• весь город ≈ {2 * OUTER_R:.0f} × {OUTER_R + 6:.0f} клеток',
-              f'• домов в нижнем городе: {houses}'):
-        d.text((lx, y), t, font=font(17, False), fill=INK)
-        y += 28
-    y += 10
-    d.text((lx, y), 'Часть 2 теснее: стороны ближе,', font=font(17, False), fill=INK)
-    d.text((lx, y + 26), 'бегать быстрее, напряжение выше.', font=font(17, False), fill=INK)
-    d.text((lx, y + 52), 'Снаружи — горящий нижний город.', font=font(17, False), fill=INK)
+        if b2:
+            d.text((lx + 44, y + 24), b2, font=font(18, False), fill=INK)
+        y += 60
+    y += 4
+    d.text((lx, y), 'Стены только прямые, из деталей игры:', font=font(18), fill=INK)
+    d.text((lx, y + 26), 'каменная стена, башни, барбакан-ворота', font=font(17, False), fill=INK)
+    y += 66
+    d.text((lx, y), 'Расстояния по улицам (Ардан ≈ 1 кл./с):', font=font(18), fill=INK)
+    y += 30
+    for line_text in (f'• запад/восток — север, внешние ≈ {run_out:.0f} кл.',
+                      f'• запад/восток — север, внутренние ≈ {run_in:.0f} кл.',
+                      f'• от площади до внешних ворот ≈ {to_out:.0f} кл.',
+                      f'• от площади до внутренних ≈ {to_in:.0f} кл.',
+                      f'• внешняя стена {OUTER[2] - OUTER[0]} × {OUTER[3] - OUTER[1]} клеток',
+                      f'• внутренняя стена {INNER[2] - INNER[0]} × {INNER[3] - INNER[1]} клеток',
+                      f'• домов в нижнем городе: {houses}'):
+        d.text((lx, y), line_text, font=font(17, False), fill=INK)
+        y += 27
+    y += 8
+    d.text((lx, y), 'Боковые ворота у северных углов:', font=font(17, False), fill=INK)
+    d.text((lx, y + 25), 'все три фронта ближе друг к другу.', font=font(17, False), fill=INK)
     img.save(OUT)
     print('written', OUT, houses, 'houses', round(run_out), round(run_in))
 

@@ -373,6 +373,14 @@
   inner wall radius 12 (part 2) with three gates and its own ring street; the square (Ардан rises) inside; the
   castle on a rock over a lake at the back (never attacked), the capital road over the lake (the cavalryman
   leaves, the relief comes). Outer gate to gate ~31 cells, inner ~11, the whole town ~56 x 34 cells.
+- **Plan v1 REJECTED in part (the user):** the game's walls are square -- a round wall means new models; fields
+  (to burn) and forests must lie under the outer walls.
+- **Town plan v2 SENT (2026-11-12):** `Design/mission2_map_v2.png` (same script, v1 png kept): rectangular walls
+  on the grid from the game's pieces (stone wall, towers, Barbican gates); outer 44 x 32 cells with the W/E gates
+  on the side walls near the north corners (all three fronts closer: W/E to N ~26 cells along the streets),
+  inner 18 x 15 (~12 cells gate to gate), a street along the inside of each wall; outside: wheat fields with
+  barns/haystacks and pastures under the walls, forest between and on the flanks, the orcs' roads from the three
+  fords through the forest and the fields; castle on the cliff, the capital road over the lake.
 - **Open:** the plan's approval; both cutscenes.
 
 ## Ардан (the model)
