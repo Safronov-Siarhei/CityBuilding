@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CityBuilder.Citizens;
 using CityBuilder.Core;
 using UnityEngine;
@@ -61,7 +61,8 @@ namespace CityBuilder.Resources
         private void CollectTaxes()
         {
             var population = citizenManager != null ? citizenManager.TotalPopulation : 0;
-            var due = population * PerCitizen + _carry;
+            // Казна multiplies the day's tax (the user, 2026-11-12)
+            var due = population * PerCitizen * Shop.Boosters.TaxFactor + _carry;
             var income = Mathf.FloorToInt(due + 0.0001f);
             _carry = Mathf.Max(0f, due - income);
             if (income > 0) ResourceManager.Instance?.Add(ResourceType.Coins, income);

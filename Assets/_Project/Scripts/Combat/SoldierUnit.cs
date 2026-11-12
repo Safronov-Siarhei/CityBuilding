@@ -160,7 +160,8 @@ namespace CityBuilder.Combat
             if (_healthBar != null) _healthBar.Report(CurrentHealth / (float)Mathf.Max(1, MaxHealth));
         }
         // the Captain's Сила round him adds to every blow struck near him (HeroAuras)
-        private int StrikeDamage => Mathf.RoundToInt(_attackDamage * RageFactor * HeroAuras.MightAt(transform.position));
+        // Боевой дух: the player's army hits harder while it runs (the user, 2026-11-12)
+        private int StrikeDamage => Mathf.RoundToInt(_attackDamage * RageFactor * HeroAuras.MightAt(transform.position) * Shop.Boosters.ArmyDamageFactor);
 
         private Vector3 _retreatTo;
         private float _retreatLeft;

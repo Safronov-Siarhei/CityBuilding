@@ -579,6 +579,23 @@ namespace CityBuilder.Core
         [SerializeField] private float shopNoticeSeconds = 30f;
         [SerializeField] private float shopStarterDelaySeconds = 120f;
         [SerializeField] private float shopAdStubSeconds = 2f;
+        // the boosters tab's keys («Песочница (Лавка): Бустеры», the user 2026-11-12)
+        [SerializeField] private int boosterSlots = 4;
+        [SerializeField] private float boosterSlotRechargeSeconds = 900f;
+        [SerializeField] private float hintFadeSeconds = 8f;
+        [SerializeField] private float hintRepeatSeconds = 600f;
+        [SerializeField] private float hintGraceSeconds = 420f;
+        [SerializeField] private int hintIgnoreLimit = 3;
+        [SerializeField] private float hintShopOfferSeconds = 1200f;
+        [SerializeField] private int hintRepairDamaged = 3;
+        [SerializeField] private float hintLongBuildSeconds = 60f;
+        [SerializeField] private float hintLongResearchSeconds = 60f;
+        [SerializeField] private int hintSettlersLeft = 10;
+        [SerializeField] private int hintSettlersFree = 20;
+        [SerializeField] private int hintCoinsBelow = 50;
+        [SerializeField] private int hintResourceBelow = 5;
+        [SerializeField] private int hintWorkersMin = 3;
+        [SerializeField] private float hintRaidNearCells = 30f;
         // a bundle's timer turns red and pulses this many seconds before it changes (shop_timer_warn_seconds)
         [SerializeField] private float shopTimerWarnSeconds = 30f;
         // the bases a crystal offer's bonus (+%) is counted from: a crystal's dollars, an ad's crystals
@@ -1232,6 +1249,23 @@ namespace CityBuilder.Core
         public float ShopNoticeSeconds => shopNoticeSeconds;
         public float ShopStarterDelaySeconds => shopStarterDelaySeconds;
         public float ShopAdStubSeconds => shopAdStubSeconds;
+        public int BoosterSlots => Mathf.Max(1, boosterSlots);
+        public float BoosterSlotRechargeSeconds => Mathf.Max(1f, boosterSlotRechargeSeconds);
+        public float HintFadeSeconds => Mathf.Max(1f, hintFadeSeconds);
+        public float HintRepeatSeconds => hintRepeatSeconds;
+        public float HintGraceSeconds => hintGraceSeconds;
+        public int HintIgnoreLimit => Mathf.Max(1, hintIgnoreLimit);
+        public float HintShopOfferSeconds => hintShopOfferSeconds;
+        public int HintRepairDamaged => Mathf.Max(1, hintRepairDamaged);
+        public float HintLongBuildSeconds => hintLongBuildSeconds;
+        public float HintLongResearchSeconds => hintLongResearchSeconds;
+        public int HintSettlersLeft => Mathf.Max(1, hintSettlersLeft);
+        public int HintSettlersFree => Mathf.Max(1, hintSettlersFree);
+        public int HintCoinsBelow => hintCoinsBelow;
+        public int HintResourceBelow => hintResourceBelow;
+        public int HintWorkersMin => hintWorkersMin;
+        /// <summary>Боевой дух: a raider this close to the Town Hall has landed on the town's island (cells).</summary>
+        public float HintRaidNearCells => hintRaidNearCells;
         public float ShopTimerWarnSeconds => shopTimerWarnSeconds;
         public float ShopCrystalUsd => shopCrystalUsd;
         public float ShopAdCrystalsBase => shopAdCrystalsBase;
@@ -1414,6 +1448,38 @@ namespace CityBuilder.Core
             public int labFrom;
             public int citizensFrom;
         }
+
+        /// <summary>
+        /// One booster of the «Песочница (Лавка): Бустеры» tab (the user, 2026-11-12): what it does is the
+        /// code's (Shop.Boosters, by id); its strength, time, price and whether an ad gets it are the sheet's.
+        /// </summary>
+        [System.Serializable]
+        public class BoosterDef
+        {
+            public string id;
+            /// <summary>#booster_&lt;id&gt; (name) and #booster_desc_&lt;id&gt; (what it does, {0} = its strength), from the tab's own columns.</summary>
+            public string nameKey;
+            public string descKey;
+            public float effect;
+            /// <summary>0 = at once (Ремонт, Новосёлы).</summary>
+            public float durationSeconds;
+            public int priceCrystals;
+            public bool ad;
+        }
+
+        [SerializeField] private List<BoosterDef> boosters = new List<BoosterDef>();
+        public IReadOnlyList<BoosterDef> Boosters => boosters;
+
+        public BoosterDef Booster(string id)
+        {
+            for (var i = 0; i < boosters.Count; i++)
+                if (boosters[i].id == id) return boosters[i];
+            return null;
+        }
+
+#if UNITY_EDITOR
+        public void EditorSetBoosters(List<BoosterDef> list) => boosters = list ?? new List<BoosterDef>();
+#endif
 
         [SerializeField] private List<OfferBundle> offerBundles = new List<OfferBundle>();
         [SerializeField] private List<OfferLevel> offerLevels = new List<OfferLevel>();
@@ -2190,6 +2256,22 @@ namespace CityBuilder.Core
             shopNoticeSeconds = Read(economy, "shop_notice_seconds", shopNoticeSeconds);
             shopStarterDelaySeconds = Read(economy, "shop_starter_delay_seconds", shopStarterDelaySeconds);
             shopAdStubSeconds = Read(economy, "shop_ad_stub_seconds", shopAdStubSeconds);
+            boosterSlots = Mathf.RoundToInt(Read(economy, "booster_slots", boosterSlots));
+            boosterSlotRechargeSeconds = Read(economy, "booster_slot_recharge_sec", boosterSlotRechargeSeconds);
+            hintFadeSeconds = Read(economy, "hint_fade_sec", hintFadeSeconds);
+            hintRepeatSeconds = Read(economy, "hint_repeat_sec", hintRepeatSeconds);
+            hintGraceSeconds = Read(economy, "hint_grace_sec", hintGraceSeconds);
+            hintIgnoreLimit = Mathf.RoundToInt(Read(economy, "hint_ignore_limit", hintIgnoreLimit));
+            hintShopOfferSeconds = Read(economy, "hint_shop_offer_sec", hintShopOfferSeconds);
+            hintRepairDamaged = Mathf.RoundToInt(Read(economy, "hint_repair_damaged", hintRepairDamaged));
+            hintLongBuildSeconds = Read(economy, "hint_long_build_sec", hintLongBuildSeconds);
+            hintLongResearchSeconds = Read(economy, "hint_long_research_sec", hintLongResearchSeconds);
+            hintSettlersLeft = Mathf.RoundToInt(Read(economy, "hint_settlers_left", hintSettlersLeft));
+            hintSettlersFree = Mathf.RoundToInt(Read(economy, "hint_settlers_free", hintSettlersFree));
+            hintCoinsBelow = Mathf.RoundToInt(Read(economy, "hint_coins_below", hintCoinsBelow));
+            hintResourceBelow = Mathf.RoundToInt(Read(economy, "hint_resource_below", hintResourceBelow));
+            hintWorkersMin = Mathf.RoundToInt(Read(economy, "hint_workers_min", hintWorkersMin));
+            hintRaidNearCells = Read(economy, "hint_raid_near_cells", hintRaidNearCells);
             shopTimerWarnSeconds = Read(economy, "shop_timer_warn_seconds", shopTimerWarnSeconds);
             shopCrystalUsd = Read(economy, "shop_crystal_usd", shopCrystalUsd);
             shopAdCrystalsBase = Read(economy, "shop_ad_crystals_base", shopAdCrystalsBase);

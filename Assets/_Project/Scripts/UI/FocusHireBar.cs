@@ -251,6 +251,8 @@ namespace CityBuilder.UI
         /// </summary>
         private void ShowSoldiers(BuildingInstance barracks)
         {
+            // the hire row up: the moment for «Вербовка» (the user, 2026-11-12; the hints keep their own pace)
+            Shop.BoosterHints.Offer(Shop.Boosters.Recruit);
             var army = ArmyManager.Instance;
             for (var i = 0; i < types.Length; i++)
             {

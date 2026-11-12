@@ -990,6 +990,11 @@ namespace CityBuilder.EditorTools
             labelRect.offsetMin = new Vector2(14f, 4f);
             labelRect.offsetMax = new Vector2(-14f, -2f);
             SkinInk(statusText, HudInk.OnPlaque);
+            // the sandbox: on the minimap's foot, the boosters' row takes this place (the user, 2026-11-12)
+            var day = plaque.gameObject.AddComponent<CityBuilder.Shop.DayOnMinimap>();
+            var daySo = new SerializedObject(day);
+            daySo.FindProperty("minimap").objectReferenceValue = uiRoot.Find("Minimap") as RectTransform;
+            daySo.ApplyModifiedPropertiesWithoutUndo();
 
             var go = new GameObject("SettlementStatusController");
             go.transform.SetParent(uiRoot, false);

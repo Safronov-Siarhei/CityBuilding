@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CityBuilder.Core;
 using CityBuilder.Maps;
 using CityBuilder.Resources;
@@ -62,6 +62,14 @@ namespace CityBuilder.Shop
             public Text moneyLabel;
             public GameObject badge;
             public Text badgeText;
+            /// <summary>The «Бустеры» tab's look of the strip: the booster's picture, name, what it does, how long, the stock.</summary>
+            public GameObject boosterPart;
+            public Image boosterIcon;
+            public Text boosterName;
+            public Text boosterDesc;
+            public Text boosterTime;
+            public GameObject boosterStock;
+            public Text boosterStockText;
             [NonSerialized] public int shownSeconds = -1;
             [NonSerialized] public string shownId;
             [NonSerialized] public int shownState = -1;
@@ -90,6 +98,14 @@ namespace CityBuilder.Shop
         /// <summary>The «Не хватает ресурсов» window (the user, 2026-11-11): the shop's look, one strip -- exactly what a building lacks.</summary>
         [SerializeField] private bool shortage;
         [SerializeField] private string pictureName = "Shop/Window_";
+        /// <summary>The two tabs along the bottom (the user, 2026-11-12): «Предложения» | «Бустеры»; the lit one shows which is open.</summary>
+        [SerializeField] private Button tabOffers;
+        [SerializeField] private Button tabBoosters;
+        [SerializeField] private GameObject tabOffersLit;
+        [SerializeField] private GameObject tabBoostersLit;
+
+        private static bool _openBoosters;
+        private bool _boosters;
 
         private static OfferShopWindow _current;
         private readonly System.Collections.Generic.List<Canvas> _hidden = new System.Collections.Generic.List<Canvas>();
@@ -121,6 +137,14 @@ namespace CityBuilder.Shop
             _pendingShortage = bundle;
             _current = Instantiate(prefab);
             _pendingShortage = null;
+        }
+
+        /// <summary>Puts the window up on its «Бустеры» tab.</summary>
+        public static void ShowBoosters()
+        {
+            _openBoosters = true;
+            Show();
+            _openBoosters = false;
         }
 
         /// <summary>Puts the window up (nothing if it is up, the shop is off here, or the prefab is missing).</summary>
@@ -172,7 +196,11 @@ namespace CityBuilder.Shop
                 OfferShop.Instance.Changed += Redraw;
                 OfferShop.Instance.Given += OnGiven;
             }
-            Redraw();
+            if (BoosterShop.Instance != null) BoosterShop.Instance.Changed += Redraw;
+            Boosters.Changed += Redraw;
+            if (tabOffers != null) tabOffers.onClick.AddListener(() => SetTab(false));
+            if (tabBoosters != null) tabBoosters.onClick.AddListener(() => SetTab(true));
+            SetTab(_openBoosters && !shortage);
         }
 
         private static string ThemeId()
@@ -186,9 +214,54 @@ namespace CityBuilder.Shop
             }
         }
 
+        /// <summary>Opens a tab: the strips switch between the offers and the boosters.</summary>
+        private void SetTab(bool boosters)
+        {
+            _boosters = boosters && BoosterShop.Instance != null;
+            if (tabOffersLit != null) tabOffersLit.SetActive(!_boosters);
+            if (tabBoostersLit != null) tabBoostersLit.SetActive(_boosters);
+            foreach (var view in slots) view.lastId = null;
+            Redraw();
+        }
+
+        private static Sprite BoosterIcon(string id) => LoadBoosterIcon(id);
+
+        private static readonly System.Collections.Generic.Dictionary<string, Sprite> _boosterIcons = new System.Collections.Generic.Dictionary<string, Sprite>();
+
+        /// <summary>A booster's picture, glow baked in (UI/Shop/Resources/Shop/Boosters/Booster_&lt;id&gt;.png), for every window that shows one.</summary>
+        public static Sprite LoadBoosterIcon(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+            if (!_boosterIcons.TryGetValue(id, out var sprite) || sprite == null)
+                _boosterIcons[id] = sprite = UnityEngine.Resources.Load<Sprite>("Shop/Boosters/Booster_" + id);
+            return sprite;
+        }
+
+        private void TakeBooster(int slot, OfferShop.Pay pay)
+        {
+            var shop = BoosterShop.Instance;
+            if (shop == null || slot >= shop.Slots.Count) return;
+            var def = Boosters.Def(shop.Slots[slot].Id);
+            if (def == null || shop.Slots[slot].Taken) return;
+            if (pay == OfferShop.Pay.Crystals && Wallet.UpgradeCrystals < def.priceCrystals)
+            {
+                _counterShakeT = 0f;
+                slots[slot].shakeT = 0f;
+                Toast("#shop_no_crystals");
+                return;
+            }
+            if (shop.Buy(slot, pay) && pay == OfferShop.Pay.Crystals) Toast("#booster_bought");
+            Redraw();
+        }
+
         private void Take(int slot, OfferShop.Pay pay)
         {
             if (_closing || OfferShop.Instance == null) return;
+            if (_boosters)
+            {
+                TakeBooster(slot, pay);
+                return;
+            }
             var s = shortage ? _shortageSlot : OfferShop.Instance.Rotation.Slots[slot];
             if (s == null || s.Taken) return;
             if (pay == OfferShop.Pay.Money)
@@ -301,6 +374,16 @@ namespace CityBuilder.Shop
                 }
                 return;
             }
+            if (_boosters && BoosterShop.Instance != null)
+            {
+                var boosters = BoosterShop.Instance;
+                for (var i = 0; i < slots.Length; i++)
+                {
+                    if (i >= boosters.Slots.Count) slots[i].root.SetActive(false);
+                    else DrawBooster(slots[i], boosters.Slots[i], i == boosters.AdPlayingSlot, adReady, boosters.Now, dt);
+                }
+                return;
+            }
             for (var i = 0; i < slots.Length && i < shop.Rotation.SlotCount; i++)
                 Draw(slots[i], shop.Rotation.Slots[i], i == shop.AdPlayingSlot, adReady, now, dt);
         }
@@ -335,12 +418,129 @@ namespace CityBuilder.Shop
             }
         }
 
+        /// <summary>
+        /// A booster on the strip (the «Бустеры» tab, mock-up Design/store/Booster_Shop.png): its picture, name,
+        /// what it does and for how long, how many the player has; «Смотреть» + the crystal price (one wide
+        /// blue button when no ad can be shown or the sheet allows crystals only); taken -- «Получено» and the
+        /// time till another booster comes to the place.
+        /// </summary>
+        private void DrawBooster(SlotView view, BoosterShop.Slot slot, bool adPlaying, bool adReady, double now, float dt)
+        {
+            var def = Boosters.Def(slot.Id);
+            view.root.SetActive(def != null);
+            if (def == null) return;
+            // 0 taken, 2 ad + crystals, 3 the ad playing, 4 crystals only
+            int state;
+            if (slot.Taken) state = 0;
+            else if (!def.ad) state = 4;
+            else state = adPlaying ? 3 : adReady ? 2 : 4;
+            var stock = Boosters.Stock(def.id);
+            var key = def.id + "#" + stock;
+            if (view.shownId != key || view.shownState != state)
+            {
+                if (view.lastId != null && view.lastId != def.id) view.changeT = 0f;
+                view.lastId = def.id;
+                view.shownId = key;
+                view.shownState = state;
+                view.name.gameObject.SetActive(false);
+                view.badge.SetActive(false);
+                foreach (var icon in view.goodIcons) icon.gameObject.SetActive(false);
+                foreach (var amount in view.goodAmounts) amount.gameObject.SetActive(false);
+                view.back.SetActive(true);
+                view.backGold.SetActive(false);
+                view.backCrystal.SetActive(false);
+                view.backPaid.SetActive(false);
+                view.shownWarn = false;
+                view.timer.color = TimerColor;
+                view.timer.transform.parent.localScale = Vector3.one;
+                var fade = state == 0 ? TakenFade : 1f;
+                if (view.boosterPart != null)
+                {
+                    view.boosterPart.SetActive(true);
+                    view.boosterIcon.sprite = BoosterIcon(def.id);
+                    view.boosterName.text = Localization.Get(def.nameKey);
+                    view.boosterDesc.text = Boosters.Describe(def);
+                    view.boosterTime.text = Boosters.Duration(def);
+                    view.boosterStock.SetActive(stock > 0);
+                    if (stock > 0) view.boosterStockText.text = "×" + stock;
+                    SetAlpha(view.boosterIcon, fade);
+                    SetAlpha(view.boosterName, fade);
+                    SetAlpha(view.boosterDesc, fade);
+                    SetAlpha(view.boosterTime, fade);
+                }
+                view.stamp.SetActive(state == 0);
+                Dim(view, state == 0);
+                view.free.gameObject.SetActive(false);
+                view.money.gameObject.SetActive(false);
+                view.watchWide.gameObject.SetActive(false);
+                view.watch.gameObject.SetActive(state == 2 || state == 3);
+                view.buy.gameObject.SetActive(state == 2 || state == 3);
+                view.buyWide.gameObject.SetActive(state == 4);
+                var price = def.priceCrystals.ToString();
+                view.price.text = price;
+                if (view.buyWidePrice.text != price)
+                {
+                    view.buyWidePrice.text = price;
+                    CentreWidePrice(view);
+                }
+                view.watch.interactable = state == 2;
+                view.buy.interactable = state == 2;
+                view.watchLabel.text = Localization.Get(state == 3 ? "#shop_ad_playing" : "#shop_watch");
+                view.timer.transform.parent.gameObject.SetActive(state == 0);
+            }
+            if (state == 0)
+            {
+                var seconds = Mathf.Max(0, Mathf.CeilToInt((float)(slot.ReadyAt - now)));
+                if (seconds != view.shownSeconds)
+                {
+                    view.shownSeconds = seconds;
+                    view.timer.text = Clock(seconds);
+                }
+            }
+            Animate(view, dt);
+        }
+
+        /// <summary>A new thing on the strip pops in with a flash; a refused crystal buy shakes the buttons.</summary>
+        private void Animate(SlotView view, float dt)
+        {
+            var rt = (RectTransform)view.root.transform;
+            if (view.changeT < ChangeSeconds)
+            {
+                view.changeT += dt;
+                var c = Mathf.Clamp01(view.changeT / ChangeSeconds);
+                rt.localScale = new Vector3(1f, Mathf.LerpUnclamped(0.2f, 1f, Back(c)), 1f);
+                var f = view.flash.color;
+                f.a = 0.85f * (1f - c);
+                view.flash.color = f;
+                view.flash.gameObject.SetActive(c < 1f);
+            }
+            else if (view.flash.gameObject.activeSelf)
+            {
+                rt.localScale = Vector3.one;
+                view.flash.gameObject.SetActive(false);
+            }
+            if (view.shakeT < ShakeSeconds)
+            {
+                view.shakeT += dt;
+                var dx = new Vector2(Shake(view.shakeT), 0f);
+                ((RectTransform)view.buy.transform).anchoredPosition = view.buyHome + dx;
+                ((RectTransform)view.buyWide.transform).anchoredPosition = view.buyWideHome + dx;
+            }
+        }
+
         /// <summary>Writes a strip only when something on it changed (no strings built per frame).</summary>
         private void Draw(SlotView view, OfferSlot slot, bool adPlaying, bool adReady, double now, float dt)
         {
             var bundle = slot.Bundle;
             view.root.SetActive(bundle != null);
             if (bundle == null) return;
+            if (view.boosterPart != null && view.boosterPart.activeSelf)
+            {
+                // back from the «Бустеры» tab: the offer's own parts again
+                view.boosterPart.SetActive(false);
+                view.name.gameObject.SetActive(true);
+                if (!shortage) view.timer.transform.parent.gameObject.SetActive(true);
+            }
             // 0 taken, 1 free, 2 ad + crystals, 3 the ad playing, 4 crystals only (no ad to show, or worth
             // more than shop_ad_max_ads ads -- one wide blue button),
             // 5 crystals for an ad, 6 its ad playing, 7 no ad to show, 8 crystals for money
@@ -426,30 +626,7 @@ namespace CityBuilder.Shop
                 pill.localScale = new Vector3(p, p, 1f);
             }
 
-            var rt = (RectTransform)view.root.transform;
-            if (view.changeT < ChangeSeconds)
-            {
-                view.changeT += dt;
-                var c = Mathf.Clamp01(view.changeT / ChangeSeconds);
-                rt.localScale = new Vector3(1f, Mathf.LerpUnclamped(0.2f, 1f, Back(c)), 1f);
-                var f = view.flash.color;
-                f.a = 0.85f * (1f - c);
-                view.flash.color = f;
-                view.flash.gameObject.SetActive(c < 1f);
-            }
-            else if (view.flash.gameObject.activeSelf)
-            {
-                rt.localScale = Vector3.one;
-                view.flash.gameObject.SetActive(false);
-            }
-
-            if (view.shakeT < ShakeSeconds)
-            {
-                view.shakeT += dt;
-                var dx = new Vector2(Shake(view.shakeT), 0f);
-                ((RectTransform)view.buy.transform).anchoredPosition = view.buyHome + dx;
-                ((RectTransform)view.buyWide.transform).anchoredPosition = view.buyWideHome + dx;
-            }
+            Animate(view, dt);
         }
 
         /// <summary>The grey of a taken strip's parchment, and how faint its words, goods and timer get (the user, 2026-11-11: taken reads as inactive).</summary>
@@ -529,6 +706,8 @@ namespace CityBuilder.Shop
                 OfferShop.Instance.Changed -= Redraw;
                 OfferShop.Instance.Given -= OnGiven;
             }
+            if (BoosterShop.Instance != null) BoosterShop.Instance.Changed -= Redraw;
+            Boosters.Changed -= Redraw;
             ShowTheInterfaceBehind();
             if (!_closing) Time.timeScale = _timeScaleBefore;
             if (_current != this) return;

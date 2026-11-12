@@ -291,7 +291,8 @@ namespace CityBuilder.Combat
             var row = Row(type);
             var cost = new List<ResourceAmount>(3)
             {
-                new ResourceAmount { type = ResourceType.Coins, amount = Stats(type).recruitCoins }
+                // Вербовка: the coins at a share while it runs (the user, 2026-11-12)
+                new ResourceAmount { type = ResourceType.Coins, amount = UnityEngine.Mathf.CeilToInt(Stats(type).recruitCoins * Shop.Boosters.HireCostFactor) }
             };
 
             if (row.recruitIronBars > 0) cost.Add(new ResourceAmount { type = ResourceType.IronBar, amount = row.recruitIronBars });

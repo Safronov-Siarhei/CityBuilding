@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using CityBuilder.Resources;
 using CityBuilder.Shop;
@@ -330,6 +330,7 @@ namespace CityBuilder.EditorTools
                 var stampText = ShopText(stamp.transform, "Text", "#shop_taken", 48, UiTheme.Heavy, UiTheme.Rgb(0x348424), TextAnchor.MiddleCenter);
                 StretchFull(stampText.rectTransform);
                 view.stamp = stamp.gameObject;
+                if (!shortage) BuildBoosterPart(slot, box, view);
                 // a new bundle's flash, over the whole strip (OfferShopWindow fades it)
                 view.flash = ShopImage(slot, "Flash", "Strip", box, Grow(box, layout.pad));
                 view.flash.color = new Color(1f, 0.97f, 0.85f, 0f);
@@ -354,6 +355,7 @@ namespace CityBuilder.EditorTools
             Rim(counterText, new Color(0.24f, 0.14f, 0.06f), 3f);
             // the close seal (the user, 2026-11-11: a tap outside closes too, the seal shows how)
             var close = ShopButton(window, "Close", "Close", screenRect, layout.close);
+            if (!shortage) BuildShopTabs(window, screenRect, screen);
 
             var so = new SerializedObject(screen);
             so.FindProperty("close").objectReferenceValue = close;
@@ -381,6 +383,58 @@ namespace CityBuilder.EditorTools
             UnityEngine.Object.DestroyImmediate(root);
         }
 
+        /// <summary>
+        /// The strip's «Бустеры» look (mock-up Design/store/Booster_Shop.png): the booster's picture on the left
+        /// with the stock «×N» on its corner, the name, what it does, how long. Hidden on the offers tab.
+        /// </summary>
+        private static void BuildBoosterPart(RectTransform slot, float[] box, OfferShopWindow.SlotView view)
+        {
+            var part = new GameObject("Booster", typeof(RectTransform)).GetComponent<RectTransform>();
+            part.SetParent(slot, false);
+            StretchFull(part);
+            view.boosterPart = part.gameObject;
+            view.boosterIcon = CreateImage(part, "Icon", Color.white);
+            view.boosterIcon.preserveAspect = true;
+            view.boosterIcon.raycastTarget = false;
+            PlaceIn(view.boosterIcon.rectTransform, box, On(box, new[] { 24f, 0f, 174f, 150f }));
+            view.boosterName = ShopText(part, "Name", null, 40, UiTheme.Heavy, ShopInk, TextAnchor.MiddleLeft);
+            PlaceIn(view.boosterName.rectTransform, box, On(box, new[] { 196f, 8f, 760f, 58f }));
+            view.boosterDesc = ShopText(part, "Desc", null, 30, UiTheme.Bold, ShopInk, TextAnchor.MiddleLeft);
+            PlaceIn(view.boosterDesc.rectTransform, box, On(box, new[] { 196f, 60f, 960f, 100f }));
+            view.boosterTime = ShopText(part, "Time", null, 30, UiTheme.Heavy, UiTheme.Rgb(0x6a3fa0), TextAnchor.MiddleLeft);
+            PlaceIn(view.boosterTime.rectTransform, box, On(box, new[] { 196f, 102f, 760f, 142f }));
+            var stock = ShopImage(part, "Stock", "Badge", box, On(box, new[] { 112f, 100f, 196f, 148f }));
+            view.boosterStockText = ShopText(stock.transform, "Text", null, 30, UiTheme.Heavy, Color.white, TextAnchor.MiddleCenter);
+            StretchFull(view.boosterStockText.rectTransform);
+            view.boosterStockText.rectTransform.offsetMin = new Vector2(0f, 4f);
+            Rim(view.boosterStockText, UiTheme.Rgb(0x600c0e), 3f);
+            view.boosterStock = stock.gameObject;
+            part.gameObject.SetActive(false);
+        }
+
+        /// <summary>The two tabs hanging under the frame (the user, 2026-11-12): «Предложения» | «Бустеры».</summary>
+        private static void BuildShopTabs(RectTransform window, float[] screenRect, OfferShopWindow screen)
+        {
+            Button Tab(string name, string key, float[] rect, out GameObject lit)
+            {
+                var button = ShopButton(window, name, "TabOff", screenRect, rect);
+                var on = ShopImage(button.transform, "On", "TabOn", rect, rect);
+                lit = on.gameObject;
+                var label = ShopText(button.transform, "Label", key, 36, UiTheme.Heavy, ShopCream, TextAnchor.MiddleCenter);
+                StretchFull(label.rectTransform);
+                Rim(label, new Color(0.3f, 0.16f, 0.05f), 3f);
+                return button;
+            }
+            var offers = Tab("TabOffers", "#shop_tab_offers", new[] { 610f, 1004f, 940f, 1082f }, out var offersLit);
+            var boosters = Tab("TabBoosters", "#shop_tab_boosters", new[] { 980f, 1004f, 1310f, 1082f }, out var boostersLit);
+            var so = new SerializedObject(screen);
+            so.FindProperty("tabOffers").objectReferenceValue = offers;
+            so.FindProperty("tabBoosters").objectReferenceValue = boosters;
+            so.FindProperty("tabOffersLit").objectReferenceValue = offersLit;
+            so.FindProperty("tabBoostersLit").objectReferenceValue = boostersLit;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
         // ---------------------------------------------------------------- the HUD and the menu
 
         /// <summary>The OfferShop, its stall icon under the sack with the loud notice, and the menu's cards. After BuildGameMenu and BuildInventoryPanel.</summary>
@@ -389,6 +443,8 @@ namespace CityBuilder.EditorTools
             var shopGO = new GameObject("OfferShop");
             shopGO.transform.SetParent(uiRoot, false);
             shopGO.AddComponent<OfferShop>();
+            // the boosters' places in the shop and the running boosters' clocks (Shop/BoosterShop.cs)
+            shopGO.AddComponent<BoosterShop>();
 
             var hudGO = new GameObject("OfferShopHud", typeof(RectTransform));
             hudGO.transform.SetParent(uiRoot, false);
@@ -459,6 +515,118 @@ namespace CityBuilder.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
 
             BuildOfferMenuStrip(uiRoot, iconLibrary);
+            BuildBoosterHud(uiRoot);
+        }
+
+        /// <summary>
+        /// The booster hint's banner (Design/store/Booster_Hints.png): above the build menu, a parchment strip --
+        /// the booster's picture, its name, what it does, «Включить» / «▶ Смотреть», a violet bar running down.
+        /// </summary>
+        private static void BuildBoosterHints(Transform uiRoot)
+        {
+            var holder = new GameObject("BoosterHints", typeof(RectTransform));
+            holder.transform.SetParent(uiRoot, false);
+            StretchFull((RectTransform)holder.transform);
+            holder.AddComponent<SandboxOnly>();
+            const float w = 880f, h = 130f;
+            var banner = CreateImage(holder.transform, "Banner", Color.white);
+            banner.sprite = ShopSprite("Strip");
+            var rect = banner.rectTransform;
+            Anchor(rect, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 240f), new Vector2(w, h));
+            var group = banner.gameObject.AddComponent<CanvasGroup>();
+            var box = new[] { 0f, 0f, w, h };
+            var icon = CreateImage(rect, "Icon", Color.white);
+            icon.preserveAspect = true;
+            icon.raycastTarget = false;
+            PlaceIn(icon.rectTransform, box, new[] { 12f, 5f, 132f, 125f });
+            var title = ShopText(rect, "Title", null, 34, UiTheme.Heavy, ShopInk, TextAnchor.MiddleLeft);
+            PlaceIn(title.rectTransform, box, new[] { 144f, 16f, 600f, 62f });
+            var line = ShopText(rect, "Line", null, 26, UiTheme.Bold, UiTheme.Rgb(0x6e4824), TextAnchor.MiddleLeft);
+            PlaceIn(line.rectTransform, box, new[] { 144f, 66f, 610f, 108f });
+            var useRect = new[] { 620f, 18f, 860f, 112f };
+            var use = ShopButton(rect, "Use", "ButtonGreen", box, useRect);
+            var play = ShopImage(use.transform, "Play", "Play", useRect, new[] { 632f, 41f, 680f, 89f });
+            var useLabel = ShopText(use.transform, "Label", null, 32, UiTheme.Heavy, Color.white, TextAnchor.MiddleCenter);
+            PlaceIn(useLabel.rectTransform, useRect, new[] { 660f, 18f, 860f, 106f });
+            Rim(useLabel, UiTheme.Rgb(0x1c5412), 3f);
+            var close = ShopButton(rect, "Close", "Close", box, new[] { 836f, -18f, 896f, 42f });
+            var bar = CreateImage(rect, "Bar", new Color(0.75f, 0.43f, 1f, 0.9f));
+            bar.raycastTarget = false;
+            PlaceIn(bar.rectTransform, box, new[] { 30f, 116f, w - 30f, 124f });
+            var barPos = bar.rectTransform.anchoredPosition;
+            bar.rectTransform.pivot = new Vector2(0f, 0.5f);
+            bar.rectTransform.anchoredPosition = barPos - new Vector2((w - 60f) * 0.5f, 0f);
+
+            var hints = holder.AddComponent<BoosterHints>();
+            var so = new SerializedObject(hints);
+            so.FindProperty("banner").objectReferenceValue = rect;
+            so.FindProperty("group").objectReferenceValue = group;
+            so.FindProperty("icon").objectReferenceValue = icon;
+            so.FindProperty("title").objectReferenceValue = title;
+            so.FindProperty("line").objectReferenceValue = line;
+            so.FindProperty("use").objectReferenceValue = use;
+            so.FindProperty("useLabel").objectReferenceValue = useLabel;
+            so.FindProperty("play").objectReferenceValue = play.gameObject;
+            so.FindProperty("close").objectReferenceValue = close;
+            so.FindProperty("bar").objectReferenceValue = bar.rectTransform;
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>
+        /// The running boosters' row under the resource bar, where «День» was (Design/store/Booster_Hud.png):
+        /// round chips -- a dark disc, the booster's picture, a gold ring of time left, the time under it.
+        /// </summary>
+        private static void BuildBoosterHud(Transform uiRoot)
+        {
+            var rowGO = new GameObject("BoosterHud", typeof(RectTransform));
+            rowGO.transform.SetParent(uiRoot, false);
+            var infoPanel = uiRoot.Find("BuildingInfoPanel");
+            if (infoPanel != null) rowGO.transform.SetSiblingIndex(infoPanel.GetSiblingIndex());
+            var row = (RectTransform)rowGO.transform;
+            Anchor(row, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -150f), new Vector2(10f, 10f));
+            rowGO.AddComponent<SandboxOnly>();
+            const int count = 11;
+            const float disc = 92f;
+            var chips = new BoosterHud.Chip[count];
+            for (var i = 0; i < count; i++)
+            {
+                var back = CreateImage(row, "Chip" + (i + 1), Color.white);
+                back.sprite = ShopSprite("BoosterDisc");
+                back.rectTransform.sizeDelta = new Vector2(disc, disc);
+                var button = back.gameObject.AddComponent<Button>();
+                button.targetGraphic = back;
+                var ring = CreateImage(back.transform, "Ring", new Color(1f, 0.82f, 0.31f));
+                ring.sprite = ShopSprite("BoosterRing");
+                ring.type = Image.Type.Filled;
+                ring.fillMethod = Image.FillMethod.Radial360;
+                ring.fillOrigin = (int)Image.Origin360.Top;
+                ring.fillClockwise = false;
+                ring.raycastTarget = false;
+                StretchFull(ring.rectTransform);
+                var icon = CreateImage(back.transform, "Icon", Color.white);
+                icon.preserveAspect = true;
+                icon.raycastTarget = false;
+                icon.rectTransform.sizeDelta = new Vector2(disc * 0.9f, disc * 0.9f);
+                var time = CreateText(back.transform, "Time", string.Empty, 24, new Vector2(0f, -disc * 0.5f - 14f), new Vector2(110f, 30f), Color.white);
+                time.font = UiTheme.Heavy;
+                time.raycastTarget = false;
+                Rim(time, new Color(0.12f, 0.08f, 0.04f), 3f);
+                chips[i] = new BoosterHud.Chip { button = button, ring = ring, icon = icon, time = time };
+            }
+            BuildBoosterHints(uiRoot);
+            var hud = rowGO.AddComponent<BoosterHud>();
+            var so = new SerializedObject(hud);
+            var prop = so.FindProperty("chips");
+            prop.arraySize = count;
+            for (var i = 0; i < count; i++)
+            {
+                var element = prop.GetArrayElementAtIndex(i);
+                element.FindPropertyRelative("button").objectReferenceValue = chips[i].button;
+                element.FindPropertyRelative("ring").objectReferenceValue = chips[i].ring;
+                element.FindPropertyRelative("icon").objectReferenceValue = chips[i].icon;
+                element.FindPropertyRelative("time").objectReferenceValue = chips[i].time;
+            }
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         /// <summary>Three small cards in the game menu, right of its entries; a tap opens the shop.</summary>

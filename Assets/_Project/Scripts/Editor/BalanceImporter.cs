@@ -91,11 +91,16 @@ namespace CityBuilder.EditorTools
                 sandboxBuildings = ReadBuildings(sandbox.LayOver(buildingRows, sandbox.Buildings, SandboxCsvPath), SandboxCsvPath);
                 AttachRecipes(sandboxBuildings, recipes);
             }
+            // the boosters tab: its keys are the sandbox's (slots, recharge, the hints), its rows the boosters
+            var boosterTab = ReadBoosters(BoostersCsvPath);
+            foreach (var pair in boosterTab.Keys) sandboxEconomy[pair.Key] = pair.Value;
             var config = WriteConfig(ConfigAssetPath, sandboxUnits, sandboxBuildings, sandboxEconomy);
             config.EditorSetBotWaves(ReadBotWaves(BotWavesCsvPath));
             var offers = ReadBundles(BundlesCsvPath);
             config.EditorSetOffers(offers.Bundles, offers.Levels);
             bundleNames = offers.Names;
+            config.EditorSetBoosters(boosterTab.Boosters);
+            foreach (var pair in boosterTab.Names) bundleNames[pair.Key] = pair.Value;
             EditorUtility.SetDirty(config);
 
             // The run's config: the same tabs with the invasion tab's cells laid over them.
@@ -204,6 +209,64 @@ namespace CityBuilder.EditorTools
                     if (bundle.goods.Count > 0) result.Bundles.Add(bundle);
                 }
                 result.Names["#bundle_" + first] = new Dictionary<string, string> { ["ru"] = Cell("name_ru"), ["en"] = Cell("name_en") };
+            }
+            return result;
+        }
+
+        /// <summary>«Песочница (Лавка): Бустеры» (the user, 2026-11-12).</summary>
+        public const string BoostersCsvPath = BalanceFolder + "/boosters.csv";
+
+        private class BoosterTab
+        {
+            public readonly List<BalanceConfig.BoosterDef> Boosters = new List<BalanceConfig.BoosterDef>();
+            public readonly Dictionary<string, float> Keys = new Dictionary<string, float>();
+            public readonly Dictionary<string, Dictionary<string, string>> Names = new Dictionary<string, Dictionary<string, string>>();
+        }
+
+        /// <summary>
+        /// boosters.csv: the `booster` table (name_ru, name_en, desc_ru, desc_en, effect, duration_sec,
+        /// price_crystals, ad) and, after it, a `key` table (key, value) like economy. A header row switches.
+        /// </summary>
+        private static BoosterTab ReadBoosters(string path)
+        {
+            var result = new BoosterTab();
+            if (!File.Exists(path)) return result;
+            var culture = System.Globalization.CultureInfo.InvariantCulture;
+            float ToFloat(string s) => float.TryParse(s.Replace(',', '.'), System.Globalization.NumberStyles.Float, culture, out var v) ? v : 0f;
+            List<string> header = null;
+            foreach (var row in ReadCsv(path))
+            {
+                if (row.Count == 0) continue;
+                var first = row[0].Trim();
+                if (first == "booster" || first == "key")
+                {
+                    header = row.ConvertAll(h => h.Trim());
+                    continue;
+                }
+                if (header == null || first.Length == 0 || first.Contains(" ")) continue;
+                string Cell(string name)
+                {
+                    var c = header.IndexOf(name);
+                    return c >= 0 && c < row.Count ? row[c].Trim() : string.Empty;
+                }
+                if (header[0] == "key")
+                {
+                    var value = Cell("value");
+                    if (value.Length > 0) result.Keys[first] = ToFloat(value);
+                    continue;
+                }
+                result.Boosters.Add(new BalanceConfig.BoosterDef
+                {
+                    id = first,
+                    nameKey = "#booster_" + first,
+                    descKey = "#booster_desc_" + first,
+                    effect = ToFloat(Cell("effect")),
+                    durationSeconds = Mathf.Max(0f, ToFloat(Cell("duration_sec"))),
+                    priceCrystals = Mathf.Max(0, Mathf.RoundToInt(ToFloat(Cell("price_crystals")))),
+                    ad = Cell("ad") != "0",
+                });
+                result.Names["#booster_" + first] = new Dictionary<string, string> { ["ru"] = Cell("name_ru"), ["en"] = Cell("name_en") };
+                result.Names["#booster_desc_" + first] = new Dictionary<string, string> { ["ru"] = Cell("desc_ru"), ["en"] = Cell("desc_en") };
             }
             return result;
         }

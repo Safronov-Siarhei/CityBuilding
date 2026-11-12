@@ -152,31 +152,47 @@ namespace CityBuilder.EditorTools
                 types.Add(type);
             }
 
-            const int perRow = 3;
-            const float rowHeight = 84f;
+            // 4 to a row (the user, 2026-11-12: the boosters' row goes under, the card stays on the screen)
+            const int perRow = 4;
+            const float rowHeight = 70f;
             const float columnWidth = 300f;
             // + the upgrade crystals' row at the end (a wallet count, not a ResourceType; the user, 2026-11-02)
             var rows = (types.Count + 1 + perRow - 1) / perRow;
             var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
             card.sprite = panelSprite;
             card.type = Image.Type.Sliced;
-            var cardHeight = 230f + rows * rowHeight;
-            SetRect(card.rectTransform, Vector2.zero, new Vector2(perRow * columnWidth + 60f, cardHeight));
+            var cardWidth = perRow * columnWidth + 60f;
+            // everything on the card hangs from its top (the boosters' rows grow it at play time), the close button from its bottom
+            const float firstRow = 150f;
+            var lastRow = firstRow + (rows - 1) * rowHeight;
+            var boostersLabel = lastRow + rowHeight * 0.5f + 40f;
+            var tilesTop = boostersLabel + 36f;
+            const float tileStep = 170f;
+            const float bottomSpace = 130f;
+            var cardHeight = tilesTop + tileStep + bottomSpace;
+            SetRect(card.rectTransform, Vector2.zero, new Vector2(cardWidth, cardHeight));
+            var ink = new Color(0.27f, 0.16f, 0.07f, 1f);
 
-            Localize(CreateText(card.transform, "Title", string.Empty, 34, new Vector2(0f, cardHeight * 0.5f - 50f), new Vector2(880f, 56f)), "#inventory_title");
+            var titleText = CreateText(card.transform, "Title", string.Empty, 34, new Vector2(0f, -50f), new Vector2(880f, 56f));
+            Localize(titleText, "#inventory_title");
+            TopPin(titleText.rectTransform);
+            var resourcesTitle = CreateText(card.transform, "ResourcesLabel", string.Empty, 26, new Vector2(-cardWidth * 0.5f + 30f + 200f, -100f), new Vector2(400f, 36f), ink);
+            resourcesTitle.alignment = TextAnchor.MiddleLeft;
+            Localize(resourcesTitle, "#inventory_resources");
+            TopPin(resourcesTitle.rectTransform);
 
             var icons = new Image[types.Count + 1];
             var names = new Text[types.Count + 1];
             var amounts = new Text[types.Count + 1];
-            var top = cardHeight * 0.5f - 120f;
             for (var i = 0; i <= types.Count; i++)
             {
                 var crystals = i == types.Count;
                 var column = i % perRow;
                 var row = i / perRow;
-                var centre = new Vector2((column - (perRow - 1) * 0.5f) * columnWidth, top - row * rowHeight);
+                var centre = new Vector2((column - (perRow - 1) * 0.5f) * columnWidth, -(firstRow + row * rowHeight));
                 var cell = CreateImage(card.transform, "Row_" + (crystals ? "Crystals" : types[i].ToString()), new Color(0.35f, 0.2f, 0.08f, 0.08f));
-                SetRect(cell.rectTransform, centre, new Vector2(columnWidth - 12f, rowHeight - 10f));
+                SetRect(cell.rectTransform, centre, new Vector2(columnWidth - 12f, rowHeight - 8f));
+                TopPin(cell.rectTransform);
                 cell.raycastTarget = false;
                 icons[i] = CreateImage(cell.transform, "Icon", Color.white);
                 icons[i].preserveAspect = true;
@@ -192,10 +208,110 @@ namespace CityBuilder.EditorTools
                 amounts[i].alignment = TextAnchor.MiddleLeft;
             }
 
-            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(0f, -cardHeight * 0.5f + 56f), new Vector2(300f, 64f));
+            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(0f, 56f), new Vector2(300f, 64f));
+            var closeRect = closeButton.GetComponent<RectTransform>();
+            closeRect.anchorMin = closeRect.anchorMax = new Vector2(0.5f, 0f);
+
+            // the boosters (the user, 2026-11-12; Design/store/Booster_Inventory.png): a label, 6 tiles to a row
+            var boostersTitle = CreateText(card.transform, "BoostersLabel", string.Empty, 26, new Vector2(-cardWidth * 0.5f + 30f + 200f, -boostersLabel), new Vector2(400f, 36f), ink);
+            boostersTitle.alignment = TextAnchor.MiddleLeft;
+            Localize(boostersTitle, "#inventory_boosters");
+            TopPin(boostersTitle.rectTransform);
+            var empty = CreateText(card.transform, "BoostersEmpty", string.Empty, 24, new Vector2(0f, -(tilesTop + 60f)), new Vector2(cardWidth - 80f, 60f), new Color(ink.r, ink.g, ink.b, 0.6f));
+            Localize(empty, "#inventory_no_boosters");
+            TopPin(empty.rectTransform);
+            const int tilesPerRow = 6;
+            const int tileCount = 12;
+            const float tileSize = 150f;
+            var tileSprite = ShopSprite("BoosterTile");
+            var tiles = new InventoryPanelController.BoosterTile[tileCount];
+            for (var i = 0; i < tileCount; i++)
+            {
+                var column = i % tilesPerRow;
+                var row = i / tilesPerRow;
+                var back = CreateImage(card.transform, "Booster" + (i + 1), Color.white);
+                back.sprite = tileSprite;
+                SetRect(back.rectTransform, new Vector2((column - (tilesPerRow - 1) * 0.5f) * tileStep, -(tilesTop + tileStep * 0.5f + row * tileStep)), new Vector2(tileSize, tileSize));
+                TopPin(back.rectTransform);
+                var button = back.gameObject.AddComponent<Button>();
+                button.targetGraphic = back;
+                var tileIcon = CreateImage(back.transform, "Icon", Color.white);
+                tileIcon.preserveAspect = true;
+                tileIcon.raycastTarget = false;
+                SetRect(tileIcon.rectTransform, new Vector2(0f, 8f), new Vector2(132f, 132f));
+                var count = CreateText(back.transform, "Count", string.Empty, 30, new Vector2(38f, -52f), new Vector2(80f, 40f), Color.white);
+                count.font = UiTheme.Heavy;
+                count.alignment = TextAnchor.MiddleRight;
+                Rim(count, new Color(0.24f, 0.14f, 0.06f), 3f);
+                var time = CreateText(back.transform, "Time", string.Empty, 26, new Vector2(0f, -88f), new Vector2(150f, 34f), UiTheme.Rgb(0x6a3fa0));
+                time.font = UiTheme.Heavy;
+                tiles[i] = new InventoryPanelController.BoosterTile { button = button, back = back, icon = tileIcon, count = count, time = time };
+                back.gameObject.SetActive(false);
+            }
+
+            // the booster's window beside the card: picture, name, what it does, the stock, «Включить» / «Продлить»
+            var side = CreateImage(panelRoot.transform, "BoosterWindow", new Color(0.16f, 0.18f, 0.15f, 0.98f));
+            side.sprite = panelSprite;
+            side.type = Image.Type.Sliced;
+            SetRect(side.rectTransform, Vector2.zero, new Vector2(460f, 640f));
+            var sideIcon = CreateImage(side.transform, "Icon", Color.white);
+            sideIcon.preserveAspect = true;
+            sideIcon.raycastTarget = false;
+            SetRect(sideIcon.rectTransform, new Vector2(0f, 190f), new Vector2(190f, 190f));
+            Text SideText(string name, int size, float y, float height, Color color, bool heavy)
+            {
+                var text = CreateText(side.transform, name, string.Empty, size, new Vector2(0f, y), new Vector2(400f, height), color);
+                if (heavy) text.font = UiTheme.Heavy;
+                text.horizontalOverflow = HorizontalWrapMode.Wrap;
+                return text;
+            }
+            var sideName = SideText("Name", 38, 66f, 50f, ink, true);
+            var sideDesc = SideText("Desc", 26, 6f, 70f, ink, false);
+            var sideTime = SideText("Duration", 26, -48f, 36f, UiTheme.Rgb(0x6a3fa0), true);
+            var sideStock = SideText("Stock", 28, -92f, 40f, ink, true);
+            var sideLeft = SideText("Left", 26, -132f, 36f, UiTheme.Rgb(0x6a3fa0), true);
+            var sideUse = CreateDynamicButton(side.transform, panelSprite, "Use", new Vector2(0f, -200f), new Vector2(320f, 76f), out var sideUseLabel);
+            sideUse.GetComponent<Image>().color = new Color(0.30f, 0.56f, 0.20f, 1f);
+            var sideNote = SideText("Note", 20, -272f, 50f, new Color(ink.r, ink.g, ink.b, 0.6f), false);
+            Localize(sideNote, "#booster_time_note");
+            var sideCloseImage = CreateImage(side.transform, "Close", Color.white);
+            sideCloseImage.sprite = ShopSprite("Close");
+            SetRect(sideCloseImage.rectTransform, new Vector2(200f, 290f), new Vector2(70f, 70f));
+            var sideClose = sideCloseImage.gameObject.AddComponent<Button>();
+            sideClose.targetGraphic = sideCloseImage;
+            side.gameObject.SetActive(false);
 
             var controller = panelRoot.AddComponent<InventoryPanelController>();
             var so = new SerializedObject(controller);
+            so.FindProperty("card").objectReferenceValue = card.rectTransform;
+            so.FindProperty("tilesTop").floatValue = tilesTop;
+            so.FindProperty("tileStep").floatValue = tileStep;
+            so.FindProperty("bottomSpace").floatValue = bottomSpace;
+            so.FindProperty("tilesPerRow").intValue = tilesPerRow;
+            so.FindProperty("boostersEmpty").objectReferenceValue = empty;
+            so.FindProperty("tileSprite").objectReferenceValue = tileSprite;
+            so.FindProperty("tileOnSprite").objectReferenceValue = ShopSprite("BoosterTileOn");
+            so.FindProperty("side").objectReferenceValue = side.rectTransform;
+            so.FindProperty("sideIcon").objectReferenceValue = sideIcon;
+            so.FindProperty("sideName").objectReferenceValue = sideName;
+            so.FindProperty("sideDesc").objectReferenceValue = sideDesc;
+            so.FindProperty("sideTime").objectReferenceValue = sideTime;
+            so.FindProperty("sideStock").objectReferenceValue = sideStock;
+            so.FindProperty("sideLeft").objectReferenceValue = sideLeft;
+            so.FindProperty("sideUse").objectReferenceValue = sideUse;
+            so.FindProperty("sideUseLabel").objectReferenceValue = sideUseLabel;
+            so.FindProperty("sideClose").objectReferenceValue = sideClose;
+            var tilesProp = so.FindProperty("tiles");
+            tilesProp.arraySize = tiles.Length;
+            for (var i = 0; i < tiles.Length; i++)
+            {
+                var element = tilesProp.GetArrayElementAtIndex(i);
+                element.FindPropertyRelative("button").objectReferenceValue = tiles[i].button;
+                element.FindPropertyRelative("back").objectReferenceValue = tiles[i].back;
+                element.FindPropertyRelative("icon").objectReferenceValue = tiles[i].icon;
+                element.FindPropertyRelative("count").objectReferenceValue = tiles[i].count;
+                element.FindPropertyRelative("time").objectReferenceValue = tiles[i].time;
+            }
             so.FindProperty("panelRoot").objectReferenceValue = panelRoot;
             var typesProp = so.FindProperty("types");
             typesProp.arraySize = types.Count;
@@ -870,6 +986,14 @@ namespace CityBuilder.EditorTools
             panelSO.FindProperty("runCard").objectReferenceValue = runCard;
             panelSO.ApplyModifiedPropertiesWithoutUndo();
             card.gameObject.SetActive(false);
+        }
+
+        /// <summary>Hangs a centre-anchored rect from its parent's top: the position already counts from the top.</summary>
+        private static void TopPin(RectTransform rect)
+        {
+            var position = rect.anchoredPosition;
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
+            rect.anchoredPosition = position;
         }
 
         private static void SetRect(RectTransform rect, Vector2 position, Vector2 size)
