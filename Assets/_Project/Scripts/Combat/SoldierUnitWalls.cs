@@ -276,7 +276,11 @@ namespace CityBuilder.Combat
                 _retargetTimer = RetargetIntervalSeconds;
                 _target = NearestEnemyInReach();
             }
-            if (_target == null || !_target.IsAlive) return;
+            if (_target == null || !_target.IsAlive)
+            {
+                LookOut();
+                return;
+            }
             if (HorizontalDistance(_target.Transform.position, transform.position) > UnitAttackRange + BodyRadius(_target))
             {
                 _target = null;
@@ -284,6 +288,19 @@ namespace CityBuilder.Combat
             }
             FaceTowards(_target.Transform.position);
             TickAttack();
+        }
+
+        /// <summary>The way an idle shooter on the wall looks (campaign mission 2, the user 2026-11-12: «смотреть в
+        /// сторону орков»); zero = wherever he last turned.</summary>
+        public Vector3 WallLookout { get; set; }
+
+        /// <summary>Posted on the wall with nobody in reach: free to walk on to another post.</summary>
+        public bool IdleOnWall => _wallPhase == WallPhase.Posted && (_target == null || !_target.IsAlive);
+
+        private void LookOut()
+        {
+            if (WallLookout.sqrMagnitude < 0.01f) return;
+            FaceTowards(transform.position + WallLookout);
         }
 
         private IDamageTarget NearestEnemyInReach()

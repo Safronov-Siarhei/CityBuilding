@@ -31,7 +31,7 @@ namespace CityBuilder.UI
 
         private void Update()
         {
-            if (!InvasionMode.IsActive) return;
+            if (!InvasionMode.IsActive && !Campaign.CityDefenceMode.IsActive) return;
             _refreshIn -= Time.unscaledDeltaTime;
             if (_refreshIn > 0f) return;
             _refreshIn = WaveRefreshSeconds;
@@ -45,6 +45,15 @@ namespace CityBuilder.UI
             if (InvasionMode.IsActive)
             {
                 statusText.text = WaveText(InvasionMode.Instance.Waves);
+                return;
+            }
+            // campaign mission 2: the part's clock (the user, 2026-11-12: «время рисуем на миникарте, как в Нашествии»)
+            if (Campaign.CityDefenceMode.IsActive)
+            {
+                var mode = Campaign.CityDefenceMode.Instance;
+                var part2 = mode.Current == Campaign.CityDefenceMode.Stage.Part2 || mode.Current == Campaign.CityDefenceMode.Stage.Won;
+                var seconds = Mathf.Max(0, Mathf.CeilToInt(mode.TimeLeft));
+                statusText.text = Localization.Format(part2 ? "#m2_clock_help" : "#m2_clock_courier", $"{seconds / 60}:{seconds % 60:00}");
                 return;
             }
             // no days pass below (the user, 2026-11-01: «вкладку День он тоже не должен видеть»)

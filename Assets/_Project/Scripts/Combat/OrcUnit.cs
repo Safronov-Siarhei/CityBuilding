@@ -477,9 +477,32 @@ namespace CityBuilder.Combat
             if (direction.sqrMagnitude > 0.0001f) transform.rotation = Quaternion.LookRotation(direction);
         }
 
+        private Vector3 _knock;
+        private float _knockLeft;
+
+        /// <summary>
+        /// Thrown `offset` away over `seconds` and down for the time (campaign mission 2: Ардан's
+        /// «Круговой удар», the user 2026-11-12). Stopped by whatever its body runs into.
+        /// </summary>
+        public void Knock(Vector3 offset, float seconds)
+        {
+            offset.y = 0f;
+            _knockLeft = Mathf.Max(0.05f, seconds);
+            _knock = offset / _knockLeft;
+            BusyFor = Mathf.Max(BusyFor, _knockLeft);
+        }
+
         private void Update()
         {
             if (Steered || Asleep) return;
+            if (_knockLeft > 0f)
+            {
+                _knockLeft -= Time.deltaTime;
+                var step = _knock * Time.deltaTime;
+                if (UnityEngine.AI.NavMesh.Raycast(transform.position, transform.position + step, out var edge, UnityEngine.AI.NavMesh.AllAreas)) _knockLeft = 0f;
+                else if (_controller != null && _controller.enabled) _controller.Move(step);
+                else transform.position += step;
+            }
             // sealed in a cocoon, down on the ground: nothing to do until it is over
             if (BusyFor > 0f)
             {
@@ -506,6 +529,7 @@ namespace CityBuilder.Combat
                     _retaliating = false;
                     _soldierTarget = FindNearestSoldierInAggroRange();
                 }
+                if (IgnoresSoldiers) _soldierTarget = null;
             }
 
             if (_soldierTarget != null)
@@ -689,7 +713,7 @@ namespace CityBuilder.Combat
         /// </summary>
         public void NotifyAttackedBy(SoldierUnit attacker)
         {
-            if (attacker == null || attacker.CurrentHealth <= 0 || CurrentHealth <= 0) return;
+            if (attacker == null || attacker.CurrentHealth <= 0 || CurrentHealth <= 0 || IgnoresSoldiers) return;
             if (_soldierTarget != null && _soldierTarget.CurrentHealth > 0) return;
             // a melee orc cannot reach a fighter on the walls (the user, 2026-11-02); a thrower can
             if (!CanReach(attacker)) return;
@@ -1260,7 +1284,7 @@ namespace CityBuilder.Combat
             {
                 var atTheEnd = _lane.Length - _lane.Project(transform.position, out _) <= LaneEndMeters;
                 if (nearest == null && atTheEnd) nearest = castle;
-                if (nearest != null && !atTheEnd && !WithinADetour(nearest)) nearest = null;
+                if (nearest != null && !atTheEnd && (LaneOnly || !WithinADetour(nearest))) nearest = null;
                 _target = nearest;
                 _routeIndex = 0;
                 _routeBlocked = false;
@@ -1382,6 +1406,17 @@ namespace CityBuilder.Combat
 
         /// <summary>The portal's way this orc keeps to, or null (a sandbox raid, a camp's guard).</summary>
         public OrcLane Lane => _lane;
+
+        /// <summary>Keeps to its way and turns aside for no building (campaign mission 2: the orcs go for the gates,
+        /// not the walls beside their road -- the user, 2026-11-12); what stands ON the way it still breaks.</summary>
+        public bool LaneOnly { get; set; }
+
+        /// <summary>A siege machine (campaign mission 2): it never turns on the fighters around it, only rolls on
+        /// to what its lane ends at.</summary>
+        public bool IgnoresSoldiers { get; set; }
+
+        /// <summary>Its pace times `factor` (a siege machine rolls slower than an orc walks).</summary>
+        public void Slow(float factor) => _walkSpeed *= Mathf.Max(0.05f, factor);
 
         /// <summary>
         /// Sends this orc down a portal's way (the user, 2026-10-24): it keeps to it, breaks what is

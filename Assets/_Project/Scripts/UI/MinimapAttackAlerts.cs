@@ -89,6 +89,11 @@ namespace CityBuilder.UI
 
         private void Place()
         {
+            if (Campaign.CityDefenceMode.IsActive)
+            {
+                PlaceDefence();
+                return;
+            }
             if (!InvasionMode.IsActive)
             {
                 PlaceLandings();
@@ -118,6 +123,32 @@ namespace CityBuilder.UI
                 ((RectTransform)mark.transform).anchoredPosition = at;
             }
             Hide(shown);
+        }
+
+        /// <summary>
+        /// Campaign mission 2 (the user, 2026-11-12: «восклицательные знаки как в Нашествии с той стороны,
+        /// откуда нападают орки»): one «!» per side (W, N, E) its wave still has orcs on, at the head of it.
+        /// </summary>
+        private void PlaceDefence()
+        {
+            var mode = Campaign.CityDefenceMode.Instance;
+            var shown = 0;
+            if (mode != null && map != null)
+            {
+                var rim = map.MapHalfExtent * RimShare;
+                for (var lane = 0; lane < 3 && shown < marks.Length; lane++)
+                {
+                    if (!mode.TryLaneFront(lane, out var front)) continue;
+                    var at = map.ToMapUnclamped(front);
+                    if (at.magnitude > rim) at = at.normalized * rim;
+                    var mark = marks[shown++];
+                    mark.gameObject.SetActive(true);
+                    ((RectTransform)mark.transform).anchoredPosition = at;
+                }
+            }
+            Hide(shown);
+            if (partyMark != null && partyMark.gameObject.activeSelf) partyMark.gameObject.SetActive(false);
+            if (thiefMark != null && thiefMark.gameObject.activeSelf) thiefMark.gameObject.SetActive(false);
         }
 
         /// <summary>The raiding party's mark, on the first of it still standing -- it outlives the wave it came with.</summary>

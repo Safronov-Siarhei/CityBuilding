@@ -58,18 +58,18 @@ namespace CityBuilder.Campaign
             var r = (RectTransform)go.transform;
             r.anchorMin = r.anchorMax = new Vector2(1f - inset.x, inset.y);
             r.pivot = new Vector2(1f, 0f);
-            r.anchoredPosition = new Vector2(-28f, 28f);
-            r.sizeDelta = new Vector2(250f, 78f);
+            r.anchoredPosition = new Vector2(-20f, 20f);
+            r.sizeDelta = new Vector2(125f, 39f);
             var img = go.GetComponent<Image>();
             img.sprite = UnityEngine.Resources.Load<Sprite>($"MenuSkins/{HudSkins.Current}/button")
                          ?? UnityEngine.Resources.Load<Sprite>($"MenuSkins/{HudSkin.Classic}/button");
             if (img.sprite != null && img.sprite.border.sqrMagnitude > 0f) img.type = Image.Type.Sliced;
             go.GetComponent<Button>().onClick.AddListener(Skip);
-            var label = MissionSkin.Label(go.transform, Localization.Get("#film_skip"), UiTheme.Bold, 32, MissionSkin.Ink(HudInk.OnButton),
-                TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(14f, 6f));
-            label.rectTransform.anchoredPosition = new Vector2(0f, 3f);
+            var label = MissionSkin.Label(go.transform, Localization.Get("#film_skip"), UiTheme.Bold, 16, MissionSkin.Ink(HudInk.OnButton),
+                TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(7f, 3f));
+            label.rectTransform.anchoredPosition = new Vector2(0f, 1.5f);
             label.resizeTextForBestFit = true;
-            label.resizeTextMaxSize = 32;
+            label.resizeTextMaxSize = 16;
             _button = go.GetComponent<CanvasGroup>();
             _button.alpha = 0f;
             _button.blocksRaycasts = false;

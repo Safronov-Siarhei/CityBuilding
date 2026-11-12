@@ -7,11 +7,14 @@ using UnityEngine.UI;
 namespace CityBuilder.Campaign
 {
     /// <summary>
-    /// Mission 2's screen (CityDefenceMode): the sandbox's building HUD put away, and in its place the
-    /// part's goal and clock at the top, the three gates' health on the left (the line being held: outer
-    /// in part 1, inner in part 2), Ардан's portrait with his health, the battle-cry button bottom right,
-    /// the stick anywhere else, a banner when a part begins, the courier's line between the parts, and
-    /// the end panel (won: to the campaign map; lost: «Заново» or the map). Built in code; texts #m2_*.
+    /// Mission 2's screen (CityDefenceMode; the user's first playtest, 2026-11-12): of the sandbox's HUD only
+    /// the menu button and the minimap stay (the minimap's plaque shows the part's clock, as an Invasion run's
+    /// shows its wave -- SettlementStatusController). Added: the goal top middle; Ардан top right, as a
+    /// sandbox hero's portrait (face, level, health, experience); his four skills bottom middle (a closed
+    /// one greyed under a lock until his level opens it; a used one shaded round as it recharges); the stick
+    /// anywhere else; a banner when a part begins or he levels; the courier's line between the parts; the
+    /// end panel (won: to the campaign map; lost: «Заново» or the map). The gates show their own health bars
+    /// over them once hit (BuildingInstance). Built in code; texts #m2_*.
     /// </summary>
     public class CityDefenceHud : MonoBehaviour
     {
@@ -20,22 +23,22 @@ namespace CityBuilder.Campaign
         private static readonly string[] Hidden =
         {
             "BuildingMenu", "ResourceHUD", "Heroes", "OfferShopHud", "BoosterHud", "ArmyButton", "ArmySquadRow",
-            "ArmyMachineRow", "WorkforceButton", "InventoryButton", "SettlementStatus", "Happiness", "HappinessBreakdown",
+            "ArmyMachineRow", "WorkforceButton", "InventoryButton", "Happiness", "HappinessBreakdown",
             "Migration", "SelectionBadge", "HeroSkillBar", "SkillHint", "RotateButton", "CancelPlacementButton",
-            "CancelSelectionButton", "BuildingFocusBar", "BuildingFocus",
+            "CancelSelectionButton", "BuildingFocusBar", "BuildingFocus", "EventFeed", "TaxButton", "PopulationHud",
         };
 
         private CityDefenceMode _mode;
         private FloatingJoystick _stick;
-        private Text _goal, _clock, _banner, _middle, _ardenLine;
-        private Image _ardenBar, _cryShade;
-        private readonly Image[] _gateBars = new Image[3];
-        private readonly Text[] _gateNames = new Text[3];
+        private Text _goal, _banner, _middle, _level;
+        private Image _ardenBar, _xpBar;
+        private readonly Image[] _skillShade = new Image[CityDefenceMode.SkillCount];
+        private readonly GameObject[] _skillLock = new GameObject[CityDefenceMode.SkillCount];
+        private readonly Image[] _skillIcon = new Image[CityDefenceMode.SkillCount];
         private CanvasGroup _bannerGroup;
         private GameObject _endPanel;
         private Text _endTitle, _endLine;
         private GameObject _restartButton;
-        private RectTransform _cryButton;
         private float _bannerFor;
 
         public void Bind(CityDefenceMode mode)
@@ -45,6 +48,7 @@ namespace CityBuilder.Campaign
             Build();
             mode.PartBegan += OnPart;
             mode.Ended += OnEnded;
+            mode.ArdenLeveled += OnLevel;
         }
 
         private void OnDestroy()
@@ -52,6 +56,7 @@ namespace CityBuilder.Campaign
             if (_mode == null) return;
             _mode.PartBegan -= OnPart;
             _mode.Ended -= OnEnded;
+            _mode.ArdenLeveled -= OnLevel;
         }
 
         private static void HideSandboxHud()
@@ -63,7 +68,10 @@ namespace CityBuilder.Campaign
                 foreach (var t in canvas.GetComponentsInChildren<Transform>(true))
                 {
                     if (!names.Contains(t.name)) continue;
-                    var group = t.GetComponent<CanvasGroup>() ?? t.gameObject.AddComponent<CanvasGroup>();
+                    // NOT `GetComponent() ?? AddComponent()`: a missing component is Unity's fake null, which
+                    // `??` takes for a real object (the user's first playtest: the mission never started)
+                    var group = t.GetComponent<CanvasGroup>();
+                    if (group == null) group = t.gameObject.AddComponent<CanvasGroup>();
                     group.alpha = 0f;
                     group.interactable = false;
                     group.blocksRaycasts = false;
@@ -91,73 +99,18 @@ namespace CityBuilder.Campaign
             safe.offsetMin = safe.offsetMax = Vector2.zero;
             safe.gameObject.AddComponent<SafeAreaFitter>();
 
-            // the goal and the clock, top middle
-            var plaque = MissionSkin.Image(safe, "Goal", "plaque", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -10f), new Vector2(460f, 86f));
+            // the goal, top middle
+            var plaque = MissionSkin.Image(safe, "Goal", "plaque", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -10f), new Vector2(460f, 56f));
             plaque.raycastTarget = false;
-            _goal = MissionSkin.Label(plaque.transform, "", UiTheme.Bold, 22, UiTheme.Ink, TextAnchor.UpperCenter, Vector2.zero, Vector2.one, new Vector2(14f, 8f));
-            _clock = MissionSkin.Label(plaque.transform, "", UiTheme.Heavy, 30, UiTheme.Danger, TextAnchor.LowerCenter, Vector2.zero, Vector2.one, new Vector2(14f, 6f));
+            _goal = MissionSkin.Label(plaque.transform, "", UiTheme.Bold, 22, UiTheme.Ink, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(14f, 6f));
+            _goal.resizeTextForBestFit = true;
+            _goal.resizeTextMaxSize = 22;
+            _goal.resizeTextMinSize = 12;
 
-            // the gates, left: an icon and a bar each (W, N, E)
-            var names = new[] { "#m2_gate_w", "#m2_gate_n", "#m2_gate_e" };
-            for (var i = 0; i < 3; i++)
-            {
-                var row = MissionSkin.Image(safe, "Gate" + i, "pillParchment", new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(16f, -120f - i * 58f), new Vector2(250f, 50f));
-                row.raycastTarget = false;
-                var icon = new GameObject("Icon", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
-                icon.transform.SetParent(row.transform, false);
-                var ir = icon.rectTransform;
-                ir.anchorMin = ir.anchorMax = new Vector2(0f, 0.5f);
-                ir.anchoredPosition = new Vector2(28f, 0f);
-                ir.sizeDelta = new Vector2(42f, 42f);
-                icon.sprite = _mode.GateIcon;
-                icon.preserveAspect = true;
-                icon.raycastTarget = false;
-                _gateNames[i] = MissionSkin.Label(row.transform, Localization.Get(names[i]), UiTheme.Bold, 16, UiTheme.Ink, TextAnchor.UpperLeft, Vector2.zero, Vector2.one, new Vector2(56f, 4f));
-                _gateBars[i] = Bar(row.transform, new Vector2(56f, 8f), new Vector2(180f, 12f));
-            }
+            BuildPortrait(safe, art);
+            BuildSkills(safe, art);
 
-            // Ардан: portrait and health, bottom left
-            var portrait = MissionSkin.Image(safe, "Arden", "round_value", new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(18f, 18f), new Vector2(96f, 96f));
-            portrait.raycastTarget = false;
-            if (art.portrait != null)
-            {
-                var face = new GameObject("Face", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
-                face.transform.SetParent(portrait.transform, false);
-                face.rectTransform.anchorMin = Vector2.zero;
-                face.rectTransform.anchorMax = Vector2.one;
-                face.rectTransform.offsetMin = new Vector2(8f, 8f);
-                face.rectTransform.offsetMax = new Vector2(-8f, -8f);
-                face.sprite = art.portrait;
-                face.preserveAspect = true;
-                face.raycastTarget = false;
-            }
-            _ardenBar = Bar(safe, new Vector2(124f, 30f), new Vector2(200f, 16f), new Vector2(0f, 0f));
-            _ardenLine = MissionSkin.Label(safe, "", UiTheme.Bold, 18, UiTheme.OnWood, TextAnchor.LowerLeft, new Vector2(0f, 0f), new Vector2(0f, 0f), Vector2.zero);
-            var lr = _ardenLine.rectTransform;
-            lr.anchoredPosition = new Vector2(124f, 54f);
-            lr.sizeDelta = new Vector2(420f, 30f);
-            lr.pivot = Vector2.zero;
-            _ardenLine.gameObject.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.6f);
-
-            // the battle cry, bottom right (a picture, no text)
-            var cry = MissionSkin.Round(safe, "Cry", "round", HudInk.Keep, _mode.CryGlyph, new Vector2(1f, 0f), new Vector2(-90f, 90f), 128f);
-            cry.onClick.AddListener(() => _mode.Cry());
-            _cryButton = (RectTransform)cry.transform;
-            var cryIcon = cry.transform.Find("Icon");
-            if (cryIcon != null) cryIcon.GetComponent<Image>().color = Color.white;   // a picture in its own colours
-            _cryShade = new GameObject("Cooldown", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
-            _cryShade.transform.SetParent(cry.transform, false);
-            _cryShade.rectTransform.anchorMin = Vector2.zero;
-            _cryShade.rectTransform.anchorMax = Vector2.one;
-            _cryShade.rectTransform.offsetMin = _cryShade.rectTransform.offsetMax = Vector2.zero;
-            _cryShade.sprite = art.mask;
-            _cryShade.type = Image.Type.Filled;
-            _cryShade.fillMethod = Image.FillMethod.Radial360;
-            _cryShade.fillClockwise = false;
-            _cryShade.color = new Color(0f, 0f, 0f, 0.55f);
-            _cryShade.raycastTarget = false;
-
-            // the banner (a part begins) and the middle line (the courier, Ардан down)
+            // the banner (a part begins, a level) and the middle line (the courier)
             _bannerGroup = new GameObject("Banner", typeof(RectTransform), typeof(CanvasGroup)).GetComponent<CanvasGroup>();
             _bannerGroup.transform.SetParent(safe, false);
             var br = (RectTransform)_bannerGroup.transform;
@@ -176,16 +129,120 @@ namespace CityBuilder.Campaign
             _stick = FloatingJoystick.Create(84f, 36f, 0.12f, 1.5f, 4f, Localization.Get("#m2_stick_hint"));
             _stick.transform.SetParent(transform, false);
             if (art.disc != null && art.rim != null) _stick.Skin(art.disc, art.rim, new Color(0.12f, 0.08f, 0.05f, 0.55f), UiTheme.Gold);
-            _stick.NotOver.Add(_cryButton);
+            for (var i = 0; i < CityDefenceMode.SkillCount; i++)
+                if (_skillIcon[i] != null) _stick.NotOver.Add((RectTransform)_skillIcon[i].transform.parent);
         }
 
-        private static Image Bar(Transform parent, Vector2 at, Vector2 size, Vector2? anchor = null)
+        /// <summary>Ардан top right, as a sandbox hero: the face in a round frame, his level, health and experience under it.</summary>
+        private void BuildPortrait(RectTransform safe, MissionHud.Art art)
         {
-            var a = anchor ?? new Vector2(0f, 0f);
+            if (CopyHeroPortrait(safe, art)) return;
+            var portrait = MissionSkin.Image(safe, "Arden", "round_value", new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-18f, -12f), new Vector2(92f, 92f));
+            portrait.raycastTarget = false;
+            if (art.portrait != null)
+            {
+                var face = new GameObject("Face", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+                face.transform.SetParent(portrait.transform, false);
+                face.rectTransform.anchorMin = Vector2.zero;
+                face.rectTransform.anchorMax = Vector2.one;
+                face.rectTransform.offsetMin = new Vector2(8f, 8f);
+                face.rectTransform.offsetMax = new Vector2(-8f, -8f);
+                face.sprite = art.portrait;
+                face.preserveAspect = true;
+                face.raycastTarget = false;
+            }
+            var badge = MissionSkin.Image(portrait.transform, "Level", "round_main", new Vector2(0f, 0f), new Vector2(0.5f, 0.5f), new Vector2(10f, 10f), new Vector2(34f, 34f));
+            badge.raycastTarget = false;
+            _level = MissionSkin.Label(badge.transform, "1", UiTheme.Heavy, 20, MissionSkin.Ink(HudInk.OnMain), TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, Vector2.zero);
+            _ardenBar = Bar(safe, new Vector2(-18f, -112f), new Vector2(120f, 14f), new Vector2(1f, 1f));
+            _xpBar = Bar(safe, new Vector2(-18f, -128f), new Vector2(120f, 8f), new Vector2(1f, 1f));
+            _xpBar.color = UiTheme.Gold;
+        }
+
+        /// <summary>The sandbox King's portrait block copied for Ардан (the user's second playtest: the same form as in the
+        /// sandbox): the round frame, the level badge, the health and experience bars on their plaque.</summary>
+        private bool CopyHeroPortrait(RectTransform safe, MissionHud.Art art)
+        {
+            var king = HeroPortraitController.Of(Combat.SoldierType.King);
+            if (king == null || king.Widget == null || king.LevelText == null || king.HealthFill == null || king.XpFill == null) return false;
+            var source = king.Widget.transform;
+            var copy = Instantiate(king.Widget, safe, false);
+            copy.name = "ArdenPortrait";
+            copy.SetActive(true);
+            var rect = (RectTransform)copy.transform;
+            var from = (RectTransform)source;
+            rect.anchorMin = from.anchorMin;
+            rect.anchorMax = from.anchorMax;
+            rect.pivot = from.pivot;
+            rect.anchoredPosition = from.anchoredPosition;
+            rect.sizeDelta = from.sizeDelta;
+            foreach (var button in copy.GetComponentsInChildren<Button>(true)) button.interactable = false;
+            foreach (var g in copy.GetComponentsInChildren<Graphic>(true)) g.raycastTarget = false;
+            var selected = copy.transform.Find("Selected");
+            if (selected != null) selected.gameObject.SetActive(false);
+            var fallen = copy.transform.Find("Portrait/Fallen");
+            if (fallen != null) fallen.gameObject.SetActive(false);
+            var face = copy.transform.Find("Portrait/Mask/Face");
+            if (face != null && art.portrait != null) face.GetComponent<Image>().sprite = art.portrait;
+            _level = copy.transform.Find(PathUnder(source, king.LevelText.transform))?.GetComponent<Text>();
+            _ardenBar = copy.transform.Find(PathUnder(source, king.HealthFill))?.GetComponent<Image>();
+            _xpBar = copy.transform.Find(PathUnder(source, king.XpFill))?.GetComponent<Image>();
+            if (_level != null && _ardenBar != null && _xpBar != null) return true;
+            Destroy(copy);
+            return false;
+        }
+
+        private static string PathUnder(Transform root, Transform t)
+        {
+            var path = t.name;
+            for (var p = t.parent; p != null && p != root; p = p.parent) path = p.name + "/" + path;
+            return path;
+        }
+
+        /// <summary>The four skills bottom middle: a picture each, no text.</summary>
+        private void BuildSkills(RectTransform safe, MissionHud.Art art)
+        {
+            // 1.5 times smaller than at first (the user's second playtest)
+            const float size = 70f, gap = 12f;
+            var width = CityDefenceMode.SkillCount * size + (CityDefenceMode.SkillCount - 1) * gap;
+            for (var i = 0; i < CityDefenceMode.SkillCount; i++)
+            {
+                var x = -width * 0.5f + size * 0.5f + i * (size + gap);
+                var button = MissionSkin.Round(safe, "Skill" + i, "round", HudInk.Keep, _mode.SkillGlyph(i), new Vector2(0.5f, 0f), new Vector2(x, size * 0.5f + 14f), size);
+                var skill = i;
+                button.onClick.AddListener(() => _mode.UseSkill(skill));
+                var icon = button.transform.Find("Icon");
+                _skillIcon[i] = icon != null ? icon.GetComponent<Image>() : button.GetComponent<Image>();
+                if (icon != null) _skillIcon[i].color = Color.white;   // a picture in its own colours
+                var shade = new GameObject("Cooldown", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+                shade.transform.SetParent(button.transform, false);
+                shade.rectTransform.anchorMin = Vector2.zero;
+                shade.rectTransform.anchorMax = Vector2.one;
+                shade.rectTransform.offsetMin = shade.rectTransform.offsetMax = Vector2.zero;
+                shade.sprite = art.mask;
+                shade.type = Image.Type.Filled;
+                shade.fillMethod = Image.FillMethod.Radial360;
+                shade.fillClockwise = false;
+                shade.color = new Color(0f, 0f, 0f, 0.55f);
+                shade.raycastTarget = false;
+                _skillShade[i] = shade;
+                var locked = new GameObject("Lock", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+                locked.transform.SetParent(button.transform, false);
+                locked.rectTransform.anchorMin = locked.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                locked.rectTransform.sizeDelta = new Vector2(size * 0.42f, size * 0.42f);
+                locked.sprite = _mode.LockGlyph;
+                locked.preserveAspect = true;
+                locked.raycastTarget = false;
+                _skillLock[i] = locked.gameObject;
+            }
+        }
+
+        private static Image Bar(Transform parent, Vector2 at, Vector2 size, Vector2 anchor)
+        {
             var back = new GameObject("Bar", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
             back.transform.SetParent(parent, false);
-            back.rectTransform.anchorMin = back.rectTransform.anchorMax = a;
-            back.rectTransform.pivot = Vector2.zero;
+            back.rectTransform.anchorMin = back.rectTransform.anchorMax = anchor;
+            back.rectTransform.pivot = anchor;
             back.rectTransform.anchoredPosition = at;
             back.rectTransform.sizeDelta = size;
             back.color = new Color(0.18f, 0.1f, 0.06f, 0.85f);
@@ -238,12 +295,20 @@ namespace CityBuilder.Campaign
             _bannerFor = 3.5f;
         }
 
+        private void OnLevel(int level)
+        {
+            _banner.text = Localization.Format("#m2_level_up", level);
+            _bannerFor = 2.5f;
+        }
+
         private void OnEnded(bool won)
         {
             _stick.Locked = true;
             _endTitle.text = Localization.Get(won ? "#m2_won" : "#m2_lost");
             _endTitle.color = won ? UiTheme.Good : UiTheme.Danger;
-            _endLine.text = Localization.Get(won ? "#m2_won_line" : "#m2_lost_line");
+            var why = _mode.Loss == CityDefenceMode.LossReason.Arden ? "#m2_lost_arden"
+                : _mode.Loss == CityDefenceMode.LossReason.Castle ? "#m2_lost_castle" : "#m2_lost_line";
+            _endLine.text = Localization.Get(won ? "#m2_won_line" : why);
             _restartButton.SetActive(!won);
             _endPanel.SetActive(true);
         }
@@ -257,30 +322,27 @@ namespace CityBuilder.Campaign
             var stage = _mode.Current;
             var part2 = stage == CityDefenceMode.Stage.Part2 || (stage == CityDefenceMode.Stage.Won);
             _goal.text = Localization.Get(part2 ? "#m2_goal_part2" : "#m2_goal_part1");
-            var seconds = Mathf.CeilToInt(Mathf.Max(0f, _mode.TimeLeft));
-            _clock.text = Localization.Format(part2 ? "#m2_clock_help" : "#m2_clock_courier", $"{seconds / 60}:{seconds % 60:00}");
-
-            var gates = part2 ? _mode.InnerGates : _mode.OuterGates;
-            for (var i = 0; i < 3; i++)
-            {
-                var g = gates[i];
-                var k = g != null && g.MaxHealth > 0 ? Mathf.Clamp01((float)g.CurrentHealth / g.MaxHealth) : 0f;
-                _gateBars[i].rectTransform.anchorMax = new Vector2(k, 1f);
-                _gateBars[i].color = k > 0.5f ? UiTheme.Good : k > 0.25f ? UiTheme.Warning : UiTheme.Danger;
-            }
 
             var arden = _mode.Arden;
             var alive = arden != null && arden.CurrentHealth > 0;
             var hk = alive && arden.MaxHealth > 0 ? Mathf.Clamp01((float)arden.CurrentHealth / arden.MaxHealth) : 0f;
-            _ardenBar.rectTransform.anchorMax = new Vector2(hk, 1f);
-            _ardenLine.text = Localization.Get("#m2_arden");
-            var cd = BalanceConfig.Instance.CityDefence.cryCooldownSeconds;
-            _cryShade.fillAmount = cd > 0f ? Mathf.Clamp01(_mode.CryCooldown / cd) : 0f;
+            _ardenBar.rectTransform.anchorMax = new Vector2(hk, _ardenBar.rectTransform.anchorMax.y);
+            _ardenBar.color = _mode.BeingHealed ? UiTheme.Gold : hk > 0.5f ? UiTheme.Good : hk > 0.25f ? UiTheme.Warning : UiTheme.Danger;
+            var next = _mode.XpForNext;
+            var from = _mode.XpOfLevel;
+            var xk = next > from ? Mathf.Clamp01((_mode.ArdenXp - from) / (float)(next - from)) : 1f;
+            _xpBar.rectTransform.anchorMax = new Vector2(xk, _xpBar.rectTransform.anchorMax.y);
+            _level.text = _mode.ArdenLevel.ToString();
 
-            if (stage == CityDefenceMode.Stage.Courier) _middle.text = Localization.Get("#m2_courier");
-            else if (!alive && stage != CityDefenceMode.Stage.Won && stage != CityDefenceMode.Stage.Lost)
-                _middle.text = Localization.Format("#m2_arden_rises", Mathf.CeilToInt(Mathf.Max(0f, _mode.ArdenRiseIn)));
-            else _middle.text = "";
+            for (var i = 0; i < CityDefenceMode.SkillCount; i++)
+            {
+                var open = _mode.SkillOpen(i);
+                _skillLock[i].SetActive(!open);
+                _skillIcon[i].color = open ? Color.white : new Color(0.35f, 0.35f, 0.35f, 1f);
+                _skillShade[i].fillAmount = open ? _mode.SkillCooldownShare(i) : 0f;
+            }
+
+            _middle.text = stage == CityDefenceMode.Stage.Courier ? Localization.Get("#m2_courier") : "";
 
             if (_bannerFor > 0f) _bannerFor -= dt;
             _bannerGroup.alpha = Mathf.Clamp01(_bannerFor / 0.6f);

@@ -315,6 +315,18 @@ namespace CityBuilder.Cheats
             if (Button(Shop.RewardedAds.NoFillForTest ? "Лавка: реклама ЕСТЬ (сейчас нет)" : "Лавка: рекламы НЕТ (сейчас есть)"))
                 Shop.RewardedAds.NoFillForTest = !Shop.RewardedAds.NoFillForTest;
 
+            // campaign level skip (the user, 2026-11-12); the campaign map has its own «Чит: пройти уровень»
+            var defence = Campaign.CityDefenceMode.Instance;
+            if (Campaign.CityDefenceMode.IsActive && defence != null)
+            {
+                Header("Кампания: миссия 2");
+                GUILayout.BeginHorizontal();
+                if (Button("Закончить часть")) { SetOpen(false); defence.CheatEndPart(); }
+                if (Button("Пройти уровень")) { SetOpen(false); defence.CheatWin(); }
+                GUILayout.EndHorizontal();
+                if (Button($"Ардан: +уровень (сейчас {defence.ArdenLevel})")) defence.CheatLevelUp();
+            }
+
             Header("Сохранение");
             var save = FindAnyObjectByType<GameSaveController>();
             GUILayout.BeginHorizontal();

@@ -239,7 +239,7 @@
   says «Скоро» / «Сначала пройди…» the same way BOTTOM CENTRE in place of «Играть»; the film-replay button
   removed (the user: pointless next to «Играть»), so level 1 replays the mission, and the film has
   «Пропустить» bottom right instead (`FilmSkip.cs`: dip to black, the film run to its end in one go -- the
-  director's end stops the sounds and starts the mission -- fade in; `#film_skip`, sheet row 61); Back
+  director's end stops the sounds and starts the mission -- fade in; `#film_skip`, sheet row 61; HALVED 2026-11-12 to 125x39 at 20 from the corner, the user); Back
   goes to the CHOICE OF MODE (`MainMenuController.OpenOnModes`); in mission 1 the clock and splits hide
   while the mage scene plays (`MissionHud.ClockShown`; it covered his line).
 
@@ -344,7 +344,7 @@
   4. Only after that is the cutscene video made.
 - Model renders go to the user for approval before anything enters the game.
 
-## Mission 2 «Оборона города» (the user, 2026-11-12; GAMEPLAY v1 BUILT the same day, not seen, untested)
+## Mission 2 «Оборона города» (the user, 2026-11-12; GAMEPLAY v2 after playtest 1 BUILT the same day, not seen)
 - **Cutscene before it (to be discussed in detail):** Ардан runs in through the gates; the captain of the guard
   stands there; Ардан starts telling him big creatures attacked his village; a soldier on the wall shouts the
   enemy is coming; the alarm, the gates close; the captain calls a CAVALRYMAN and orders him to ride to the
@@ -423,6 +423,87 @@
 - **Traps:** `FogOfWarManager.DisabledCheat` is an INSTANCE property. Regenerating the map: rerun
   `mission2_town.py` FIRST (it writes mission2-plan.json), then Blender, then export.
 - **Open:** both cutscenes (to discuss before building them); the user's playtest of v1.
+- **SWORD + SIEGE (approved by the user 2026-11-12, «Утверждаю, ставь») -> IN THE GAME (not seen).**
+  - Ардан WITH THE SWORD replaces the Латник's look: CineArdanSword.fbx from
+    Tools/blender/cinematic/export_ardan_sword.py (poses from ardan_sword.py; clips Idle, Run, Attack, Whirl, Cry,
+    Dash, Breath; entry in OpeningCast.json). CityDefenceMode.Figure.cs hides the ManAtArms renderers, rides the
+    figure (x 1/1.6) on the SoldierUnit: Run/Idle by measured speed (rate = speed / runSpeed), Attack on
+    `Struck`, a clip per skill via `SkillUsed`. Fighting/health still the SoldierUnit's.
+  - ORC RAM + SIEGE TOWER (Models/Orcs, `orc_siege_drafts.py -- <project> export`): CityDefenceMode.Siege.cs.
+    Only while `Late` (second half of a part): every m2_ram_every-th wave a ram, every m2_tower_every-th a tower,
+    one road in turn. Both = a Brute with its figure hidden + the model, Toughen x m2_*_health_mult,
+    `Slow(m2_siege_speed)`, `IgnoresSoldiers` (new OrcUnit flag: never targets/retaliates), LaneOnly. Ram hits
+    x m2_ram_damage_mult (breaks the gate). Tower: within m2_tower_dock_cells of its outer gate (or lane end in
+    part 2) it becomes a standing model for m2_tower_stay_sec and m2_tower_crew raiders land 2.5 cells inside the
+    wall (free raiders, no lane). Killed on the road = nothing.
+  - TRAP: orc_siege_drafts.py had a broken "
+" literal and orcgrunt exec needs `__file__` set -- fixed.
+  - TRAP: run.ps1 via `powershell -File ... -Steps a,b` passes ONE string -> no step runs; call `& run.ps1`.
+- **PLAYTEST 2 (the user, 2026-11-12) -> v3 BUILT the same day (setup green, CityDefenceTests 2/2; not seen).**
+  - Start: Ардан at plan (50.5, 55.5) north of the square (`_start`), the castle behind the camera; healers stay on the square.
+  - Minimap was black: the darkness quad rendered in the minimap camera too (no depth texture) -> the renderer is
+    switched on only for the main camera (`RenderPipelineManager.beginCameraRendering`, World.cs). TRAP for any
+    fullscreen quad on Camera.main.
+  - Garrison: `SoldierUnit.Pen` (world rect, walk destinations clamped, no target past the pen's edge + a blow) =
+    the outer walls (part 1) / inner walls (part 2) -- nobody leaves the gates. Wall shooters face out
+    (`SoldierUnit.WallLookout`) and walk between two posts m2_wall_patrol_cells apart (`IdleOnWall`, TickWallPatrol).
+  - HP bars of soldiers only when hurt in this mode (`ShowHealth`); `Heal` at full health does nothing; static
+    `SoldierUnit.Healed` -> green sparks (m2_heal_fx_sec throttle).
+  - Orcs: `OrcUnit.LaneOnly` -- no turning aside for buildings beside the way, only what stands ON it (the gate);
+    numbers raised (4 orcs/lane, +1 each wave, max 12, levels 2/3/3, x1.5 health and damage, brutes every 2nd /
+    every wave late, throwers every wave, pauses 8/5 s, max 35 s).
+  - Roads give no speed in this mode (`CitizenAgent.CurrentWalkSpeed`; soldiers never had road speed).
+  - Town (mission2_town.py): every plain Tower -> Fence (only the gates' own towers); 14 ruined farmsteads outside
+    (piece `state: "ruin"` -> `BuildingRuin.LeaveOf` quietly), `fields` (4 burnt = ash furrows), `fires` (10),
+    `decor` (haystacks, bales, carts in free yards; Cinematic props x 1/1.6). CityDefenceMode.Look.cs draws them:
+    wheat slab (CineGround mode 5) + CineWheat ears along edges (cap m2_wheat_ears_max), SAND ROADS = a dirt
+    ribbon (mode 2) along each lane up to its gate (m2_sand_road_width), particle fires. Ore deposits and
+    iron/coal/gold nodes removed at start.
+  - HUD: skills 70 px (was 104); the portrait is a COPY of the sandbox King's widget (`HeroPortraitController.Of`).
+  - Drafts (APPROVED + installed, see SWORD + SIEGE above): orc ram + siege tower (Tools/blender/orc_siege_drafts.py), Ардан with
+    a sword and 7 key poses (Tools/blender/cinematic/ardan_sword.py). After approval: export, orc machines enter at
+    half time, Ардан's figure replaces the Man-at-Arms. OPEN: closed gate leaves (orcs already cannot pass a gate;
+    the leaves are drawn open in the FortifiedGate mesh) -- a door piece still to model.
+- **PLAYTEST 1 (the user, 2026-11-12) -> v2 BUILT the same day (not seen).** The v1 never started: the HUD's
+  `GetComponent<CanvasGroup>() ?? AddComponent` threw (Unity's fake null) inside Setup, so the sandbox HUD
+  stayed and no part began -- TRAP, never `??` on a Unity component. The user's decisions (part 1 now; part 2
+  "уточним позже"):
+  - **HUD:** only the menu button (top left), Ардан top right as a sandbox hero (face, level badge, health
+    bar gold while healed, xp bar), the goal top middle, the FOUR SKILLS bottom middle, the minimap kept but
+    framed close (m2_minimap_radius) with the part's clock on its plaque (SettlementStatusController, as an
+    Invasion run's wave) and «!» per attacking side (MinimapAttackAlerts.PlaceDefence, all three at once).
+    No gate bars: a gate shows its own health bar once hit (BuildingInstance). HousePeople switched off
+    (its resident bars stood over every roof).
+  - **Ардан:** starts on the central square, camera on him at mission 1's distance (`LockView`
+    m2_camera_distance/pitch, no zoom), always centred. MORTAL: dead = lost (LossReason.Arden). Levels on his
+    OWN kills (OrcUnit.Died + KilledBy; xp = the orc's max health; m2_arden_xp2/3/4 cumulative), each level
+    +health/+damage and opens a skill: 1 Боевой клич (Enrage self + garrison in radius, orcs stunned),
+    2 Круговой удар (damage round him + `OrcUnit.Knock` push), 3 Натиск (`SoldierUnit.Dash` the stick's
+    way / facing, damage + stun along it), 4 Второе дыхание (heals self over seconds + allies near). Icons:
+    the heroes' Skill_captain_might / king_rage / captain_rescue / king_heal (placeholders), Hud_Lock over a
+    closed one. Healers: m2_square_healers monks on the square + a green ring; inside m2_heal_radius he mends
+    m2_heal_per_sec of his health a second.
+  - **Living town** (`CityDefenceMode.Garrison.cs`): inside each outer gate a squad (m2_squad_infantry men-
+    at-arms, m2_squad_crossbows crossbowmen, m2_squad_monks monk), archers + crossbowmen on the walls beside
+    each gate, m2_patrols spearman patrols looping the lower town's streets (corners in `PatrolLoops`), and
+    m2_townsfolk townsfolk (`CitizenVisualsManager.SpawnLoose`: uncounted figures) running from house door to
+    house door, vanishing in and another coming out elsewhere after m2_townsfolk_respawn_sec.
+  - **Time & waves:** EACH part 8 minutes (480 s). Waves on all three lanes at once, growing (+1 per lane every
+    m2_wave_orcs_grow_every, cap m2_wave_orcs_max); the next comes m2_wave_pause_sec after the last is beaten
+    (or m2_wave_max_sec whatever); past HALF the part: x m2_late_orcs_mult orcs, m2_late_orc_level, brutes
+    every m2_late_brute_every, pause m2_wave_pause_late_sec.
+  - **Edge:** dark past the fields and the fords (the dungeon darkness shader over a mask of the rectangle
+    m2_lit_x0..x1, y0..y1 in plan cells, soft m2_dark_soft) -- `CityDefenceMode.World.cs`; Ардан's
+    `SoldierUnit.SteerArea` keeps him inside (1 cell in). The orcs spawn in the dark beyond the fords.
+  - Files: the mode is now partial -- `CityDefenceMode.cs` (setup, parts, waves), `.Arden.cs`, `.Garrison.cs`,
+    `.World.cs`; `CityDefenceHud.cs` rewritten. Sheet tab 2000066 now 69 m2_* keys; texts: gate/arden-rises
+    keys removed, #m2_lost_castle/#m2_lost_arden/#m2_level_up added, #m2_lost = «Поражение». Test:
+    `Tests/PlayMode/CityDefenceTests.cs` (the mission starts; Ардан dying loses it). Cheat window: «Ардан:
+    +уровень».
+- **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
+  уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right
+  (IMGUI in `CampaignMapScreen.OnGUI`); in mission 2 the cheat window's «Служебное» tab has «Закончить часть»
+  (`CityDefenceMode.CheatEndPart`: the clock to zero -> courier / win) and «Пройти уровень» (`CheatWin`).
 
 ## Ардан (the model)
 `CineArdan`, about 1 750 tris, in the «Кино» collection of `Buildings-Size1-Models.blend`.

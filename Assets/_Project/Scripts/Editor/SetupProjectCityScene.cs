@@ -611,8 +611,40 @@ namespace CityBuilder.EditorTools
             DefenceSprite(defenceArt.FindPropertyRelative("rim"), UiTextureImport.SkinFolder + "/event_rim.png");
             DefenceSprite(defenceArt.FindPropertyRelative("mask"), UiTextureImport.SkinFolder + "/circle_mask.png");
             DefenceSprite(defenceArt.FindPropertyRelative("portrait"), UiTextureImport.IconsFolder + "/PortraitArdan.png");
-            DefenceSprite(cityDefenceSO.FindProperty("cryGlyph"), UiTextureImport.GlyphsFolder + "/Skill_captain_might.png");
-            DefenceSprite(cityDefenceSO.FindProperty("gateIcon"), UiTextureImport.IconsFolder + "/FortifiedGate.png");
+            // Ардан's four skills (the user, 2026-11-12): cry, whirl, dash, second wind -- the heroes' pictures for now
+            var skillGlyphs = cityDefenceSO.FindProperty("skillGlyphs");
+            var skillFiles = new[] { "Skill_captain_might", "Skill_king_rage", "Skill_captain_rescue", "Skill_king_heal" };
+            skillGlyphs.arraySize = skillFiles.Length;
+            for (var i = 0; i < skillFiles.Length; i++)
+                DefenceSprite(skillGlyphs.GetArrayElementAtIndex(i), UiTextureImport.GlyphsFolder + "/" + skillFiles[i] + ".png");
+            DefenceSprite(cityDefenceSO.FindProperty("lockGlyph"), UiTextureImport.GlyphsFolder + "/Hud_Lock.png");
+            // the siege's look (the user's second playtest): fires, smoke, the healing sparks, the wheat, the sand roads, props
+            var defenceDot = SoftDot();
+            cityDefenceSO.FindProperty("fxGlow").objectReferenceValue = ParticleMaterial("DefenceGlow", defenceDot, true);
+            cityDefenceSO.FindProperty("fxSmoke").objectReferenceValue = ParticleMaterial("DefenceSmoke", defenceDot, false);
+            cityDefenceSO.FindProperty("wheatMaterial").objectReferenceValue = GroundMaterial("DefenceWheat", 5f);
+            var ash = GroundMaterial("DefenceAsh", 3f);
+            ash.SetVector("_Dir", new Vector4(1f, 0f, 0f, 0f));
+            EditorUtility.SetDirty(ash);
+            cityDefenceSO.FindProperty("ashMaterial").objectReferenceValue = ash;
+            cityDefenceSO.FindProperty("sandMaterial").objectReferenceValue = GroundMaterial("DefenceSand", 2f);
+            const string cine = "Assets/_Project/Models/Cinematic/";
+            cityDefenceSO.FindProperty("wheatEars").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(cine + "CineWheat.fbx");
+            var propNames = new[] { "CineHaystack", "CineHayBales", "CineCartBody" };
+            var propList = new System.Collections.Generic.List<Object>();
+            foreach (var n in propNames)
+            {
+                var model = AssetDatabase.LoadAssetAtPath<GameObject>(cine + n + ".fbx");
+                if (model == null) Debug.LogError($"[CityDefence] prop {n} not found");
+                else propList.Add(model);
+            }
+            WriteArray(cityDefenceSO.FindProperty("props"), propList.ToArray());
+            // the orcs' ram and siege tower (approved 2026-11-12)
+            cityDefenceSO.FindProperty("orcRamModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Orcs/OrcRam.fbx");
+            cityDefenceSO.FindProperty("orcTowerModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Orcs/OrcSiegeTower.fbx");
+            // Ардан with the sword in place of the Латник's look (approved 2026-11-12)
+            cityDefenceSO.FindProperty("ardenModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(cine + "Cast/CineArdanSword.fbx");
+            cityDefenceSO.FindProperty("ardenClips").objectReferenceValue = AssetDatabase.LoadAssetAtPath<CityBuilder.Campaign.CineClips>("Assets/_Project/Campaign/Cast/CineArdanSwordClips.asset");
             cityDefenceSO.ApplyModifiedPropertiesWithoutUndo();
 
             // The dungeon (Dungeon/DungeonMode): idle in a town; when DungeonTravel sent the heroes

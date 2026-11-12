@@ -7275,7 +7275,7 @@ MonoBehaviour:
     - coins: 375
       seconds: 240
   - id: Colosseum
-    displayName: "\u041A\u043E\u043B\u043B\u0438\u0437\u0435\u0439"
+    displayName: "\u041A\u043E\u043B\u0438\u0437\u0435\u0439"
     category: 2
     cost:
     - type: 0
@@ -7779,6 +7779,92 @@ MonoBehaviour:
   loadingSecondsEnter: 10
   loadingSecondsExit: 5
   loadingSecondsCampaignMap: 5
+  cityDefence:
+    part1Seconds: 480
+    part2Seconds: 480
+    firstWaveSeconds: 10
+    wavePauseSeconds: 8
+    wavePauseLateSeconds: 5
+    waveMaxSeconds: 35
+    waveOrcs: 4
+    waveOrcsGrowEvery: 1
+    waveOrcsMax: 12
+    lateOrcsMult: 1.8
+    orcLevel: 2
+    lateOrcLevel: 3
+    orcLevelPart2: 3
+    bruteEvery: 2
+    lateBruteEvery: 1
+    throwerEvery: 1
+    orcHealthMult: 1.5
+    orcDamageMult: 1.5
+    squadInfantry: 4
+    squadCrossbows: 3
+    squadMonks: 1
+    wallArchers: 3
+    wallCrossbows: 2
+    patrols: 2
+    patrolSize: 3
+    innerGuards: 2
+    innerArchers: 2
+    guardLevel: 2
+    townsfolk: 24
+    townsfolkRespawnSeconds: 4
+    ardenHealth: 400
+    ardenDamage: 30
+    ardenHealthPerLevel: 60
+    ardenDamagePerLevel: 6
+    ardenXp2: 300
+    ardenXp3: 900
+    ardenXp4: 1800
+    cryCooldownSeconds: 20
+    cryRadius: 7
+    crySeconds: 6
+    cryDamageMult: 1.5
+    cryStunSeconds: 1.5
+    whirlCooldownSeconds: 12
+    whirlRadius: 3
+    whirlDamageMult: 2
+    whirlPush: 2.5
+    dashCooldownSeconds: 14
+    dashDistance: 7
+    dashSeconds: 0.35
+    dashWidth: 1.5
+    dashDamageMult: 1.5
+    dashStunSeconds: 1.5
+    breathCooldownSeconds: 40
+    breathHeal: 0.5
+    breathSeconds: 3
+    breathRadius: 6
+    breathAllyHeal: 0.4
+    squareHealers: 2
+    healRadius: 3
+    healPerSecond: 0.08
+    cameraDistance: 6
+    cameraPitch: 50
+    minimapRadius: 22
+    litX0: 8
+    litY0: 6
+    litX1: 92
+    litY1: 70
+    darkSoft: 4
+    part2Burnt: 0.5
+    sandRoadWidth: 2
+    wheatHeight: 0.17
+    fireSize: 1
+    healFxSeconds: 0.8
+    wheatEarsMax: 300
+    wallPatrolCells: 3
+    wallPatrolSeconds: 8
+    ramEvery: 3
+    towerEvery: 4
+    ramHealthMult: 6
+    ramDamageMult: 8
+    towerHealthMult: 5
+    siegeSpeed: 0.6
+    towerCrew: 4
+    towerDockCells: 3.5
+    towerStaySeconds: 20
   tutorialBuildSeconds: 5
   tutorialStartPeople: 3
   tutorialKingHealBelow: 0.25
@@ -8694,77 +8780,77 @@ MonoBehaviour:
     descKey: '#booster_desc_lumberjack'
     effect: 1.5
     durationSeconds: 300
-    priceCrystals: 0
+    priceCrystals: 10
     ad: 1
   - id: stonecutter
     nameKey: '#booster_stonecutter'
     descKey: '#booster_desc_stonecutter'
     effect: 1.5
     durationSeconds: 300
-    priceCrystals: 0
+    priceCrystals: 10
     ad: 1
   - id: abundance
     nameKey: '#booster_abundance'
     descKey: '#booster_desc_abundance'
     effect: 1
     durationSeconds: 300
-    priceCrystals: 0
+    priceCrystals: 10
     ad: 1
   - id: treasury
     nameKey: '#booster_treasury'
     descKey: '#booster_desc_treasury'
     effect: 1.2
     durationSeconds: 600
-    priceCrystals: 0
+    priceCrystals: 15
     ad: 1
   - id: architect
     nameKey: '#booster_architect'
     descKey: '#booster_desc_architect'
     effect: 1
-    durationSeconds: 180
-    priceCrystals: 0
+    durationSeconds: 120
+    priceCrystals: 5
     ad: 1
   - id: scholar
     nameKey: '#booster_scholar'
     descKey: '#booster_desc_scholar'
     effect: 1
-    durationSeconds: 180
-    priceCrystals: 0
+    durationSeconds: 120
+    priceCrystals: 5
     ad: 1
   - id: battle_spirit
     nameKey: '#booster_battle_spirit'
     descKey: '#booster_desc_battle_spirit'
-    effect: 0.5
+    effect: 0.25
     durationSeconds: 180
-    priceCrystals: 0
+    priceCrystals: 15
     ad: 1
   - id: fortitude
     nameKey: '#booster_fortitude'
     descKey: '#booster_desc_fortitude'
     effect: 0.25
-    durationSeconds: 300
-    priceCrystals: 0
+    durationSeconds: 180
+    priceCrystals: 15
     ad: 1
   - id: recruit
     nameKey: '#booster_recruit'
     descKey: '#booster_desc_recruit'
     effect: 0.5
-    durationSeconds: 300
-    priceCrystals: 0
+    durationSeconds: 180
+    priceCrystals: 5
     ad: 1
   - id: repair
     nameKey: '#booster_repair'
     descKey: '#booster_desc_repair'
     effect: 1
     durationSeconds: 0
-    priceCrystals: 0
+    priceCrystals: 5
     ad: 1
   - id: settlers
     nameKey: '#booster_settlers'
     descKey: '#booster_desc_settlers'
     effect: 20
     durationSeconds: 0
-    priceCrystals: 0
+    priceCrystals: 10
     ad: 1
   offerBundles:
   - id: builder_1
