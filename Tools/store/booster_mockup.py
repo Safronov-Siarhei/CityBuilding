@@ -281,7 +281,36 @@ def ground(W, H):
     return img
 
 
-def building(img, path, cx, base_y, size, look=None, colours=None, icons=None, t=0.0):
+def swirl(img, cx, base_y, size, colour, front):
+    """Look C (the user, 2026-11-12, after a well-known town builder): streams of wind winding up round
+    the building. Each streak is a tapering arc on a tilted ellipse; `front` draws the halves in front of
+    the building, else the halves behind it."""
+    import math
+    layer = Image.new('RGBA', img.size, (0, 0, 0, 0))
+    g = ImageDraw.Draw(layer)
+    rw, rh = size * 0.58, size * 0.17
+    for k, (h, a0, span) in enumerate(((0.02, 200, 230), (0.20, 20, 220), (0.38, 250, 200), (0.56, 60, 170))):
+        cy = base_y - 20 - size * h
+        n = 40
+        for i in range(n):
+            t0 = a0 + span * i / n
+            t1 = a0 + span * (i + 1) / n
+            ang = math.radians((t0 + t1) / 2)
+            is_front = math.sin(ang) > 0
+            if is_front != front:
+                continue
+            f = i / n                             # thin at the tail, thick and bright at the head
+            w = 2 + 8 * f
+            al = int(40 + 160 * f)
+            p0 = (cx + rw * math.cos(math.radians(t0)), cy + rh * math.sin(math.radians(t0)) - size * 0.12 * (t0 - a0) / span)
+            p1 = (cx + rw * math.cos(math.radians(t1)), cy + rh * math.sin(math.radians(t1)) - size * 0.12 * (t1 - a0) / span)
+            g.line([p0, p1], fill=colour + (al,), width=int(w))
+    glow = layer.filter(ImageFilter.GaussianBlur(5))
+    img.alpha_composite(glow)
+    img.alpha_composite(layer)
+
+
+def building(img, path, cx, base_y, size, look=None, colours=None, icons=None, t=0.0, wind=(120, 240, 110)):
     """A building's picture standing on `base_y`. look 'A': a gold ring + rising motes + a badge;
     look 'B': a gold outline glow + the badge."""
     pic = Image.open(UI + path).convert('RGBA')
@@ -301,7 +330,11 @@ def building(img, path, cx, base_y, size, look=None, colours=None, icons=None, t
         glow.putalpha(a.filter(ImageFilter.MaxFilter(13)).filter(ImageFilter.GaussianBlur(7)))
         img.alpha_composite(glow, (x0, y0))
         img.alpha_composite(glow, (x0, y0))
+    if look == 'C':
+        swirl(img, cx, base_y, size, wind, False)
     img.alpha_composite(pic, (x0, y0))
+    if look == 'C':
+        swirl(img, cx, base_y, size, wind, True)
     if look == 'A':
         d = ImageDraw.Draw(img)
         import random
@@ -323,14 +356,14 @@ def hud():
     stone = BOOSTERS[1]
     lab = BOOSTERS[5]
     building(img, 'Icons/Cottage.png', 300, 600, 260)
-    building(img, 'Icons/Sawmill.png', 640, 560, 300, 'A', sawmill[5], sawmill[6])
-    building(img, 'Icons/Quarry.png', 1000, 620, 290, 'A', stone[5], stone[6])
-    building(img, 'Icons/Laboratory.png', 1380, 560, 300, 'B', lab[5], lab[6])
+    building(img, 'Icons/Sawmill.png', 640, 560, 300, 'C', sawmill[5], sawmill[6])
+    building(img, 'Icons/Quarry.png', 1000, 620, 290, 'C', stone[5], stone[6], wind=(130, 210, 255))
+    building(img, 'Icons/Laboratory.png', 1380, 560, 300, 'C', lab[5], lab[6], wind=(255, 214, 90))
     building(img, 'Icons/Cottage.png', 1700, 900, 240)
     d = ImageDraw.Draw(img)
     med = m.R + 'Assets/_Project/Resources/Fonts/Rubik-Medium.ttf'
-    m.text(d, (820, 640), 'Вид А: золотое кольцо, искры, значок', 30, 'white', stroke=3, stroke_fill=(30, 40, 20), path=med)
-    m.text(d, (1380, 640), 'Вид Б: золотой контур, значок', 30, 'white', stroke=3, stroke_fill=(30, 40, 20), path=med)
+    for x, t in ((640, 'зелёный'), (1000, 'голубой'), (1380, 'золотой')):
+        m.text(d, (x, 650), 'Вид В: поток, ' + t, 28, 'white', stroke=3, stroke_fill=(30, 40, 20), path=med)
 
     # the top bar (schematic: the game's own chips), crystals number-then-icon
     chips = [('Res_Wood', '120'), ('Res_Stone', '80'), ('Res_Coins', '350'), ('Res_UpgradeCrystal', '989'),
