@@ -250,7 +250,9 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
 - **Inventory (the user's idea, 2026-11-12):** «Запасы» lists only the boosters the player HAS (stock > 0
   or running); resources: ALL of them, as now (the user: else a player may never learn they exist).
   Concept v2 `Booster_Inventory.png`: resources, a gap, the owned boosters (running one gold with its
-  time), tapping one opens its window («Включить», or «Продлить» while it runs).
+  time), tapping one opens its window («Включить», or «Продлить» while it runs). v3: compact tiles, SIX a
+  row (icon, ×N, name; time instead of the name while running), the effect only in the window, so all 11
+  fit two rows (`Booster_Inventory_Full.png`).
 - **Concepts:** `Tools/store/booster_mockup.py` -> `Design/store/Booster_Shop.png`, `Booster_Inventory.png`,
   `Booster_Hud.png` (icons are placeholder medallions; real ones rendered for approval).
 

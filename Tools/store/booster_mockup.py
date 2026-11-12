@@ -184,12 +184,15 @@ def shop():
 PANEL = (41, 46, 38)
 
 
-def inventory():
+OWNED = [(0, 1, '3:30'), (4, 1, None), (6, 3, None), (9, 1, None)]
+
+
+def inventory(out='Booster_Inventory.png'):
     W, H = 1920, 1080
     img = backdrop(W, H)
     d = ImageDraw.Draw(img)
     # the inventory card as in the game (dark, three columns), a little wider for the boosters
-    pw, ph = 1080, 870
+    pw, ph = 1080, 690 + 188 * ((len(OWNED) + 5) // 6)
     x0, y0 = (W - pw) // 2 - 330, (H - ph) // 2
     d.rounded_rectangle((x0, y0, x0 + pw, y0 + ph), 24, fill=PANEL, outline=(120, 130, 110), width=3)
     m.text(d, (x0 + pw / 2, y0 + 52), 'Запасы', 44, 'white')
@@ -216,30 +219,27 @@ def inventory():
     # the gap, then «Бустеры»: one cell per booster, ×N, the running one with its time, an empty one «Купить»
     by = y0 + 150 + 3 * (rh + 10) + 50
     label(by, 'Бустеры')
-    # only the boosters the player HAS (the user, 2026-11-12): stock > 0, or running
-    owned = [(0, 1, '3:30'), (4, 1, None), (6, 3, None), (9, 1, None)]
-    bw, bh = (pw - 80 - 24) / 3, 150
-    stocks = {i: n for i, n, _ in owned}
-    running = {i: t for i, _, t in owned if t}
+    # only the boosters the player HAS (the user, 2026-11-12): stock > 0, or running. Compact tiles, six a
+    # row, so even all of them fit two rows; the effect is in the activation window.
+    owned = [(i, n, t) for i, n, t in OWNED]
+    cols = 6
+    bw, bh = (pw - 80 - (cols - 1) * 12) / cols, 176
     for k, (i, n, t) in enumerate(owned):
         name, effect, mins, price, ad, colours, icons = BOOSTERS[i]
-        cx0 = x0 + 40 + (k % 3) * (bw + 12)
-        cy0 = by + 34 + (k // 3) * (bh + 12)
-        on = i in running
+        cx0 = x0 + 40 + (k % cols) * (bw + 12)
+        cy0 = by + 30 + (k // cols) * (bh + 12)
+        on = t is not None
         m.over(img, lambda g: g.rounded_rectangle((cx0, cy0, cx0 + bw, cy0 + bh), 14,
                                                   fill=(255, 220, 120, 40) if on else (255, 255, 255, 14),
                                                   outline=(255, 210, 90, 255) if on else None, width=3))
         d = ImageDraw.Draw(img)
-        med = medallion(110, colours, icons, arrow=False)
-        img.alpha_composite(med, (int(cx0 + 14), int(cy0 + 20)))
+        img.alpha_composite(medallion(104, colours, icons, arrow=False), (int(cx0 + bw / 2 - 52), int(cy0 + 12)))
         d = ImageDraw.Draw(img)
-        m.text(d, (cx0 + 138, cy0 + 40), name, 28, 'white' if stocks[i] else (150, 150, 140), anchor='lm')
+        m.text(d, (cx0 + bw - 10, cy0 + 100), f'×{n}', 30, 'white', anchor='rm', stroke=3, stroke_fill=(20, 20, 10))
         if on:
-            m.text(d, (cx0 + 138, cy0 + 82), 'Работает', 24, (255, 214, 110), anchor='lm', path=m.R + 'Assets/_Project/Resources/Fonts/Rubik-Medium.ttf')
-            m.text(d, (cx0 + 138, cy0 + 116), running[i], 30, (255, 230, 150), anchor='lm')
-        if not on:
-            m.text(d, (cx0 + 138, cy0 + 86), effect, 22, (210, 205, 190), anchor='lm', path=m.R + 'Assets/_Project/Resources/Fonts/Rubik-Medium.ttf')
-        m.text(d, (cx0 + bw - 16, cy0 + bh - 26), f'×{stocks[i]}', 34, 'white', anchor='rm', stroke=3, stroke_fill=(20, 20, 10))
+            m.text(d, (cx0 + bw / 2, cy0 + 146), t, 26, (255, 220, 120), stroke=2, stroke_fill=(30, 20, 10))
+        else:
+            m.text(d, (cx0 + bw / 2, cy0 + 146), name, 21, 'white')
 
     # the activation window, opened by tapping «Зодчий»
     ax0, ay0, aw, ah = x0 + pw + 60, 170, 660, 740
@@ -262,7 +262,7 @@ def inventory():
     m.paste(img, m.SHOP + 'Close.png', (ax0 + aw - 70, ay0 - 30, ax0 + aw + 40, ay0 + 80))
     d = ImageDraw.Draw(img)
     m.text(d, (ax0 + aw / 2, ay0 + ah + 60), 'если бустер уже работает — «Продлить»', 26, (230, 220, 200), path=med)
-    img.convert('RGB').save(OUT + 'Booster_Inventory.png')
+    img.convert('RGB').save(OUT + out)
 
 
 # ------------------------------------------------------------------ 3. the town: the HUD row, boosted buildings, the hint
