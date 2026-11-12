@@ -344,6 +344,27 @@
   4. Only after that is the cutscene video made.
 - Model renders go to the user for approval before anything enters the game.
 
+## Mission 2 «Оборона города» (the user, 2026-11-12; DESIGN, nothing built)
+- **Cutscene before it (to be discussed in detail):** Ардан runs in through the gates; the captain of the guard
+  stands there; Ардан starts telling him big creatures attacked his village; a soldier on the wall shouts the
+  enemy is coming; the alarm, the gates close; the captain calls a CAVALRYMAN and orders him to ride to the
+  capital and tell the king; then: «А нам стоит только надеяться, что помощь успеет вовремя».
+- **Part 1 -- the outer town:** hold out a set time; orcs must not reach the gates into the town centre.
+  The orcs ALWAYS break the outer defences (tuned so); the point is that they must not break the inner ones in time.
+- **Cutscene between the parts (to be discussed later):** the cavalryman reaches the capital and tells the king.
+  (My suggestion, not decided: the King leads the relief -- the sandbox's playable hero.)
+- **Part 2 -- the town centre:** starts at the INNER walls, the outer works ruined or burning; hold out till the
+  relief comes. Lost if the orcs break ANY gate of the second (inner) line.
+- **End:** a short scene -- the relief arrives and cuts down every orc in the town.
+- **Play:** the player controls ONLY Ардан: he gets a weapon and ONE ability; the guards fight on their own;
+  nothing else to command or build. Taken from Invasion: the town is attacked from THREE directions, the player
+  must run to help on each side in time.
+- **Two lines of defence**, each with gates on the three ways.
+- **Failure:** restart from the start of the part; a SAVE after part 1 (a loss in part 2 restarts part 2).
+- **Length:** about 8-10 minutes in all.
+- **Open:** the weapon and the ability; what happens when Ардан falls; how the time is split between the parts;
+  the town's map (to be approved before anything is built, as for mission 1); both cutscenes.
+
 ## Ардан (the model)
 `CineArdan`, about 1 750 tris, in the «Кино» collection of `Buildings-Size1-Models.blend`.
 It uses the shared palette material, and only palette colours (the palette is full).
