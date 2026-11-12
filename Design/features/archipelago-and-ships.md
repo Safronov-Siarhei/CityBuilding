@@ -76,6 +76,13 @@ water, the ship inside -- from above mostly roof), B «Стапель» (a works
 with a half-planked ship, scaffolding, an A-frame crane), C «Док» (stone quay round a basin with a moored
 ship, an office tower with a blue spire, a storehouse, a treadwheel crane). 1.4-3k tris. SENT for the user's
 choice; then levels 1-5 and icons (it has no level 2-5 icons yet).
+- **The user chose B «Стапель» (2026-11-12).** Levels 1-5 as pure builders in `Tools/blender/shipyard1.py`
+  (L1 workshop + slipway + a scout-size ship half planked + A-frame crane; L2 timber upper storey, walkways,
+  a transport-size ship, taller crane; L3 stone ground floor with quoins, finials + weathervane, paved quay,
+  a gantry at the slip's landward end, a two-masted warship with furled sails, two banners; L4 glazed roof +
+  pennant; L5 gilded), 1.4-2.8k tris; review renders `render_shipyard_levels.py` -> `Design/shipyard_levels.png`,
+  SENT for approval. NOT in the game: after the yes, ships.py builds Shipyard1-lvl1..5 from it, export,
+  BuildingData level models, icons (render_icons.py).
 
 ## Placing the Shipyard (fixed 2026-10-29)
 - 2026-11-05 (the user, whole game): the Shipyard floated over a low beach (every building stands at the
