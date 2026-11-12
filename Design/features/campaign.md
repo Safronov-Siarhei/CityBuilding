@@ -344,6 +344,45 @@
   4. Only after that is the cutscene video made.
 - Model renders go to the user for approval before anything enters the game.
 
+## Mission 2 «Оборона города» (the user, 2026-11-12; DESIGN, nothing built)
+- **Cutscene before it (to be discussed in detail):** Ардан runs in through the gates; the captain of the guard
+  stands there; Ардан starts telling him big creatures attacked his village; a soldier on the wall shouts the
+  enemy is coming; the alarm, the gates close; the captain calls a CAVALRYMAN and orders him to ride to the
+  capital and tell the king; then: «А нам стоит только надеяться, что помощь успеет вовремя».
+- **Part 1 -- the outer town:** hold out a set time; orcs must not reach the gates into the town centre.
+  The orcs ALWAYS break the outer defences (tuned so); the point is that they must not break the inner ones in time.
+- **Cutscene between the parts (to be discussed later):** the cavalryman reaches the capital and tells the king.
+  (My suggestion, not decided: the King leads the relief -- the sandbox's playable hero.)
+- **Part 2 -- the town centre:** starts at the INNER walls, the outer works ruined or burning; hold out till the
+  relief comes. Lost if the orcs break ANY gate of the second (inner) line.
+- **End:** a short scene -- the relief arrives and cuts down every orc in the town.
+- **Play:** the player controls ONLY Ардан: he gets a weapon and ONE ability; the guards fight on their own;
+  nothing else to command or build. Taken from Invasion: the town is attacked from THREE directions, the player
+  must run to help on each side in time.
+- **Two lines of defence**, each with gates on the three ways.
+- **Failure:** restart from the start of the part; a SAVE after part 1 (a loss in part 2 restarts part 2).
+- **Length:** about 8-10 minutes in all.
+- **Ардан (the user, 2026-11-12):** a SWORD and the ability BATTLE CRY (guards near him hit harder and heal);
+  fallen, he rises again in the town centre after a delay; controls as mission 1: the joystick, he strikes the
+  nearest orc by himself, the cry on its own button.
+- **Defaults I proposed (not objected to yet):** a health bar over every gate, the minimap with a blinking «!»
+  on the attacked way (from Invasion), a «до подкрепления» timer at the top, the time split about evenly (sheet).
+- **Town plan v1 SENT for approval (2026-11-12):** `Design/mission2_map_v1.png` (`Tools/campaign/mission2_map.py`):
+  the mission-1 river at the top, orcs over three fords (upstream, the bridge's wreck, downstream) to the W/N/E
+  outer gates; outer wall radius 28 cells (part 1) round the lower town (~120 houses, a ring street inside it);
+  inner wall radius 12 (part 2) with three gates and its own ring street; the square (Ардан rises) inside; the
+  castle on a rock over a lake at the back (never attacked), the capital road over the lake (the cavalryman
+  leaves, the relief comes). Outer gate to gate ~31 cells, inner ~11, the whole town ~56 x 34 cells.
+- **Plan v1 REJECTED in part (the user):** the game's walls are square -- a round wall means new models; fields
+  (to burn) and forests must lie under the outer walls.
+- **Town plan v2 APPROVED by the user (2026-11-12):** `Design/mission2_map_v2.png` (same script, v1 png kept): rectangular walls
+  on the grid from the game's pieces (stone wall, towers, Barbican gates); outer 44 x 32 cells with the W/E gates
+  on the side walls near the north corners (all three fronts closer: W/E to N ~26 cells along the streets),
+  inner 18 x 15 (~12 cells gate to gate), a street along the inside of each wall; outside: wheat fields with
+  barns/haystacks and pastures under the walls, forest between and on the flanks, the orcs' roads from the three
+  fords through the forest and the fields; castle on the cliff, the capital road over the lake.
+- **Open:** both cutscenes (to discuss before building them); the build itself.
+
 ## Ардан (the model)
 `CineArdan`, about 1 750 tris, in the «Кино» collection of `Buildings-Size1-Models.blend`.
 It uses the shared palette material, and only palette colours (the palette is full).
