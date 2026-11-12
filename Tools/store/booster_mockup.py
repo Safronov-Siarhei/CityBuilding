@@ -25,13 +25,18 @@ INK = (84, 50, 24)
 CREAM = (255, 246, 222)
 
 # name, effect line, minutes, crystals, ad minutes, colours (top, bottom), inner icons
-BOOSTERS = [
-    ('Урожай', '+50% дерева, камня', 15, 20, 5, ((120, 200, 90), (40, 110, 40)), ['Icons/Res_Wood.png', 'Icons/Res_Stone.png']),
-    ('Ремесло', 'Мастерские +50%', 15, 20, 5, ((255, 180, 90), (180, 90, 20)), ['Icons/Res_IronBar.png']),
-    ('Зодчий', 'Стройка ×2 быстрее', 15, 30, 5, ((120, 180, 255), (40, 80, 180)), ['Glyphs/Hammer.png']),
-    ('Учёный', 'Исследования ×2', 15, 30, 5, ((200, 150, 255), (100, 50, 180)), ['Icons/Laboratory.png']),
-    ('Боевой дух', '+25% урона армии', 10, 25, 3, ((255, 120, 110), (160, 30, 30)), ['Glyphs/Swords.png']),
-    ('Готово!', 'Достроить сразу', 0, 40, 0, ((255, 230, 120), (210, 140, 20)), ['Glyphs/Upgrade.png']),
+BOOSTERS = [   # the user's list, round 5 (2026-11-12): no tiers, an ad OR crystals for the same time
+    ('Лесоруб', 'Рубка дерева ×1,5', 5, 20, 5, ((120, 200, 90), (40, 110, 40)), ['Icons/Res_Wood.png']),
+    ('Каменотёс', 'Добыча камня ×1,5', 5, 20, 5, ((190, 190, 180), (100, 100, 96)), ['Icons/Res_Stone.png']),
+    ('Изобилие', 'Еда +1 за цикл', 5, 20, 5, ((255, 200, 110), (200, 110, 30)), ['Icons/Res_Food.png']),
+    ('Казна', 'Налог ×1,2', 10, 20, 10, ((255, 230, 120), (200, 140, 20)), ['Icons/Res_Coins.png']),
+    ('Зодчий', 'Стройка мгновенно', 3, 20, 3, ((120, 180, 255), (40, 80, 180)), ['Glyphs/Hammer.png']),
+    ('Учёный', 'Исследования мгновенно', 3, 20, 3, ((200, 150, 255), (100, 50, 180)), ['Icons/Laboratory.png']),
+    ('Боевой дух', '+50% урона армии', 3, 20, 3, ((255, 120, 110), (160, 30, 30)), ['Glyphs/Swords.png']),
+    ('Стойкость', 'Прочность зданий +25%', 5, 20, 5, ((150, 170, 200), (60, 80, 120)), ['Glyphs/Hud_Shield.png']),
+    ('Вербовка', 'Найм в 2 раза дешевле', 5, 20, 5, ((240, 150, 90), (150, 70, 30)), ['Icons/PortraitSpearman.png']),
+    ('Ремонт', 'Чинит все здания', 0, 20, 1, ((140, 220, 200), (30, 120, 110)), ['Glyphs/Heal.png']),
+    ('Новосёлы', '+20 жителей', 0, 20, 1, ((255, 170, 190), (180, 70, 100)), ['Icons/Res_Population.png']),
 ]
 
 
@@ -211,52 +216,52 @@ def inventory():
     # the gap, then «Бустеры»: one cell per booster, ×N, the running one with its time, an empty one «Купить»
     by = y0 + 150 + 3 * (rh + 10) + 50
     label(by, 'Бустеры')
-    stocks = [2, 0, 1, 0, 3, 0]
-    running = {0: '12:30'}
+    # only the boosters the player HAS (the user, 2026-11-12): stock > 0, or running
+    owned = [(0, 1, '3:30'), (4, 1, None), (6, 3, None), (9, 1, None)]
     bw, bh = (pw - 80 - 24) / 3, 150
-    for i, (name, effect, mins, price, ad, colours, icons) in enumerate(BOOSTERS):
-        cx0 = x0 + 40 + (i % 3) * (bw + 12)
-        cy0 = by + 34 + (i // 3) * (bh + 12)
+    stocks = {i: n for i, n, _ in owned}
+    running = {i: t for i, _, t in owned if t}
+    for k, (i, n, t) in enumerate(owned):
+        name, effect, mins, price, ad, colours, icons = BOOSTERS[i]
+        cx0 = x0 + 40 + (k % 3) * (bw + 12)
+        cy0 = by + 34 + (k // 3) * (bh + 12)
         on = i in running
         m.over(img, lambda g: g.rounded_rectangle((cx0, cy0, cx0 + bw, cy0 + bh), 14,
                                                   fill=(255, 220, 120, 40) if on else (255, 255, 255, 14),
                                                   outline=(255, 210, 90, 255) if on else None, width=3))
         d = ImageDraw.Draw(img)
-        med = medallion(110, colours, icons, arrow=mins > 0)
-        if not stocks[i]:
-            med.putalpha(med.getchannel('A').point(lambda a: int(a * 0.45)))
+        med = medallion(110, colours, icons, arrow=False)
         img.alpha_composite(med, (int(cx0 + 14), int(cy0 + 20)))
         d = ImageDraw.Draw(img)
         m.text(d, (cx0 + 138, cy0 + 40), name, 28, 'white' if stocks[i] else (150, 150, 140), anchor='lm')
         if on:
             m.text(d, (cx0 + 138, cy0 + 82), 'Работает', 24, (255, 214, 110), anchor='lm', path=m.R + 'Assets/_Project/Resources/Fonts/Rubik-Medium.ttf')
             m.text(d, (cx0 + 138, cy0 + 116), running[i], 30, (255, 230, 150), anchor='lm')
-        if stocks[i]:
-            m.text(d, (cx0 + bw - 16, cy0 + bh - 26), f'×{stocks[i]}', 34, 'white', anchor='rm', stroke=3, stroke_fill=(20, 20, 10))
-        else:
-            m.text(d, (cx0 + 138, cy0 + 92), 'Купить', 28, (120, 190, 255), anchor='lm')
+        if not on:
+            m.text(d, (cx0 + 138, cy0 + 86), effect, 22, (210, 205, 190), anchor='lm', path=m.R + 'Assets/_Project/Resources/Fonts/Rubik-Medium.ttf')
+        m.text(d, (cx0 + bw - 16, cy0 + bh - 26), f'×{stocks[i]}', 34, 'white', anchor='rm', stroke=3, stroke_fill=(20, 20, 10))
 
-    # the activation window, opened by tapping «Урожай»
+    # the activation window, opened by tapping «Зодчий»
     ax0, ay0, aw, ah = x0 + pw + 60, 170, 660, 740
     m.over(img, lambda g: g.rounded_rectangle((ax0 + 6, ay0 + 12, ax0 + aw + 6, ay0 + ah + 12), 30, fill=(0, 0, 0, 120)))
     d = ImageDraw.Draw(img)
     d.rounded_rectangle((ax0, ay0, ax0 + aw, ay0 + ah), 30, fill=(250, 236, 204), outline=(150, 100, 46), width=6)
-    name, effect, mins, price, ad, colours, icons = BOOSTERS[0]
-    img.alpha_composite(medallion(220, colours, icons), (ax0 + aw // 2 - 110, ay0 + 40))
+    name, effect, mins, price, ad, colours, icons = BOOSTERS[4]
+    img.alpha_composite(medallion(220, colours, icons, arrow=False), (ax0 + aw // 2 - 110, ay0 + 40))
     d = ImageDraw.Draw(img)
     m.text(d, (ax0 + aw / 2, ay0 + 300), name, 54, INK)
     med = m.R + 'Assets/_Project/Resources/Fonts/Rubik-Medium.ttf'
-    m.text(d, (ax0 + aw / 2, ay0 + 360), 'Сборщики приносят на 50% больше', 30, (110, 72, 36), path=med)
-    m.text(d, (ax0 + aw / 2, ay0 + 400), 'дерева и камня', 30, (110, 72, 36), path=med)
-    m.text(d, (ax0 + aw / 2, ay0 + 456), 'Работает: ещё 12:30  ·  в запасе ×2', 30, (60, 130, 50))
+    m.text(d, (ax0 + aw / 2, ay0 + 360), 'Всё, что начнёшь строить или улучшать', 30, (110, 72, 36), path=med)
+    m.text(d, (ax0 + aw / 2, ay0 + 400), '3 минуты, достраивается сразу', 30, (110, 72, 36), path=med)
+    m.text(d, (ax0 + aw / 2, ay0 + 456), 'В запасе ×1', 30, (60, 130, 50))
     gb = (ax0 + 60, ay0 + 510, ax0 + aw - 60, ay0 + 619)
     m.paste(img, m.SHOP + 'ButtonGreenWide.png', gb, keep=False)
     d = ImageDraw.Draw(img)
-    m.text(d, ((gb[0] + gb[2]) / 2, (gb[1] + gb[3]) / 2 - 4), 'Продлить +15 мин', 44, 'white', stroke=3, stroke_fill=(20, 80, 20))
+    m.text(d, ((gb[0] + gb[2]) / 2, (gb[1] + gb[3]) / 2 - 4), 'Включить', 48, 'white', stroke=3, stroke_fill=(20, 80, 20))
     m.text(d, (ax0 + aw / 2, ay0 + 672), 'Время идёт только во время игры', 26, (140, 100, 60), path=med)
     m.paste(img, m.SHOP + 'Close.png', (ax0 + aw - 70, ay0 - 30, ax0 + aw + 40, ay0 + 80))
     d = ImageDraw.Draw(img)
-    m.text(d, (ax0 + aw / 2, ay0 + ah + 60), 'с нулём в запасе — кнопка «Купить» (ведёт в лавку)', 26, (230, 220, 200), path=med)
+    m.text(d, (ax0 + aw / 2, ay0 + ah + 60), 'если бустер уже работает — «Продлить»', 26, (230, 220, 200), path=med)
     img.convert('RGB').save(OUT + 'Booster_Inventory.png')
 
 

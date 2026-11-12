@@ -248,7 +248,9 @@ reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Sa
   their work is in question, so the ore booster waits until the mines are settled. Its intent so far:
   ×1.5 to the ore-digging action of mine workers and citizens, never walking. 11 boosters are built first.
 - **Inventory (the user's idea, 2026-11-12):** «Запасы» lists only the boosters the player HAS (stock > 0
-  or running); maybe resources too -- under discussion.
+  or running); resources: ALL of them, as now (the user: else a player may never learn they exist).
+  Concept v2 `Booster_Inventory.png`: resources, a gap, the owned boosters (running one gold with its
+  time), tapping one opens its window («Включить», or «Продлить» while it runs).
 - **Concepts:** `Tools/store/booster_mockup.py` -> `Design/store/Booster_Shop.png`, `Booster_Inventory.png`,
   `Booster_Hud.png` (icons are placeholder medallions; real ones rendered for approval).
 
