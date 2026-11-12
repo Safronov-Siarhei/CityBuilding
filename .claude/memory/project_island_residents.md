@@ -1,6 +1,6 @@
 ---
 name: project_island_residents
-description: AGREED 2026-11-12, not built: residents bound to their house, workers/soldiers only from the building's island, Town Hall hidden residents; one open point (soldier whose house burns)
+description: AGREED 2026-11-12, not built: residents bound to their house, workers/soldiers only from the building's island, Town Hall hidden residents; all points settled
 metadata:
   type: project
 ---
@@ -10,7 +10,7 @@ leave; buildings and the Barracks take people only from their own island, a «no
 notice when none; soldiers keep their house place; the Town Hall silently holds a few permanent residents
 (hidden anti-loss); people move between islands only by building houses there; hunger removes from any
 house; old saves irrelevant. Full rules: Design/features/citizens-and-workforce.md «AGREED, NOT BUILT».
-OPEN: a soldier whose house is destroyed (proposed: stays in the army homeless, leaves on disband).
+A soldier whose house is destroyed leaves AT ONCE with its residents (the user's answer).
 
 **Why:** a town-wide pool would let islands overpopulate when the main island's houses burn.
-**How to apply:** build only when the user says go; settle the soldier question first.
+**How to apply:** build only when the user says go; every rule is settled.

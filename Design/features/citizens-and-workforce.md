@@ -78,8 +78,8 @@ others when the main island's houses burn; work on another island had no way to 
 - A building takes workers only from residents of ITS island; none free there -> a «no workers» mark
   over it and ONE notice («на этом острове нет жителей»), shown once.
 - Barracks (and other hiring buildings) hire only from their island; a soldier KEEPS his place in his
-  house (the house does not grow a replacement). OPEN: what happens to a soldier whose house is
-  destroyed -- proposed: he stays in the army, homeless, and on disband leaves the town.
+  house (the house does not grow a replacement). A soldier whose house is burnt or demolished LEAVES
+  AT ONCE with its residents (the user, 2026-11-12: «уходит сразу»).
 - The Town Hall is a house too: a few permanent residents, made silently (never shown as making
   people) -- a hidden guard against an outright loss.
 - Moving people between islands = only by building new houses there (no ferrying of citizens).
