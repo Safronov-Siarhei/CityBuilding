@@ -83,6 +83,13 @@ choice; then levels 1-5 and icons (it has no level 2-5 icons yet).
   pennant; L5 gilded), 1.4-2.8k tris; review renders `render_shipyard_levels.py` -> `Design/shipyard_levels.png`,
   SENT for approval. NOT in the game: after the yes, ships.py builds Shipyard1-lvl1..5 from it, export,
   BuildingData level models, icons (render_icons.py).
+- **The ship redone (the user, 2026-11-12: building liked, ship «скучный»).** `ship()` in shipyard1.py
+  replaces the stepped `hull()` on the slip: 15 stations, fine bow / full stern, dark planking below + mid
+  above, a curved stem, keel, sternpost + rudder, a raised stern castle. Stage 1 (L1) bare ribs over the
+  lower planking + a framed castle; 2 (L2) planked, blue band strakes, castle built; 3 (L3-5) gun ports on
+  the band, gilded side rails, lit stern windows + lanterns, gold figurehead, pennants at the mastheads.
+  TRAP: band/rail must be SIDE strips -- a full-width box floods the whole deck with the colour. 2-3.8k tris.
+  Re-rendered `Design/shipyard_levels.png`, SENT for approval.
 
 ## Placing the Shipyard (fixed 2026-10-29)
 - 2026-11-05 (the user, whole game): the Shipyard floated over a low beach (every building stands at the

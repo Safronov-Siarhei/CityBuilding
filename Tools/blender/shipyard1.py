@@ -50,6 +50,81 @@ def hull(b, cx, cy, z0, length, beam, depth, colour='wood_mid', rail='wood_dark'
     b.box(cx - 0.04, cx + 0.04, cy - length * 0.5 - 0.12, cy - length * 0.5 + 0.1, z0 + 0.05, z0 + depth * 1.35, rail)
 
 
+def ship(b, cy, z0, length, beam, depth, stage, band='banner_blue'):
+    """The ship on the stocks, bow to the sea (-y), stern to the land, centred on x = 0 (the user,
+    2026-11-12: the plain stepped hull was «скучный»). Two-tone planking (dark below, mid above), a
+    painted band and a rail along the sheer, a keel and a curved stem, a rudder, a raised stern castle
+    with windows. `stage`: 1 = being built (bare ribs above the lower planking, the castle a frame),
+    2 = planked to the band, the castle built but bare, 3 = finished (gun ports on the band, gold rail
+    and trim, lit stern windows, a gilded figurehead)."""
+    n = 15
+    half = length / 2
+    planked = {1: 0.45, 2: 0.82, 3: 1.0}[stage]
+
+    def width(t):            # t in -0.5..0.5 along the hull; the bow (t<0) is finer than the stern
+        k = abs(t) * 2
+        return beam * (1.0 - k ** (2.0 if t < 0 else 3.0) * (0.92 if t < 0 else 0.55))
+
+    def sheer(t):
+        return z0 + depth + (abs(t) * 2) ** 2 * depth * (0.45 if t < 0 else 0.3)
+
+    for k in range(n):
+        t0, t1 = -0.5 + k / n, -0.5 + (k + 1) / n
+        mid = (t0 + t1) / 2
+        w = width(mid)
+        top = sheer(mid)
+        y0, y1 = cy + t0 * length, cy + t1 * length
+        low_top = z0 + (top - z0) * 0.42
+        b.box(-w * 0.62, w * 0.62, y0, y1, z0, low_top, 'wood_dark')                  # below the waterline: narrower, dark
+        up_top = z0 + (top - z0) * planked
+        if up_top > low_top:
+            b.box(-w / 2, w / 2, y0, y1, low_top, up_top, 'wood_mid')
+        if stage >= 2:
+            bz = z0 + (top - z0) * 0.72
+            for sd in (-1, 1):                                                          # the painted band, a strake on each side
+                b.box(min(sd * w / 2, sd * (w / 2 + 0.014)), max(sd * w / 2, sd * (w / 2 + 0.014)), y0, y1, bz, bz + 0.07, band)
+            if stage == 3 and -0.32 < mid < 0.3 and k % 2 == 0:
+                for s in (-1, 1):                                                       # gun ports on it
+                    b.box(s * (w / 2 + 0.014) - 0.012, s * (w / 2 + 0.014) + 0.012, (y0 + y1) / 2 - 0.035,
+                          (y0 + y1) / 2 + 0.035, bz + 0.012, bz + 0.058, 'stone_dark')
+        if stage == 3:
+            for sd in (-1, 1):                                                          # the gilded rail on each side
+                b.box(min(sd * (w / 2 - 0.04), sd * (w / 2 + 0.015)), max(sd * (w / 2 - 0.04), sd * (w / 2 + 0.015)),
+                      y0, y1, top, top + 0.07, 'gold')
+        if planked < 1.0:                                                               # bare ribs above the planking
+            for s in (-1, 1):
+                b.rod((s * w * 0.5, (y0 + y1) / 2, up_top), (s * w * 0.56, (y0 + y1) / 2, top), 0.045, 'wood_light')
+    # the keel, the curved stem rising at the bow, the sternpost and the rudder
+    b.box(-0.035, 0.035, cy - half + 0.05, cy + half - 0.05, z0 - 0.05, z0 + 0.02, 'wood_dark')
+    bow = cy - half
+    pts = [(bow + 0.05, z0 + 0.02), (bow - 0.05, z0 + depth * 0.6), (bow - 0.1, z0 + depth * 1.3), (bow - 0.12, z0 + depth * 1.6)]
+    for (ya, za), (yb, zb) in zip(pts, pts[1:]):
+        b.rod((0, ya, za), (0, yb, zb), 0.06, 'wood_dark')
+    stern = cy + half
+    b.box(-0.04, 0.04, stern - 0.06, stern + 0.02, z0, z0 + depth * 1.5, 'wood_dark')
+    b.box(-0.02, 0.02, stern, stern + 0.14, z0 + 0.02, z0 + depth * 0.9, 'wood_mid')     # the rudder
+    # the stern castle: a raised cabin over the last fifth of the hull
+    cw = width(0.42) * 0.96
+    c0, c1 = stern - length * 0.24, stern - 0.02
+    deck_z = sheer(0.45)
+    if stage == 1:
+        for x in (-cw / 2 + 0.03, cw / 2 - 0.03):
+            for y in (c0 + 0.03, c1 - 0.03):
+                b.box(x - 0.025, x + 0.025, y - 0.025, y + 0.025, deck_z - 0.05, deck_z + 0.3, 'wood_light')
+    else:
+        b.box(-cw / 2, cw / 2, c0, c1, deck_z - 0.08, deck_z + 0.26, 'wood_mid' if stage == 2 else band)
+        b.box(-cw / 2 - 0.02, cw / 2 + 0.02, c0 - 0.02, c1 + 0.02, deck_z + 0.26, deck_z + 0.3,
+              'gold' if stage == 3 else 'wood_dark')
+        f = Facade(b, '+y', c1)
+        for x in (-cw * 0.25, 0.0, cw * 0.25):
+            f.rect(x - 0.045, x + 0.045, deck_z + 0.04, deck_z + 0.17, 0.01, 'window_light' if stage == 3 else 'window')
+        if stage == 3:
+            f.rect(-cw / 2, cw / 2, deck_z - 0.02, deck_z + 0.01, 0.012, 'gold')
+            b.ball(0, bow - 0.13, z0 + depth * 1.62, 0.06, 0.1, 'gold')                  # the figurehead
+            for x in (-cw / 2 + 0.04, cw / 2 - 0.04):
+                b.cylinder(x, c1 - 0.04, deck_z + 0.3, deck_z + 0.42, 0.02, 'gold', sides=6)   # stern lanterns
+
+
 def piles(b, xs, ys, top, bottom=SEA_Z - 0.5, r=0.07):
     for x in xs:
         for y in ys:
@@ -167,7 +242,7 @@ def level1():
     _ground(b)
     _workshop(b)
     _slip(b)
-    hull(b, 0, -0.55, 0.14, 2.3, 0.8, 0.42, colour='wood_mid', ribs_above=0.22)      # the scout's size
+    ship(b, -0.55, 0.16, 2.3, 0.82, 0.44, stage=1)                                     # the scout's size, being built
     _scaffold(b)
     _crane(b)
     _yard(b)
@@ -180,7 +255,7 @@ def level2():
     _ground(b)
     _workshop(b, storeys=2)
     _slip(b, wide=True)
-    hull(b, 0, -0.6, 0.14, 2.5, 1.0, 0.52, colour='wood_mid', ribs_above=0.12)       # the transport, planked higher
+    ship(b, -0.6, 0.16, 2.5, 1.0, 0.5, stage=2)                                        # the transport, planked to the band
     _scaffold(b, h=0.95)
     _crane(b, h=2.25, second_winch=True)
     _yard(b)
@@ -198,13 +273,15 @@ def _level3_core():
         d.finial(b, x, WYC, zr + 0.03)
     d.weathervane(b, (WX0 + WX1) / 2, WYC, zr + 0.03)
     _slip(b, wide=True)
-    hull(b, 0, -0.6, 0.14, 2.6, 1.05, 0.55, colour='wood_light')                    # the warship, planked
+    ship(b, -0.6, 0.16, 2.6, 1.05, 0.52, stage=3)                                      # the warship, finished
     b.cylinder(0, -0.5, 0.6, 2.2, 0.045, 'wood_dark', sides=6)                       # its mast
     b.cylinder(0, -1.1, 0.6, 1.75, 0.035, 'wood_dark', sides=6)                      # the foremast
     for my, half, z in ((-0.5, 0.5, 1.8), (-1.1, 0.38, 1.45)):
         b.box(-half, half, my - 0.03, my + 0.03, z, z + 0.05, 'wood_dark')              # the yards
         b.hcylinder('x', (0, my - 0.02, z - 0.05), half - 0.04, 0.055, 'white', sides=6)   # sails furled on them
-    b.rod((0, -1.9, 0.75), (0, -2.35, 1.05), 0.035, 'wood_dark')                     # the bowsprit
+    b.rod((0, -1.95, 0.8), (0, -2.4, 1.1), 0.035, 'wood_dark')                       # the bowsprit
+    for my, top in ((-0.5, 2.2), (-1.1, 1.75)):                                        # pennants at the mastheads
+        b.prism([(0, 0), (0.32, -0.04), (0, -0.09)], (0.0, my, top), (1, 0, 0), (0, 0, 1), 0.012, 'banner_red', back_cap=True)
     _gantry(b)
     _yard(b)
     d.barrel(b, 1.3, 0.95, r=0.07)
