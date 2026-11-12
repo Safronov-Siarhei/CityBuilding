@@ -82,6 +82,14 @@ EditMode `CitizenManagerTests`, `SettlementTierManagerTests`, `CitizenNamesTests
 `WorkforcePanelTests`, `CitizensTabTests`, `WalkCostTests`.
 
 ## Traps
+- **The sea has its own NavMesh (ShipManager, ships' agent type)** -- every citizen query must use the land
+  filter (agent type 0; `CitizenAgent.LandFilter`, WorkSpots too). Unfiltered, a wander target snapped onto
+  the sea and a path between the two meshes failed («could not determine precisely which agent type»), and
+  the straight-line fallback walked a citizen across the water (the user, 2026-11-12, after loading a save).
+  Now: a partial path ending > 6 m short of its target, or a straight line that leaves the land NavMesh
+  (`LeavesLand`) / crosses water cells, = unreachable: he stands still. A workplace on ANOTHER island is
+  therefore never walked to (the building still counts its assigned worker) -- how island work should
+  look is an OPEN question put to the user 2026-11-12.
 - `Destroy()` is deferred to end of frame — counting `childCount` right after repopulating counts
   old rows; the panel exposes `RowCount`. +/- refreshes in place, the list rebuilds only when a row's
   building is gone.

@@ -41,6 +41,14 @@ namespace CityBuilder.Citizens
         private const float StuckRetryPauseSeconds = 1f;
         /// <summary>How far from a destination off the NavMesh (inside a building's carve) the route looks for the nearest point on it.</summary>
         private const float TargetSnapMeters = 3f;
+
+        // The land's NavMesh only (agent type 0, MeshMapApplier.NavSettings). Since the archipelago
+        // the sea has a NavMesh of its own for the ships (ShipManager): an unfiltered query could
+        // snap a citizen's target onto the sea, and a path between a point nearer the sea's mesh
+        // and one nearer the land's failed outright («CalculatePath() could not determine
+        // precisely which agent type...») -- a citizen then walked the straight line across the
+        // water (the user, 2026-11-12: «житель гуляет по воде»).
+        private static readonly NavMeshQueryFilter LandFilter = new NavMeshQueryFilter { agentTypeID = 0, areaMask = NavMesh.AllAreas };
         /// <summary>Stuck this close to a route corner that is not the last, the corner counts as reached (see Update).</summary>
         private const float CornerGiveUpMeters = 0.6f;
         private const float ProgressEpsilon = 0.02f;
@@ -813,6 +821,34 @@ namespace CityBuilder.Citizens
         // working citizens, is a steady trickle of otherwise-avoidable GC garbage).
         private readonly Vector3[] _fallbackRoute = new Vector3[1];
 
+        // a partial path ending further than this from its target is no way there (twice the snap)
+        private const float PartialFarSqr = TargetSnapMeters * 2f * TargetSnapMeters * 2f;
+
+        /// <summary>No route: he "arrives" where he stands (a gatherer then gives his node up, OnArrived -> OnStuck).</summary>
+        private void StandStill(Vector3 from)
+        {
+            _fallbackRoute[0] = from;
+            _route = _fallbackRoute;
+            _routeIndex = 0;
+        }
+
+        /// <summary>
+        /// Whether the straight line runs off the land's NavMesh somewhere (the sea of the archipelago,
+        /// which has no water cells for LineCrossesWater). Only asked when no path was found, and
+        /// only while there is a land NavMesh to ask -- without one the straight line stays the fallback.
+        /// </summary>
+        private static bool LeavesLand(Vector3 from, Vector3 to)
+        {
+            if (!NavMesh.SamplePosition(from, out _, TargetSnapMeters, LandFilter)) return false; // no NavMesh here at all
+            var flat = new Vector3(to.x - from.x, 0f, to.z - from.z);
+            var steps = Mathf.Clamp(Mathf.CeilToInt(flat.magnitude / 2f), 1, 64);
+            for (var i = 1; i <= steps; i++)
+            {
+                if (!NavMesh.SamplePosition(from + flat * (i / (float)steps), out _, 1.5f, LandFilter)) return true;
+            }
+            return false;
+        }
+
         /// <summary>
         /// Routes around solid obstacles (buildings, trees) via the NavMesh baked in
         /// MeshMapApplier.BuildNavMesh, instead of the straight line this used to be -- those
@@ -837,9 +873,9 @@ namespace CityBuilder.Citizens
             // fails outright -- which fell through to the straight line below, and a quarry woman
             // walking home that way stood against a house in between for the rest of the run
             // (Invasion, 2026-10-23). Aim at the nearest point that IS on the mesh, as NavRoute does.
-            if (NavMesh.SamplePosition(to, out var onMesh, TargetSnapMeters, NavMesh.AllAreas)) to = onMesh.position;
+            if (NavMesh.SamplePosition(to, out var onMesh, TargetSnapMeters, LandFilter)) to = onMesh.position;
 
-            if (NavMesh.CalculatePath(from, to, NavMesh.AllAreas, _sharedPath))
+            if (NavMesh.CalculatePath(from, to, LandFilter, _sharedPath))
             {
                 var corners = _sharedPath.corners;
 
@@ -853,6 +889,16 @@ namespace CityBuilder.Citizens
                 // succeeded. This was the "Town Hall built among trees breaks the game" report.
                 var reachesSomewhere = corners.Length > 0 &&
                                        HorizontalSqrDistance(corners[corners.Length - 1], from) > MinRouteProgressSqr;
+
+                // A PARTIAL path that stops far short of the target ends at the land's edge nearest
+                // to it -- a workplace on another island led a citizen out into the shallows
+                // (2026-11-12). Unreachable: he stays where he is, as below.
+                if (reachesSomewhere && _sharedPath.status == NavMeshPathStatus.PathPartial &&
+                    HorizontalSqrDistance(corners[corners.Length - 1], to) > PartialFarSqr)
+                {
+                    StandStill(from);
+                    return;
+                }
 
                 if (reachesSomewhere)
                 {
@@ -881,11 +927,9 @@ namespace CityBuilder.Citizens
             // Never over the water (the user, 2026-11-02: one sent to fell a tree on another
             // island must not walk the sea): he "arrives" where he stands, and a gatherer, out of
             // reach of his tree, gives it up (OnArrived -> OnStuck).
-            if (Maps.MeshMapApplier.LineCrossesWater(from, to))
+            if (Maps.MeshMapApplier.LineCrossesWater(from, to) || LeavesLand(from, to))
             {
-                _fallbackRoute[0] = from;
-                _route = _fallbackRoute;
-                _routeIndex = 0;
+                StandStill(from);
                 return;
             }
 
@@ -932,7 +976,7 @@ namespace CityBuilder.Citizens
                 var offset = UnityEngine.Random.insideUnitCircle * wanderRadius;
                 var candidate = _townCenter + new Vector3(offset.x, 0f, offset.y);
 
-                if (NavMesh.SamplePosition(candidate, out var navHit, WanderNavSampleRadius, NavMesh.AllAreas))
+                if (NavMesh.SamplePosition(candidate, out var navHit, WanderNavSampleRadius, LandFilter))
                 {
                     WalkTo(navHit.position);
                     return;

@@ -36,7 +36,7 @@ Menu round button top-left (pauses `timeScale`, hides HUD via `HudHider`; save/s
 `HudHider` (menu, «Запасы», workforce) hides the hero portraits, the hero skill bar, the ship bar and the
 dungeon potion bar too (the user, 2026-11-05) -- only the menu, dialogs and panels carry `HudOverlay`;
 citizens button under it; event feed down the left edge; one resource bar top-centre on a wood plaque,
-«День N» under it; happiness round number top-right (tap → breakdown), migration + army under it;
+«День N» under it (sandbox: on the minimap's foot, `Shop/DayOnMinimap`, lifted 52 px so it clears the screen edge -- the user 2026-11-12; field renamed `liftOverFoot` so the scene's old 22 no longer applies); happiness round number top-right (tap → breakdown), migration + army under it;
 minimap bottom-left (round); build menu bottom-centre — CLOSED at rest (tabs only), a tab slides the
 card row up, re-tap/map tap closes; replaced by ✕ ⟳ ✓ while placing; tax bottom-right «Налог: 10%».
 **No text on buttons — pictures only** (the tax plaque is the one allowed word). Settlement tiers hidden.

@@ -10,7 +10,8 @@ namespace CityBuilder.Shop
     public class DayOnMinimap : MonoBehaviour
     {
         [SerializeField] private RectTransform minimap;
-        [SerializeField] private float lift = 22f;
+        // the plaque's centre this far over the minimap's foot: whole above the screen's edge (the user, 2026-11-12: «поднять выше»)
+        [SerializeField] private float liftOverFoot = 52f;   // renamed from `lift` (22) so the scene's old value does not hold it down
         [SerializeField] private Vector2 size = new Vector2(220f, 46f);
 
         private bool _on;
@@ -25,7 +26,7 @@ namespace CityBuilder.Shop
         {
             if (!_on) return;
             var r = minimap.rect;
-            transform.position = minimap.TransformPoint(new Vector3(r.center.x, r.yMin + lift, 0f));
+            transform.position = minimap.TransformPoint(new Vector3(r.center.x, r.yMin + liftOverFoot, 0f));
         }
     }
 }

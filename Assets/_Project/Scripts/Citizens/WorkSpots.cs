@@ -118,7 +118,7 @@ namespace CityBuilder.Citizens
                         if (!Wet(map, grid, c + step)) continue;
                         var at = grid.GetFootprintCenterWorld(c, Vector2Int.one);
                         if (!map.SameIsland(hut.transform.position, at)) break;
-                        if (!NavMesh.SamplePosition(at, out var hit, grid.CellSize * 0.6f, NavMesh.AllAreas)) break;
+                        if (!NavMesh.SamplePosition(at, out var hit, grid.CellSize * 0.6f, new NavMeshQueryFilter { agentTypeID = 0, areaMask = NavMesh.AllAreas })) break;   // the land's NavMesh, never the sea's (ShipManager)
                         var water = grid.GetFootprintCenterWorld(c + step, Vector2Int.one);
                         list.Add(new CitizenAgent.WorkSpot { At = hit.position, Face = new Vector3(water.x, hit.position.y, water.z) });
                         break;
