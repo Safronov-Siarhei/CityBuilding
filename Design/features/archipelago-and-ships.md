@@ -68,6 +68,15 @@
   temporary reveal, no return to a sketch). Ship levels are raised in the Laboratory.
 - Orcs get ONE shipyard at the main base; destroyed, it is rebuilt after a sheet-set time.
 
+## A new Shipyard model (the user, 2026-11-12: «мне не нравится»)
+The current Shipyard1-lvl1 (ships.py) is a bare deck on piles with a hull's ribs and a crane -- no walls,
+no roof. Three concepts in the roster's look on the same 3x4 plot, sea in front (`Tools/blender/shipyard_concepts.py`,
+renders only, never saves; sheet `Design/shipyard_concepts.png`): A «Эллинг» (a big boat-house over the
+water, the ship inside -- from above mostly roof), B «Стапель» (a workshop house on land + an open slipway
+with a half-planked ship, scaffolding, an A-frame crane), C «Док» (stone quay round a basin with a moored
+ship, an office tower with a blue spire, a storehouse, a treadwheel crane). 1.4-3k tris. SENT for the user's
+choice; then levels 1-5 and icons (it has no level 2-5 icons yet).
+
 ## Placing the Shipyard (fixed 2026-10-29)
 - 2026-11-05 (the user, whole game): the Shipyard floated over a low beach (every building stands at the
   grid's one height; water buildings get no footing). `BuildingFooting.SettleOnShore` lowers it to the
