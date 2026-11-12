@@ -12,8 +12,16 @@ param(
 # separate APK carrying the profiler, so both can sit on the phone at once.
 
 $ErrorActionPreference = 'Continue'
-$unity = 'C:\Program Files\Unity\Hub\Editor\6000.5.4f1\Editor\Unity.exe'
-$project = 'D:/Fork/CityBuilding'
+# the project and the editor found as run.ps1 finds them (the machine moved to G: and D:\unity), and
+# only an editor that has Android Build Support
+$project = (Resolve-Path "$PSScriptRoot/../..").Path.Replace('\', '/')
+$version = ((Get-Content "$project/ProjectSettings/ProjectVersion.txt" | Select-String 'm_EditorVersion:') -split ':\s*')[1].Trim()
+$unity = $env:UNITY_EXE
+if (-not $unity) {
+    $unity = @("C:\Program Files\Unity\Hub\Editor\$version\Editor\Unity.exe", "D:\unity\$version-x86_64\Editor\Unity.exe", "D:\unity\$version\Editor\Unity.exe") |
+        Where-Object { Test-Path (Join-Path (Split-Path $_) 'Data\PlaybackEngines\AndroidPlayer') } | Select-Object -First 1
+}
+if (-not $unity) { throw "Unity $version with Android Build Support not found: Unity Hub -> $version -> Add modules -> Android Build Support (+ OpenJDK, SDK/NDK), or set UNITY_EXE" }
 New-Item -ItemType Directory -Force "$project/RunLogs" | Out-Null
 
 # No -quit: BuildAndroid.Run exits the editor itself, with 0 or 1 depending on the build. Passing
