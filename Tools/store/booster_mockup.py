@@ -310,7 +310,7 @@ def swirl(img, cx, base_y, size, colour, front):
     img.alpha_composite(layer)
 
 
-def building(img, path, cx, base_y, size, look=None, colours=None, icons=None, t=0.0, wind=(120, 240, 110)):
+def building(img, path, cx, base_y, size, look=None, colours=None, icons=None, t=0.0, wind=(190, 110, 255)):
     """A building's picture standing on `base_y`. look 'A': a gold ring + rising motes + a badge;
     look 'B': a gold outline glow + the badge."""
     pic = Image.open(UI + path).convert('RGBA')
@@ -357,13 +357,13 @@ def hud():
     lab = BOOSTERS[5]
     building(img, 'Icons/Cottage.png', 300, 600, 260)
     building(img, 'Icons/Sawmill.png', 640, 560, 300, 'C', sawmill[5], sawmill[6])
-    building(img, 'Icons/Quarry.png', 1000, 620, 290, 'C', stone[5], stone[6], wind=(130, 210, 255))
-    building(img, 'Icons/Laboratory.png', 1380, 560, 300, 'C', lab[5], lab[6], wind=(255, 214, 90))
+    building(img, 'Icons/Quarry.png', 1000, 620, 290, 'C', stone[5], stone[6])
+    building(img, 'Icons/Laboratory.png', 1380, 560, 300, 'C', lab[5], lab[6])
     building(img, 'Icons/Cottage.png', 1700, 900, 240)
     d = ImageDraw.Draw(img)
     med = m.R + 'Assets/_Project/Resources/Fonts/Rubik-Medium.ttf'
-    for x, t in ((640, 'зелёный'), (1000, 'голубой'), (1380, 'золотой')):
-        m.text(d, (x, 650), 'Вид В: поток, ' + t, 28, 'white', stroke=3, stroke_fill=(30, 40, 20), path=med)
+    m.text(d, (1000, 660), 'Фиолетовый магический поток на всех ускоренных зданиях', 30, 'white', stroke=3,
+           stroke_fill=(30, 40, 20), path=med)
 
     # the top bar (schematic: the game's own chips), crystals number-then-icon
     chips = [('Res_Wood', '120'), ('Res_Stone', '80'), ('Res_Coins', '350'), ('Res_UpgradeCrystal', '989'),
