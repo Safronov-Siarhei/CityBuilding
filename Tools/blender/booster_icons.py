@@ -19,6 +19,9 @@ from mathutils import Euler, Matrix, Vector
 argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 OUT = argv[0] if argv else "."
 SIZE = int(argv[1]) if len(argv) > 1 else 256
+# "medal" (v1: the sign on an enamel medallion) or "bare" (v2, the user 2026-11-12: round icons do not
+# look like the game -- the sign alone, from the resource icons' angle, framed to its bounds)
+MODE = argv[2] if len(argv) > 2 else "medal"
 
 
 # -- materials ------------------------------------------------------------------------------------
@@ -253,11 +256,69 @@ def pawn(x, z, s, cloth):
     prim("sphere", M["skin"], T(x, FACE, z + 0.4 * s), r=0.16 * s, seg=12, vseg=8, smooth=True)
 
 
+CITIZENS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "Assets", "_Project", "Models", "Citizens")
+
+
+def villager(name, x, y, turn, height=1.15):
+    """The game's own townsfolk model (villagers.py, exported to Models/Citizens): imported as the FBX
+    left it, then scaled to `height`, turned `turn` degrees and stood with its feet on the sign's floor."""
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.fbx(filepath=os.path.join(CITIZENS, name + ".fbx"))
+    new = [o for o in bpy.data.objects if o not in before]
+    meshes = [o for o in new if o.type == 'MESH']
+    root = bpy.data.objects.new(name + "_root", None)
+    bpy.context.scene.collection.objects.link(root)
+    bpy.context.view_layer.update()
+    for o in meshes:
+        mw = o.matrix_world.copy()
+        o.parent = root
+        o.matrix_world = mw
+    for o in new:
+        if o.type != 'MESH':
+            bpy.data.objects.remove(o)
+    bpy.context.view_layer.update()
+    pts = [o.matrix_world @ Vector(c) for o in meshes for c in o.bound_box]
+    lo, hi = min(p.z for p in pts), max(p.z for p in pts)
+    cx, cy = sum(p.x for p in pts) / len(pts), sum(p.y for p in pts) / len(pts)
+    k = height / max(hi - lo, 1e-6)
+    root.matrix_world = (Matrix.Translation((x, y, -0.62)) @ Matrix.Rotation(math.radians(turn), 4, 'Z')
+                         @ Matrix.Scale(k, 4) @ Matrix.Translation((-cx, -cy, -lo)))
+    pal = palette()
+    for o in meshes:
+        o.data.materials.clear()
+        o.data.materials.append(pal)
+    PARTS.extend(meshes)
+    PARTS.append(root)
+
+
+def palette():
+    """The models' colours come from the shared palette texture through their UVs (the FBX carries no
+    usable image path here): one material reading Blender/Buildings-Palette.png, closest-pixel."""
+    m = bpy.data.materials.get("Palette")
+    if m:
+        return m
+    m = bpy.data.materials.new("Palette")
+    m.use_nodes = True
+    nt = m.node_tree
+    bsdf = nt.nodes.get("Principled BSDF")
+    bsdf.inputs["Roughness"].default_value = 0.7
+    tex = nt.nodes.new("ShaderNodeTexImage")
+    tex.image = bpy.data.images.load(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "Blender",
+                                                  "Buildings-Palette.png"))
+    tex.interpolation = 'Closest'
+    nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+    return m
+
+
 def settlers():
-    pawn(-0.2, -0.1, 1.0, M["clothBlue"])
-    pawn(0.26, -0.22, 0.78, M["cloth"])
-    prim("cube", M["gold"], T(0.48, FACE - 0.05, 0.36, scale=(0.08, 0.04, 0.24)))
-    prim("cube", M["gold"], T(0.48, FACE - 0.05, 0.36, scale=(0.24, 0.04, 0.08)))
+    if MODE == "bare" and os.path.exists(os.path.join(CITIZENS, "VillagerPeasant1.fbx")):
+        villager("VillagerPeasant1", -0.22, FACE, -10)
+        villager("VillagerWoman2", 0.3, FACE + 0.15, 15)
+    else:
+        pawn(-0.2, -0.1, 1.0, M["clothBlue"])
+        pawn(0.26, -0.22, 0.78, M["cloth"])
+    prim("cube", M["gold"], T(0.68, FACE - 0.05, 0.56, scale=(0.08, 0.04, 0.24)))
+    prim("cube", M["gold"], T(0.68, FACE - 0.05, 0.56, scale=(0.24, 0.04, 0.08)))
 
 
 SIGNS = {"lumberjack": lumberjack, "stonecutter": stonecutter, "abundance": abundance, "treasury": treasury,
@@ -296,23 +357,40 @@ def stage():
     cam.data.ortho_scale = 2.3
     sc.collection.objects.link(cam)
     sc.camera = cam
-    pitch, yaw = math.radians(12), math.radians(-10)   # nearly front-on, a hint of the top and the rim
+    pitch, yaw = (math.radians(12), math.radians(-10)) if MODE == "medal" else (math.radians(30), math.radians(-28))
     d = Vector((math.sin(yaw) * math.cos(pitch), -math.cos(yaw) * math.cos(pitch), math.sin(pitch)))
     cam.location = d * 30
     cam.rotation_euler = (-d).to_track_quat('-Z', 'Y').to_euler()
     return sc
 
 
+def frame(sc):
+    """Bare mode: the camera frames the sign's own bounds (as render_icons does for the resources)."""
+    cam = sc.camera
+    bpy.context.view_layer.update()
+    inv = cam.matrix_world.inverted()
+    pts = [inv @ (o.matrix_world @ Vector(c)) for o in PARTS for c in o.bound_box]
+    xs, ys = [p.x for p in pts], [p.y for p in pts]
+    cam.data.ortho_scale = max(max(xs) - min(xs), max(ys) - min(ys)) * 1.08
+    cam.location = cam.matrix_world @ Vector(((max(xs) + min(xs)) / 2, (max(ys) + min(ys)) / 2, 0))
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     sc = stage()
     materials()
+    only = os.environ.get("BOOSTER_ONLY")   # one id, to redo a single icon
     for key, sign in SIGNS.items():
+        if only and key != only:
+            continue
         for o in PARTS:
             bpy.data.objects.remove(o)
         PARTS.clear()
-        medallion(ENAMEL[key])
+        if MODE == "medal":
+            medallion(ENAMEL[key])
         sign()
+        if MODE == "bare":
+            frame(sc)
         sc.render.filepath = os.path.join(OUT, "Booster_" + key + ".png")
         bpy.ops.render.render(write_still=True)
         print("ICON", sc.render.filepath)
