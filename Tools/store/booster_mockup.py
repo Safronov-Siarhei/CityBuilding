@@ -40,7 +40,34 @@ BOOSTERS = [   # the user's list, round 5 (2026-11-12): no tiers, an ad OR cryst
 ]
 
 
+IDS = ['lumberjack', 'stonecutter', 'abundance', 'treasury', 'architect', 'scholar', 'battle_spirit', 'fortitude',
+       'recruit', 'repair', 'settlers']
+ICONS = m.R + 'Design/store/booster_icons_v2/'
+
+
 def medallion(size, colours, icons, arrow=True):
+    """A booster's icon: the approved v2 render (the sign alone + a violet glow, the user 2026-11-12) when the
+    booster is known, else the old placeholder disc."""
+    for i, b in enumerate(BOOSTERS):
+        if b[5] is colours and b[6] is icons and os.path.exists(ICONS + 'Booster_' + IDS[i] + '.png'):
+            return booster_icon(size, IDS[i])
+    return old_medallion(size, colours, icons, arrow)
+
+
+def booster_icon(size, key):
+    from PIL import ImageFilter
+    ic = Image.open(ICONS + 'Booster_' + key + '.png').convert('RGBA').resize((size, size), Image.LANCZOS)
+    k = max(3, size // 28)
+    a = ic.getchannel('A').filter(ImageFilter.MaxFilter(k | 1)).filter(ImageFilter.GaussianBlur(k))
+    g = Image.new('RGBA', ic.size, (190, 110, 255, 0))
+    g.putalpha(a.point(lambda v: min(255, int(v * 1.6))))
+    out = Image.new('RGBA', ic.size, (0, 0, 0, 0))
+    out.alpha_composite(g)
+    out.alpha_composite(ic)
+    return out
+
+
+def old_medallion(size, colours, icons, arrow=True):
     """A booster's placeholder icon: a gold rim, a coloured disc, the game's icon, a green arrow badge."""
     S = 2
     n = size * S
