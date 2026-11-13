@@ -107,6 +107,8 @@ OrcRaidManager.RaidNow/EndRaidWait, GameCalendar.EndDayNow, LighthouseAim.ResetC
 RELEASE: build scripts take `-release` -> extraScriptingDefines CB_RELEASE -> the panel compiles empty.
 Also `ResourceCheat`, `ResearchCheat`, `OrcSpawnCheat` (Inspector), `Editor/CheatInspectors.cs`.
 User has NOT checked the window in game yet.
+- **Editor account switcher (the user, 2026-11-13):** «Аккаунт: <имя>» dropdown in the editor's MAIN TOOLBAR next to Play/Pause/Step (`Scripts/Editor/AccountToolbar.cs`, Unity 6.3+ `[MainToolbarElement]`, Windows editor only). An account = every PlayerPrefs key of the project (registry HKCU/Software/Unity/UnityEditor/Depigo Games/CityBuilding) + everything under persistentDataPath; inactive accounts sit in `Library/CB_Accounts/<name>/` (prefs.json + data/). Menu: pick an account, «Новый аккаунт» (fresh player), «Сбросить прогресс» (current only), «Удалить», open folder. Only out of Play mode. Current name in EditorPrefs `CB_Account`. If the element is not shown: right-click the toolbar and tick it. Not compile-checked in batchmode (the user's editor held the project); its .meta comes from the user's editor.
+
 ## General run 2026-11-02 (923e2c5f)
 EditMode 460/460, PlayMode 359/378 (18 skipped). 31 failures fixed: real bugs (tide monsters missing from
 `BalanceConfig.MonsterIds` -> fallback stats; the hire camp's «!» re-shown by BuildingFocus.Update; moat at 6
