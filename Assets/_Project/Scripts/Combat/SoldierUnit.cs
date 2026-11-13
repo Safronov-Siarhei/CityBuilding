@@ -82,9 +82,12 @@ namespace CityBuilder.Combat
         /// dungeon_ranged_range_factor -- its halls are narrow (the user, 2026-11-02: «у королевы
         /// слишком далёкое расстояние для атаки, нужно уменьшить где-то в два раза»).
         /// </summary>
-        private float UnitAttackRange => (IsRanged && Dungeon.DungeonMode.IsActive && BalanceConfig.Instance != null
+        private float UnitAttackRange => ((IsRanged && Dungeon.DungeonMode.IsActive && BalanceConfig.Instance != null
             ? _unitAttackRange * BalanceConfig.Instance.DungeonRangedRangeFactor
-            : _unitAttackRange) + WallRangeBonus;
+            : _unitAttackRange) + WallRangeBonus) * (IsRanged ? RangedRangeFactor : 1f);
+
+        /// <summary>A shooter's reach times this (campaign mission 2: m2_ranged_range_mult, the user's fourth playtest).</summary>
+        public float RangedRangeFactor { get; set; } = 1f;
 
         /// <summary>How far off he picks a fight by himself: cut in a dungeon by dungeon_engage_factor.</summary>
         private float EngageRadius => Dungeon.DungeonMode.IsActive && BalanceConfig.Instance != null
@@ -767,7 +770,7 @@ namespace CityBuilder.Combat
                 var feet = transform.position.y;
                 var top = feet + 0.6f;
                 foreach (var r in GetComponentsInChildren<Renderer>()) top = Mathf.Max(top, r.bounds.max.y);
-                _healthBar = Buildings.BuildingHealthBar.CreateFor(transform, top - feet + 0.2f, 0.7f);
+                _healthBar = Buildings.BuildingHealthBar.CreateFor(transform, top - feet + 0.2f, 0.7f, Buildings.BuildingHealthBar.Icon.Ally);
             }
             _healthBar.Report(CurrentHealth / (float)Mathf.Max(1, MaxHealth));
         }

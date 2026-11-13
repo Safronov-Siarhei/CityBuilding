@@ -2879,6 +2879,8 @@ namespace CityBuilder.Core
         // each wave's make-up is a row of the m2waves tab (the user's third playtest: «удобный лист с волнами»)
         public float firstWaveSeconds = 10f;
         public float meleeReachMult = 0.6f;
+        // the shooters' reach and blow (the user's fourth playtest: range about half, damage a third)
+        public float rangedRangeMult = 0.5f, rangedDamageMult = 0.34f;
         public float orcHealthMult = 1f, orcDamageMult = 1f;
         // the garrison: a squad inside each gate, shooters on the walls, patrols on the streets
         public int squadInfantry = 4, squadCrossbows = 3, squadMonks = 1, wallArchers = 3, wallCrossbows = 2;
@@ -2926,6 +2928,8 @@ namespace CityBuilder.Core
             part2Seconds = F("m2_part2_sec", part2Seconds);
             firstWaveSeconds = F("m2_first_wave_sec", firstWaveSeconds);
             meleeReachMult = F("m2_melee_reach_mult", meleeReachMult);
+            rangedRangeMult = F("m2_ranged_range_mult", rangedRangeMult);
+            rangedDamageMult = F("m2_ranged_damage_mult", rangedDamageMult);
             orcHealthMult = F("m2_orc_health_mult", orcHealthMult);
             orcDamageMult = F("m2_orc_damage_mult", orcDamageMult);
             squadInfantry = I("m2_squad_infantry", squadInfantry);

@@ -36,11 +36,26 @@ namespace CityBuilder.Campaign
             var stats = SoldierStats.StatsAt(type, B.guardLevel);
             var unit = army.SpawnHireling(type, at, group);
             if (unit == null) return null;
-            unit.SetHeroStats(stats.maxHealth, stats.attackDamage);
+            var ranged = unit.IsRanged;
+            unit.SetHeroStats(stats.maxHealth, ranged ? Mathf.Max(1, Mathf.RoundToInt(stats.attackDamage * B.rangedDamageMult)) : stats.attackDamage);
+            if (ranged) unit.RangedRangeFactor = B.rangedRangeMult;
             unit.SetCurrentHealth(stats.maxHealth);
             unit.Pen = _pen;
             _garrison.Add(unit);
             return unit;
+        }
+
+        /// <summary>A wall between an orc and a soldier (OrcUnit.WallBetween, the user's fourth playtest: «орки агрятся через
+        /// стену и упираются в неё»): one inside the garrison's pen, the other outside it. A man up on the wall is
+        /// left to OrcUnit's own rule (only a thrower reaches him). The orc's side gets 0.6 of a cell of slack: one in
+        /// a broken gateway is through.</summary>
+        private bool WallBetween(OrcUnit orc, SoldierUnit soldier)
+        {
+            if (_pen.width <= 0f || orc == null || soldier == null || soldier.OnWall) return false;
+            var o = orc.transform.position;
+            var s = soldier.transform.position;
+            var orcIn = o.x >= _pen.xMin - 0.6f && o.x <= _pen.xMax + 0.6f && o.z >= _pen.yMin - 0.6f && o.z <= _pen.yMax + 0.6f;
+            return orcIn != _pen.Contains(new Vector2(s.x, s.z));
         }
 
         private static Vector3 OnMesh(Vector3 at)

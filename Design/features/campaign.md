@@ -444,13 +444,16 @@
   18. The next wave starts only once the previous is fully beaten. [code] TickWaves waits for every orc dead, then pause_sec
   19. MAP: remake as a castle with ONE gate (user chose). [code, MAP APPROVED 2026-11-12] plan Design/mission2_map_v3.png (Tools/campaign/mission2_map_v3.py); mission2_town.py one gate per ring, lanes converge at (50.5,31.6); Mission2Town.json regenerated
   20. After the gate falls orcs go raze the whole town, then attack the second line. [code] LetThemLoose: inside the outer pen after the gate falls, lane orcs drop their road and raze
-- **PLAYTEST 4 (the user, 2026-11-12) -- QUEUED, NOT BUILT (the user: do it tomorrow):**
-  1. A haystack stands on the sand road outside: decor must keep off lanes/roads.
-  2. Orcs aggro on soldiers THROUGH the wall and stick against it instead of going on along the road to the gate.
-  3. Ranged soldiers' attack radius too far: about half.
-  4. The three roads mix in front of the main gate (lanes converge at (50.5,31.6), the sand ribbons overlap): looks strange.
-  5. The hp «heart» icon over soldiers/orcs: the user dislikes it -- PROPOSE a new look (pictures) before building.
-  6. RULE (the user, 2026-11-13): a wave with a siege TOWER on a road -- the tower goes FIRST on that road, the road's other orcs walk BEHIND it (escort pace), so that at the wall they can CLIMB the tower onto the wall (not only its own crew). Today the tower spawns with the rest and drives alone at m2_siege_speed (Siege.cs), crew m2_tower_crew lands inside.
+- **PLAYTEST 4 + 5 (the user, 2026-11-12/13) -- ALL BUILT 2026-11-13 (setup green; not seen by the user):**
+  1. Haystack on a sand road -> `Decor()` skips props within m2_sand_road_width/2 + 1.2 of any lane line (`SandRoadLine`, `DistanceToLine` in CityDefenceMode.Look.cs).
+  2. + 9. Fighting THROUGH walls (orcs aggro and stick, soldiers trigger) -> `OrcUnit.WallBetween` (static Func, set by the mode): an orc never targets a soldier on the other side of the garrison pen (orc side gets 0.6 cell slack for a broken gateway; a man on the wall left to OrcUnit's own rule: only throwers). Soldiers: `InReachOfPen` lets a SHOOTER reach past the pen's edge only while `OnWall`; on the ground he, like melee, takes only what stands at the edge.
+  3. + 10. Shooters' range x m2_ranged_range_mult 0,5 (`SoldierUnit.RangedRangeFactor`) and damage x m2_ranged_damage_mult 0,34, set in `Hire` (garrison only).
+  4. Three sand roads overlapping before the gate -> the side roads END where they meet the middle (north) road, which runs on alone a hair higher.
+  5. The hp heart -> the user chose variant Б «герб стороны»: `BuildingHealthBar.Icon.Ally` (blue shield, gold cross, gold rim) over SoldierUnit, `Icon.Enemy` (dark hide shield, red rim, bone skull; red frame and red fill) over OrcUnit -- everywhere, not only the mission. Heart kept for ships.
+  6. RULE: a siege tower LEADS its road -> SendWave spawns the road's towers first; the road's other orcs are `Escort`s: same tower road, siege pace, set off one after another (BusyFor 1.2 + 0.6 k). Docked, the tower STAYS as the live orc (still breakable, BusyFor each tick, turned to the wall) for m2_tower_stay_sec + crew time; its crew climb first, then each escort that reaches its foot (2.5 cells) climbs, one per m2_tower_climb_gap_sec, drops inside off the lane. Tower broken or its time up -> escorts left go on along their lane to the gate. Part 2 docks at the inner wall's north side (plan y 51, at most 7 cells from the gate).
+  7. Siege machines drove BACKWARDS -> the model child turned 180 deg in `Dress`; ram/tower health x30 a brute (were 6/5).
+  8. «A small triangle flying near the archers» -> NOT reproduced; best guess: arrows aimed at orcs hidden in a tower waiting to climb. Now a climbing/waiting orc is `Untargetable` (IDamageTarget.IsAlive false). Ask the user if it is still there.
+  11. Wave number for testing: «Волна N» under the goal plaque (#m2_wave_number, `#if !CB_RELEASE`).
 - **SWORD + SIEGE (approved by the user 2026-11-12, «Утверждаю, ставь») -> IN THE GAME (not seen).**
   - Ардан WITH THE SWORD replaces the Латник's look: CineArdanSword.fbx from
     Tools/blender/cinematic/export_ardan_sword.py (poses from ardan_sword.py; clips Idle, Run, Attack, Whirl, Cry,

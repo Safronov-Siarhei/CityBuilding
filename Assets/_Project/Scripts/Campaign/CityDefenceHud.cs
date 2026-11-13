@@ -32,6 +32,7 @@ namespace CityBuilder.Campaign
         private CityDefenceMode _mode;
         private FloatingJoystick _stick;
         private Text _goal, _banner, _middle, _level;
+        private Text _wave;   // the wave's number under the goal, for testing (the user's fourth playtest); not in a release
         private Image _ardenBar, _xpBar;
         private readonly Image[] _skillShade = new Image[CityDefenceMode.SkillCount];
         private readonly GameObject[] _skillLock = new GameObject[CityDefenceMode.SkillCount];
@@ -111,6 +112,11 @@ namespace CityBuilder.Campaign
             _goal.resizeTextForBestFit = true;
             _goal.resizeTextMaxSize = 22;
             _goal.resizeTextMinSize = 12;
+#if !CB_RELEASE
+            _wave = MissionSkin.Label(plaque.transform, "", UiTheme.Bold, 18, Color.white, TextAnchor.MiddleCenter, new Vector2(0f, -0.6f), new Vector2(1f, 0f), Vector2.zero);
+            _wave.raycastTarget = false;
+            _wave.gameObject.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.8f);
+#endif
 
             BuildPortrait(safe, art);
             BuildSkills(safe, art);
@@ -408,6 +414,7 @@ namespace CityBuilder.Campaign
             var stage = _mode.Current;
             var part2 = stage == CityDefenceMode.Stage.Part2 || (stage == CityDefenceMode.Stage.Won);
             _goal.text = Localization.Get(part2 ? "#m2_goal_part2" : "#m2_goal_part1");
+            if (_wave != null) _wave.text = _mode.Wave > 0 ? string.Format(Localization.Get("#m2_wave_number"), _mode.Wave) : string.Empty;
 
             var arden = _mode.Arden;
             var alive = arden != null && arden.CurrentHealth > 0;

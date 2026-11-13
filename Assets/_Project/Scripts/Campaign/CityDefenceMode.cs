@@ -143,6 +143,8 @@ namespace CityBuilder.Campaign
                 if (behaviour != null) behaviour.enabled = false;
             // fighters close in to strike (the user's third playtest: «подходили вплотную»)
             MeleeReach.Factor = B.meleeReachMult;
+            // nobody fights across a wall (the user's fourth playtest)
+            OrcUnit.WallBetween = WallBetween;
             // no residents grow in the houses (their bars stood over every roof, the user's first playtest)
             var people = GetComponent<Citizens.HousePeople>();
             if (people != null) people.enabled = false;
@@ -160,6 +162,7 @@ namespace CityBuilder.Campaign
             {
                 RTSCameraController.GesturesLocked = false;
                 MeleeReach.Factor = 1f;
+                OrcUnit.WallBetween = null;
             }
         }
 
@@ -462,16 +465,18 @@ namespace CityBuilder.Campaign
             var b = B;
             for (var road = 0; road < 3; road++)
             {
-                Send(OrcKind.Brute, road, At(row.brutes, road));
-                Send(OrcKind.Raider, road, At(row.raiders, road));
-                Send(OrcKind.Thrower, road, At(row.throwers, road));
+                // a siege tower leads its road and the road's orcs walk behind it (the user, 2026-11-13)
+                Tower lead = null;
+                for (var i = 0; i < At(row.towers, road); i++) lead = SpawnMachine(false, road, row.level) ?? lead;
                 for (var i = 0; i < At(row.rams, road); i++) SpawnMachine(true, road, row.level);
-                for (var i = 0; i < At(row.towers, road); i++) SpawnMachine(false, road, row.level);
+                Send(OrcKind.Brute, road, At(row.brutes, road), lead);
+                Send(OrcKind.Raider, road, At(row.raiders, road), lead);
+                Send(OrcKind.Thrower, road, At(row.throwers, road), lead);
             }
 
             static int At(int[] perRoad, int road) => perRoad != null && road < perRoad.Length ? perRoad[road] : 0;
 
-            void Send(OrcKind kind, int lane, int count)
+            void Send(OrcKind kind, int lane, int count, Tower lead)
             {
                 if (_lanes[lane] == null) return;
                 for (var i = 0; i < count; i++)
@@ -483,6 +488,7 @@ namespace CityBuilder.Campaign
                     orc.FollowLane(_lanes[lane]);
                     orc.LaneOnly = true;
                     _laneOrcs[lane].Add(orc);
+                    if (lead != null) Escort(lead, orc);
                 }
             }
         }
