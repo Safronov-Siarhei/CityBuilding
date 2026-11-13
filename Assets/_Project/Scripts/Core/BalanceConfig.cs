@@ -1421,6 +1421,8 @@ namespace CityBuilder.Core
         [SerializeField] private List<M2WaveRow> m2Waves = new List<M2WaveRow>();
 
         /// <summary>Wave `wave` (1 = the first) of part `part`; past the last row of the part, the last again. Null when the part has none.</summary>
+        public IReadOnlyList<M2WaveRow> M2Waves => m2Waves;
+
         public M2WaveRow M2Wave(int part, int wave)
         {
             M2WaveRow last = null, hit = null;
@@ -2893,7 +2895,12 @@ namespace CityBuilder.Core
         public float townsfolkRespawnSeconds = 4f;
         // Ардан: mortal (dies = lost), levels on his own kills, four skills opened by level
         public int ardenHealth = 400, ardenDamage = 30, ardenHealthPerLevel = 60, ardenDamagePerLevel = 6;
-        public int ardenXp2 = 300, ardenXp3 = 900, ardenXp4 = 1800;
+        // 20 levels over all the level's orcs (the user, 2026-11-13); the skills open at these levels
+        public int ardenMaxLevel = 20, cryLevel = 1, whirlLevel = 5, dashLevel = 10, breathLevel = 15;
+        public float ardenEngageCells = 3f;
+        // the gates' own health (a level-3 Barbican has 850) and the height of their bar over the ground (cells)
+        public int outerGateHealth = 2500, innerGateHealth = 2500;
+        public float gateBarHeight = 1.3f;
         public float cryCooldownSeconds = 20f, cryRadius = 7f, crySeconds = 6f, cryDamageMult = 1.5f, cryStunSeconds = 1.5f;
         public float whirlCooldownSeconds = 12f, whirlRadius = 3f, whirlDamageMult = 2f, whirlPush = 2.5f;
         public float dashCooldownSeconds = 14f, dashDistance = 7f, dashSeconds = 0.35f, dashWidth = 1.5f, dashDamageMult = 1.5f, dashStunSeconds = 1.5f;
@@ -2951,9 +2958,15 @@ namespace CityBuilder.Core
             ardenDamage = I("m2_arden_damage", ardenDamage);
             ardenHealthPerLevel = I("m2_arden_health_per_level", ardenHealthPerLevel);
             ardenDamagePerLevel = I("m2_arden_damage_per_level", ardenDamagePerLevel);
-            ardenXp2 = I("m2_arden_xp2", ardenXp2);
-            ardenXp3 = I("m2_arden_xp3", ardenXp3);
-            ardenXp4 = I("m2_arden_xp4", ardenXp4);
+            ardenMaxLevel = I("m2_arden_max_level", ardenMaxLevel);
+            cryLevel = I("m2_cry_level", cryLevel);
+            whirlLevel = I("m2_whirl_level", whirlLevel);
+            dashLevel = I("m2_dash_level", dashLevel);
+            breathLevel = I("m2_breath_level", breathLevel);
+            ardenEngageCells = F("m2_arden_engage_cells", ardenEngageCells);
+            outerGateHealth = I("m2_outer_gate_health", outerGateHealth);
+            innerGateHealth = I("m2_inner_gate_health", innerGateHealth);
+            gateBarHeight = F("m2_gate_bar_height", gateBarHeight);
             ardenRespawnSeconds = F("m2_arden_respawn_sec", ardenRespawnSeconds);
             cryCooldownSeconds = F("m2_cry_cooldown_sec", cryCooldownSeconds);
             cryRadius = F("m2_cry_radius", cryRadius);

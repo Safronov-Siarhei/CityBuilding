@@ -54,8 +54,9 @@ namespace CityBuilder.Buildings
         private float _fraction = 1f;
 
         /// <summary>Creates the bar over a building, hidden until the first Report or Pin.</summary>
-        public static BuildingHealthBar CreateFor(Transform building)
+        public static BuildingHealthBar CreateFor(Transform building, float fixedHeight = 0f)
         {
+            if (fixedHeight > 0f) return Create(building, fixedHeight / Mathf.Max(0.0001f, building.lossyScale.y), Icon.Shield);
             // over the model's top when that is higher than the usual height (the lighthouse's bar sat
             // half-way up its tower, 2026-11-02)
             var height = HeightAboveBuilding;

@@ -89,8 +89,14 @@ namespace CityBuilder.Combat
         /// <summary>A shooter's reach times this (campaign mission 2: m2_ranged_range_mult, the user's fourth playtest).</summary>
         public float RangedRangeFactor { get; set; } = 1f;
 
+        /// <summary>A mode's own engage radius for him (campaign level 2's Ардан: m2_arden_engage_cells); 0 = the sheet's.</summary>
+        public float EngageOverride { get; set; }
+
+        /// <summary>A point by a broken stretch of the pen's wall (campaign level 2 sets it): a soldier penned in reaches it.</summary>
+        public static System.Func<Vector3, bool> PenBreach;
+
         /// <summary>How far off he picks a fight by himself: cut in a dungeon by dungeon_engage_factor.</summary>
-        private float EngageRadius => Dungeon.DungeonMode.IsActive && BalanceConfig.Instance != null
+        private float EngageRadius => EngageOverride > 0f ? EngageOverride : Dungeon.DungeonMode.IsActive && BalanceConfig.Instance != null
             ? _engageRadius * BalanceConfig.Instance.DungeonEngageFactor
             : _engageRadius;
 
@@ -662,7 +668,8 @@ namespace CityBuilder.Combat
         private void WalkTowards(Vector3 destination)
         {
             // kept inside (campaign mission 2: the garrison never leaves the town's walls, the user 2026-11-12)
-            if (Pen.width > 0f) destination = new Vector3(Mathf.Clamp(destination.x, Pen.xMin, Pen.xMax), destination.y, Mathf.Clamp(destination.z, Pen.yMin, Pen.yMax));
+            // -- but into the rubble of a broken wall, after an orc standing there (the user's sixth playtest)
+            if (Pen.width > 0f && !(PenBreach != null && PenBreach(destination))) destination = new Vector3(Mathf.Clamp(destination.x, Pen.xMin, Pen.xMax), destination.y, Mathf.Clamp(destination.z, Pen.yMin, Pen.yMax));
             // wedged inside something (two buildings put up round him): through it to free ground first
             if (_escape.Step(transform, _controller, _walkSpeed)) return;
             _routeRefreshTimer -= Time.deltaTime;

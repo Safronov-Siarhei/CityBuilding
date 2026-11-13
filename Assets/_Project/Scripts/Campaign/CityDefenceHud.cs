@@ -276,7 +276,7 @@ namespace CityBuilder.Campaign
             if (skill < 0) return;
             _hintTitle.text = Localization.Get("#m2_skill_" + skill);
             var line = Localization.Get("#m2_skill_" + skill + "_line");
-            if (!_mode.SkillOpen(skill)) line = Localization.Format("#m2_skill_locked", skill + 1) + "\n" + line;
+            if (!_mode.SkillOpen(skill)) line = Localization.Format("#m2_skill_locked", CityDefenceMode.SkillLevel(skill)) + "\n" + line;
             _hintLine.text = line;
         }
 

@@ -454,6 +454,17 @@
   7. Siege machines drove BACKWARDS -> the model child turned 180 deg in `Dress`; ram/tower health x30 a brute (were 6/5).
   8. «A small triangle flying near the archers» -> NOT reproduced; best guess: arrows aimed at orcs hidden in a tower waiting to climb. Now a climbing/waiting orc is `Untargetable` (IDamageTarget.IsAlive false). Ask the user if it is still there.
   11. Wave number for testing: «Волна N» under the goal plaque (#m2_wave_number, `#if !CB_RELEASE`).
+- **PLAYTEST 6 (the user, 2026-11-13) -- ALL BUILT 2026-11-13 (setup green; not seen by the user):**
+  1. Orc shooters outranged the garrison and killed it unanswered -> a wave's ranged orc gets `OrcUnit.SetUnitRange` = the archer's sheet range x m2_ranged_range_mult (CityDefenceMode.SendWave). Wall archers keep their +2 wall bonus on top.
+  2. Gate hp bar too high to be seen; gates too weak -> `BuildingInstance.OverrideMaxHealth` + `HealthBarHeight` (BuildingHealthBar.CreateFor(transform, fixedHeight)), set in `Sort`: m2_outer_gate_health / m2_inner_gate_health 2500 (a level-3 Barbican is 850), bar at m2_gate_bar_height 1,3 cells.
+  3. Buildings could be picked by a tap -> `BuildingSelector.HandleWorldTap` / `HasBuildingAt` do nothing while `CityDefenceMode.IsActive` (fighter cards still open).
+  4. Ардан picked fights too far off -> `SoldierUnit.EngageOverride` = m2_arden_engage_cells 3.
+  5. Siege tower stood at the wall doing nothing -> it docks also when STUCK (still 1,2 s within 5 cells of its spot; dock range at least 1,2); on docking the model's «Bridge» node (orc_siege_drafts.py, hinged at the deck) swings down 90 deg towards the wall in 0,7 s (`LowerBridge`, axis from the bridge's own bounds, sign-agnostic), then the crew climb.
+  6. After the outer gate fell the orcs razed everything -> inside the outer walls in part 1 (gate, breach or off a tower) an orc gets `ToInnerGate`: a road to the inner main gate's front, LaneOnly (fights fighters, leaves houses). In part 2 still let loose. Replaces the third playtest's «raze the town».
+  7. Orcs on a broken wall not fought -> `_breaches` (positions of fallen wall pieces/gates, `NoteBreach` in OnBuildingDown); `SoldierUnit.PenBreach` lets a penned soldier target AND walk to a point within 1,8 of a breach at the pen's edge; `WallBetween` counts such an orc as inside.
+  8. Where are ram/tower hp: m2_ram_health_mult / m2_tower_health_mult (x a brute's health), tab «Кампания: оборона города».
+  9. Only rams/towers left -> the next wave comes (TickWaves counts only orcs without `IgnoresSoldiers`).
+  10. Ардан's XP: EVERY orc that falls on the map = 1 point (any killer); m2_arden_max_level 20 levels spread evenly over ALL orcs of all waves of both parts (m2waves tab; a tower counts 1 + m2_tower_crew); skills open at m2_cry_level 1 / m2_whirl_level 5 / m2_dash_level 10 / m2_breath_level 15; part 2 credits all of part 1's orcs (`CreditPart1`); health/damage per level 20 / 2. m2_arden_xp2-4 deleted (sheet + CSV + code).
 - **SWORD + SIEGE (approved by the user 2026-11-12, «Утверждаю, ставь») -> IN THE GAME (not seen).**
   - Ардан WITH THE SWORD replaces the Латник's look: CineArdanSword.fbx from
     Tools/blender/cinematic/export_ardan_sword.py (poses from ardan_sword.py; clips Idle, Run, Attack, Whirl, Cry,

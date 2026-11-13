@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using CityBuilder.CameraControl;
 using CityBuilder.Combat;
+using CityBuilder.Core;
+using CityBuilder.Grid;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -10,8 +12,8 @@ namespace CityBuilder.Campaign
     /// <summary>
     /// Mission 2's Ардан (the user's first playtest, 2026-11-12): run by the stick; fallen, he RISES AGAIN on the
     /// square after m2_arden_respawn_sec, his level kept (the user's third playtest: «слишком тяжело удерживать его
-    /// живым»). He levels on every orc that dies after he wounded it (experience = the orc's health) and each level
-    /// opens a skill: 1 «Боевой клич» (he and the allies near strike harder, the orcs near stagger),
+    /// живым»). He levels on EVERY orc that falls on the map (the user, 2026-11-13): m2_arden_max_level levels spread over
+    /// all the orcs of all the waves of both parts; four of the levels (m2_*_level) open a skill: 1 «Боевой клич» (he and the allies near strike harder, the orcs near stagger),
     /// 2 «Круговой удар» (a blow round him that throws them back), 3 «Натиск» (a dash the stick's way,
     /// striking and staggering all on the line), 4 «Второе дыхание» (he and the allies near heal fast).
     /// The healers on the square mend him while he stands among them -- the way out of a losing fight.
@@ -38,7 +40,66 @@ namespace CityBuilder.Campaign
         private readonly float[] _cooldown = new float[SkillCount];
         private float _healCarry;
 
-        public bool SkillOpen(int skill) => skill >= 0 && skill < SkillCount && ArdenLevel > skill;
+        public bool SkillOpen(int skill) => skill >= 0 && skill < SkillCount && ArdenLevel >= SkillLevel(skill);
+
+        /// <summary>The level a skill opens at (m2_cry_level, m2_whirl_level, m2_dash_level, m2_breath_level).</summary>
+        public static int SkillLevel(int skill)
+        {
+            var b = B;
+            switch (skill)
+            {
+                case Cry: return b.cryLevel;
+                case Whirl: return b.whirlLevel;
+                case Dash: return b.dashLevel;
+                default: return b.breathLevel;
+            }
+        }
+
+        /// <summary>His last level (m2_arden_max_level, 20).</summary>
+        public static int MaxLevel => Mathf.Max(2, B.ardenMaxLevel);
+
+        // the user, 2026-11-13: his levels ride on the whole level's orcs -- every orc that falls anywhere is a point,
+        // and the last level comes with the last orc of the last wave of part 2
+        private int _orcsTotal = 1, _orcsPart1;
+
+        /// <summary>Orcs that fall to reach `level` (all told).</summary>
+        private int XpAt(int level) => level <= 1 ? 0 : Mathf.CeilToInt(_orcsTotal * (level - 1) / (float)(MaxLevel - 1));
+
+        private void CountOrcs()
+        {
+            var b = B;
+            int Part(int part)
+            {
+                var n = 0;
+                foreach (var row in BalanceConfig.Instance.M2Waves)
+                {
+                    if (row.part != part) continue;
+                    for (var r = 0; r < 3; r++)
+                        n += row.raiders[r] + row.brutes[r] + row.throwers[r] + row.rams[r] + row.towers[r] * (1 + b.towerCrew);
+                }
+                return n;
+            }
+            _orcsPart1 = Part(1);
+            _orcsTotal = Mathf.Max(1, _orcsPart1 + Part(2));
+        }
+
+        /// <summary>Part 2 starts with part 1's orcs counted, whether they fell or rode off with the courier's time.</summary>
+        private void CreditPart1()
+        {
+            if (ArdenXp >= _orcsPart1) return;
+            ArdenXp = _orcsPart1;
+            LevelFromXp();
+        }
+
+        private void LevelFromXp()
+        {
+            while (ArdenLevel < MaxLevel && ArdenXp >= XpForNext)
+            {
+                ArdenLevel++;
+                if (Arden != null) ApplyLevel(fullHealth: false);
+                ArdenLeveled?.Invoke(ArdenLevel);
+            }
+        }
 
         /// <summary>0 ready .. 1 just used.</summary>
         public float SkillCooldownShare(int skill)
@@ -60,10 +121,10 @@ namespace CityBuilder.Campaign
         }
 
         /// <summary>Experience to reach the next level (all told), or 0 at the last.</summary>
-        public int XpForNext => ArdenLevel == 1 ? B.ardenXp2 : ArdenLevel == 2 ? B.ardenXp3 : ArdenLevel == 3 ? B.ardenXp4 : 0;
+        public int XpForNext => ArdenLevel < MaxLevel ? XpAt(ArdenLevel + 1) : 0;
 
         /// <summary>Experience the current level began at.</summary>
-        public int XpOfLevel => ArdenLevel == 2 ? B.ardenXp2 : ArdenLevel == 3 ? B.ardenXp3 : ArdenLevel >= 4 ? B.ardenXp4 : 0;
+        public int XpOfLevel => XpAt(ArdenLevel);
 
         private bool ArdenAlive => Arden != null && Arden.CurrentHealth > 0;
 
@@ -84,6 +145,8 @@ namespace CityBuilder.Campaign
             Arden = army.SpawnHireling(SoldierType.ManAtArms, at, _ardenGroup);
             if (Arden == null) return;
             Arden.name = "Arden";
+            // he picks a fight by himself only this near (the user, 2026-11-13: «слишком далёкий радиус триггера»)
+            Arden.EngageOverride = B.ardenEngageCells * (GridManager.Instance != null ? GridManager.Instance.CellSize : 1f);
             Arden.SteerArea = LitArea(1f);
             ApplyLevel(fullHealth: true);
             DressArden();
@@ -114,21 +177,16 @@ namespace CityBuilder.Campaign
         private void OnOrcDied(OrcUnit orc)
         {
             if (orc == null) return;
-            var his = _woundedByArden.Remove(orc) || (Arden != null && orc.KilledBy == Arden);
-            if (!his || ArdenLevel >= SkillCount) return;
-            ArdenXp += Mathf.Max(1, orc.MaxHealth);
-            while (ArdenLevel < SkillCount && XpForNext > 0 && ArdenXp >= XpForNext)
-            {
-                ArdenLevel++;
-                ApplyLevel(fullHealth: false);
-                ArdenLeveled?.Invoke(ArdenLevel);
-            }
+            _woundedByArden.Remove(orc);
+            if (Current != Stage.Part1 && Current != Stage.Part2) return;
+            ArdenXp++;
+            LevelFromXp();
         }
 
         /// <summary>Cheat (the user, 2026-11-12): Ардан a level up (the skills to try).</summary>
         public void CheatLevelUp()
         {
-            if (Arden == null || ArdenLevel >= SkillCount) return;
+            if (Arden == null || ArdenLevel >= MaxLevel) return;
             ArdenXp = Mathf.Max(ArdenXp, XpForNext);
             ArdenLevel++;
             ApplyLevel(fullHealth: true);

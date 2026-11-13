@@ -145,6 +145,7 @@ namespace CityBuilder.Campaign
             MeleeReach.Factor = B.meleeReachMult;
             // nobody fights across a wall (the user's fourth playtest)
             OrcUnit.WallBetween = WallBetween;
+            SoldierUnit.PenBreach = Breach;
             // no residents grow in the houses (their bars stood over every roof, the user's first playtest)
             var people = GetComponent<Citizens.HousePeople>();
             if (people != null) people.enabled = false;
@@ -163,6 +164,7 @@ namespace CityBuilder.Campaign
                 RTSCameraController.GesturesLocked = false;
                 MeleeReach.Factor = 1f;
                 OrcUnit.WallBetween = null;
+                SoldierUnit.PenBreach = null;
             }
         }
 
@@ -207,6 +209,7 @@ namespace CityBuilder.Campaign
             SetUpView();
             Darkness();
             RaiseHealers();
+            CountOrcs();
 
             gameObject.AddComponent<CityDefenceHud>().Bind(this);
 
@@ -270,6 +273,9 @@ namespace CityBuilder.Campaign
             if (data.isGate)
             {
                 var gates = OnOuterRing(piece) ? OuterGates : InnerGates;
+                // their own health and a bar low enough to be seen (the user, 2026-11-13)
+                building.OverrideMaxHealth(OnOuterRing(piece) ? B.outerGateHealth : B.innerGateHealth);
+                building.HealthBarHeight = B.gateBarHeight * (GridManager.Instance != null ? GridManager.Instance.CellSize : 1f);
                 for (var lane = 0; lane < gates.Length; lane++) gates[lane] = building;
                 return;
             }
@@ -330,6 +336,7 @@ namespace CityBuilder.Campaign
 
         private void BeginPart2(bool atOnce)
         {
+            CreditPart1();
             // the waves of part 1 are gone with the courier's ride; the outer works and half the lower town lie in ruins
             foreach (var orc in new List<OrcUnit>(OrcUnit.All))
                 if (orc != null) Destroy(orc.gameObject);
@@ -408,7 +415,9 @@ namespace CityBuilder.Campaign
             foreach (var lane in _laneOrcs)
             {
                 lane.RemoveAll(o => o == null || o.CurrentHealth <= 0);
-                alive += lane.Count;
+                // rams and towers left alone do not hold the next wave back (the user's sixth playtest)
+                foreach (var o in lane)
+                    if (!o.IgnoresSoldiers) alive++;
             }
             LetThemLoose();
             // the next wave only once this one is beaten to the last orc (the user's third playtest), after its pause
@@ -444,12 +453,35 @@ namespace CityBuilder.Campaign
             foreach (var lane in _laneOrcs)
                 foreach (var orc in lane)
                 {
-                    if (orc == null || orc.Lane == null || orc.IgnoresSoldiers) continue;
+                    if (orc == null || orc.Lane == null || orc.IgnoresSoldiers || _toInner.Contains(orc)) continue;
                     var at = orc.transform.position;
                     if (!town.Contains(new Vector2(at.x, at.z))) continue;
-                    orc.LaneOnly = false;
-                    orc.FollowLane(null);
+                    ToInnerGate(orc);
                 }
+        }
+
+        // the orcs already sent on to the inner gate
+        private readonly HashSet<OrcUnit> _toInner = new HashSet<OrcUnit>();
+
+        /// <summary>
+        /// Inside the outer walls in part 1 (through the broken gate, a breach or off a tower): the INNER main gate is the
+        /// next goal (the user's sixth playtest, 2026-11-13, replacing the third's «raze the whole town»): a road from
+        /// where it stands to the gate's front; fighters on the way it still fights, houses it leaves alone.
+        /// In part 2 (it is already at the last line) it is let loose.
+        /// </summary>
+        private void ToInnerGate(OrcUnit orc)
+        {
+            if (orc == null) return;
+            _toInner.Add(orc);
+            if (Current != Stage.Part1 || InnerGates[0] == null)
+            {
+                orc.LaneOnly = false;
+                orc.FollowLane(null);
+                return;
+            }
+            var front = OnMesh(World(50.5f + Random.Range(-1f, 1f), InnerNorthWallY - 1.3f));
+            orc.FollowLane(new OrcLane(new[] { orc.transform.position, OnMesh(World(50.5f, 44f)), front }));
+            orc.LaneOnly = true;
         }
 
         private void SendWave()
@@ -485,6 +517,8 @@ namespace CityBuilder.Campaign
                     var orc = raids.SpawnOrcOfKind(at, row.level, kind);
                     if (orc == null) continue;
                     orc.Toughen(b.orcHealthMult, b.orcDamageMult);
+                    // an orc shooter reaches as far as the kingdom's archers, no farther (the user, 2026-11-13)
+                    if (orc.IsRanged) orc.SetUnitRange(SoldierStats.Row(SoldierType.Archer).attackRangeUnits * b.rangedRangeMult);
                     orc.FollowLane(_lanes[lane]);
                     orc.LaneOnly = true;
                     _laneOrcs[lane].Add(orc);
@@ -514,6 +548,7 @@ namespace CityBuilder.Campaign
         private void OnBuildingDown(BuildingInstance building)
         {
             if (Current == Stage.Won || Current == Stage.Lost || building == null) return;
+            NoteBreach(building);
             if (building == Castle) { Lose(LossReason.Castle); return; }
             for (var i = 0; i < 3; i++)
             {

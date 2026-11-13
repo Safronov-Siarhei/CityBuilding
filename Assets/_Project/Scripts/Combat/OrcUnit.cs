@@ -593,6 +593,14 @@ namespace CityBuilder.Combat
         /// sandbox raid's (inv_orc_health_mult), or a tower's arrow drops each with one shot; its
         /// blows times `damage` (inv_orc_damage_mult).
         /// </summary>
+        /// <summary>Its reach against soldiers, set from outside (campaign level 2, the user 2026-11-13: an orc shooter
+        /// outranged the kingdom's and killed them unanswered -- now the same reach as the garrison's archers).</summary>
+        public void SetUnitRange(float range)
+        {
+            _soldierAttackRange = Mathf.Max(0.5f, range);
+            if (_guardRadius > 0f) _guardRadius = _soldierAttackRange + _perchBonus;
+        }
+
         public void Toughen(float factor, float damage = 1f)
         {
             _maxHealth = Mathf.Max(1, Mathf.RoundToInt(_maxHealth * factor));

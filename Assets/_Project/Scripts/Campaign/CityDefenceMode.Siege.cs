@@ -35,6 +35,10 @@ namespace CityBuilder.Campaign
             public bool docked;
             public float until, nextClimb;
             public Vector3 foot, deck, walk, drop;
+            // a tower the wall's own body keeps off its spot docks where it stuck (the user's sixth playtest: it rolled
+            // up to the wall and did nothing)
+            public Vector3 lastAt;
+            public float stillFor;
         }
 
         private readonly List<Tower> _towers = new List<Tower>();
@@ -47,6 +51,10 @@ namespace CityBuilder.Campaign
         private const float WalkHeight = 1.15f;
         // an escort this near the docked tower's foot climbs it
         private const float FootReach = 2.5f;
+        // stuck this near its spot, it docks there
+        private const float StuckDockCells = 5f;
+        // the drawbridge drops onto the wall-walk in this long
+        private const float BridgeDropSeconds = 0.7f;
 
         /// <summary>A ram or a tower on road `lane`; the tower's record (escorts join it), null for a ram.</summary>
         private Tower SpawnMachine(bool ram, int lane, int level)
@@ -136,7 +144,11 @@ namespace CityBuilder.Campaign
                 if (!t.docked)
                 {
                     var spot = World(t.wallX, t.wallY - TowerStandOff);
-                    if (Flat(t.orc.transform.position - spot) <= B.towerDockCells) Dock(t);
+                    var at = t.orc.transform.position;
+                    var near = Flat(at - spot);
+                    t.stillFor = Flat(at - t.lastAt) < 0.25f * dt ? t.stillFor + dt : 0f;
+                    t.lastAt = at;
+                    if (near <= Mathf.Max(B.towerDockCells, 1.2f) || (near <= StuckDockCells && t.stillFor >= 1.2f)) Dock(t);
                     continue;
                 }
                 // standing against the wall: it does nothing but stand (and can still be broken)
@@ -188,8 +200,11 @@ namespace CityBuilder.Campaign
             t.walk = World(t.wallX, t.wallY + 0.5f);
             t.walk.y = ground + WalkHeight;
             t.drop = OnMesh(World(t.wallX, t.wallY + 2.2f));
-            // the crew first (they rode inside), then the escorts as they reach its foot
-            t.nextClimb = Time.time + B.towerCrew * B.towerClimbGapSeconds;
+            // the wooden drawbridge falls onto the wall first (the user's sixth playtest), then the crew climb (they rode
+            // inside), then the escorts as they reach its foot
+            StartCoroutine(LowerBridge(t.orc.transform, Vector3.back));
+            t.until += BridgeDropSeconds;
+            t.nextClimb = Time.time + BridgeDropSeconds + B.towerCrew * B.towerClimbGapSeconds;
             var raids = OrcRaidManager.Instance;
             if (raids == null) return;
             for (var k = 0; k < B.towerCrew; k++)
@@ -198,7 +213,7 @@ namespace CityBuilder.Campaign
                 if (orc == null) continue;
                 orc.Toughen(B.orcHealthMult, B.orcDamageMult);
                 _laneOrcs[t.lane].Add(orc);
-                StartCoroutine(Climb(orc, t.foot, t.deck, t.walk, t.drop, k * B.towerClimbGapSeconds, false));
+                StartCoroutine(Climb(orc, t.foot, t.deck, t.walk, t.drop, BridgeDropSeconds + k * B.towerClimbGapSeconds, false));
             }
         }
 
@@ -234,15 +249,41 @@ namespace CityBuilder.Campaign
             if (body != null) body.enabled = true;
             orc.Untargetable = false;
             orc.enabled = true;
-            if (!escort) yield break;
-            orc.Slow(1f / Mathf.Max(0.05f, B.siegeSpeed));
-            orc.LaneOnly = false;
-            orc.FollowLane(null);
+            if (escort) orc.Slow(1f / Mathf.Max(0.05f, B.siegeSpeed));
+            // inside the walls: on to the inner main gate (the user's sixth playtest)
+            ToInnerGate(orc);
+        }
+
+        /// <summary>The tower model's «Bridge» (orc_siege_drafts.py: hinged at its foot on the top deck, folded up) swings
+        /// down 90 degrees towards the wall, with a bounce at the end.</summary>
+        private static IEnumerator LowerBridge(Transform tower, Vector3 toWall)
+        {
+            Transform bridge = null;
+            foreach (var child in tower.GetComponentsInChildren<Transform>(true))
+                if (child.name == "Bridge") { bridge = child; break; }
+            if (bridge == null) yield break;
+            var look = bridge.GetComponentInChildren<Renderer>();
+            var up = look != null ? look.bounds.center - bridge.position : Vector3.up;
+            up.y = Mathf.Max(up.y, 0.01f);
+            var axis = Vector3.Cross(up.normalized, toWall.normalized);
+            if (axis.sqrMagnitude < 0.0001f) yield break;
+            axis.Normalize();
+            var start = bridge.rotation;
+            for (var t = 0f; t < BridgeDropSeconds; t += Time.deltaTime)
+            {
+                if (bridge == null) yield break;
+                var k = t / BridgeDropSeconds;
+                var angle = 90f * k * k + Mathf.Sin(Mathf.Clamp01((k - 0.8f) / 0.2f) * Mathf.PI) * -6f;
+                bridge.rotation = Quaternion.AngleAxis(angle, axis) * start;
+                yield return null;
+            }
+            if (bridge != null) bridge.rotation = Quaternion.AngleAxis(90f, axis) * start;
         }
 
         private void ForgetSiege()
         {
             _towers.Clear();
+            _toInner.Clear();
         }
     }
 }
