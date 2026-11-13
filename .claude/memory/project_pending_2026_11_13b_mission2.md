@@ -12,7 +12,9 @@ Playtest 7 of campaign level 2 BUILT (not seen): shooters both sides of the gate
 
 Then the user merged the two parts into ONE 11-minute mission (BUILT 2026-11-13, setup green, not seen; card Design/features/campaign.md «ONE PART, 11 MINUTES»): goals outer gate → inner gate → central square (orc of the waves on the square = loss), the goal's gate hp as a HUD bar under the goal plaque, minimap «Гонец в пути» then «Подкрепление через:» for the last 3 min, only part-1 waves kept (the sheet's waves are the user's own heavier tuning), 5 wreckers break houses after the outer gate falls (respawn when all dead, no «!»), inner gate guard from the start kept inside.
 
-OPEN: (1) doors at the gatehouse foot — the user chose «дверь в каждой башне»; renders need approval before the model goes in; (2) the capital cutscene at the 8-minute mark — later, discuss before building.
+PLAYTEST 8 (13 items) BUILT 2026-11-13 too (card «PLAYTEST 8»), not seen.
+
+OPEN: (1) doors at the gatehouse foot — drafts A (door+step+lantern) / B (door under a blue porch) sent, `Tools/blender/gate_door_drafts.py`; wait for the pick, then export and place on the Barbican towers' town face; (2) the capital cutscene at the 8-minute mark — later, discuss before building.
 
 **Why:** the user's seventh playtest and their redesign request.
 **How to apply:** next mission 2 work starts from these open items or the user's next playtest. Related: [[project-pending-2026-11-13-mission2]], [[feedback-approve-models-first]], [[project-campaign]].
