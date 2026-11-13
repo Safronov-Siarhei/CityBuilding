@@ -72,6 +72,14 @@ def lock(size):
     return im
 
 
+def plus_dark(size):
+    im = Image.new("RGBA", (size, size))
+    ImageDraw.Draw(im).ellipse([0, 0, size - 1, size - 1], fill=(122, 76, 40, 255))
+    p = plus(int(size * .8))
+    im.alpha_composite(p, ((size - p.width) // 2, (size - p.height) // 2))
+    return im
+
+
 def portrait_disc(name, size):
     """A villager portrait cut to a disc (as the hire bar's people)."""
     p = sb.sprite(name, (size, size))
@@ -83,14 +91,31 @@ def portrait_disc(name, size):
 
 
 def sick_badge(size=44):
-    """The sickness mark: a green disc, a white drop with a fever line."""
+    """The sickness mark (the user, 2026-11-13): a green skull."""
     t = Image.new("RGBA", (size, size))
     d = ImageDraw.Draw(t)
-    d.ellipse([0, 0, size - 1, size - 1], fill=(92, 160, 60, 255), outline=(250, 236, 190, 255), width=max(2, size // 12))
-    s = size / 44
-    d.ellipse([14 * s, 18 * s, 30 * s, 34 * s], fill=(255, 255, 255, 255))
-    d.polygon([(15 * s, 24 * s), (22 * s, 8 * s), (29 * s, 24 * s)], fill=(255, 255, 255, 255))
+    s = size / 100
+    green, dark = (120, 205, 80, 255), (36, 70, 24, 255)
+    w = max(2, int(4 * s))
+    d.ellipse([16 * s, 6 * s, 84 * s, 70 * s], fill=green, outline=dark, width=w)
+    d.rounded_rectangle([30 * s, 56 * s, 70 * s, 92 * s], 8 * s, fill=green, outline=dark, width=w)
+    d.rectangle([32 * s, 54 * s, 68 * s, 64 * s], fill=green)
+    d.ellipse([26 * s, 30 * s, 46 * s, 52 * s], fill=dark)
+    d.ellipse([54 * s, 30 * s, 74 * s, 52 * s], fill=dark)
+    d.polygon([(50 * s, 54 * s), (44 * s, 66 * s), (56 * s, 66 * s)], fill=dark)
+    for x in (40, 50, 60):
+        d.line([(x * s, 74 * s), (x * s, 90 * s)], fill=dark, width=w)
     return t
+
+
+def plus(size):
+    """An empty bed slot (the user, 2026-11-13): a plain plus."""
+    im = Image.new("RGBA", (size, size))
+    d = ImageDraw.Draw(im)
+    s = size / 100
+    d.rounded_rectangle([42 * s, 18 * s, 58 * s, 82 * s], 6 * s, fill=(255, 246, 225, 255))
+    d.rounded_rectangle([18 * s, 42 * s, 82 * s, 58 * s], 6 * s, fill=(255, 246, 225, 255))
+    return im
 
 
 def slot(kind, arg):
@@ -105,7 +130,7 @@ def slot(kind, arg):
         d.text(((b.width - d.textlength(t, font=f)) / 2, b.height - 50), t, font=f, fill=CREAM)
         return b
     if kind is None:
-        b.alpha_composite(bed(inner), (ox, oy))
+        b.alpha_composite(plus(int(inner * .7)), ((b.width - int(inner * .7)) // 2, (b.height - int(inner * .7)) // 2 - 2))
         return b
     b.alpha_composite(portrait_disc(kind, inner), (ox, oy))
     if arg is not None:  # under treatment: the 60 s ring
@@ -115,8 +140,6 @@ def slot(kind, arg):
         rd.arc(box, 0, 360, fill=(40, 28, 18, 220), width=11)
         rd.arc(box, -90, -90 + 360 * arg, fill=(110, 210, 90, 255), width=11)
         b.alpha_composite(r)
-    else:  # lying in bed, waiting for a free healer: a small bed badge
-        b.alpha_composite(bed(46), (b.width - 50, b.height - 52))
     return b
 
 
@@ -138,13 +161,10 @@ def panel_bar():
     c = ground()
     held(c, W // 2, 30)
     xs = row_x(7)
-    cy = H - 60 - 80
+    cy = H - 24 - 80
     for i, (kind, arg) in enumerate(SLOTS):
         sb.put_centre(c, slot("lock" if kind == "lock" else kind, arg), xs[i], cy)
     sb.mark_button(c, xs[6], cy)
-    names = ["42 с", "15 с", "ждёт", "пусто", "закрыто", "закрыто", "окно"]
-    for x, n in zip(xs, names):
-        label(c, x, cy + 70, n, 20)
     caption(c, "1", "Лечебница ур. 3: 4 койки, 2 лекаря")
     return c
 
@@ -186,14 +206,14 @@ def panel_world():
     disc = Image.new("RGBA", mark.size)
     dd = ImageDraw.Draw(disc)
     dd.ellipse([4, 4, 91, 91], fill=(250, 240, 214, 255), outline=(110, 74, 30, 255), width=5)
-    disc.alpha_composite(sick_badge(64), (16, 16))
+    disc.alpha_composite(sick_badge(66), (15, 13))
     ring = ImageDraw.Draw(disc)
     ring.arc([0, 0, 95, 95], -90, -90 + 360 * .6, fill=(214, 34, 40, 255), width=7)
     sb.put_centre(c, disc, 330, 160)
     for k in range(4):  # footsteps towards the healer
         ImageDraw.Draw(c).ellipse([420 + k * 70, 400 - k * 18, 444 + k * 70, 412 - k * 18], fill=(60, 90, 44, 255))
-    label(c, 330, 420, "больной идёт в лечебницу", 22)
-    label(c, 330, 466, "кольцо = 30 с до смерти без койки", 20)
+    label(c, 330, 420, "больной без места", 22)
+    label(c, 330, 466, "кольцо = 30 с до смерти", 20)
 
     # middle: the healer with no healer assigned -- the worker mark over it
     held(c, 960, 120, 240, "HealerHouse")
@@ -214,7 +234,7 @@ def panel_card():
     d = ImageDraw.Draw(c)
     t = "Лечебница · ур. 3"
     d.text((W // 2 - d.textlength(t, font=sb.font(40)) / 2, 62), t, font=sb.font(40), fill=INK)
-    rows = [(bed(56), "Койки", "3 / 4"), (portrait_disc("PortraitVillagerPeasant1", 56), "Лекари", "2 / 2"),
+    rows = [(plus_dark(56), "Койки", "3 / 4"), (portrait_disc("PortraitVillagerPeasant1", 56), "Лекари", "2 / 2"),
             (sick_badge(56), "Лечение", "60 с"), (lock(56), "Ждёт места", "30 с")]
     x0 = W // 2 - 440
     for i, (icon, name, value) in enumerate(rows):

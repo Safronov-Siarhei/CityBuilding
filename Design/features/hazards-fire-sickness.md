@@ -22,12 +22,13 @@ The user's rules, SANDBOX ONLY (other modes keep the radius healer above):
 - Illness chance unchanged (daily roll). A sick resident leaves his job (another is hired), pays no tax,
   and WALKS to the nearest healer on his island with a free bed, a sickness mark over his head.
 - No radius: beds. Beds by level 2/3/4/5/6; healers (workers) 1/2/2/3/3. Several healers on an island: beds add up, nearest free one.
-- In a bed = never dies. Without a bed a sick resident lives 30 s (the walk counts); a bed freed in time
+- A free bed is TAKEN THE MOMENT he falls ill (he walks there meanwhile): his death timer stops and
+  treatment counts from then (he is on the healer's list). In a bed = never dies. Without a bed a sick resident lives 30 s (the walk counts); a bed freed in time
   goes to whoever fell ill FIRST. No healer on the island = he dies.
 - Treatment 60 s per patient, in queue order; as many at once as healers assigned.
 - A healer with no worker takes nobody (no-worker mark + notice «Назначьте рабочего лечебницы»);
   beds short: notice «На острове не хватает мест в лечебнице».
-- Bottom bar on tap: 6 bed slots (empty bed / portrait / portrait in a 60 s ring; locked «Ур. N») + «!» 7th. No bar over the building.
+- Bottom bar on tap: 6 bed slots (empty = a plus / portrait / portrait in a 60 s ring; locked «Ур. N»), no captions under them; sickness mark = a GREEN SKULL + «!» 7th. No bar over the building.
 - Numbers on the sheet as per-level columns (beds, workers, 60 s, 30 s).
 - Workers: general auto-assignment, BUT the player's manual count has priority for EVERY building
   (lowered 3->1: auto never gives more than 1; set to 0: no-worker mark stays, auto never staffs it).
