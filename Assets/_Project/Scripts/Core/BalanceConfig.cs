@@ -733,6 +733,7 @@ namespace CityBuilder.Core
         [SerializeField] private float plagueWindowSeconds = 300f;
         [SerializeField] private float plagueBannerShare = 0.4f;
         [SerializeField] private float plagueCalmSeconds = 180f;
+        [SerializeField] private float plagueShieldSeconds = 420f;
         [SerializeField] private int plagueEndCrystals = 30;
 
         [Header("Migration (economy.csv)")]
@@ -1199,6 +1200,8 @@ namespace CityBuilder.Core
         public float PlagueWindowSeconds => plagueWindowSeconds;
         public float PlagueBannerShare => plagueBannerShare;
         public float PlagueCalmSeconds => plagueCalmSeconds;
+        /// <summary>After the banner ended a plague: no plague breaks out anywhere for so long (the user, 2026-11-13: 7 minutes).</summary>
+        public float PlagueShieldSeconds => plagueShieldSeconds;
         public int PlagueEndCrystals => plagueEndCrystals;
         public int PortalMaxHealth => portalMaxHealth;
         public int OrcTowerHealth => orcTowerHealth;
@@ -2251,6 +2254,7 @@ namespace CityBuilder.Core
             plagueWindowSeconds = Read(economy, "plague_window_sec", plagueWindowSeconds);
             plagueBannerShare = Read(economy, "plague_banner_share", plagueBannerShare);
             plagueCalmSeconds = Read(economy, "plague_calm_sec", plagueCalmSeconds);
+            plagueShieldSeconds = Read(economy, "plague_shield_sec", plagueShieldSeconds);
             plagueEndCrystals = (int)Read(economy, "plague_end_crystals", plagueEndCrystals);
             portalMaxHealth = (int)Read(economy, "portal_max_health", portalMaxHealth);
             orcTowerHealth = (int)Read(economy, "orc_tower_health", orcTowerHealth);

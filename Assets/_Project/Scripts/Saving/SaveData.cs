@@ -140,6 +140,9 @@ namespace CityBuilder.Saving
         /// <summary>The islands the plague is on (Citizens/Plague).</summary>
         public List<OutbreakEntry> outbreaks = new List<OutbreakEntry>();
 
+        /// <summary>Seconds left of the plague shield the banner gave (Citizens/Plague.ShieldLeft).</summary>
+        public float plagueShield;
+
         /// <summary>
         /// Everything alight, and how far into its burn it is. Without this a reload was a fire
         /// brigade: every fire went out at once, the buildings kept whatever health the flames had

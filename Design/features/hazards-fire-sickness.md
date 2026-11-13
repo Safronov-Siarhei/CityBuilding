@@ -1,6 +1,6 @@
 # Hazards: fire and sickness
 
-> **Status (2026-11-13):** sandbox healer v2 (beds) BUILT; PLAGUE + CEMETERY + the dead BUILT (setup green), not seen, untested; the lying-skeleton model (Remains1) awaits approval. **Earlier (2026-10-21):** shipped 2026-08-19, numbers first-pass and NOT balanced (first playtest:
+> **Status (2026-11-13):** sandbox healer v2 (beds) BUILT; PLAGUE (+ 7-min shield after the banner) + CEMETERY + the dead BUILT (setup green), not seen, untested; lying skeleton Remains1 approved and in. **Earlier (2026-10-21):** shipped 2026-08-19, numbers first-pass and NOT balanced (first playtest:
 > 3 dead of illness by day 7 — clearly harsh).
 > **Read with:** [building-levels-and-decay](building-levels-and-decay.md), [citizens-and-workforce](citizens-and-workforce.md).
 
@@ -72,6 +72,9 @@ Plague (sandbox, per island, never spreads to other islands) -- `Citizens/Plague
   `UI/PlagueBanner` offers to end it: rewarded ad (stand-in: ShopAdStubSeconds) or `plague_end_crystals` 30.
 - Ends by itself after `plague_calm_sec` 180 with no illness death on the island (my proposal, not
   objected), or by the banner. Saved (OutbreakEntry).
+- SHIELD (the user, 2026-11-13): ended BY THE BANNER (ad or crystals) -> no plague breaks out on ANY
+  island for `plague_shield_sec` 420 (7 min, game time; illness deaths meanwhile are not counted);
+  notice #log_plague_shield; saved (SaveData.plagueShield). Plague.EndByBanner / ShieldLeft.
 - Look: SwampHaze patches (PlagueHaze.mat) over the island's buildings + a CrowFlock (OrcRaidManager.CrowModel).
 - BANNER art v2 APPROVED 2026-11-13 (v1, a plain card, was «дёшево»): the Rate window's build --
   wood window over a field of green skulls (3 depths, varied size/turn), the dungeon skeleton
@@ -91,8 +94,7 @@ Cemetery + the dead -- `Citizens/Remains.cs`:
 - Demolishing costs `cemetery_demolish_crystals` 50 (BuildingInfoPanelController).
 - Bodies over `remains_notice_share` 10% of the island's residents -> notice #log_remains_build_cemetery.
 - Models: Tools/blender/cemetery1.py (levels 1-5 APPROVED), installed by cemetery_install.py.
-  Remains1 (lying skeleton, review Design/buildings/Remains_review.png) AWAITS APPROVAL -- until then
-  only the skull marks a body; after: cemetery_install.py + export_fbx.py Remains1.
+  Remains1 (lying skeleton, 386 tris) APPROVED 2026-11-13 and exported (Models/Buildings/Remains1.fbx).
 - Bodies and graves saved (SaveData bodies / GraveEntry).
 
 ## Code

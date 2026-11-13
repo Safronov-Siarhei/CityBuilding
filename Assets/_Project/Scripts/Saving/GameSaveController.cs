@@ -355,7 +355,7 @@ namespace CityBuilder.Saving
             if (data.outbreaks != null)
                 foreach (var o in data.outbreaks)
                     outbreaks.Add(new Citizens.Plague.Outbreak { Island = o.island, People = o.people, Deaths = o.deaths, Calm = o.calm, BannerShown = o.bannerShown });
-            Citizens.Plague.Instance?.RestoreFromSave(outbreaks);
+            Citizens.Plague.Instance?.RestoreFromSave(outbreaks, data.plagueShield);
         }
 
         /// <summary>The sandbox Лечебница's patients, each back in his house and his bed with his clocks (after the buildings).</summary>
@@ -925,6 +925,7 @@ namespace CityBuilder.Saving
                 foreach (var pair in graves)
                     data.graves.Add(new GraveEntry { cellX = pair.Key.OriginCell.x, cellY = pair.Key.OriginCell.y, dead = pair.Value });
             }
+            if (Citizens.Plague.Instance != null) data.plagueShield = Citizens.Plague.Instance.ShieldLeft;
             if (Citizens.Plague.Instance != null)
                 foreach (var o in Citizens.Plague.Instance.Outbreaks)
                     data.outbreaks.Add(new OutbreakEntry { island = o.Island, people = o.People, deaths = o.Deaths, calm = o.Calm, bannerShown = o.BannerShown });

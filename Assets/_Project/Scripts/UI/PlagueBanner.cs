@@ -96,7 +96,7 @@ namespace CityBuilder.UI
 
         private void EndPlague()
         {
-            Citizens.Plague.Instance?.End(_island);
+            Citizens.Plague.Instance?.EndByBanner(_island);   // ended and shielded for plague_shield_sec
             Close();
         }
 

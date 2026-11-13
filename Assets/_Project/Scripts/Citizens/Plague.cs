@@ -18,7 +18,9 @@ namespace CityBuilder.Citizens
     ///   (40%) of the island since it broke out, the game pauses and PlagueBanner offers to end it for a
     ///   rewarded ad or plague_end_crystals.
     /// - It ends by itself after plague_calm_sec with no illness death on the island (the open
-    ///   question's proposal, 2026-11-13), or by the banner.
+    ///   question's proposal, 2026-11-13), or by the banner. Ended by the banner (ad or crystals), the
+    ///   player is shielded for plague_shield_sec (the user, 2026-11-13: 7 minutes): no plague breaks
+    ///   out on any island meanwhile.
     /// </summary>
     public class Plague : MonoBehaviour
     {
@@ -42,6 +44,9 @@ namespace CityBuilder.Citizens
         private readonly Dictionary<int, Outbreak> _on = new Dictionary<int, Outbreak>();
         private readonly List<int> _ending = new List<int>();
         private static Mesh _hazeQuad;
+
+        /// <summary>Seconds of the shield the banner gave (game time); no outbreak while it lasts.</summary>
+        public float ShieldLeft { get; private set; }
 
         public static bool Active => Infirmary.Active;
 
@@ -73,6 +78,7 @@ namespace CityBuilder.Citizens
                 }
                 return;
             }
+            if (ShieldLeft > 0f) return;   // the banner's shield: these deaths start nothing
             if (!_deaths.TryGetValue(island, out var times)) _deaths[island] = times = new List<float>();
             var now = Time.time;
             times.Add(now);
@@ -105,8 +111,20 @@ namespace CityBuilder.Citizens
                 Infirmary.HealerId, at));
         }
 
+        /// <summary>The banner ended it (ad or crystals): the plague goes and the shield goes up.</summary>
+        public void EndByBanner(int island)
+        {
+            End(island);
+            ShieldLeft = Mathf.Max(ShieldLeft, BalanceConfig.Instance.PlagueShieldSeconds);
+            _deaths.Clear();
+            var minutes = Mathf.RoundToInt(ShieldLeft / 60f);
+            EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_plague_shield", minutes), EventSeverity.Good, EventGlyph.Heal,
+                Infirmary.HealerId, IslandCentre(island, out _)));
+        }
+
         private void Update()
         {
+            if (ShieldLeft > 0f) ShieldLeft = Mathf.Max(0f, ShieldLeft - Time.deltaTime);
             if (_on.Count == 0) return;
             if (!Active)
             {
@@ -206,8 +224,9 @@ namespace CityBuilder.Citizens
         // ---------------------------------------------------------------- save
 
         /// <summary>A save's outbreaks (after the buildings: the look is laid over them).</summary>
-        public void RestoreFromSave(List<Outbreak> outbreaks)
+        public void RestoreFromSave(List<Outbreak> outbreaks, float shieldLeft = 0f)
         {
+            ShieldLeft = Mathf.Max(0f, shieldLeft);
             foreach (var o in _on.Values) if (o.Look != null) Destroy(o.Look);
             _on.Clear();
             _deaths.Clear();
