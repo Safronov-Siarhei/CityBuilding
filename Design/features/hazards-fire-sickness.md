@@ -61,6 +61,29 @@ The user's rules, SANDBOX ONLY (other modes keep the radius healer above):
   12 rows -- HealerHouse 0, Well/FireBrigade copy the base (keep them in step with «Здания»).
 - Trap: a patient's figure on another island than its healer never walks (no healer there = he dies, by the rules).
 
+## Plague + Cemetery -- DECIDED 2026-11-13 (the user), NOT BUILT (cemetery model: level 1 render first, then levels)
+Plague (sandbox, per island, never spreads to other islands):
+- Starts when illness killed 10% of an island's residents within 5 minutes.
+- While it lasts the island's houses make NO new residents; the rest of the harm is the deaths themselves.
+- Hints: «build infirmaries» (pointing at it); short of resources -> the existing offer to get them;
+  illness killed 40% of the island -> the game PAUSES and a banner offers to end the plague for a
+  rewarded ad or crystals.
+- Look over the island: a green haze on the ground + circling ravens.
+- How it ends besides the banner: OPEN (proposed: T minutes with no illness death).
+Cemetery (new building, sandbox):
+- Every death (any cause) leaves a skeleton lying on the ground with a skull icon over it; each body
+  on an island raises its illness chance by +2%.
+- With a cemetery on the island, bodies vanish by themselves into it (no worker) and graves appear on it.
+- Capacity 20, levels via the Laboratory 20/30/40/50/60; the player picks: a new cemetery or an upgrade.
+- Demolishing a cemetery costs 50 crystals (else it would be a free way to clear bodies).
+- Bodies over 10% of the island's residents -> notice + hint «build a cemetery to avoid plague».
+- Model: headstones and a fence round the edges; level 1 render first, then the other levels.
+  Level 1 drafted 2026-11-13: Tools/blender/cemetery1.py (2x2 plot, picket fence, gate, path, memorial
+  cross, 20 grave places 4x5 filling front-first; base 1514 tris, ~39 a grave), review
+  Design/buildings/Cemetery_L1_review.png -- APPROVED 2026-11-13. Levels 2-5
+  (stone footing + cobbles + lamps / chapel with gilded cross / glazed / gilded roof) in
+  Design/buildings/Cemetery_levels_review.png -- AWAIT APPROVAL. 20 places at every level: past lvl 1 a grave = a share of the dead.
+
 ## Code
 `Buildings/FireManager.cs`, `Buildings/BuildingFire.cs`, `Citizens/SicknessManager.cs`,
 `Buildings/BuildingInstance.cs` (`TryDamage`).
