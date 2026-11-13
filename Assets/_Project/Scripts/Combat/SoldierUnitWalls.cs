@@ -389,6 +389,8 @@ namespace CityBuilder.Combat
         public bool SlideAlongWall(Vector3 dir, float dt)
         {
             if (_wallPhase != WallPhase.Posted && _wallPhase != WallPhase.Walking) return false;
+            // already on his way down through a tower: let him go
+            if (_wallLeaving) return false;
             var grid = GridManager.Instance;
             if (grid == null) return false;
             // the walk's line here: along x where it goes on east or west, else along z
@@ -400,6 +402,17 @@ namespace CityBuilder.Combat
             _wallPhase = WallPhase.Posted;
             var p = transform.position + axis * (Mathf.Sign(amount) * _walkSpeed * dt);
             var cell = grid.WorldToCell(p);
+            // walked into a stair tower (the user's tenth playtest: «не могу зайти в башню и слезть, Ардан упирается
+            // в башню»): in through it and down by its town-side door
+            if (cell != _wallAt && WallWalk.IsStair(cell) && !WallWalk.IsDockStair(cell) && WallWalk.Path(_wallAt, cell, _wallPath))
+            {
+                WallWalk.Release(this);
+                _wallStair = cell;
+                _wallStep = 1;
+                _wallLeaving = true;
+                _wallPhase = WallPhase.Walking;
+                return true;
+            }
             if (cell != _wallAt && (!WallWalk.IsWalk(cell) || WallWalk.IsStair(cell) || WallWalk.IsDockStair(cell))) return true;
             var mid = WallWalk.Top(cell);
             // into the walk's middle across it

@@ -11,7 +11,9 @@ img{width:80px;height:80px;display:block;margin:auto}.none{color:#b9a27a}
 img.u{width:110px;height:110px}.where{color:#8a7350;font-size:13px}h1.part{margin-top:40px}</style></head><body>
 <h1>Справочник: здания и армия</h1>
 <div class="head">Файл СОБИРАЕТСЯ САМ (Tools/docs/reference.py, после каждого setup в run.ps1): не правь его руками.<br>Состав и числа — лист «Здания» (buildings.csv), еда — economy.csv, скрытые — BuildingIds.Hidden, иконки — UI/Icons,<br>описания — Design/buildings/descriptions.tsv (новое здание: добавь туда строку).<br>Армия: числа — лист «units» (units.csv), описания — Design/reference/units.tsv, картинки уровней —<br>Design/reference/units (Tools/blender/render_unit_cards.py; у кораблей — портреты из UI/Icons).<br>Цены и время стройки — песочницы (sandbox.csv; ур.1 = постройка, дальше — улучшение); остальные числа — базовые.</div>
-<p>Активных зданий: <b>53</b> (скрыто: 5).</p>
+<p>Активных зданий: <b>54</b> (скрыто: 5).</p>
+<p class="warn">⚠ Без описания: Cemetery.</p>
+<p class="warn">⚠ Нет иконки: Cemetery ур.1, Cemetery ур.2, Cemetery ур.3, Cemetery ур.4, Cemetery ур.5.</p>
 <p class="toc"><b>Здания:</b> <a href="#g0">Город</a><a href="#g1">Склады</a><a href="#g2">Производство</a><a href="#g3">Еда</a><a href="#g4">Оборона</a><a href="#g5">Водные</a><a href="#g6">Развлечения и украшения</a><br><b>Армия:</b> <a href="#a0">Солдаты</a><a href="#a1">Осадные машины</a><a href="#a2">Корабли</a></p>
 <h1 class="part">Здания</h1>
 <h2 id="g0">Город</h2>
@@ -113,6 +115,14 @@ img.u{width:110px;height:110px}.where{color:#8a7350;font-size:13px}h1.part{margi
 <tr><td>Прочность</td><td>200</td><td>320</td><td>500</td><td>720</td><td>1000</td></tr>
 <tr><td>Цена (песочница)</td><td>дерево 40, камень 30</td><td>дерево 64, камень 48</td><td>дерево 112, камень 84</td><td>дерево 196, камень 147</td><td>дерево 343, камень 257</td></tr>
 <tr><td>Стройка, с (песочница)</td><td>22</td><td>25</td><td>40</td><td>65</td><td>109</td></tr>
+</table></div>
+<div class="b"><h3>Кладбище <span class="id">Cemetery</span></h3>
+<div class="note">⚠ описание не написано — добавь строку в Design/buildings/descriptions.tsv</div><table>
+<tr><th></th><th>ур. 1</th><th>ур. 2</th><th>ур. 3</th><th>ур. 4</th><th>ур. 5</th></tr>
+<tr><td></td><td class="none">нет иконки</td><td class="none">нет иконки</td><td class="none">нет иконки</td><td class="none">нет иконки</td><td class="none">нет иконки</td></tr>
+<tr><td>Прочность</td><td>120</td><td>190</td><td>300</td><td>430</td><td>600</td></tr>
+<tr><td>Цена (песочница)</td><td>дерево 30, камень 20</td><td>дерево 48, камень 30</td><td>дерево 84, камень 52</td><td>дерево 147, камень 90</td><td>дерево 257, камень 158</td></tr>
+<tr><td>Стройка, с (песочница)</td><td>10</td><td>12</td><td>18</td><td>26</td><td>40</td></tr>
 </table></div>
 <h2 id="g1">Склады</h2>
 <div class="b"><h3>Склад <span class="id">Warehouse</span></h3>

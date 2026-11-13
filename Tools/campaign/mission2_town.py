@@ -111,7 +111,11 @@ def build_town():
     # wells and trees in the yards
     for gx in range(ol + 3, or_ - 2, 5):
         for gy in range(ot + 3, ob - 1, 5):
-            put(t, "Well" if rnd.random() < 0.3 else "DecTree", gx, gy, 1, "decor")
+            pick = "Well" if rnd.random() < 0.3 else "DecTree"
+            # none before the gate towers' doors (the user's tenth playtest: «дерево стоит у входа в башню»)
+            if any(abs(gx - 50) <= 4 and 0 < gy - gy0 <= 3 for gy0 in (ot, it)):
+                continue
+            put(t, pick, gx, gy, 1, "decor")
 
     # barns by the fields (props; the fields themselves are the ground's colour)
     for x, y in ((29, 25), (70, 25), (14, 61), (85, 61)):

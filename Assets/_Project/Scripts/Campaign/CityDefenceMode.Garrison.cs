@@ -89,8 +89,16 @@ namespace CityBuilder.Campaign
         {
             if (soldier == null || orc == null) return false;
             if (OnTheWall(orc)) return !soldier.OnWall && !soldier.IsRanged;
-            if (soldier.OnWall) return false;
+            // a melee fighter up on the walk reaches only the walk and a docked tower's top (the user's tenth
+            // playtest: «Ардан стоит на стене, но бьёт тех, кто под ней»); shooters up there shoot down
+            if (soldier.OnWall) return !soldier.IsRanged && !DockedTower(orc);
             return WallBetween(orc, soldier);
+        }
+
+        private bool DockedTower(OrcUnit orc)
+        {
+            foreach (var t in _towers) if (t.orc == orc && t.docked) return true;
+            return false;
         }
 
         // where a piece of wall or a gate has fallen (the user's sixth playtest: orcs standing in the rubble of a wall
