@@ -39,6 +39,10 @@ namespace CityBuilder.Campaign
             // up to the wall and did nothing)
             public Vector3 lastAt;
             public float stillFor;
+            // the wall-walk cell it leans on (its climbers step onto it) and its own cell, a stair for the defenders;
+            // onWall false: no walk cell found, its climbers jump straight in as before
+            public Vector2Int wallCell, towerCell;
+            public bool onWall;
         }
 
         private readonly List<Tower> _towers = new List<Tower>();
@@ -50,7 +54,7 @@ namespace CityBuilder.Campaign
         private const float TowerStandOff = 1.1f;
         private const float WalkHeight = 1.15f;
         // an escort this near the docked tower's foot climbs it
-        private const float FootReach = 2.5f;
+        private const float FootReach = 3.5f;
         // stuck this near its spot, it docks there
         private const float StuckDockCells = 5f;
         // the drawbridge drops onto the wall-walk in this long
@@ -78,7 +82,8 @@ namespace CityBuilder.Campaign
                 return null;
             }
             // the tower's own road: the lane to the gate's front, then along the wall to a section either side of the gate
-            var inner = Current == Stage.Part2;
+            // the outer gate broken: the towers go for the inner wall
+            var inner = OuterGates[0] == null && InnerGates[0] != null;
             var side = (_towerSide++ % 2 == 0) ? -1f : 1f;
             var from = b.towerWallFromCells;
             var to = inner ? Mathf.Min(b.towerWallToCells, 7f) : b.towerWallToCells;
@@ -137,12 +142,15 @@ namespace CityBuilder.Campaign
                 t.escorts.RemoveAll(e => e == null || e.CurrentHealth <= 0);
                 if (t.orc == null || t.orc.CurrentHealth <= 0)
                 {
+                    if (t.orc != null) Buildings.WallWalk.Undock(t.orc);
                     ReleaseEscorts(t);
                     _towers.RemoveAt(i);
                     continue;
                 }
                 if (!t.docked)
                 {
+                    // its road's orcs keep BEHIND it (the user's seventh playtest: they walked ahead and hit the wall)
+                    HoldEscorts(t);
                     var spot = World(t.wallX, t.wallY - TowerStandOff);
                     var at = t.orc.transform.position;
                     var near = Flat(at - spot);
@@ -159,7 +167,7 @@ namespace CityBuilder.Campaign
                     {
                         if (Flat(e.transform.position - t.foot) > FootReach) continue;
                         t.escorts.Remove(e);
-                        StartCoroutine(Climb(e, t.foot, t.deck, t.walk, t.drop, 0f, true));
+                        StartCoroutine(Climb(e, t, 0f, true));
                         t.nextClimb = Time.time + B.towerClimbGapSeconds;
                         break;
                     }
@@ -167,11 +175,27 @@ namespace CityBuilder.Campaign
                 if (Time.time < t.until) continue;
                 // its time is up: the tower is left behind, the escorts still on the ground go for the gate
                 ReleaseEscorts(t);
+                Buildings.WallWalk.Undock(t.orc);
                 _laneOrcs[t.lane].Remove(t.orc);
                 Destroy(t.orc.gameObject);
                 _towers.RemoveAt(i);
             }
         }
+
+        /// <summary>An escort level with its rolling tower or ahead of it waits a moment (nearer its dock spot = ahead).</summary>
+        private void HoldEscorts(Tower t)
+        {
+            var spot = World(t.wallX, t.wallY - TowerStandOff);
+            var tower = Flat(t.orc.transform.position - spot);
+            foreach (var e in t.escorts)
+            {
+                if (e == null) continue;
+                if (Flat(e.transform.position - spot) < tower + EscortGap) e.BusyFor = Mathf.Max(e.BusyFor, 0.3f);
+            }
+        }
+
+        // an escort keeps this far (cells) behind its tower
+        private const float EscortGap = 1.5f;
 
         private void ReleaseEscorts(Tower t)
         {
@@ -200,6 +224,29 @@ namespace CityBuilder.Campaign
             t.walk = World(t.wallX, t.wallY + 0.5f);
             t.walk.y = ground + WalkHeight;
             t.drop = OnMesh(World(t.wallX, t.wallY + 2.2f));
+            // the wall-walk cell where it actually stands (it may have stuck short of its spot): its climbers step onto
+            // the wall THERE and fight (the user's seventh playtest), and it is a stair for the defenders too
+            var grid = Grid.GridManager.Instance;
+            if (grid != null)
+            {
+                var cell = grid.CellSize;
+                for (var k = 1; k <= 4 && !t.onWall; k++)
+                {
+                    var c = grid.WorldToCell(t.foot + Vector3.back * (k * cell));
+                    if (!Buildings.WallWalk.IsWalk(c) || Buildings.WallWalk.IsStair(c)) continue;
+                    t.wallCell = c;
+                    t.onWall = true;
+                }
+                if (t.onWall)
+                {
+                    var top = Buildings.WallWalk.Top(t.wallCell);
+                    t.towerCell = grid.WorldToCell(top + Vector3.forward * cell);
+                    t.walk = top;
+                    t.deck = top + Vector3.forward * (0.6f * cell);
+                    t.drop = OnMesh(top + Vector3.back * (2.2f * cell));
+                    Buildings.WallWalk.Dock(t.orc, t.towerCell, t.wallCell, top.y);
+                }
+            }
             // the wooden drawbridge falls onto the wall first (the user's sixth playtest), then the crew climb (they rode
             // inside), then the escorts as they reach its foot
             StartCoroutine(LowerBridge(t.orc.transform, Vector3.back));
@@ -213,14 +260,18 @@ namespace CityBuilder.Campaign
                 if (orc == null) continue;
                 orc.Toughen(B.orcHealthMult, B.orcDamageMult);
                 _laneOrcs[t.lane].Add(orc);
-                StartCoroutine(Climb(orc, t.foot, t.deck, t.walk, t.drop, BridgeDropSeconds + k * B.towerClimbGapSeconds, false));
+                StartCoroutine(Climb(orc, t, BridgeDropSeconds + k * B.towerClimbGapSeconds, false));
             }
         }
 
         /// <summary>One climbing the tower: waits his turn (inside it, unseen and out of reach), climbs to the deck,
         /// crosses onto the wall-walk, jumps down inside. An escort then drops his road and his tower's pace.</summary>
-        private IEnumerator Climb(OrcUnit orc, Vector3 foot, Vector3 deck, Vector3 walk, Vector3 drop, float wait, bool escort)
+        private IEnumerator Climb(OrcUnit orc, Tower tower, float wait, bool escort)
         {
+            var foot = tower.foot;
+            var deck = tower.deck;
+            var walk = tower.walk;
+            var drop = tower.drop;
             var body = orc.GetComponent<CharacterController>();
             if (body != null) body.enabled = false;
             orc.enabled = false;
@@ -233,7 +284,9 @@ namespace CityBuilder.Campaign
             foreach (var r in looks) if (r != null) r.enabled = true;
             orc.transform.rotation = Quaternion.LookRotation(Vector3.back);
             var climb = Mathf.Max(0.2f, B.towerClimbSeconds);
-            var legs = new[] { (foot, deck, climb, 0f), (deck, walk, climb * 0.5f, 0.15f), (walk, drop, climb * 0.5f, 0.35f) };
+            var legs = tower.onWall
+                ? new[] { (foot, deck, climb, 0f), (deck, walk, climb * 0.5f, 0.15f) }
+                : new[] { (foot, deck, climb, 0f), (deck, walk, climb * 0.5f, 0.15f), (walk, drop, climb * 0.5f, 0.35f) };
             foreach (var (a, b, seconds, hop) in legs)
             {
                 for (var t = 0f; t < seconds; t += Time.deltaTime)
@@ -245,11 +298,17 @@ namespace CityBuilder.Campaign
                 }
             }
             if (orc == null) yield break;
+            if (escort) orc.Slow(1f / Mathf.Max(0.05f, B.siegeSpeed));
+            if (tower.onWall)
+            {
+                // onto the wall-walk: the fight up there first (CityDefenceMode.WallFight)
+                PutOnWall(orc, tower.wallCell);
+                yield break;
+            }
             orc.transform.position = drop;
             if (body != null) body.enabled = true;
             orc.Untargetable = false;
             orc.enabled = true;
-            if (escort) orc.Slow(1f / Mathf.Max(0.05f, B.siegeSpeed));
             // inside the walls: on to the inner main gate (the user's sixth playtest)
             ToInnerGate(orc);
         }
@@ -282,7 +341,9 @@ namespace CityBuilder.Campaign
 
         private void ForgetSiege()
         {
+            foreach (var t in _towers) if (t.orc != null) Buildings.WallWalk.Undock(t.orc);
             _towers.Clear();
+            ForgetWallFight();
             _toInner.Clear();
         }
     }

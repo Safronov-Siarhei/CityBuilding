@@ -34,12 +34,34 @@ namespace CityBuilder.Campaign
         public const string MapId = "Mission2";
         public const string LevelId = "m2";
         public const string GameplayScene = "CityBuilder";
-        /// <summary>PlayerPrefs: part 1 is won, a restart begins at part 2 (cleared when the mission is won).</summary>
+        /// <summary>PlayerPrefs of the old two-part mission (a restart began at part 2): cleared on every start since the
+        /// mission is one part (the user, 2026-11-13).</summary>
         public const string Part2Key = "m2_part2_saved";
 
-        public enum Stage { Setup, Part1, Courier, Part2, Won, Lost }
+        /// <summary>Part1 = the siege, the mission's one part since 2026-11-13 (the name kept for the tests).</summary>
+        public enum Stage { Setup, Part1, Won, Lost }
 
-        public enum LossReason { None, Gate, Castle, Arden }
+        public enum LossReason { None, Square, Castle, Arden }
+
+        /// <summary>
+        /// What the player holds (the user, 2026-11-13: the two parts made one, 11 minutes): the outer gate; once it is
+        /// broken, the inner gate; once that is broken, the central square -- an orc on it loses the mission.
+        /// </summary>
+        public enum Goal { OuterGate, InnerGate, Square }
+
+        public Goal CurrentGoal { get; private set; }
+
+        /// <summary>The gate the goal is about (its bar under the goal plaque), null once the square is the goal.</summary>
+        public BuildingInstance GoalGate => CurrentGoal == Goal.OuterGate ? OuterGates[0] : CurrentGoal == Goal.InnerGate ? InnerGates[0] : null;
+
+        /// <summary>The goal changed (the HUD's banner).</summary>
+        public event System.Action<Goal> GoalChanged;
+
+        /// <summary>The courier has reached the capital (m2_reinforce_sec before the end): the clock counts down the help.</summary>
+        public bool HelpComing => TimeLeft <= B.reinforceSeconds;
+
+        /// <summary>m2_reinforce_sec: the help's last stretch of the clock.</summary>
+        public float ReinforceSeconds => B.reinforceSeconds;
 
         /// <summary>Set by the campaign map before the gameplay scene loads (Begin).</summary>
         public static bool Pending;
@@ -66,7 +88,7 @@ namespace CityBuilder.Campaign
         public Stage Current { get; private set; } = Stage.Setup;
         public LossReason Loss { get; private set; }
 
-        /// <summary>The part's clock: seconds until the courier is away (part 1) / the help comes (part 2).</summary>
+        /// <summary>The mission's clock: seconds until the help comes (the courier reaches the capital m2_reinforce_sec before).</summary>
         public float TimeLeft { get; private set; }
 
         /// <summary>Past half the part: the waves much harder.</summary>
@@ -75,7 +97,7 @@ namespace CityBuilder.Campaign
         public int Wave { get; private set; }
 
         /// <summary>How long the town has held in this part (the end window's numbers).</summary>
-        public float HeldSeconds => Mathf.Max(0f, (Current == Stage.Part2 || (Current != Stage.Part1 && PlayerPrefs.GetInt(Part2Key, 0) == 1) ? B.part2Seconds : B.part1Seconds) - TimeLeft);
+        public float HeldSeconds => Mathf.Max(0f, B.missionSeconds - TimeLeft);
 
         /// <summary>The gates by lane (W, N, E). Since the user's third playtest the castle has ONE gate in each ring,
         /// so every lane's entry is that same gate (null once broken).</summary>
@@ -213,8 +235,8 @@ namespace CityBuilder.Campaign
 
             gameObject.AddComponent<CityDefenceHud>().Bind(this);
 
-            if (PlayerPrefs.GetInt(Part2Key, 0) == 1) BeginPart2(atOnce: true);
-            else BeginPart1();
+            PlayerPrefs.DeleteKey(Part2Key);
+            BeginPart1();
         }
 
         /// <summary>A plan point (x right, y down = south, in plan cells) in the world.</summary>
@@ -276,6 +298,8 @@ namespace CityBuilder.Campaign
                 // their own health and a bar low enough to be seen (the user, 2026-11-13)
                 building.OverrideMaxHealth(OnOuterRing(piece) ? B.outerGateHealth : B.innerGateHealth);
                 building.HealthBarHeight = B.gateBarHeight * (GridManager.Instance != null ? GridManager.Instance.CellSize : 1f);
+                // its health is the bar under the goal (the user liked it, 2026-11-13), none over the gate
+                building.HideHealthBar = true;
                 for (var lane = 0; lane < gates.Length; lane++) gates[lane] = building;
                 return;
             }
@@ -310,74 +334,23 @@ namespace CityBuilder.Campaign
         private void BeginPart1()
         {
             Current = Stage.Part1;
-            TimeLeft = B.part1Seconds;
+            TimeLeft = B.missionSeconds;
+            CurrentGoal = Goal.OuterGate;
             Late = false;
             Wave = 0;
             _waveBeaten = false;
             _nextWave = B.firstWaveSeconds;
             Man(outer: true);
             RaisePatrols();
+            // the inner gate's own guard from the start, kept behind it (the user, 2026-11-13); the patrols and
+            // the rest keep the outer pen
+            Man(outer: false);
+            _pen = PenOf(true);
             StartTownsfolk();
             RaiseArden();
             HangDoors(OuterGates[0]);
             HangDoors(InnerGates[0]);
             PartBegan?.Invoke(1);
-        }
-
-        /// <summary>Part 1 won: the courier is away (later: the cutscene at the King's); part 2 from the ruins.</summary>
-        private IEnumerator Courier()
-        {
-            Current = Stage.Courier;
-            PlayerPrefs.SetInt(Part2Key, 1);
-            PlayerPrefs.Save();
-            yield return new WaitForSeconds(3f);
-            BeginPart2(atOnce: false);
-        }
-
-        private void BeginPart2(bool atOnce)
-        {
-            CreditPart1();
-            // the waves of part 1 are gone with the courier's ride; the outer works and half the lower town lie in ruins
-            foreach (var orc in new List<OrcUnit>(OrcUnit.All))
-                if (orc != null) Destroy(orc.gameObject);
-            foreach (var lane in _laneOrcs) lane.Clear();
-            ForgetSiege();
-            for (var i = 0; i < 3; i++)
-            {
-                if (OuterGates[i] != null) OuterGates[i].TryDamage(OuterGates[i].CurrentHealth);
-                OuterGates[i] = null;
-            }
-            // the wall pieces either side of each gate: breaches the orcs pour through
-            foreach (var piece in _outerWall)
-            {
-                if (piece == null) continue;
-                var near = false;
-                if (Flat(piece.transform.position - World(50.5f, 34.5f)) < 4.5f) near = true;
-                if (near || Random.value < 0.25f) piece.TryDamage(piece.CurrentHealth);
-            }
-            var burnt = Mathf.RoundToInt(_lowerTown.Count * Mathf.Clamp01(B.part2Burnt));
-            var order = new List<BuildingInstance>(_lowerTown);
-            for (var i = 0; i < order.Count; i++)
-            {
-                var j = Random.Range(i, order.Count);
-                (order[i], order[j]) = (order[j], order[i]);
-            }
-            for (var i = 0; i < burnt && i < order.Count; i++)
-                if (order[i] != null) order[i].TryDamage(order[i].CurrentHealth);
-
-            ClearGarrison();
-            Man(outer: false);
-            if (Arden == null) RaiseArden();
-            else JumpToArden();
-
-            Current = Stage.Part2;
-            TimeLeft = B.part2Seconds;
-            Late = false;
-            Wave = 0;
-            _waveBeaten = false;
-            _nextWave = atOnce ? B.firstWaveSeconds : B.firstWaveSeconds * 0.5f;
-            HangDoors(InnerGates[0]);
-            PartBegan?.Invoke(2);
         }
 
         private void Update()
@@ -390,16 +363,18 @@ namespace CityBuilder.Campaign
             TickGarrison(dt);
             TickTownsfolk(dt);
             TickSiege(dt);
+            TickWallOrcs(dt);
+            TickArdenWall(dt);
             TickGates(dt);
-            if (Current == Stage.Courier || Current == Stage.Lost) return;
+            TickWreckers(dt);
+            if (Current == Stage.Lost) return;
 
             TimeLeft -= dt;
-            var length = Current == Stage.Part2 ? B.part2Seconds : B.part1Seconds;
-            Late = TimeLeft <= length * 0.5f;
+            Late = TimeLeft <= B.missionSeconds * 0.5f;
             TickWaves(dt);
-            if (TimeLeft > 0f) return;
-            if (Current == Stage.Part1) StartCoroutine(Courier());
-            else Win();
+            WatchTheSquare(dt);
+            if (Current == Stage.Lost) return;
+            if (TimeLeft <= 0f) Win();
         }
 
         // ------------------------------------------------------------------ the waves
@@ -425,7 +400,7 @@ namespace CityBuilder.Campaign
             if (_waveBeaten)
             {
                 _waveBeaten = false;
-                var row = BalanceConfig.Instance.M2Wave(Current == Stage.Part2 ? 2 : 1, Wave);
+                var row = BalanceConfig.Instance.M2Wave(1, Wave);
                 _nextWave = Mathf.Max(_nextWave, row != null ? row.pause : 0f);
             }
             _nextWave -= dt;
@@ -449,7 +424,8 @@ namespace CityBuilder.Campaign
             if (_looseCheck > 0f) return;
             _looseCheck = 0.5f;
             if (OuterGates[0] != null || Current != Stage.Part1) return;
-            var town = PenOf(true);
+            // inside the outer walls (the inner gate standing) / inside the inner ones (it broken): on to the next goal
+            var town = InnerGates[0] != null ? PenOf(true) : PenOf(false);
             foreach (var lane in _laneOrcs)
                 foreach (var orc in lane)
                 {
@@ -473,10 +449,12 @@ namespace CityBuilder.Campaign
         {
             if (orc == null) return;
             _toInner.Add(orc);
-            if (Current != Stage.Part1 || InnerGates[0] == null)
+            if (InnerGates[0] == null)
             {
-                orc.LaneOnly = false;
-                orc.FollowLane(null);
+                // the inner gate is broken: through it to the square (the user, 2026-11-13)
+                orc.FollowLane(new OrcLane(new[] { orc.transform.position, OnMesh(World(50.5f, InnerNorthWallY - 1.5f)),
+                    OnMesh(World(50.5f, InnerNorthWallY + 1.5f)), _square }));
+                orc.LaneOnly = true;
                 return;
             }
             var front = OnMesh(World(50.5f + Random.Range(-1f, 1f), InnerNorthWallY - 1.3f));
@@ -489,10 +467,14 @@ namespace CityBuilder.Campaign
             var raids = OrcRaidManager.Instance;
             if (raids == null) return;
             Wave++;
-            // the part's first wave shuts its gate (the user's third playtest)
-            if (Wave == 1) ShutGate(Current == Stage.Part2 ? InnerGates[0] : OuterGates[0]);
+            // the first wave shuts the gates (the user's third playtest)
+            if (Wave == 1)
+            {
+                ShutGate(OuterGates[0]);
+                ShutGate(InnerGates[0]);
+            }
             // the m2waves tab's row (the user's third playtest): each kind's count per road (the user, 2026-11-13)
-            var row = BalanceConfig.Instance.M2Wave(Current == Stage.Part2 ? 2 : 1, Wave);
+            var row = BalanceConfig.Instance.M2Wave(1, Wave);
             if (row == null) return;
             var b = B;
             for (var road = 0; road < 3; road++)
@@ -550,17 +532,55 @@ namespace CityBuilder.Campaign
             if (Current == Stage.Won || Current == Stage.Lost || building == null) return;
             NoteBreach(building);
             if (building == Castle) { Lose(LossReason.Castle); return; }
+            var outer = false;
+            var inner = false;
             for (var i = 0; i < 3; i++)
             {
-                if (InnerGates[i] == building) { Lose(LossReason.Gate); return; }
-                if (OuterGates[i] == building) OuterGates[i] = null;
+                if (OuterGates[i] == building) { OuterGates[i] = null; outer = true; }
+                if (InnerGates[i] == building) { InnerGates[i] = null; inner = true; }
             }
+            // the goal moves on (the user, 2026-11-13): outer gate -> inner gate -> the square
+            if (outer && CurrentGoal == Goal.OuterGate)
+            {
+                CurrentGoal = InnerGates[0] != null ? Goal.InnerGate : Goal.Square;
+                GoalChanged?.Invoke(CurrentGoal);
+                StartWreckers();
+            }
+            if (inner && CurrentGoal != Goal.Square)
+            {
+                CurrentGoal = Goal.Square;
+                GoalChanged?.Invoke(CurrentGoal);
+                // the orcs bound for the inner gate make for the square now
+                foreach (var orc in new List<OrcUnit>(_toInner))
+                    if (orc != null && orc.CurrentHealth > 0 && !orc.Steered) ToInnerGate(orc);
+                _toInner.RemoveWhere(o => o == null);
+            }
+        }
+
+        private float _squareCheck;
+
+        /// <summary>An orc of the waves on the central square: the mission is lost (the user, 2026-11-13).</summary>
+        private void WatchTheSquare(float dt)
+        {
+            if (CurrentGoal != Goal.Square) return;
+            _squareCheck -= dt;
+            if (_squareCheck > 0f) return;
+            _squareCheck = 0.25f;
+            var reach = B.squareLossCells * (GridManager.Instance != null ? GridManager.Instance.CellSize : 1f);
+            foreach (var lane in _laneOrcs)
+                foreach (var orc in lane)
+                {
+                    if (orc == null || orc.CurrentHealth <= 0 || orc.Steered) continue;
+                    if (Flat(orc.transform.position - _square) > reach) continue;
+                    Lose(LossReason.Square);
+                    return;
+                }
         }
 
         /// <summary>Cheat (the user, 2026-11-12): the running part's clock runs out now.</summary>
         public void CheatEndPart()
         {
-            if (_active && (Current == Stage.Part1 || Current == Stage.Part2)) TimeLeft = 0.01f;
+            if (_active && Current == Stage.Part1) TimeLeft = 0.01f;
         }
 
         /// <summary>Cheat (the user, 2026-11-12): the level won on the spot.</summary>
@@ -589,7 +609,7 @@ namespace CityBuilder.Campaign
             Ended?.Invoke(false);
         }
 
-        /// <summary>«Заново»: the mission again (from part 2 once part 1 is won).</summary>
+        /// <summary>«Заново»: the mission again.</summary>
         public static void Restart()
         {
             Time.timeScale = 1f;

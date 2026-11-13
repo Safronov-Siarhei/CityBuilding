@@ -33,6 +33,8 @@ namespace CityBuilder.Campaign
         private FloatingJoystick _stick;
         private Text _goal, _banner, _middle, _level;
         private Text _wave;   // the wave's number under the goal, for testing (the user's fourth playtest); not in a release
+        // the goal's gate's health, under the goal plaque (the user, 2026-11-13)
+        private Image _gateBar;
         private Image _ardenBar, _xpBar;
         private readonly Image[] _skillShade = new Image[CityDefenceMode.SkillCount];
         private readonly GameObject[] _skillLock = new GameObject[CityDefenceMode.SkillCount];
@@ -55,6 +57,7 @@ namespace CityBuilder.Campaign
             mode.PartBegan += OnPart;
             mode.Ended += OnEnded;
             mode.ArdenLeveled += OnLevel;
+            mode.GoalChanged += OnGoal;
         }
 
         private void OnDestroy()
@@ -63,6 +66,7 @@ namespace CityBuilder.Campaign
             _mode.PartBegan -= OnPart;
             _mode.Ended -= OnEnded;
             _mode.ArdenLeveled -= OnLevel;
+            _mode.GoalChanged -= OnGoal;
         }
 
         private static void HideSandboxHud()
@@ -112,8 +116,9 @@ namespace CityBuilder.Campaign
             _goal.resizeTextForBestFit = true;
             _goal.resizeTextMaxSize = 22;
             _goal.resizeTextMinSize = 12;
+            _gateBar = Bar(safe, new Vector2(0f, -74f), new Vector2(360f, 16f), new Vector2(0.5f, 1f));
 #if !CB_RELEASE
-            _wave = MissionSkin.Label(plaque.transform, "", UiTheme.Bold, 18, Color.white, TextAnchor.MiddleCenter, new Vector2(0f, -0.6f), new Vector2(1f, 0f), Vector2.zero);
+            _wave = MissionSkin.Label(plaque.transform, "", UiTheme.Bold, 18, Color.white, TextAnchor.MiddleCenter, new Vector2(0f, -1.05f), new Vector2(1f, -0.45f), Vector2.zero);
             _wave.raycastTarget = false;
             _wave.gameObject.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.8f);
 #endif
@@ -380,7 +385,17 @@ namespace CityBuilder.Campaign
 
         private void OnPart(int part)
         {
-            _banner.text = Localization.Get(part == 1 ? "#m2_part1_banner" : "#m2_part2_banner");
+            _banner.text = Localization.Get("#m2_part1_banner");
+            _bannerFor = 3.5f;
+        }
+
+        private static string GoalKey(CityDefenceMode.Goal goal) => goal == CityDefenceMode.Goal.OuterGate ? "#m2_goal_outer"
+            : goal == CityDefenceMode.Goal.InnerGate ? "#m2_goal_inner" : "#m2_goal_square";
+
+        /// <summary>A gate is broken: the new goal as a banner too.</summary>
+        private void OnGoal(CityDefenceMode.Goal goal)
+        {
+            _banner.text = Localization.Get(GoalKey(goal));
             _bannerFor = 3.5f;
         }
 
@@ -396,7 +411,7 @@ namespace CityBuilder.Campaign
             _endTitle.text = Localization.Get(won ? "#m2_won" : "#m2_lost");
             _endTitle.color = won ? UiTheme.Good : UiTheme.Danger;
             var why = _mode.Loss == CityDefenceMode.LossReason.Arden ? "#m2_lost_arden"
-                : _mode.Loss == CityDefenceMode.LossReason.Castle ? "#m2_lost_castle" : "#m2_lost_line";
+                : _mode.Loss == CityDefenceMode.LossReason.Castle ? "#m2_lost_castle" : "#m2_lost_square";
             _endLine.text = Localization.Get(won ? "#m2_won_line" : why);
             _endStats.text = Localization.Format("#m2_end_stats", Mathf.Max(0, _mode.Wave - (won ? 0 : 1)), MissionSkin.Clock(_mode.HeldSeconds), _mode.ArdenLevel);
             _restartButton.SetActive(!won);
@@ -411,9 +426,15 @@ namespace CityBuilder.Campaign
             var dt = Time.unscaledDeltaTime;
             if (_stick != null) _mode.Stick = _stick.Locked ? Vector2.zero : _stick.Value;
 
-            var stage = _mode.Current;
-            var part2 = stage == CityDefenceMode.Stage.Part2 || (stage == CityDefenceMode.Stage.Won);
-            _goal.text = Localization.Get(part2 ? "#m2_goal_part2" : "#m2_goal_part1");
+            _goal.text = Localization.Get(GoalKey(_mode.CurrentGoal));
+            var gate = _mode.GoalGate;
+            _gateBar.transform.parent.gameObject.SetActive(gate != null);
+            if (gate != null)
+            {
+                var gk = gate.MaxHealth > 0 ? Mathf.Clamp01(gate.CurrentHealth / (float)gate.MaxHealth) : 0f;
+                _gateBar.rectTransform.anchorMax = new Vector2(gk, _gateBar.rectTransform.anchorMax.y);
+                _gateBar.color = gk > 0.5f ? UiTheme.Good : gk > 0.25f ? UiTheme.Warning : UiTheme.Danger;
+            }
             if (_wave != null) _wave.text = _mode.Wave > 0 ? string.Format(Localization.Get("#m2_wave_number"), _mode.Wave) : string.Empty;
 
             var arden = _mode.Arden;
@@ -435,8 +456,7 @@ namespace CityBuilder.Campaign
                 _skillShade[i].fillAmount = open ? _mode.SkillCooldownShare(i) : 0f;
             }
 
-            _middle.text = stage == CityDefenceMode.Stage.Courier ? Localization.Get("#m2_courier")
-                : _mode.RespawnLeft > 0f ? Localization.Format("#m2_respawn", Mathf.CeilToInt(_mode.RespawnLeft)) : "";
+            _middle.text = _mode.RespawnLeft > 0f ? Localization.Format("#m2_respawn", Mathf.CeilToInt(_mode.RespawnLeft)) : "";
 
             // the end card pops in, on the unscaled clock (the game is paused)
             if (_endPop >= 0f && _endCard != null)

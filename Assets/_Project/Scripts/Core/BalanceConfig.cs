@@ -2878,9 +2878,14 @@ namespace CityBuilder.Core
     [System.Serializable]
     public class CityDefenceBalance
     {
-        // the parts and the waves (the user's first playtest, 2026-11-12: 8 minutes EACH part; waves from
-        // all three sides at once, growing, short pauses; past half the part much harder)
-        public float part1Seconds = 480f, part2Seconds = 480f;
+        // the mission and the waves (the user, 2026-11-13: one part of 11 minutes; the courier reaches the capital
+        // m2_reinforce_sec before the end and the clock counts down the help from then); an orc of the waves this
+        // near the square (cells) once both gates are broken loses it
+        public float missionSeconds = 660f, reinforceSeconds = 180f, squareLossCells = 4f;
+        // the wreckers: a band loosed in the town once the outer gate falls, after houses only; the next band
+        // this long after the last one is gone
+        public int wreckers = 5;
+        public float wreckersRespawnSeconds = 8f;
         // each wave's make-up is a row of the m2waves tab (the user's third playtest: «удобный лист с волнами»)
         public float firstWaveSeconds = 10f;
         public float meleeReachMult = 0.6f;
@@ -2901,6 +2906,11 @@ namespace CityBuilder.Core
         // the gates' own health (a level-3 Barbican has 850) and the height of their bar over the ground (cells)
         public int outerGateHealth = 2500, innerGateHealth = 2500;
         public float gateBarHeight = 1.3f;
+        // the fight on the wall-walk (the user's seventh playtest): an orc off a tower walks the wall at this speed
+        // (cells a second), fights the defenders up there and jumps into the town only when none is this near
+        // (cells); this many of the town's infantry climb up against each orc on the wall
+        public float wallOrcSpeed = 1.5f, wallFightCells = 10f;
+        public int wallDefendersPerOrc = 2;
         public float cryCooldownSeconds = 20f, cryRadius = 7f, crySeconds = 6f, cryDamageMult = 1.5f, cryStunSeconds = 1.5f;
         public float whirlCooldownSeconds = 12f, whirlRadius = 3f, whirlDamageMult = 2f, whirlPush = 2.5f;
         public float dashCooldownSeconds = 14f, dashDistance = 7f, dashSeconds = 0.35f, dashWidth = 1.5f, dashDamageMult = 1.5f, dashStunSeconds = 1.5f;
@@ -2912,7 +2922,6 @@ namespace CityBuilder.Core
         // the view, the minimap, the dark past the fields and the fords (plan cells)
         public float cameraDistance = 6f, cameraPitch = 50f, minimapRadius = 22f;
         public float litX0 = 8f, litY0 = 6f, litX1 = 92f, litY1 = 70f, darkSoft = 4f;
-        public float part2Burnt = 0.5f;
         // the look of the siege (the user's second playtest): the orcs' sand roads, the wheat, the fires, the healing glow
         public float sandRoadWidth = 2f, wheatHeight = 0.17f, fireSize = 1f, healFxSeconds = 0.8f;
         public int wheatEarsMax = 300;
@@ -2934,8 +2943,11 @@ namespace CityBuilder.Core
         {
             float F(string key, float d) => get(key) ?? d;
             int I(string key, int d) => get(key).HasValue ? Mathf.RoundToInt(get(key).Value) : d;
-            part1Seconds = F("m2_part1_sec", part1Seconds);
-            part2Seconds = F("m2_part2_sec", part2Seconds);
+            missionSeconds = F("m2_mission_sec", missionSeconds);
+            reinforceSeconds = F("m2_reinforce_sec", reinforceSeconds);
+            squareLossCells = F("m2_square_loss_cells", squareLossCells);
+            wreckers = I("m2_wreckers", wreckers);
+            wreckersRespawnSeconds = F("m2_wreckers_respawn_sec", wreckersRespawnSeconds);
             firstWaveSeconds = F("m2_first_wave_sec", firstWaveSeconds);
             meleeReachMult = F("m2_melee_reach_mult", meleeReachMult);
             rangedRangeMult = F("m2_ranged_range_mult", rangedRangeMult);
@@ -2967,6 +2979,9 @@ namespace CityBuilder.Core
             outerGateHealth = I("m2_outer_gate_health", outerGateHealth);
             innerGateHealth = I("m2_inner_gate_health", innerGateHealth);
             gateBarHeight = F("m2_gate_bar_height", gateBarHeight);
+            wallOrcSpeed = F("m2_wall_orc_speed", wallOrcSpeed);
+            wallFightCells = F("m2_wall_fight_cells", wallFightCells);
+            wallDefendersPerOrc = I("m2_wall_defenders_per_orc", wallDefendersPerOrc);
             ardenRespawnSeconds = F("m2_arden_respawn_sec", ardenRespawnSeconds);
             cryCooldownSeconds = F("m2_cry_cooldown_sec", cryCooldownSeconds);
             cryRadius = F("m2_cry_radius", cryRadius);
@@ -2999,7 +3014,6 @@ namespace CityBuilder.Core
             litX1 = F("m2_lit_x1", litX1);
             litY1 = F("m2_lit_y1", litY1);
             darkSoft = F("m2_dark_soft", darkSoft);
-            part2Burnt = F("m2_part2_burnt", part2Burnt);
             sandRoadWidth = F("m2_sand_road_width", sandRoadWidth);
             wheatHeight = F("m2_wheat_height", wheatHeight);
             wheatEarsMax = Mathf.RoundToInt(F("m2_wheat_ears_max", wheatEarsMax));

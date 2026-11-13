@@ -51,9 +51,12 @@ namespace CityBuilder.UI
             if (Campaign.CityDefenceMode.IsActive)
             {
                 var mode = Campaign.CityDefenceMode.Instance;
-                var part2 = mode.Current == Campaign.CityDefenceMode.Stage.Part2 || mode.Current == Campaign.CityDefenceMode.Stage.Won;
-                var seconds = Mathf.Max(0, Mathf.CeilToInt(mode.TimeLeft));
-                statusText.text = Localization.Format(part2 ? "#m2_clock_help" : "#m2_clock_courier", $"{seconds / 60}:{seconds % 60:00}");
+                // the courier on his way, then the help on its way (the user, 2026-11-13: one part, the last 3 minutes
+                // say Подкрепление через; the capital's cutscene at that turn comes later)
+                var help = mode.HelpComing || mode.Current == Campaign.CityDefenceMode.Stage.Won;
+                var left = help ? mode.TimeLeft : mode.TimeLeft - mode.ReinforceSeconds;
+                var seconds = Mathf.Max(0, Mathf.CeilToInt(left));
+                statusText.text = Localization.Format(help ? "#m2_clock_help" : "#m2_clock_courier", $"{seconds / 60}:{seconds % 60:00}");
                 return;
             }
             // no days pass below (the user, 2026-11-01: «вкладку День он тоже не должен видеть»)

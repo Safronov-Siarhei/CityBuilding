@@ -59,8 +59,8 @@ namespace CityBuilder.Campaign
         public static int MaxLevel => Mathf.Max(2, B.ardenMaxLevel);
 
         // the user, 2026-11-13: his levels ride on the whole level's orcs -- every orc that falls anywhere is a point,
-        // and the last level comes with the last orc of the last wave of part 2
-        private int _orcsTotal = 1, _orcsPart1;
+        // and the last level comes with the last orc of the last wave (one part since 2026-11-13; the wreckers count not)
+        private int _orcsTotal = 1;
 
         /// <summary>Orcs that fall to reach `level` (all told).</summary>
         private int XpAt(int level) => level <= 1 ? 0 : Mathf.CeilToInt(_orcsTotal * (level - 1) / (float)(MaxLevel - 1));
@@ -79,16 +79,7 @@ namespace CityBuilder.Campaign
                 }
                 return n;
             }
-            _orcsPart1 = Part(1);
-            _orcsTotal = Mathf.Max(1, _orcsPart1 + Part(2));
-        }
-
-        /// <summary>Part 2 starts with part 1's orcs counted, whether they fell or rode off with the courier's time.</summary>
-        private void CreditPart1()
-        {
-            if (ArdenXp >= _orcsPart1) return;
-            ArdenXp = _orcsPart1;
-            LevelFromXp();
+            _orcsTotal = Mathf.Max(1, Part(1));
         }
 
         private void LevelFromXp()
@@ -178,7 +169,7 @@ namespace CityBuilder.Campaign
         {
             if (orc == null) return;
             _woundedByArden.Remove(orc);
-            if (Current != Stage.Part1 && Current != Stage.Part2) return;
+            if (Current != Stage.Part1 || _wreckers.Contains(orc)) return;
             ArdenXp++;
             LevelFromXp();
         }
@@ -197,11 +188,10 @@ namespace CityBuilder.Campaign
         {
             for (var i = 0; i < SkillCount; i++)
                 if (_cooldown[i] > 0f) _cooldown[i] -= dt;
-            if (Current == Stage.Courier) return;
             if (!ArdenAlive)
             {
                 // fallen: he rises on the square a while later, his level and skills kept (the user's third playtest)
-                if (Current != Stage.Part1 && Current != Stage.Part2) return;
+                if (Current != Stage.Part1) return;
                 if (RespawnLeft <= 0f)
                 {
                     RespawnLeft = Mathf.Max(1f, B.ardenRespawnSeconds);
@@ -222,14 +212,14 @@ namespace CityBuilder.Campaign
             var steer = new Vector3(Stick.x, 0f, Stick.y);
             var was = Arden.IsSteered;
             Arden.Steer = steer;
-            if (was && !Arden.IsSteered) _ardenGroup.OrderMoveTo(Arden.transform.position);   // let go: he holds there and fights
+            if (was && !Arden.IsSteered && !Arden.WallBound) _ardenGroup.OrderMoveTo(Arden.transform.position);   // let go: he holds there and fights
             RTSCameraController.Instance?.FocusOn(Arden.transform.position);
         }
 
         /// <summary>A skill button: true when it went off.</summary>
         public bool UseSkill(int skill)
         {
-            if (!SkillOpen(skill) || _cooldown[skill] > 0f || !ArdenAlive || (Current != Stage.Part1 && Current != Stage.Part2)) return false;
+            if (!SkillOpen(skill) || _cooldown[skill] > 0f || !ArdenAlive || Current != Stage.Part1) return false;
             var b = B;
             var at = Arden.transform.position;
             switch (skill)

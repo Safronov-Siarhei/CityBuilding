@@ -51,11 +51,14 @@ namespace CityBuilder.Campaign
         /// a broken gateway is through.</summary>
         private bool WallBetween(OrcUnit orc, SoldierUnit soldier)
         {
-            if (_pen.width <= 0f || orc == null || soldier == null || soldier.OnWall) return false;
+            // each man by his own pen: the outer garrison and the inner gate's guard stand side by side (2026-11-13)
+            if (orc == null || soldier == null || soldier.OnWall) return false;
+            var pen = soldier.Pen;
+            if (pen.width <= 0f) return false;
             var o = orc.transform.position;
             var s = soldier.transform.position;
-            var orcIn = Breach(o) || o.x >= _pen.xMin - 0.6f && o.x <= _pen.xMax + 0.6f && o.z >= _pen.yMin - 0.6f && o.z <= _pen.yMax + 0.6f;
-            return orcIn != _pen.Contains(new Vector2(s.x, s.z));
+            var orcIn = InBreach(o, pen) || o.x >= pen.xMin - 0.6f && o.x <= pen.xMax + 0.6f && o.z >= pen.yMin - 0.6f && o.z <= pen.yMax + 0.6f;
+            return orcIn != pen.Contains(new Vector2(s.x, s.z));
         }
 
         // where a piece of wall or a gate has fallen (the user's sixth playtest: orcs standing in the rubble of a wall
@@ -69,12 +72,15 @@ namespace CityBuilder.Campaign
             _breaches.Add(building.transform.position);
         }
 
-        /// <summary>A point in the rubble of a fallen wall piece or gate, at the garrison pen's edge.</summary>
-        private bool Breach(Vector3 at)
+        /// <summary>A point in the rubble of a fallen wall piece or gate (SoldierUnit.PenBreach: any pen's edge).</summary>
+        private bool Breach(Vector3 at) => InBreach(at, Rect.zero);
+
+        /// <summary>A point in the rubble of a fallen wall piece or gate, at `pen`'s edge (zero: anywhere).</summary>
+        private bool InBreach(Vector3 at, Rect pen)
         {
-            if (_breaches.Count == 0 || _pen.width <= 0f) return false;
+            if (_breaches.Count == 0) return false;
             const float edge = 2.5f;
-            if (at.x < _pen.xMin - edge || at.x > _pen.xMax + edge || at.z < _pen.yMin - edge || at.z > _pen.yMax + edge) return false;
+            if (pen.width > 0f && (at.x < pen.xMin - edge || at.x > pen.xMax + edge || at.z < pen.yMin - edge || at.z > pen.yMax + edge)) return false;
             foreach (var b in _breaches)
                 if (Flat(at - b) <= BreachReach) return true;
             return false;
@@ -94,7 +100,8 @@ namespace CityBuilder.Campaign
             _wallmen.Clear();
         }
 
-        /// <summary>The gates' squads and the shooters on the walls beside them (outer: part 1; inner: part 2).</summary>
+        /// <summary>The gates' squads and the shooters on the walls beside them (outer: the garrison; inner: the inner
+        /// gate's guard, kept behind it -- both from the start since 2026-11-13).</summary>
         private void Man(bool outer)
         {
             var b = B;
@@ -174,7 +181,9 @@ namespace CityBuilder.Campaign
                 else { fixedC = 59; from = 52; to = 65; gateAt = 56; vertical = true; }
             }
             // nearest the gate first, alternating sides
-            for (var d = 2; d <= Mathf.Max(gateAt - from, to - gateAt); d++)
+            // every other cell out from the gate, BOTH sides of it in turn (all the posts went to the left, the user's
+            // seventh playtest: the candidates alternate sides, and taking every second one took one side only)
+            for (var d = 2; d <= Mathf.Max(gateAt - from, to - gateAt); d += 2)
             {
                 foreach (var a in new[] { gateAt - d, gateAt + d })
                 {
@@ -183,7 +192,7 @@ namespace CityBuilder.Campaign
                     candidates.Add(vertical ? (CellOf(fixedC, a), CellOf(fixedC, further)) : (CellOf(a, fixedC), CellOf(further, fixedC)));
                 }
             }
-            for (var i = 0; i < candidates.Count && found.Count < count; i += 2) found.Add(candidates[i]);
+            for (var i = 0; i < candidates.Count && found.Count < count; i++) found.Add(candidates[i]);
             return found;
         }
 
