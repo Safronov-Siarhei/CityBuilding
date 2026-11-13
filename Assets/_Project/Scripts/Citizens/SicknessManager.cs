@@ -83,6 +83,12 @@ namespace CityBuilder.Citizens
 
             UnwateredShare = ComputeUnwateredShare();
             FallIll(citizens);
+            // the sandbox's Лечебница heals by beds, in seconds (Infirmary; the user, 2026-11-13)
+            if (Infirmary.Active)
+            {
+                UntreatedDaysInARow = 0;
+                return;
+            }
             Heal(citizens);
             KillTheUntreated(citizens);
         }

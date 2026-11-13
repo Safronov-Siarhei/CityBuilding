@@ -183,6 +183,11 @@ namespace CityBuilder.EditorTools
             // the Smelter's metals (the user, 2026-11-12, concept A): a tap picks what is smelted; the soldier types are only slot fillers
             BuildHireBar(row.transform, FocusHireBar.Kind.Smelter, new[] { SoldierType.Militia, SoldierType.Spearman, SoldierType.Archer },
                 new[] { "Res_CopperBar", "Res_IronBar", "Res_GoldBar" }, iconLibrary, new[] { "SmeltCopperBar", "SmeltIronBar", "SmeltGoldBar" });
+            // the sandbox Лечебница's six beds (the user, 2026-11-13); the soldier types and faces are only slot fillers
+            BuildHireBar(row.transform, FocusHireBar.Kind.Healer,
+                new[] { SoldierType.Militia, SoldierType.Militia, SoldierType.Militia, SoldierType.Militia, SoldierType.Militia, SoldierType.Militia },
+                new[] { "PortraitVillagerPeasant1", "PortraitVillagerPeasant1", "PortraitVillagerPeasant1", "PortraitVillagerPeasant1", "PortraitVillagerPeasant1", "PortraitVillagerPeasant1" },
+                iconLibrary, new[] { "Bed1", "Bed2", "Bed3", "Bed4", "Bed5", "Bed6" });
             BuildHireBar(row.transform, FocusHireBar.Kind.Castle, new[] { SoldierType.King, SoldierType.Queen, SoldierType.Captain },
                 new[] { "PortraitKing", "PortraitQueen", "PortraitCaptain" }, iconLibrary);
             // the Shipyard's ships (ShipStats.All order); the soldier types are only slot fillers
@@ -240,6 +245,7 @@ namespace CityBuilder.EditorTools
             var picked = new Object[n];
             var locks = new Object[n];
             var lockTexts = new Object[n];
+            var rings = new Object[kind == FocusHireBar.Kind.Healer ? n : 0];
             const float size = 128f;
             for (var i = 0; i < n; i++)
             {
@@ -265,6 +271,21 @@ namespace CityBuilder.EditorTools
                 face.raycastTarget = false;
                 Anchor(face.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 8f), new Vector2(size * 0.78f, size * 0.78f));
                 faces[i] = face;
+
+                if (kind == FocusHireBar.Kind.Healer)
+                {
+                    // the treatment's 60 s round the patient's face (UI/Icons/HealRing.png, filled clockwise)
+                    var ring = CreateImage(button.transform, "Treatment", Color.white);
+                    ring.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.IconsFolder}/HealRing.png");
+                    ring.type = Image.Type.Filled;
+                    ring.fillMethod = Image.FillMethod.Radial360;
+                    ring.fillOrigin = (int)Image.Origin360.Top;
+                    ring.fillClockwise = true;
+                    ring.raycastTarget = false;
+                    Anchor(ring.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 8f), new Vector2(size * 0.92f, size * 0.92f));
+                    ring.gameObject.SetActive(false);
+                    rings[i] = ring;
+                }
 
                 // the price on a plaque across the button's foot
                 var price = HudImage(button.transform, "Price", "plaque", new Vector2(116f, 44f));
@@ -329,6 +350,12 @@ namespace CityBuilder.EditorTools
             WriteObjects(so.FindProperty("picked"), picked);
             WriteObjects(so.FindProperty("locks"), locks);
             WriteObjects(so.FindProperty("lockTexts"), lockTexts);
+            if (kind == FocusHireBar.Kind.Healer)
+            {
+                WriteObjects(so.FindProperty("rings"), rings);
+                so.FindProperty("freeBedSprite").objectReferenceValue = HudGlyph("Plus");
+                so.FindProperty("lockedBedSprite").objectReferenceValue = HudGlyph("Lock");
+            }
             so.FindProperty("iconLibrary").objectReferenceValue = iconLibrary;
             so.ApplyModifiedPropertiesWithoutUndo();
         }

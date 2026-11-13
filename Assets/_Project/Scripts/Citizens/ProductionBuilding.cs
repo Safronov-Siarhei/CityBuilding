@@ -49,12 +49,17 @@ namespace CityBuilder.Citizens
         public bool WorkersCapped { get; private set; }
 
         /// <summary>Production and food buildings fill themselves (not in an Invasion run, which keeps its own rules).</summary>
+        /// In the sandbox EVERY workplace does (the user, 2026-11-13: «общее автоназначение»), the
+        /// player's own count first: lowered by hand it is filled only up to that, set to 0 never.
         public bool AutoStaffed =>
-            Data != null && (Data.category == BuildingCategory.Production || Data.category == BuildingCategory.Food)
-            && !Invasion.InvasionMode.IsActive;
+            Data != null && !Invasion.InvasionMode.IsActive
+            && (Data.category == BuildingCategory.Production || Data.category == BuildingCategory.Food || Infirmary.Active);
 
         /// <summary>Wanting hands it does not have: the worker-shortage mark goes up over it (WorkerShortageMarks).</summary>
-        public bool ShortOfWorkers => Instance != null && Instance.IsOperational && AssignedWorkers < WantedWorkers;
+        /// A self-staffing building the player emptied by hand keeps the mark too (the user, 2026-11-13:
+        /// «над зданием висит иконка нет рабочих»), though nobody is sent to it.
+        public bool ShortOfWorkers => Instance != null && Instance.IsOperational
+            && (AssignedWorkers < WantedWorkers || (AutoStaffed && WorkersCapped && AssignedWorkers == 0 && MaxWorkers > 0));
 
         private int? _island;
 

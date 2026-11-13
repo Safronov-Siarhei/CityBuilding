@@ -60,7 +60,9 @@ namespace CityBuilder.Resources
 
         private void CollectTaxes()
         {
-            var population = citizenManager != null ? citizenManager.TotalPopulation : 0;
+            // the sandbox's sick pay no tax (the user, 2026-11-13)
+            var population = citizenManager == null ? 0
+                : Citizens.Infirmary.Active ? citizenManager.HealthyPopulation : citizenManager.TotalPopulation;
             // Казна multiplies the day's tax (the user, 2026-11-12)
             // + the decor's coins to the people living round it (the user, 2026-11-12; DecorBonus)
             var due = (population * PerCitizen + DecorBonus.DailyCoins()) * Shop.Boosters.TaxFactor + _carry;

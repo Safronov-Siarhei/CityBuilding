@@ -819,6 +819,25 @@ namespace CityBuilder.EditorTools
             }
             shortageSO.FindProperty("resourceMaterial").objectReferenceValue = noResource;
             shortageSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // the sandbox Лечебница: beds, a queue, the green skull over the sick (the user, 2026-11-13;
+            // UI/Icons/SickMark.png from Tools/ui/sick_mark_icon.py, the red ring is the shader's _Ring)
+            var infirmary = managers.AddComponent<CityBuilder.Citizens.Infirmary>();
+            const string sickMarkPath = "Assets/_Project/Materials/SickMark.mat";
+            var sickMark = AssetDatabase.LoadAssetAtPath<Material>(sickMarkPath);
+            if (sickMark == null && billboard != null)
+            {
+                sickMark = new Material(billboard) { name = "SickMark" };
+                AssetDatabase.CreateAsset(sickMark, sickMarkPath);
+            }
+            if (sickMark != null)
+            {
+                sickMark.SetTexture("_MainTex", AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/_Project/UI/Icons/SickMark.png"));
+                EditorUtility.SetDirty(sickMark);
+            }
+            var infirmarySO = new SerializedObject(infirmary);
+            infirmarySO.FindProperty("markMaterial").objectReferenceValue = sickMark;
+            infirmarySO.ApplyModifiedPropertiesWithoutUndo();
             // the boosters' violet stream round the buildings they work on (Shaders/BoosterStream; the user, 2026-11-12)
             var auras = managers.AddComponent<Shop.BoosterAuras>();
             const string streamPath = "Assets/_Project/Materials/BoosterStream.mat";

@@ -721,6 +721,10 @@ namespace CityBuilder.Core
         [SerializeField] private float sicknessThirstChancePerDay = 0.12f;
         [SerializeField] private int sicknessDaysBeforeDeath = 3;
         [SerializeField] private int healPerHealerPerDay = 2;
+        // the sandbox Лечебница (the user, 2026-11-13): one patient's treatment, and how long one
+        // with no bed lives
+        [SerializeField] private float infirmaryTreatSeconds = 60f;
+        [SerializeField] private float infirmaryWaitSeconds = 30f;
 
         [Header("Migration (economy.csv)")]
         // How fast people find their way to the settlement, or away from it. Contentment above the
@@ -1177,6 +1181,8 @@ namespace CityBuilder.Core
         public float SicknessThirstChancePerDay => sicknessThirstChancePerDay;
         public int SicknessDaysBeforeDeath => sicknessDaysBeforeDeath;
         public int HealPerHealerPerDay => healPerHealerPerDay;
+        public float InfirmaryTreatSeconds => infirmaryTreatSeconds;
+        public float InfirmaryWaitSeconds => infirmaryWaitSeconds;
         public int PortalMaxHealth => portalMaxHealth;
         public int OrcTowerHealth => orcTowerHealth;
         public int OrcTowerDamage => orcTowerDamage;
@@ -2219,6 +2225,8 @@ namespace CityBuilder.Core
             sicknessThirstChancePerDay = Read(economy, "sickness_thirst_chance_per_day", sicknessThirstChancePerDay);
             sicknessDaysBeforeDeath = (int)Read(economy, "sickness_days_before_death", sicknessDaysBeforeDeath);
             healPerHealerPerDay = (int)Read(economy, "heal_per_healer_per_day", healPerHealerPerDay);
+            infirmaryTreatSeconds = Read(economy, "infirmary_treat_sec", infirmaryTreatSeconds);
+            infirmaryWaitSeconds = Read(economy, "infirmary_wait_sec", infirmaryWaitSeconds);
             portalMaxHealth = (int)Read(economy, "portal_max_health", portalMaxHealth);
             orcTowerHealth = (int)Read(economy, "orc_tower_health", orcTowerHealth);
             orcTowerDamage = (int)Read(economy, "orc_tower_damage", orcTowerDamage);

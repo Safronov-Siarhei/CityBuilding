@@ -109,6 +109,9 @@ house, the hall last). Nothing of it is saved: after a load the reconcile re-hom
   building its 1st hand (oldest first), then a 2nd to each, then a 3rd... up to what it wants; a
   building whose island has nobody free is skipped. A building the player took a worker off still
   keeps only what he left (WorkersCapped).
+- SANDBOX: EVERY workplace staffs itself (2026-11-13, the user: «общее автоназначение + ручная настройка в
+  приоритете»): the Laboratory, the healer, the brigade too; lowered by hand it is filled only to that
+  count, set to 0 never, and the no-worker mark stays over it. The sick (Infirmary) are no hands on their island.
 - Decor money and gifts now count a house's LIVE residents (`CitizensOf`), not its places.
 
 ## Code

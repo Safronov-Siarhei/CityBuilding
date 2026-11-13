@@ -25,7 +25,9 @@ namespace CityBuilder.UI
         // the dungeon's hire camp (the user, 2026-11-01): a gnome per button, held like the Barracks
         // the Stable and the Church (the user, 2026-11-05): the knight, the monk -- hired like the Barracks' soldiers
         // the Smelter (the user, 2026-11-12): a bar per button -- copper, iron, gold; a tap picks what is smelted
-        public enum Kind { Barracks = 0, Castle = 1, Shipyard = 2, HireCamp = 3, Stable = 4, Church = 5, Workshop = 6, Smelter = 7 }
+        // the sandbox Лечебница (the user, 2026-11-13): six beds -- a plus when free, the patient's face
+        // (in a ring while he is treated), a lock with «Ур. N» for one a higher level opens
+        public enum Kind { Barracks = 0, Castle = 1, Shipyard = 2, HireCamp = 3, Stable = 4, Church = 5, Workshop = 6, Smelter = 7, Healer = 8 }
 
         /// <summary>The Smelter's buttons, in order: the bar each one smelts.</summary>
         public static readonly ResourceType[] SmeltedBars = { ResourceType.CopperBar, ResourceType.IronBar, ResourceType.GoldBar };
@@ -48,6 +50,10 @@ namespace CityBuilder.UI
         [SerializeField] private GameObject[] locks = new GameObject[0];
         [SerializeField] private Text[] lockTexts = new Text[0];
         [SerializeField] private ResourceIconLibrary iconLibrary;
+        [SerializeField] private Image[] rings = new Image[0];
+        [SerializeField] private Sprite freeBedSprite;
+        [SerializeField] private Sprite lockedBedSprite;
+        private readonly System.Collections.Generic.List<Citizens.Infirmary.Patient> _beds = new System.Collections.Generic.List<Citizens.Infirmary.Patient>();
 
         private float _refreshIn;
         private bool _shown;
@@ -63,6 +69,7 @@ namespace CityBuilder.UI
                 if (kind == Kind.Castle) return focus == HeroRoster.Castle && HeroRoster.Instance != null ? focus : null;
                 if (kind == Kind.Shipyard) return focus.Data.buildingName == Ships.ShipManager.ShipyardId && focus.IsOperational ? focus : null;
                 if (kind == Kind.Smelter) return focus.Data.buildingName == BuildingIds.Smelter && !focus.IsBot ? focus : null;
+                if (kind == Kind.Healer) return Citizens.Infirmary.Active && Citizens.Infirmary.IsHealer(focus) ? focus : null;
                 var hall = kind == Kind.Stable ? BuildingIds.Stable : kind == Kind.Church ? BuildingIds.Church
                     : kind == Kind.Workshop ? BuildingIds.Workshop : BuildingIds.Barracks;
                 return focus.Data.buildingName == hall && focus.IsOperational ? focus : null;
@@ -119,6 +126,7 @@ namespace CityBuilder.UI
             else if (kind == Kind.Castle) Buy(index);
             else if (kind == Kind.Shipyard) BuildShip(index);
             else if (kind == Kind.Smelter) Smelt(index);
+            else if (kind == Kind.Healer) return;   // the beds only show
             else Hire(index);
         }
 
@@ -250,6 +258,7 @@ namespace CityBuilder.UI
             else if (kind == Kind.Castle) ShowHeroes(target);
             else if (kind == Kind.Shipyard) ShowShips(target);
             else if (kind == Kind.Smelter) ShowMetals(target);
+            else if (kind == Kind.Healer) ShowBeds(target);
             else ShowSoldiers(target);
         }
 
@@ -274,6 +283,43 @@ namespace CityBuilder.UI
             smelter.SelectRecipe(recipe);
             _refreshIn = 0f;
             return true;
+        }
+
+        /// <summary>The Лечебница's six beds: free (a plus), taken (the patient's face, ringed while treated), locked («Ур. N»).</summary>
+        private void ShowBeds(BuildingInstance healer)
+        {
+            var infirmary = Citizens.Infirmary.Instance;
+            if (infirmary == null) return;
+            var beds = Citizens.Infirmary.BedsOf(healer);
+            infirmary.InBed(healer, _beds);
+            for (var i = 0; i < buttons.Length; i++)
+            {
+                buttons[i].SetActive(true);
+                if (i < prices.Length && prices[i] != null) prices[i].SetActive(false);
+                if (i < ticks.Length && ticks[i] != null) ticks[i].SetActive(false);
+                var ring = i < rings.Length ? rings[i] : null;
+                var locked = i >= beds;
+                if (i < locks.Length && locks[i] != null) locks[i].SetActive(locked);
+                if (locked)
+                {
+                    var need = healer.Level + 1;
+                    while (need < BuildingInstance.MaxLevel && healer.Data.LevelStats(need).beds <= i) need++;
+                    if (i < lockTexts.Length && lockTexts[i] != null) lockTexts[i].text = Localization.Format("#healer_bed_level", need);
+                    faces[i].sprite = lockedBedSprite;
+                    faces[i].color = Dimmed;
+                    if (ring != null) ring.gameObject.SetActive(false);
+                    continue;
+                }
+                faces[i].color = Color.white;
+                var patient = i < _beds.Count ? _beds[i] : null;
+                faces[i].sprite = patient != null && patient.Figure != null && patient.Figure.Portrait != null ? patient.Figure.Portrait : freeBedSprite;
+                var progress = patient != null ? infirmary.Progress(patient) : -1f;
+                if (ring != null)
+                {
+                    ring.gameObject.SetActive(progress >= 0f);
+                    ring.fillAmount = Mathf.Max(0f, progress);
+                }
+            }
         }
 
         /// <summary>A bar per button, no price; the one smelting now on the gold button with a tick.</summary>

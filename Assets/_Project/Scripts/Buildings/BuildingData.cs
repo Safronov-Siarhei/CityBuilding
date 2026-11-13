@@ -37,6 +37,9 @@ namespace CityBuilder.Buildings
 
         public int maxWorkers;
 
+        /// <summary>Sickbeds at this level -- the sandbox Лечебница (the sheet's beds .. beds_5; the user, 2026-11-13: 2/3/4/5/6). 0 elsewhere.</summary>
+        public int beds;
+
         /// <summary>
         /// How many batches of the selected recipe one worker gets through per tick. What a batch
         /// consists of is the recipe's business (see BuildingRecipe) -- this is the only half an
@@ -282,6 +285,7 @@ namespace CityBuilder.Buildings
                     defense = level.defense,
                     housingCapacity = level.housingCapacity,
                     maxWorkers = level.maxWorkers,
+                    beds = level.beds,
                     batchesPerWorkerPerTick = level.batchesPerWorkerPerTick,
                     storageCapacity = level.storageCapacity,
                     happiness = level.happiness,

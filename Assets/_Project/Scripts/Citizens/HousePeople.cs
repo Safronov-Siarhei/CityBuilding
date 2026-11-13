@@ -180,7 +180,10 @@ namespace CityBuilder.Citizens
         }
 
         /// <summary>Residents of this island with no job -- what a building or a Barracks there may take.</summary>
-        public int IdleOn(int island) => Mathf.Max(0, CitizensOn(island) - WorkersOn(island));
+        public int IdleOn(int island) => Mathf.Max(0, CitizensOn(island) - SickOn(island) - WorkersOn(island));
+
+        /// <summary>The sick of this island (the sandbox Лечебница's patients): residents, but no hands.</summary>
+        private static int SickOn(int island) => Infirmary.Active ? Infirmary.Instance.SickOn(island) : 0;
 
         /// <summary>Every home (the hall first) as (building, residents) -- for the walking figures, who live where these do.</summary>
         public void Homes(List<KeyValuePair<BuildingInstance, int>> into)
@@ -302,14 +305,14 @@ namespace CityBuilder.Citizens
             return take;
         }
 
-        /// <summary>A building whose island has fewer residents than workers loses the difference (the place stays wanted).</summary>
-        private void LayOffIslandExcess()
+        /// <summary>A building whose island has fewer healthy residents than workers loses the difference (the place stays wanted).</summary>
+        public void LayOffIslandExcess()
         {
             foreach (var building in ProductionBuilding.All)
             {
                 if (building == null || building.AssignedWorkers <= 0) continue;
                 var island = building.Island;
-                while (building.AssignedWorkers > 0 && WorkersOn(island) > CitizensOn(island)) building.LayOffWorker();
+                while (building.AssignedWorkers > 0 && WorkersOn(island) > CitizensOn(island) - SickOn(island)) building.LayOffWorker();
             }
         }
 

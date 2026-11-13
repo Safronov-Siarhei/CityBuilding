@@ -244,7 +244,7 @@ namespace CityBuilder.Citizens
         private readonly Dictionary<BuildingInstance, int> _figuresAt = new Dictionary<BuildingInstance, int>();
 
         /// <summary>Just outside a building's south edge, where its door faces (as the Town Hall's spawn point).</summary>
-        private Vector3 DoorOf(BuildingInstance building)
+        public Vector3 DoorOf(BuildingInstance building)
         {
             if (building == null) return Vector3.zero;
             if (gridManager == null) return building.transform.position;
@@ -519,6 +519,48 @@ namespace CityBuilder.Citizens
             }
 
             return nearest;
+        }
+
+        /// <summary>
+        /// A villager falls ill (the sandbox Лечебница, Infirmary): an idle one if there is one, else
+        /// one taken off his work (the place stays wanted, someone else steps in). He leaves the idle
+        /// and working lists -- the Infirmary walks him from now on -- but stays one of the town's figures.
+        /// </summary>
+        public CitizenAgent TakeForPatient(Infirmary infirmary)
+        {
+            CitizenAgent agent = null;
+            if (_idleAgents.Count > 0)
+            {
+                var index = UnityEngine.Random.Range(0, _idleAgents.Count);
+                agent = _idleAgents[index];
+                _idleAgents.RemoveAt(index);
+                return agent;
+            }
+            foreach (var pair in _workingAgents)
+            {
+                if (pair.Value.Count == 0) continue;
+                agent = pair.Value[pair.Value.Count - 1];
+                pair.Value.RemoveAt(pair.Value.Count - 1);
+                UnsubscribeWorkVisit(agent);
+                if (_claimedNodes.TryGetValue(agent, out var node))
+                {
+                    node.Release();
+                    _claimedNodes.Remove(agent);
+                }
+                if (pair.Key != null) pair.Key.LayOffWorker();
+                agent.SetIdleWander(agent.Home != null && agent.Home.CurrentHealth > 0 ? CentreOf(agent.Home) : agent.transform.position);
+                return agent;
+            }
+            return null;
+        }
+
+        /// <summary>Cured: back at the Лечебница's door, an idle villager again.</summary>
+        public void ReturnFromPatient(CitizenAgent agent, Vector3 at)
+        {
+            if (agent == null || !_allAgents.Contains(agent) || _idleAgents.Contains(agent)) return;
+            agent.Teleport(at);
+            ReleaseAgentToIdle(agent);
+            RefillShortBuildings();
         }
 
         private void ReleaseAgentToIdle(CitizenAgent agent)

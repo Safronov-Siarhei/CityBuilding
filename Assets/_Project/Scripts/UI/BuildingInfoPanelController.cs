@@ -358,6 +358,9 @@ namespace CityBuilder.UI
         /// </summary>
         private string FoodLine()
         {
+            // the sandbox Лечебница: beds taken, the treatment and the wait (the user, 2026-11-13)
+            var heal = Citizens.Infirmary.CardLine(_currentInstance);
+            if (heal != null) return heal;
             var id = _currentProduction != null ? _currentProduction.BuildingId : null;
             if (id == null) return null;
             if (Citizens.FoodOutput.IsProducer(id)) return Localization.Format("#food_card_per_day", Citizens.FoodOutput.PerDay(_currentProduction));

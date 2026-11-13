@@ -8,6 +8,9 @@ Shader "CityBuilder/IconBillboard"
         _MainTex ("Picture", 2D) = "white" {}
         _Size ("Size (world)", Float) = 1
         _Bob ("Bob (world)", Float) = 0.08
+        // a red ring round the picture, this much of it left (0..1); below 0 none (the sandbox
+        // Лечебница's patient with no bed, Citizens/Infirmary, the user 2026-11-13)
+        _Ring ("Ring left", Float) = -1
     }
 
     SubShader
@@ -34,6 +37,7 @@ Shader "CityBuilder/IconBillboard"
                 float4 _MainTex_ST;
                 float _Size;
                 float _Bob;
+                float _Ring;
             CBUFFER_END
 
             struct Attributes
@@ -62,7 +66,20 @@ Shader "CityBuilder/IconBillboard"
 
             half4 Frag(Varyings input) : SV_Target
             {
-                return SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv);
+                half4 c = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, input.uv);
+                if (_Ring >= 0.0)
+                {
+                    float2 d = input.uv - 0.5;
+                    float r = length(d);
+                    if (r > 0.415 && r < 0.5)
+                    {
+                        // clockwise from the top: what is left is red, what is spent dark
+                        float f = frac(atan2(d.x, d.y) / 6.2831853 + 1.0);
+                        half4 ring = f <= _Ring ? half4(0.84, 0.13, 0.16, 1.0) : half4(0.18, 0.11, 0.07, 0.85);
+                        c = lerp(c, ring, ring.a);
+                    }
+                }
+                return c;
             }
             ENDHLSL
         }

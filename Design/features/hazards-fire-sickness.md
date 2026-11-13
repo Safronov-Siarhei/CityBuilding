@@ -1,6 +1,6 @@
 # Hazards: fire and sickness
 
-> **Status (2026-11-13):** sandbox healer v2 (beds) DECIDED, concepts sent, not built. **Earlier (2026-10-21):** shipped 2026-08-19, numbers first-pass and NOT balanced (first playtest:
+> **Status (2026-11-13):** sandbox healer v2 (beds) BUILT, not seen, untested. **Earlier (2026-10-21):** shipped 2026-08-19, numbers first-pass and NOT balanced (first playtest:
 > 3 dead of illness by day 7 — clearly harsh).
 > **Read with:** [building-levels-and-decay](building-levels-and-decay.md), [citizens-and-workforce](citizens-and-workforce.md).
 
@@ -17,7 +17,7 @@
 - No sickness while the town settles in (easy start, 2026-10-20). Fires and illness are off in Invasion.
 - Saved: sick count, untreated streak, every fire with ELAPSED time (remaining depends on the crew after load).
 
-## Sandbox healer v2 -- DECIDED 2026-11-13, NOT BUILT (concepts Design/ui/Healer_Concepts.png await approval)
+## Sandbox healer v2 -- BUILT 2026-11-13 (concepts Design/ui/Healer_Concepts.png APPROVED), not seen by the user
 The user's rules, SANDBOX ONLY (other modes keep the radius healer above):
 - Illness chance unchanged (daily roll). A sick resident leaves his job (another is hired), pays no tax,
   and WALKS to the nearest healer on his island with a free bed, a sickness mark over his head.
@@ -32,6 +32,30 @@ The user's rules, SANDBOX ONLY (other modes keep the radius healer above):
 - Numbers on the sheet as per-level columns (beds, workers, 60 s, 30 s).
 - Workers: general auto-assignment, BUT the player's manual count has priority for EVERY building
   (lowered 3->1: auto never gives more than 1; set to 0: no-worker mark stays, auto never staffs it).
+
+**How it is built (2026-11-13):**
+- `Citizens/Infirmary.cs` (on the managers, `Infirmary.Active` = not Invasion / tutorial / campaign town):
+  patients follow `CitizenManager.SickPopulation` (Reconcile), each one a villager figure taken by
+  `CitizenVisualsManager.TakeForPatient` (idle first, else off a job -- the place stays wanted); beds
+  each frame oldest first to the nearest healer on his island that `Takes` (built, a healer in it,
+  beds > 0); in bed the figure walks to `DoorOf` and is hidden; cured -> `ReturnFromPatient`; dead ->
+  `KillAgent` (+ HealSick, RecordDeaths, #log_plague_deaths). A healer that loses its last worker
+  lets its patients out (back to waiting, fresh 30 s).
+- SicknessManager.PassDay: in the sandbox only FallIll; no daily Heal / untreated streak.
+- HousePeople.IdleOn and LayOffIslandExcess subtract the island's sick; TaxManager taxes HealthyPopulation.
+- Mark: `UI/Icons/SickMark.png` (Tools/ui/sick_mark_icon.py) on `Materials/SickMark.mat`
+  (IconBillboard, new `_Ring` property: the red ring left, -1 none).
+- Bottom bar: `FocusHireBar.Kind.Healer`, 6 buttons (faces = Hud_Plus / patient portrait / Hud_Lock with
+  «Ур. N» band), `rings` = UI/Icons/HealRing.png filled radially.
+- Card line `#healer_card` (Infirmary.CardLine via FoodLine); notices `#log_infirmary_full`, `#log_infirmary_no_worker` (once per 20 s per island).
+- Data: buildings `beds..beds_5` (HealerHouse 2..6); sandbox tab «Город» `max_workers..max_workers_5` for
+  all its 12 rows (HealerHouse 1/2/2/3/3) -- a blank level-1 cell there would wipe the base value;
+  economy `infirmary_treat_sec` 60, `infirmary_wait_sec` 30.
+- Workers: in the sandbox EVERY workplace is AutoStaffed (lab, healer, brigade too); the player's own
+  count caps it (WorkersCapped); emptied by hand = no-worker mark stays, nobody sent.
+- Traps / open: the patient list is not saved (rebuilt from the sick count, timers fresh); the healer
+  still shows its old service radius when placed; a patient's figure on another island than its healer
+  never walks (no healer there = he dies, by the rules).
 
 ## Code
 `Buildings/FireManager.cs`, `Buildings/BuildingFire.cs`, `Citizens/SicknessManager.cs`,

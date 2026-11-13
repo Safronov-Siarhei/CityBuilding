@@ -1105,6 +1105,8 @@ namespace CityBuilder.EditorTools
                     defense = LevelNumber(header, row, "defense", level, previous?.defense, path),
                     housingCapacity = LevelNumber(header, row, "housing_capacity", level, previous?.housingCapacity, path),
                     maxWorkers = LevelNumber(header, row, "max_workers", level, previous?.maxWorkers, path),
+                    // optional (only the sandbox Лечебница has it): no column = 0, a blank higher level repeats the one below
+                    beds = header.IndexOf("beds") < 0 ? 0 : level == 1 ? (int)OptionalNumber(header, row, "beds", path) : LevelNumber(header, row, "beds", level, previous?.beds, path),
                     batchesPerWorkerPerTick = LevelNumber(header, row, "batches_per_tick", level, previous?.batchesPerWorkerPerTick, path),
                     storageCapacity = LevelNumber(header, row, "storage_capacity", level, previous?.storageCapacity, path),
                     happiness = LevelNumber(header, row, "happiness", level, previous?.happiness, path),
