@@ -80,7 +80,9 @@ Cemetery (new building, sandbox):
 - Model: headstones and a fence round the edges; level 1 render first, then the other levels.
   Level 1 drafted 2026-11-13: Tools/blender/cemetery1.py (2x2 plot, picket fence, gate, path, memorial
   cross, 20 grave places 4x5 filling front-first; base 1514 tris, ~39 a grave), review
-  Design/buildings/Cemetery_L1_review.png -- AWAITS APPROVAL.
+  Design/buildings/Cemetery_L1_review.png -- APPROVED 2026-11-13. Levels 2-5
+  (stone footing + cobbles + lamps / chapel with gilded cross / glazed / gilded roof) in
+  Design/buildings/Cemetery_levels_review.png -- AWAIT APPROVAL. 20 places at every level: past lvl 1 a grave = a share of the dead.
 
 ## Code
 `Buildings/FireManager.cs`, `Buildings/BuildingFire.cs`, `Citizens/SicknessManager.cs`,
