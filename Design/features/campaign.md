@@ -471,9 +471,9 @@
   2. Orcs aggro/throw at Ардан through a wall -> `WallBetween` for a pen-less soldier compares RINGS (outside /
      between the walls / inside the inner ones, `Ring`), a breach lets through.
   3. Hero cannot get on the wall -> running INTO a Barbican end tower (a WallWalk stair, within 1,6 cells, stick
-     towards it) climbs him up (`TickArdenWall`). Doors on the towers: DRAFTS sent 2026-11-13
-     (`Tools/blender/gate_door_drafts.py`: A = arched oak door + step + lantern in each flanking tower's town face,
-     B = the same under a blue wooden porch); waiting for the user's pick, not in the game.
+     towards it) climbs him up (`TickArdenWall`). Doors on the towers: the user picked A
+     (2026-11-13): arched oak door + step + lantern in each flanking tower's town face, `Tools/blender/gate_door_drafts.py`
+     export -> Models/Buildings/FortifiedGate1-TowerDoors.fbx, hung by `HangDoors` with the leaves (town face). IN THE GAME, not seen.
   4. Ардан under the wall hit orcs on it -> `SoldierUnit.WallBlocks` (set by the mode, `SoldierBlocked`): a melee man
      on the ground never strikes an orc on the wall-walk; nobody on the ground strikes across a wall. Checked in
      `CanStrike` and `OrcAtHand`.

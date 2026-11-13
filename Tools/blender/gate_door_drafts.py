@@ -3,6 +3,10 @@ and eighth playtests: «у ворот не видно дверей снизу, �
 «дверь в каждой башне»). DRAFTS for approval before anything goes into the game. Never saves the .blend.
 
     blender --background Buildings-Size1-Models.blend --python gate_door_drafts.py -- <out_dir>
+    blender ... --python gate_door_drafts.py -- <unity project> export     (the approved A into the game)
+
+APPROVED 2026-11-13: variant A («Вариант A») -> Models/Buildings/FortifiedGate1-TowerDoors.fbx, both doors in one mesh
+in the gate's own space; CityDefenceMode.HangDoors sets it on the town face.
 
 The Barbican (FortifiedGate1-lvl3) is a gatehouse in the middle cell with the curtain wall in the two end cells;
 the game's wall-walk takes those END cells (the two flanking towers) as the stairs up. Two looks, each from the town side (+x):
@@ -25,7 +29,7 @@ exec(compile(_src, "siege_drafts.py", "exec"), globals())
 import details as d  # noqa: E402
 from kit import Facade  # noqa: E402
 
-TX = 0.569                    # the town (+x) face of the two flanking towers (measured on the lvl3 mesh)
+TX = 0.485                    # the town (+x) face of the two flanking towers at door height (lvl3 and lvl4 meshes)
 END_S = 1.0                   # the towers' middle along y (the end cells)
 DOOR_W, DOOR_H = 0.26, 0.46
 
@@ -105,4 +109,27 @@ def main():
         piece.hide_render = True
 
 
-main()
+def export(project):
+    """Variant A to Models/Buildings with export_fbx.py's settings for static models. Never saves the .blend."""
+    folder = os.path.join(project, "Assets", "_Project", "Models", "Buildings")
+    blend = os.path.dirname(bpy.data.filepath)
+    img = kit.ensure_palette(os.path.join(blend, "Buildings-Palette.png"))
+    mat = kit.ensure_material(img)
+    obj = make("FortifiedGate1-TowerDoors", towers, mat)
+    bpy.ops.object.select_all(action='DESELECT')
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    path = os.path.join(folder, "FortifiedGate1-TowerDoors.fbx")
+    bpy.ops.export_scene.fbx(
+        filepath=path, use_selection=True, object_types={'MESH'},
+        axis_forward='Z', axis_up='Y', apply_unit_scale=True, apply_scale_options='FBX_SCALE_ALL',
+        bake_space_transform=True, use_mesh_modifiers=True, mesh_smooth_type='FACE',
+        add_leaf_bones=False, bake_anim=False, path_mode='STRIP', embed_textures=False,
+        colors_type='LINEAR', prioritize_active_color=True)
+    print("EXPORTED", path)
+
+
+if len(argv) > 1 and argv[1] == "export":
+    export(argv[0])
+else:
+    main()

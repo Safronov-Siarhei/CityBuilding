@@ -656,6 +656,7 @@ namespace CityBuilder.EditorTools
             // the gate's leaves, portcullis and passage (approved 2026-11-12, Tools/blender/gate_close_drafts.py)
             cityDefenceSO.FindProperty("gatePassageModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Buildings/FortifiedGate1-Passage.fbx");
             cityDefenceSO.FindProperty("gateLeafModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Buildings/FortifiedGate1-Leaf.fbx");
+            cityDefenceSO.FindProperty("gateTowerDoorsModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Buildings/FortifiedGate1-TowerDoors.fbx");
             cityDefenceSO.FindProperty("gateGrilleModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Buildings/FortifiedGate1-Grille.fbx");
             // Ардан with the sword in place of the Латник's look (approved 2026-11-12)
             cityDefenceSO.FindProperty("ardenModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(cine + "Cast/CineArdanSword.fbx");

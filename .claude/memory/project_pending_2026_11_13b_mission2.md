@@ -14,7 +14,9 @@ Then the user merged the two parts into ONE 11-minute mission (BUILT 2026-11-13,
 
 PLAYTEST 8 (13 items) BUILT 2026-11-13 too (card «PLAYTEST 8»), not seen.
 
-OPEN: (1) doors at the gatehouse foot — drafts A (door+step+lantern) / B (door under a blue porch) sent, `Tools/blender/gate_door_drafts.py`; wait for the pick, then export and place on the Barbican towers' town face; (2) the capital cutscene at the 8-minute mark — later, discuss before building.
+Tower doors: the user picked A; IN THE GAME 2026-11-13 (FortifiedGate1-TowerDoors.fbx via HangDoors), not seen.
+
+OPEN: the capital cutscene at the 8-minute mark — later, discuss before building.
 
 **Why:** the user's seventh playtest and their redesign request.
 **How to apply:** next mission 2 work starts from these open items or the user's next playtest. Related: [[project-pending-2026-11-13-mission2]], [[feedback-approve-models-first]], [[project-campaign]].
