@@ -1,6 +1,6 @@
 # Hazards: fire and sickness
 
-> **Status (2026-11-13):** sandbox healer v2 (beds) BUILT, not seen, untested. **Earlier (2026-10-21):** shipped 2026-08-19, numbers first-pass and NOT balanced (first playtest:
+> **Status (2026-11-13):** sandbox healer v2 (beds) BUILT; PLAGUE + CEMETERY + the dead BUILT (setup green), not seen, untested; the lying-skeleton model (Remains1) awaits approval. **Earlier (2026-10-21):** shipped 2026-08-19, numbers first-pass and NOT balanced (first playtest:
 > 3 dead of illness by day 7 — clearly harsh).
 > **Read with:** [building-levels-and-decay](building-levels-and-decay.md), [citizens-and-workforce](citizens-and-workforce.md).
 
@@ -61,31 +61,43 @@ The user's rules, SANDBOX ONLY (other modes keep the radius healer above):
   12 rows -- HealerHouse 0, Well/FireBrigade copy the base (keep them in step with «Здания»).
 - Trap: a patient's figure on another island than its healer never walks (no healer there = he dies, by the rules).
 
-## Plague + Cemetery -- DECIDED 2026-11-13 (the user), NOT BUILT (cemetery model: level 1 render first, then levels)
-Plague (sandbox, per island, never spreads to other islands):
-- Starts when illness killed 10% of an island's residents within 5 minutes.
-- While it lasts the island's houses make NO new residents; the rest of the harm is the deaths themselves.
-- Hints: «build infirmaries» (pointing at it); short of resources -> the existing offer to get them;
-  illness killed 40% of the island -> the game PAUSES and a banner offers to end the plague for a
-  rewarded ad or crystals.
-- Look over the island: a green haze on the ground + circling ravens.
-- How it ends besides the banner: OPEN (proposed: T minutes with no illness death).
-Cemetery (new building, sandbox):
-- Every death (any cause) leaves a skeleton lying on the ground with a skull icon over it; each body
-  on an island raises its illness chance by +2%.
-- With a cemetery on the island, bodies vanish by themselves into it (no worker) and graves appear on it.
-- Capacity 20, levels via the Laboratory 20/30/40/50/60; the player picks: a new cemetery or an upgrade.
-- Demolishing a cemetery costs 50 crystals (else it would be a free way to clear bodies).
-- Bodies over 10% of the island's residents -> notice + hint «build a cemetery to avoid plague».
-- Model: headstones and a fence round the edges; level 1 render first, then the other levels.
-  Level 1 drafted 2026-11-13: Tools/blender/cemetery1.py (2x2 plot, picket fence, gate, path, memorial
-  cross, 20 grave places 4x5 filling front-first; base 1514 tris, ~39 a grave), review
-  Design/buildings/Cemetery_L1_review.png -- APPROVED 2026-11-13. Levels 2-5
-  (stone footing + cobbles + lamps / chapel with gilded cross / glazed / gilded roof) in
-  Design/buildings/Cemetery_levels_review.png -- AWAIT APPROVAL. 20 places at every level: past lvl 1 a grave = a share of the dead.
+## Plague + Cemetery -- DECIDED 2026-11-13 (the user), BUILT 2026-11-13 (not seen, untested)
+Plague (sandbox, per island, never spreads to other islands) -- `Citizens/Plague.cs`:
+- Starts when illness killed `plague_death_share` 10% of an island's people within `plague_window_sec`
+  300 (Infirmary.Die -> Plague.RecordIllnessDeath).
+- While it lasts the island's houses make NO new residents (HousePeople.Update); the rest of the harm
+  is the deaths themselves. Notice #log_plague_start «стройте лечебницы»; short of resources -> the
+  existing shop offer when placing.
+- `plague_banner_share` 40% of the island dead since the outbreak -> the game PAUSES and
+  `UI/PlagueBanner` offers to end it: rewarded ad (stand-in: ShopAdStubSeconds) or `plague_end_crystals` 30.
+- Ends by itself after `plague_calm_sec` 180 with no illness death on the island (my proposal, not
+  objected), or by the banner. Saved (OutbreakEntry).
+- Look: SwampHaze patches (PlagueHaze.mat) over the island's buildings + a CrowFlock (OrcRaidManager.CrowModel).
+- BANNER art v2 APPROVED 2026-11-13 (v1, a plain card, was «дёшево»): the Rate window's build --
+  wood window over a field of green skulls (3 depths, varied size/turn), the dungeon skeleton
+  (MonsterSkeleton, helmet raised so the skull no longer pokes through) at each side, red ribbon
+  «Чума!», parchment, green ad button with a play mark, crystals button = ONLY the price + the
+  crystal icon (the user: no words). Art: `Tools/ui/plague_banner_art.py <figures folder>` ->
+  `Assets/_Project/UI/Plague/*.png + layout.json` + mock-up `Design/ui/Plague_Banner.png`; figures
+  `render_icons_3d.py -- figure_skeleton_l|figure_skeleton_r`; prefab part `SetupProjectPanels.BuildPlagueBanner`
+  (scale 0.6). `#plague_banner_crystals` is no longer shown (the label is the number).
+Cemetery + the dead -- `Citizens/Remains.cs`:
+- Every death (any cause) leaves a body where the figure fell (CitizenManager.KillCitizens(n, bodiesLaid)
+  -> BodiesOwed -> CitizenVisualsManager drops it; KillAgent drops its own) with a skull mark; each body
+  on an island adds `remains_sickness_per_body` +2% to its illness (SicknessManager.FallIllByIsland,
+  the sick then taken from that island: Infirmary.Expect).
+- A Кладбище (building `Cemetery`, 2x2) on the island takes them by itself, no worker; capacity
+  `graves` 20/30/40/50/60 by level (Lab); its 20 grave places fill to its share (Grave1-stone/light/cross).
+- Demolishing costs `cemetery_demolish_crystals` 50 (BuildingInfoPanelController).
+- Bodies over `remains_notice_share` 10% of the island's residents -> notice #log_remains_build_cemetery.
+- Models: Tools/blender/cemetery1.py (levels 1-5 APPROVED), installed by cemetery_install.py.
+  Remains1 (lying skeleton, review Design/buildings/Remains_review.png) AWAITS APPROVAL -- until then
+  only the skull marks a body; after: cemetery_install.py + export_fbx.py Remains1.
+- Bodies and graves saved (SaveData bodies / GraveEntry).
 
 ## Code
-`Buildings/FireManager.cs`, `Buildings/BuildingFire.cs`, `Citizens/SicknessManager.cs`,
+`Buildings/FireManager.cs`, `Buildings/BuildingFire.cs`, `Citizens/SicknessManager.cs`, `Citizens/Plague.cs`,
+`Citizens/Remains.cs`, `UI/PlagueBanner.cs`,
 `Buildings/BuildingInstance.cs` (`TryDamage`).
 
 ## Data

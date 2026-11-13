@@ -182,6 +182,7 @@ namespace CityBuilder.Citizens
 
             while (_allAgents.Count > target)
             {
+                var dying = citizenManager.BodiesOwed > 0;
                 // Prefer removing idle agents first; a mismatched save/load edge case could
                 // otherwise leave a building visually short a worker, which self-heals on the
                 // next SyncBuildingWorkers pass.
@@ -190,8 +191,16 @@ namespace CityBuilder.Citizens
                 CitizenAgent agent = null;
                 for (var i = _idleAgents.Count - 1; i >= 0 && agent == null; i--) if (Surplus(_idleAgents[i])) agent = _idleAgents[i];
                 if (agent == null) agent = _idleAgents.Count > 0 ? _idleAgents[_idleAgents.Count - 1] : _allAgents[_allAgents.Count - 1];
+                // a death, not a departure: he lies where he was (the sandbox's dead, Remains)
+                if (dying)
+                {
+                    citizenManager.BodiesOwed--;
+                    if (agent != null) Remains.Instance?.Drop(agent.transform.position);
+                }
                 RemoveAgent(agent);
             }
+            // owed with no figure left to fall: forgotten
+            citizenManager.BodiesOwed = 0;
         }
 
         private void SyncBuildingWorkers(ProductionBuilding building)
@@ -526,9 +535,38 @@ namespace CityBuilder.Citizens
         /// one taken off his work (the place stays wanted, someone else steps in). He leaves the idle
         /// and working lists -- the Infirmary walks him from now on -- but stays one of the town's figures.
         /// </summary>
-        public CitizenAgent TakeForPatient(Infirmary infirmary, BuildingInstance home = null)
+        public CitizenAgent TakeForPatient(Infirmary infirmary, BuildingInstance home = null, int island = -1)
         {
             CitizenAgent agent = null;
+            // one of the island the illness struck (SicknessManager by island): idle first
+            if (home == null && island >= 0)
+            {
+                for (var i = 0; i < _idleAgents.Count; i++)
+                {
+                    if (_idleAgents[i] == null || HomeIsland(_idleAgents[i]) != island) continue;
+                    agent = _idleAgents[i];
+                    _idleAgents.RemoveAt(i);
+                    return agent;
+                }
+                foreach (var pair in _workingAgents)
+                {
+                    for (var i = pair.Value.Count - 1; i >= 0; i--)
+                    {
+                        if (pair.Value[i] == null || HomeIsland(pair.Value[i]) != island) continue;
+                        agent = pair.Value[i];
+                        pair.Value.RemoveAt(i);
+                        UnsubscribeWorkVisit(agent);
+                        if (_claimedNodes.TryGetValue(agent, out var claimed))
+                        {
+                            claimed.Release();
+                            _claimedNodes.Remove(agent);
+                        }
+                        if (pair.Key != null) pair.Key.LayOffWorker();
+                        agent.SetIdleWander(agent.Home != null && agent.Home.CurrentHealth > 0 ? CentreOf(agent.Home) : agent.transform.position);
+                        return agent;
+                    }
+                }
+            }
             // a loaded patient: one living in his own house, if one is free
             if (home != null)
             {
@@ -599,8 +637,9 @@ namespace CityBuilder.Citizens
             if (agent == null || !_allAgents.Contains(agent)) return;
             foreach (var pair in _workingAgents) pair.Value.Remove(agent);
             HousePeople.Instance?.Lose(agent.Home);   // this very one's house is one short
+            Remains.Instance?.Drop(agent.transform.position);   // he lies where he fell (sandbox)
             RemoveAgent(agent);
-            citizenManager?.KillCitizens(1);
+            citizenManager?.KillCitizens(1, true);
             RefillShortBuildings();
         }
 

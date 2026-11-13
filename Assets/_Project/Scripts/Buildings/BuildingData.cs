@@ -40,6 +40,9 @@ namespace CityBuilder.Buildings
         /// <summary>Sickbeds at this level -- the sandbox Лечебница (the sheet's beds .. beds_5; the user, 2026-11-13: 2/3/4/5/6). 0 elsewhere.</summary>
         public int beds;
 
+        /// <summary>The dead a Кладбище takes at this level (the sheet's graves .. graves_5; the user, 2026-11-13: 20/30/40/50/60). 0 elsewhere.</summary>
+        public int graves;
+
         /// <summary>
         /// How many batches of the selected recipe one worker gets through per tick. What a batch
         /// consists of is the recipe's business (see BuildingRecipe) -- this is the only half an
@@ -286,6 +289,7 @@ namespace CityBuilder.Buildings
                     housingCapacity = level.housingCapacity,
                     maxWorkers = level.maxWorkers,
                     beds = level.beds,
+                    graves = level.graves,
                     batchesPerWorkerPerTick = level.batchesPerWorkerPerTick,
                     storageCapacity = level.storageCapacity,
                     happiness = level.happiness,

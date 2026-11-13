@@ -725,6 +725,15 @@ namespace CityBuilder.Core
         // with no bed lives
         [SerializeField] private float infirmaryTreatSeconds = 60f;
         [SerializeField] private float infirmaryWaitSeconds = 30f;
+        // the dead and the plague (the user, 2026-11-13)
+        [SerializeField] private float remainsSicknessPerBody = 0.02f;
+        [SerializeField] private float remainsNoticeShare = 0.1f;
+        [SerializeField] private int cemeteryDemolishCrystals = 50;
+        [SerializeField] private float plagueDeathShare = 0.1f;
+        [SerializeField] private float plagueWindowSeconds = 300f;
+        [SerializeField] private float plagueBannerShare = 0.4f;
+        [SerializeField] private float plagueCalmSeconds = 180f;
+        [SerializeField] private int plagueEndCrystals = 30;
 
         [Header("Migration (economy.csv)")]
         // How fast people find their way to the settlement, or away from it. Contentment above the
@@ -1183,6 +1192,14 @@ namespace CityBuilder.Core
         public int HealPerHealerPerDay => healPerHealerPerDay;
         public float InfirmaryTreatSeconds => infirmaryTreatSeconds;
         public float InfirmaryWaitSeconds => infirmaryWaitSeconds;
+        public float RemainsSicknessPerBody => remainsSicknessPerBody;
+        public float RemainsNoticeShare => remainsNoticeShare;
+        public int CemeteryDemolishCrystals => cemeteryDemolishCrystals;
+        public float PlagueDeathShare => plagueDeathShare;
+        public float PlagueWindowSeconds => plagueWindowSeconds;
+        public float PlagueBannerShare => plagueBannerShare;
+        public float PlagueCalmSeconds => plagueCalmSeconds;
+        public int PlagueEndCrystals => plagueEndCrystals;
         public int PortalMaxHealth => portalMaxHealth;
         public int OrcTowerHealth => orcTowerHealth;
         public int OrcTowerDamage => orcTowerDamage;
@@ -2227,6 +2244,14 @@ namespace CityBuilder.Core
             healPerHealerPerDay = (int)Read(economy, "heal_per_healer_per_day", healPerHealerPerDay);
             infirmaryTreatSeconds = Read(economy, "infirmary_treat_sec", infirmaryTreatSeconds);
             infirmaryWaitSeconds = Read(economy, "infirmary_wait_sec", infirmaryWaitSeconds);
+            remainsSicknessPerBody = Read(economy, "remains_sickness_per_body", remainsSicknessPerBody);
+            remainsNoticeShare = Read(economy, "remains_notice_share", remainsNoticeShare);
+            cemeteryDemolishCrystals = (int)Read(economy, "cemetery_demolish_crystals", cemeteryDemolishCrystals);
+            plagueDeathShare = Read(economy, "plague_death_share", plagueDeathShare);
+            plagueWindowSeconds = Read(economy, "plague_window_sec", plagueWindowSeconds);
+            plagueBannerShare = Read(economy, "plague_banner_share", plagueBannerShare);
+            plagueCalmSeconds = Read(economy, "plague_calm_sec", plagueCalmSeconds);
+            plagueEndCrystals = (int)Read(economy, "plague_end_crystals", plagueEndCrystals);
             portalMaxHealth = (int)Read(economy, "portal_max_health", portalMaxHealth);
             orcTowerHealth = (int)Read(economy, "orc_tower_health", orcTowerHealth);
             orcTowerDamage = (int)Read(economy, "orc_tower_damage", orcTowerDamage);

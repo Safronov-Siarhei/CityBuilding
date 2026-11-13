@@ -772,6 +772,8 @@ namespace CityBuilder.EditorTools
 
             demolishConfirm.SetActive(false);
 
+            BuildPlagueBanner(panelRoot.transform.parent, panelSprite);
+
             var controller = panelRoot.AddComponent<BuildingInfoPanelController>();
             var controllerSO = new SerializedObject(controller);
             controllerSO.FindProperty("panelRoot").objectReferenceValue = panelRoot;
@@ -1228,6 +1230,133 @@ namespace CityBuilder.EditorTools
             dialog.gameObject.SetActive(false);
             panelRoot.SetActive(false);
             return controller;
+        }
+
+        /// <summary>
+        /// «Чума!» (UI/PlagueBanner, the user 2026-11-13; art v2 approved the same day): over everything,
+        /// the game paused under it. Built like the Rate window (SetupProjectRateUs): the pieces and
+        /// their places come from Tools/ui/plague_banner_art.py (UI/Plague/*.png + layout.json, rects in
+        /// the 1920 x 1080 reference, y down) -- the wood window over a field of green skulls, a skeleton
+        /// at each side, the red ribbon, the parchment with the text, a green «Смотреть рекламу», the
+        /// crystals button showing only the price and the crystal, «Закрыть».
+        /// </summary>
+        private const float PlagueBannerSize = 0.6f;
+
+        private static void BuildPlagueBanner(Transform uiRoot, Sprite panelSprite)
+        {
+            var folder = UiTextureImport.PlagueFolder;
+            var layoutPath = $"{folder}/layout.json";
+            if (!File.Exists(layoutPath))
+            {
+                Debug.LogWarning("BuildPlagueBanner: no UI/Plague/layout.json -- run Tools/ui/plague_banner_art.py.");
+                return;
+            }
+            var layout = JsonUtility.FromJson<RateUsLayout>(File.ReadAllText(layoutPath));
+            // pictures imported before UiTextureImport knew the folder stay plain textures: again, under its rules
+            foreach (var piece in layout.pieces)
+            {
+                var path = $"{folder}/{piece.name}.png";
+                if (AssetImporter.GetAtPath(path) is TextureImporter ti && ti.textureType != TextureImporterType.Sprite)
+                    AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+            }
+            var refW = layout.reference[0];
+            var refH = layout.reference[1];
+
+            var holder = new GameObject("PlagueBanner", typeof(RectTransform));
+            holder.transform.SetParent(uiRoot, false);
+            StretchFull(holder.GetComponent<RectTransform>());
+            var root = new GameObject("Window", typeof(RectTransform));
+            root.transform.SetParent(holder.transform, false);
+            StretchFull(root.GetComponent<RectTransform>());
+
+            var backdrop = CreateImage(root.transform, "Backdrop", new Color(0.02f, 0.05f, 0.02f, 0.8f));
+            StretchBleed(backdrop.GetComponent<RectTransform>());
+            var window = new GameObject("Frame", typeof(RectTransform)).GetComponent<RectTransform>();
+            window.SetParent(root.transform, false);
+            window.anchorMin = window.anchorMax = window.pivot = new Vector2(0.5f, 0.5f);
+            window.sizeDelta = new Vector2(refW, refH);
+            window.localScale = Vector3.one * PlagueBannerSize;
+
+            void Place(RectTransform rect, float[] r)
+            {
+                rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.anchoredPosition = new Vector2((r[0] + r[2]) / 2f - refW / 2f, refH / 2f - (r[1] + r[3]) / 2f);
+                rect.sizeDelta = new Vector2(r[2] - r[0], r[3] - r[1]);
+            }
+
+            float[] TextRect(string name) => System.Array.Find(layout.texts, t => t.name == name).rect;
+
+            var images = new Dictionary<string, Image>();
+            foreach (var piece in layout.pieces)
+            {
+                var image = CreateImage(window, piece.name, Color.white);
+                image.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{folder}/{piece.name}.png");
+                image.raycastTarget = piece.name == "Window" || piece.name.EndsWith("Button");
+                Place(image.rectTransform, piece.rect);
+                images[piece.name] = image;
+            }
+
+            var title = Words(window, "Title", "#plague_banner_title", 78, UiTheme.Heavy, new Color(1f, 0.94f, 0.78f));
+            Place(title.rectTransform, TextRect("Title"));
+            Rim(title, new Color(0.35f, 0.05f, 0.06f), 4f);
+            var body = Words(window, "Text", "#plague_banner_text", 38, UiTheme.Regular, UiTheme.Rgb(0x3c3418));
+            Place(body.rectTransform, TextRect("Body"));
+            body.verticalOverflow = VerticalWrapMode.Overflow;
+
+            // a label in the button's own space: the layout's rect less the button's centre
+            Text Label(Image image, string name, string key, int size, Color rim)
+            {
+                var label = Words(image.transform, name, key, size, UiTheme.Heavy, Color.white);
+                Place(label.rectTransform, TextRect(name));
+                label.rectTransform.anchoredPosition -= image.rectTransform.anchoredPosition;
+                Rim(label, rim, 4f);
+                label.resizeTextForBestFit = true;
+                label.resizeTextMinSize = 24;
+                label.resizeTextMaxSize = size;
+                return label;
+            }
+
+            Button MakeButton(Image image)
+            {
+                var button = image.gameObject.AddComponent<Button>();
+                button.targetGraphic = image;
+                return button;
+            }
+
+            var ad = MakeButton(images["AdButton"]);
+            var adLabel = Label(images["AdButton"], "AdLabel", "#plague_banner_ad", 40, UiTheme.Rgb(0x1c5412));
+            // the crystals: the price (the code's number, no words) and the game's crystal icon
+            var pay = MakeButton(images["CrystalsButton"]);
+            var payLabel = Label(images["CrystalsButton"], "CrystalsLabel", "#plague_banner_crystals", 62, UiTheme.Rgb(0x282260));
+            payLabel.alignment = TextAnchor.MiddleRight;
+            Object.DestroyImmediate(payLabel.GetComponent<LocalizedText>());   // a number, not words
+            payLabel.text = "30";
+            var gem = CreateImage(images["CrystalsButton"].transform, "Crystal", Color.white);
+            gem.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.IconsFolder}/Res_UpgradeCrystal.png");
+            gem.preserveAspect = true;
+            gem.raycastTarget = false;
+            Place(gem.rectTransform, TextRect("CrystalsIcon"));
+            gem.rectTransform.anchoredPosition -= images["CrystalsButton"].rectTransform.anchoredPosition;
+
+            var closeText = Words(window, "Close", "#ui_close", 44, UiTheme.Bold, UiTheme.Rgb(0x786a3a));
+            Place(closeText.rectTransform, TextRect("Close"));
+            closeText.raycastTarget = true;
+            var close = closeText.gameObject.AddComponent<Button>();
+            close.targetGraphic = closeText;
+
+            var banner = holder.AddComponent<PlagueBanner>();
+            var so = new SerializedObject(banner);
+            so.FindProperty("root").objectReferenceValue = root;
+            so.FindProperty("bodyText").objectReferenceValue = body;
+            so.FindProperty("adButton").objectReferenceValue = ad;
+            so.FindProperty("adLabel").objectReferenceValue = adLabel;
+            so.FindProperty("crystalsButton").objectReferenceValue = pay;
+            so.FindProperty("crystalsLabel").objectReferenceValue = payLabel;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            UnityEventTools.AddPersistentListener(ad.onClick, banner.WatchAd);
+            UnityEventTools.AddPersistentListener(pay.onClick, banner.PayCrystals);
+            UnityEventTools.AddPersistentListener(close.onClick, banner.Close);
+            root.SetActive(false);
         }
     }
 }

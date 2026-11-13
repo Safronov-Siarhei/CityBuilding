@@ -7,7 +7,7 @@
 
 Opens the models file, builds the scene, renders, never saves:
 
-    blender --background Buildings-Size1-Models.blend --python Tools/store/render_icons_3d.py -- <orc|king|figure_king|figure_orc> <out.png> [size]
+    blender --background Buildings-Size1-Models.blend --python Tools/store/render_icons_3d.py -- <orc|king|figure_king|figure_orc|figure_skeleton_l|figure_skeleton_r> <out.png> [size]
 """
 import math
 import os
@@ -381,7 +381,10 @@ def figure_scene(root, yaw, retouch=False):
 
 SCENES = {"orc": orc_scene, "king": king_scene,
           "figure_king": lambda: figure_scene("HeroKing", 22),
-          "figure_orc": lambda: figure_scene("OrcChief", -22)}
+          "figure_orc": lambda: figure_scene("OrcChief", -22),
+          # the plague banner's sides (the user, 2026-11-13): the dungeon's skeleton, turned in from each side
+          "figure_skeleton_l": lambda: figure_scene("MonsterSkeleton", 24),
+          "figure_skeleton_r": lambda: figure_scene("MonsterSkeleton", -24)}
 FIGURE = which.startswith("figure")
 if FIGURE:
     sc.render.resolution_x, sc.render.resolution_y = size * 3 // 4, size

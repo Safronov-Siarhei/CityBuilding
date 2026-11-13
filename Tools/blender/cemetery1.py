@@ -148,3 +148,52 @@ def build_with(graves, level=1):
 STATES = [build_with(0), build_with(10), build_with(20)]
 # the five levels, each full (render_levels.py renders LEVELS)
 LEVELS = [build_with(20, n) for n in range(1, 6)]
+
+
+# ---------------------------------------------------------------------------- the dead and the graves
+# (the user, 2026-11-13): every death leaves a skeleton lying on the ground, a villager's size (0.45 m),
+# until a cemetery on the island takes it. One mesh, lying along x, the skull at +x, a rag under it.
+
+BONE, RAG = 'plaster', 'burlap'
+
+
+def remains(b=None):
+    b = b or Builder()
+    b.box(-0.06, 0.15, -0.065, 0.065, 0.0, 0.006, RAG)                                  # the torn rag under him
+    b.box(-0.12, -0.05, -0.05, 0.02, 0.0, 0.005, RAG)
+    b.zbox(0.205, 0.0, 0.0, 0.05, 0.036, 0.032, 0, BONE, bevel=0.01)                    # the skull, face up
+    b.box(0.2, 0.225, -0.03, 0.03, 0.0, 0.03, BONE, bevel=0.006)                        # its jaw
+    for k in (-1, 1):
+        b.box(0.205, 0.225, k * 0.014 - 0.008, k * 0.014 + 0.008, 0.045, 0.052, 'window')   # the sockets
+    b.rod((0.17, 0.0, 0.012), (-0.02, 0.0, 0.012), 0.014, BONE)                          # the spine
+    for x in (0.135, 0.105, 0.075):                                                      # the ribs
+        b.rod((x, -0.045, 0.012), (x, 0.045, 0.012), 0.01, BONE)
+        for k in (-1, 1):
+            b.rod((x, k * 0.045, 0.012), (x - 0.012, k * 0.05, 0.004), 0.009, BONE)
+    b.box(-0.045, 0.0, -0.038, 0.038, 0.0, 0.022, BONE, bevel=0.006)                     # the pelvis
+    for k in (-1, 1):
+        b.rod((0.155, k * 0.05, 0.008), (0.07, k * 0.085, 0.008), 0.011, BONE)          # upper arm
+        b.rod((0.07, k * 0.085, 0.008), (-0.01, k * 0.1, 0.008), 0.01, BONE)            # forearm
+        b.box(-0.03, -0.01, k * 0.1 - 0.012, k * 0.1 + 0.012, 0.0, 0.008, BONE)          # hand
+        b.rod((-0.03, k * 0.025, 0.01), (-0.14, k * 0.04, 0.01), 0.013, BONE)            # thigh
+        b.rod((-0.14, k * 0.04, 0.01), (-0.245, k * 0.035, 0.008), 0.011, BONE)          # shin
+        b.box(-0.27, -0.24, k * 0.035 - 0.016, k * 0.035 + 0.016, 0.0, 0.016, 'wood_mid')   # a worn shoe
+    return b
+
+
+GRAVE_KINDS = ('stone', 'light', 'cross')
+
+
+def grave_model(kind):
+    """One grave as its own model (the game puts them on the places as the island's dead come in)."""
+    def build():
+        b = Builder()
+        grave(b, 0.0, 0.0, kind)
+        return b
+    return build
+
+
+# what export goes into the game: the cemetery's five levels with no graves, the three graves, the remains
+GAME_MODELS = dict({f"Cemetery1-lvl{n}": build_with(0, n) for n in range(1, 6)},
+                   **{f"Grave1-{k}": grave_model(k) for k in GRAVE_KINDS},
+                   Remains1=remains)

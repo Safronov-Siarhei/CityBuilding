@@ -145,6 +145,14 @@ namespace CityBuilder.Citizens
             return 0f;
         }
 
+        /// <summary>Every island with a home on it (the hall's too), for the illness by island.</summary>
+        public void Islands(List<int> into)
+        {
+            into.Clear();
+            if (_hall != null && !into.Contains(_hall.Island)) into.Add(_hall.Island);
+            foreach (var house in _houses) if (!into.Contains(house.Island)) into.Add(house.Island);
+        }
+
         /// <summary>Residents of this house (the Town Hall's hidden ones for the hall), soldiers not counted.</summary>
         public int CitizensOf(BuildingInstance building)
         {
@@ -217,8 +225,9 @@ namespace CityBuilder.Citizens
 
             var seconds = Seconds;
             var paused = PausedByHunger;
-            foreach (var house in _houses) Grow(house, seconds, paused, true);
-            if (_hall != null) Grow(_hall, seconds, paused, false);
+            // a plague island makes no one (the user, 2026-11-13; Plague)
+            foreach (var house in _houses) Grow(house, seconds, paused || Plague.On(house.Island), true);
+            if (_hall != null) Grow(_hall, seconds, paused || Plague.On(_hall.Island), false);
         }
 
         private void Grow(House house, float seconds, bool paused, bool showBar)

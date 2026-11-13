@@ -46,6 +46,9 @@
         /// <summary>The Tax House (the user, 2026-11-02): each level raises what a citizen pays a day; its levels cost crystals.</summary>
         public const string TaxHouse = "TaxHouse";
 
+        /// <summary>The Кладбище (the user, 2026-11-13): takes the island's dead, graves appear on it.</summary>
+        public const string Cemetery = "Cemetery";
+
         /// <summary>The Diplomacy Hall (the user, 2026-11-03): built, it opens relations with the bot kingdom.</summary>
         public const string DiplomacyHall = "DiplomacyHall";
 

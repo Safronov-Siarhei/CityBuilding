@@ -337,6 +337,25 @@ namespace CityBuilder.Saving
             RestoreFires(data);
             Citizens.SicknessManager.Instance?.RestoreFromSave(data.sicknessUntreatedDays);
             RestorePatients(data);
+            RestoreTheDead(data);
+        }
+
+        /// <summary>The sandbox's dead, graves and plague (after the buildings).</summary>
+        private static void RestoreTheDead(GameSaveData data)
+        {
+            var graves = new List<KeyValuePair<BuildingInstance, int>>();
+            if (data.graves != null)
+                foreach (var g in data.graves)
+                {
+                    var cemetery = FindBuildingAt(new Vector2Int(g.cellX, g.cellY));
+                    if (cemetery != null) graves.Add(new KeyValuePair<BuildingInstance, int>(cemetery, g.dead));
+                }
+            Citizens.Remains.Instance?.RestoreFromSave(data.bodies, graves);
+            var outbreaks = new List<Citizens.Plague.Outbreak>();
+            if (data.outbreaks != null)
+                foreach (var o in data.outbreaks)
+                    outbreaks.Add(new Citizens.Plague.Outbreak { Island = o.island, People = o.people, Deaths = o.deaths, Calm = o.calm, BannerShown = o.bannerShown });
+            Citizens.Plague.Instance?.RestoreFromSave(outbreaks);
         }
 
         /// <summary>The sandbox Лечебница's patients, each back in his house and his bed with his clocks (after the buildings).</summary>
@@ -898,6 +917,17 @@ namespace CityBuilder.Saving
             data.sicknessUntreatedDays = Citizens.SicknessManager.Instance != null
                 ? Citizens.SicknessManager.Instance.UntreatedDaysInARow
                 : 0;
+            if (Citizens.Remains.Instance != null)
+            {
+                foreach (var body in Citizens.Remains.Instance.Bodies) data.bodies.Add(body.At);
+                var graves = new List<KeyValuePair<BuildingInstance, int>>();
+                Citizens.Remains.Instance.Graves(graves);
+                foreach (var pair in graves)
+                    data.graves.Add(new GraveEntry { cellX = pair.Key.OriginCell.x, cellY = pair.Key.OriginCell.y, dead = pair.Value });
+            }
+            if (Citizens.Plague.Instance != null)
+                foreach (var o in Citizens.Plague.Instance.Outbreaks)
+                    data.outbreaks.Add(new OutbreakEntry { island = o.Island, people = o.People, deaths = o.Deaths, calm = o.Calm, bannerShown = o.BannerShown });
             if (Citizens.Infirmary.Instance != null)
             {
                 foreach (var p in Citizens.Infirmary.Instance.Patients)

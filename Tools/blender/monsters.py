@@ -265,10 +265,12 @@ def skel_leg(b, k):
 
 def skel_head(b):
     o.skull(b, 0, -0.005, 0.385, s=0.085)
-    b.ball(0, 0.0, 0.43, 0.052, 0.04, HELMET, sides=8)                                               # miner's helmet
-    b.cylinder(0, 0.0, 0.425, 0.434, 0.06, HELMET, sides=8)                                          # brim
-    b.box(-0.014, 0.014, -0.058, -0.046, 0.442, 0.462, 'gold')                                        # lamp
-    b.box(-0.009, 0.009, -0.062, -0.058, 0.446, 0.458, EYE)
+    # the helmet sits ON the skull (top 0.453): its brim over the skull's top, so no bone shows through
+    # it (the user, 2026-11-13: the skull poked out from under the cap)
+    b.ball(0, 0.0, 0.45, 0.06, 0.045, HELMET, sides=8)                                               # miner's helmet
+    b.cylinder(0, 0.0, 0.445, 0.455, 0.068, HELMET, sides=8)                                         # brim
+    b.box(-0.014, 0.014, -0.064, -0.052, 0.46, 0.48, 'gold')                                          # lamp
+    b.box(-0.009, 0.009, -0.068, -0.064, 0.464, 0.476, EYE)
     for k in (-1, 1):
         b.box(k * 0.017 - 0.007, k * 0.017 + 0.007, -0.048, -0.044, 0.398, 0.408, GLOW)              # eye lights
 

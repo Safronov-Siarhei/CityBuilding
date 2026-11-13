@@ -46,12 +46,14 @@ namespace CityBuilder.EditorTools
         public const string ShopFolder = "Assets/_Project/UI/Shop";
         /// <summary>The daily login bonus window's day cards (Tools/store/daily_bonus_art.py), placed by SetupProjectDailyBonus.</summary>
         public const string DailyBonusFolder = "Assets/_Project/UI/DailyBonus";
+        /// <summary>The plague banner's pieces (Tools/ui/plague_banner_art.py), placed by SetupProjectPanels.BuildPlagueBanner.</summary>
+        public const string PlagueFolder = "Assets/_Project/UI/Plague";
 
         private void OnPreprocessTexture()
         {
             var isHudSkin = assetPath.StartsWith(HudSkinsFolder + "/") || assetPath.StartsWith(MenuSkinsFolder + "/");
             var isSkin = assetPath.StartsWith(SkinFolder + "/") || isHudSkin;
-            var isArt = assetPath.StartsWith(MenuArtFolder + "/") || assetPath.StartsWith(LoadingFolder + "/") || assetPath.StartsWith(CampaignFolder + "/") || assetPath.StartsWith(RateUsFolder + "/") || assetPath.StartsWith(ShopFolder + "/") || assetPath.StartsWith(DailyBonusFolder + "/");
+            var isArt = assetPath.StartsWith(MenuArtFolder + "/") || assetPath.StartsWith(LoadingFolder + "/") || assetPath.StartsWith(CampaignFolder + "/") || assetPath.StartsWith(RateUsFolder + "/") || assetPath.StartsWith(ShopFolder + "/") || assetPath.StartsWith(DailyBonusFolder + "/") || assetPath.StartsWith(PlagueFolder + "/");
             var isIcon = assetPath.StartsWith(IconsFolder + "/") || assetPath.StartsWith(GlyphsFolder + "/") || isArt;
             if (!isSkin && !isIcon) return;
             if (!(assetImporter is TextureImporter importer)) return;
@@ -76,7 +78,7 @@ namespace CityBuilder.EditorTools
                 overridden = true,
                 format = TextureImporterFormat.ASTC_4x4,
                 // the rate-us window shows its art at half size: half the texture is enough
-                maxTextureSize = assetPath.StartsWith(RateUsFolder + "/") || assetPath.StartsWith(ShopFolder + "/") || assetPath.StartsWith(DailyBonusFolder + "/") ? 1024 : 2048,
+                maxTextureSize = assetPath.StartsWith(RateUsFolder + "/") || assetPath.StartsWith(ShopFolder + "/") || assetPath.StartsWith(DailyBonusFolder + "/") || assetPath.StartsWith(PlagueFolder + "/") ? 1024 : 2048,
                 compressionQuality = 100,
             });
 

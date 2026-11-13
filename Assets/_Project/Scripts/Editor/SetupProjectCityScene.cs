@@ -322,6 +322,8 @@ namespace CityBuilder.EditorTools
                 ("TaxHouse", new Vector2Int(2, 2), 3f, new Color(0.8f, 0.74f, 0.6f), new Color(0.75f, 0.3f, 0.24f), BuildingStyle.Hut, BuildingMotif.Vault),
                 // the Diplomacy Hall (Tools/blender/diplomacyhall1.py, the user 2026-11-03): relations with the bot
                 ("DiplomacyHall", new Vector2Int(4, 4), 2.8f, new Color(0.95f, 0.94f, 0.9f), new Color(0.25f, 0.43f, 0.85f), BuildingStyle.Hut, BuildingMotif.Colonnade),
+                // the Кладбище (Tools/blender/cemetery1.py, the user 2026-11-13): takes the island's dead, graves appear on it
+                ("Cemetery", new Vector2Int(2, 2), 1f, new Color(0.45f, 0.62f, 0.3f), new Color(0.4f, 0.27f, 0.16f), BuildingStyle.Plot, BuildingMotif.Cross),
                 ("Colosseum", new Vector2Int(4, 6), 3.6f, new Color(0.72f, 0.68f, 0.6f), new Color(0.5f, 0.47f, 0.42f), BuildingStyle.Plot, BuildingMotif.Arena),
             })
             {
@@ -850,6 +852,52 @@ namespace CityBuilder.EditorTools
             var infirmarySO = new SerializedObject(infirmary);
             infirmarySO.FindProperty("markMaterial").objectReferenceValue = sickMark;
             infirmarySO.ApplyModifiedPropertiesWithoutUndo();
+
+            // the dead and the Кладбище (the user, 2026-11-13): skeletons with a skull over them, graves
+            // (Tools/blender/cemetery1.py: Remains1, Grave1-*; UI/Icons/SkullMark.png from sick_mark_icon.py)
+            var remains = managers.AddComponent<CityBuilder.Citizens.Remains>();
+            const string skullMarkPath = "Assets/_Project/Materials/SkullMark.mat";
+            var skullMark = AssetDatabase.LoadAssetAtPath<Material>(skullMarkPath);
+            if (skullMark == null && billboard != null)
+            {
+                skullMark = new Material(billboard) { name = "SkullMark" };
+                AssetDatabase.CreateAsset(skullMark, skullMarkPath);
+            }
+            if (skullMark != null)
+            {
+                skullMark.SetTexture("_MainTex", AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/_Project/UI/Icons/SkullMark.png"));
+                EditorUtility.SetDirty(skullMark);
+            }
+            var remainsSO = new SerializedObject(remains);
+            remainsSO.FindProperty("skullMaterial").objectReferenceValue = skullMark;
+            remainsSO.FindProperty("remainsModel").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Buildings/Remains1.fbx");
+            var graveModels = remainsSO.FindProperty("graveModels");
+            var graveNames = new[] { "Grave1-stone", "Grave1-light", "Grave1-cross" };
+            graveModels.arraySize = graveNames.Length;
+            for (var g = 0; g < graveNames.Length; g++)
+                graveModels.GetArrayElementAtIndex(g).objectReferenceValue =
+                    AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/_Project/Models/Buildings/{graveNames[g]}.fbx");
+            remainsSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // the plague: a green haze (the swamp's haze shader, tinted) and crows over the island
+            var plague = managers.AddComponent<CityBuilder.Citizens.Plague>();
+            const string plagueHazePath = "Assets/_Project/Materials/PlagueHaze.mat";
+            var plagueHaze = AssetDatabase.LoadAssetAtPath<Material>(plagueHazePath);
+            var hazeShader = Shader.Find("CityBuilder/SwampHaze");
+            if (plagueHaze == null && hazeShader != null)
+            {
+                plagueHaze = new Material(hazeShader) { name = "PlagueHaze" };
+                AssetDatabase.CreateAsset(plagueHaze, plagueHazePath);
+            }
+            if (plagueHaze != null)
+            {
+                plagueHaze.SetColor("_BaseColor", new Color(0.38f, 0.72f, 0.26f, 0.2f));
+                EditorUtility.SetDirty(plagueHaze);
+            }
+            var plagueSO = new SerializedObject(plague);
+            plagueSO.FindProperty("hazeMaterial").objectReferenceValue = plagueHaze;
+            plagueSO.ApplyModifiedPropertiesWithoutUndo();
             // the boosters' violet stream round the buildings they work on (Shaders/BoosterStream; the user, 2026-11-12)
             var auras = managers.AddComponent<Shop.BoosterAuras>();
             const string streamPath = "Assets/_Project/Materials/BoosterStream.mat";

@@ -131,6 +131,15 @@ namespace CityBuilder.Saving
         /// <summary>The sandbox Лечебница's patients (Citizens/Infirmary): where each lives, his bed, his clocks.</summary>
         public List<PatientEntry> patients = new List<PatientEntry>();
 
+        /// <summary>The sandbox's dead still lying out (Citizens/Remains), each where he fell.</summary>
+        public List<Vector3> bodies = new List<Vector3>();
+
+        /// <summary>Each Кладбище's dead (its origin cell and count).</summary>
+        public List<GraveEntry> graves = new List<GraveEntry>();
+
+        /// <summary>The islands the plague is on (Citizens/Plague).</summary>
+        public List<OutbreakEntry> outbreaks = new List<OutbreakEntry>();
+
         /// <summary>
         /// Everything alight, and how far into its burn it is. Without this a reload was a fire
         /// brigade: every fire went out at once, the buildings kept whatever health the flames had
@@ -265,6 +274,24 @@ namespace CityBuilder.Saving
 
         /// <summary>Seconds burnt so far. Not seconds REMAINING: how long a fire has left depends on how many firefighters can reach it, which is a question about the town as it stands after the load, not before the save.</summary>
         public float elapsedSeconds;
+    }
+
+    [Serializable]
+    public class GraveEntry
+    {
+        public int cellX;
+        public int cellY;
+        public int dead;
+    }
+
+    [Serializable]
+    public class OutbreakEntry
+    {
+        public int island;
+        public int people;
+        public int deaths;
+        public float calm;
+        public bool bannerShown;
     }
 
     [Serializable]

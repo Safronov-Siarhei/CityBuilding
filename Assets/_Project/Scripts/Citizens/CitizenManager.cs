@@ -160,7 +160,22 @@ namespace CityBuilder.Citizens
         /// Citizens lost for good -- starvation today, plague or fire later. Returns how many
         /// actually died, which is fewer than asked for once the town runs out of people.
         /// </summary>
-        public int KillCitizens(int amount) => RemoveCitizens(amount);
+        public int KillCitizens(int amount) => KillCitizens(amount, false);
+
+        /// <summary>
+        /// The same, saying whether the caller already laid the bodies down (Remains.Drop where the very
+        /// figure fell). If not, the figures the town loses next leave them (CitizenVisualsManager): the
+        /// sandbox's dead lie where they were (the user, 2026-11-13).
+        /// </summary>
+        public int KillCitizens(int amount, bool bodiesLaid)
+        {
+            var died = RemoveCitizens(amount);
+            if (!bodiesLaid && Remains.Active) BodiesOwed += died;
+            return died;
+        }
+
+        /// <summary>Deaths whose figures have not yet left a body (they do as the figures go).</summary>
+        public int BodiesOwed { get; set; }
 
         /// <summary>
         /// Citizens who are no longer part of the settlement, for any reason. Returns how many

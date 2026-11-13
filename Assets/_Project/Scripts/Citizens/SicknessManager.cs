@@ -137,7 +137,7 @@ namespace CityBuilder.Citizens
             var migration = MigrationManager.Instance;
             if (migration != null && migration.SettlingInRemaining > 0f) return;
 
-            var fell = Mathf.RoundToInt(exposed * CurrentRisk());
+            var fell = Infirmary.Active && HousePeople.Instance != null ? FallIllByIsland() : Mathf.RoundToInt(exposed * CurrentRisk());
             if (fell <= 0) return;
 
             LastFellIll = citizens.AddSick(fell);
@@ -149,6 +149,35 @@ namespace CityBuilder.Citizens
             // well is a food problem, and telling the player to dig wells would send them the wrong
             // way entirely.
             if (UnwateredShare > 0f) EventLogManager.Instance?.Post(NoWellEvent());
+        }
+
+        private readonly List<int> _islands = new List<int>();
+
+        /// <summary>
+        /// The sandbox works illness out island by island (the user, 2026-11-13): the town's risk, plus
+        /// remains_sickness_per_body for every body lying unburied on the island (Remains). The sick are
+        /// then taken from that island's people (Infirmary.Expect). Returns how many fell ill in all.
+        /// </summary>
+        private int FallIllByIsland()
+        {
+            var homes = HousePeople.Instance;
+            var infirmary = Infirmary.Instance;
+            var remains = Remains.Instance;
+            var risk = CurrentRisk();
+            var perBody = BalanceConfig.Instance.RemainsSicknessPerBody;
+            homes.Islands(_islands);
+            var total = 0;
+            foreach (var island in _islands)
+            {
+                var exposed = homes.CitizensOn(island) - (infirmary != null ? infirmary.SickOn(island) : 0);
+                if (exposed <= 0) continue;
+                var bodies = remains != null ? remains.BodiesOn(island) : 0;
+                var fell = Mathf.RoundToInt(exposed * Mathf.Clamp01(risk + bodies * perBody));
+                if (fell <= 0) continue;
+                infirmary?.Expect(island, fell);
+                total += fell;
+            }
+            return total;
         }
 
         private void Heal(CitizenManager citizens)

@@ -33,7 +33,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | **Population** | | |
 | [citizens-and-workforce](citizens-and-workforce.md) | headcount, workers, workforce panel, citizen agents, tiers | жители, рабочие, назначить |
 | [happiness-and-migration](happiness-and-migration.md) | 6-factor happiness, arrivals/departures | довольство, миграция |
-| [hazards-fire-sickness](hazards-fire-sickness.md) | fire from decay, brigade, illness, well, healer | пожар, болезнь, колодец, лекарь |
+| [hazards-fire-sickness](hazards-fire-sickness.md) | fire from decay, brigade, illness, well, healer, plague, cemetery, the dead | пожар, болезнь, колодец, лекарь, чума, кладбище |
 | **Buildings** | | |
 | [decor-bonus](decor-bonus.md) | decor gives coins a day to residents of houses in its radius (adds up), gift bubbles over decorated houses; sheet tab «Песочница: Здания (Декор)» (2026-11-12) | декор, украшения, уют, подарки, пузыри, бонус жителям |
 | [buildings-catalog](buildings-catalog.md) | the 49-building roster, categories, ids, BuildingData, model contract | здания, ростер, категории |

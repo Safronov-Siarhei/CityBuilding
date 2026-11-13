@@ -62,6 +62,15 @@ namespace CityBuilder.Citizens
         // a loaded town's patients, waiting for their figures (Reconcile takes them first)
         private readonly List<Patient> _pending = new List<Patient>();
 
+        // the islands today's illness struck, one entry a person (SicknessManager): new patients come from there
+        private readonly Queue<int> _expected = new Queue<int>();
+
+        /// <summary>So many fell ill on this island today: the next patients are its people.</summary>
+        public void Expect(int island, int count)
+        {
+            for (var i = 0; i < count; i++) _expected.Enqueue(island);
+        }
+
         /// <summary>A save's patients (GameSaveController.RestorePatients): each back in his house and bed, his clocks as they were.</summary>
         public void RestoreFromSave(List<Patient> patients)
         {
@@ -265,7 +274,8 @@ namespace CityBuilder.Citizens
                 HousePeople.Instance?.LayOffIslandExcess();
                 return saved;
             }
-            var figure = visuals != null ? visuals.TakeForPatient(this) : null;
+            var island = _expected.Count > 0 ? _expected.Dequeue() : -1;
+            var figure = visuals != null ? visuals.TakeForPatient(this, null, island) : null;
             var p = new Patient { Figure = figure, Order = ++_order };
             if (figure != null)
             {
@@ -379,6 +389,7 @@ namespace CityBuilder.Citizens
             }
             citizens.HealSick(1);
             FoodConsumptionManager.Instance?.RecordDeaths(1);
+            Plague.Instance?.RecordIllnessDeath(p.Island);
             EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_plague_deaths", 1), EventSeverity.Danger, EventGlyph.Skull, "Res_Population", at));
         }
 

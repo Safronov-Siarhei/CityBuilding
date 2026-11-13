@@ -137,8 +137,9 @@ namespace CityBuilder.UI
 
             if (demolishConfirmLabel != null)
             {
-                demolishConfirmLabel.text = Localization.Format(
-                    "#demolish_confirm", _currentInstance.Data.LocalizedName, DescribeRefund());
+                demolishConfirmLabel.text = DemolishCrystals(_currentInstance) > 0
+                    ? Localization.Format("#demolish_confirm_crystals", _currentInstance.Data.LocalizedName, DemolishCrystals(_currentInstance))
+                    : Localization.Format("#demolish_confirm", _currentInstance.Data.LocalizedName, DescribeRefund());
             }
             if (demolishConfirmRoot != null) demolishConfirmRoot.SetActive(true);
         }
@@ -154,9 +155,26 @@ namespace CityBuilder.UI
 
             // Closed BEFORE the building goes, or the card is left pointing at a destroyed object
             // and its next Refresh walks into a null.
+            // a Кладбище goes only for crystals (the user, 2026-11-13: else it is a free way to clear the dead)
+            var crystals = DemolishCrystals(instance);
+            if (crystals > 0)
+            {
+                if (Wallet.UpgradeCrystals < crystals)
+                {
+                    EventLogManager.Instance?.Post(GameEvent.About(instance, Localization.Format("#demolish_no_crystals", crystals),
+                        EventSeverity.Warning, EventGlyph.Alert));
+                    CancelDemolish();
+                    return;
+                }
+                Wallet.UpgradeCrystals -= crystals;
+            }
             Close();
             if (instance != null) instance.Demolish();
         }
+
+        /// <summary>What pulling this building down costs in crystals (the sandbox's Кладбище), 0 for anything else.</summary>
+        private static int DemolishCrystals(BuildingInstance instance) =>
+            Citizens.Remains.Active && Citizens.Remains.IsCemetery(instance) ? BalanceConfig.Instance.CemeteryDemolishCrystals : 0;
 
         /// <summary>What the refund actually is, spelled out -- "half of everything" is not a number a player can act on.</summary>
         private string DescribeRefund()
@@ -359,7 +377,7 @@ namespace CityBuilder.UI
         private string FoodLine()
         {
             // the sandbox Лечебница: beds taken, the treatment and the wait (the user, 2026-11-13)
-            var heal = Citizens.Infirmary.CardLine(_currentInstance);
+            var heal = Citizens.Infirmary.CardLine(_currentInstance) ?? Citizens.Remains.CardLine(_currentInstance);
             if (heal != null) return heal;
             var id = _currentProduction != null ? _currentProduction.BuildingId : null;
             if (id == null) return null;

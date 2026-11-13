@@ -210,6 +210,9 @@ namespace CityBuilder.Combat
         public GameObject[] DeadTreeModels => deadTreeModels;
         public GameObject WreckModel => wreckModel;
         public Material SwampHazeMaterial => swampHazeMaterial;
+
+        /// <summary>The crow, for flocks elsewhere too (the sandbox plague's, Citizens/Plague).</summary>
+        public GameObject CrowModel => crowModel;
         // The Invasion mode's round camps (Tools/blender/orcringcamp1.py): the ring wall's section and the open gateway.
         [SerializeField] private GameObject ringWallModel;
         [SerializeField] private GameObject ringWallRuinModel;
