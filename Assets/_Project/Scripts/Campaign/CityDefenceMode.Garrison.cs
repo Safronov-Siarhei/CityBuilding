@@ -53,12 +53,44 @@ namespace CityBuilder.Campaign
         {
             // each man by his own pen: the outer garrison and the inner gate's guard stand side by side (2026-11-13)
             if (orc == null || soldier == null || soldier.OnWall) return false;
-            var pen = soldier.Pen;
-            if (pen.width <= 0f) return false;
             var o = orc.transform.position;
             var s = soldier.transform.position;
+            var pen = soldier.Pen;
+            if (pen.width <= 0f)
+            {
+                // Ардан (no pen, the user's eighth playtest: «орки агрятся на героя через стену»): which ring each
+                // stands in -- outside, between the walls, inside the inner ones; one in a breach is through
+                if (InBreach(o, Rect.zero) || InBreach(s, Rect.zero)) return false;
+                return Ring(o, 0.6f) != Ring(s, 0f);
+            }
             var orcIn = InBreach(o, pen) || o.x >= pen.xMin - 0.6f && o.x <= pen.xMax + 0.6f && o.z >= pen.yMin - 0.6f && o.z <= pen.yMax + 0.6f;
             return orcIn != pen.Contains(new Vector2(s.x, s.z));
+        }
+
+        private Rect _outerPen, _innerPen;
+
+        /// <summary>0 outside the outer walls, 1 between them and the inner ones, 2 inside the inner ones (`slack` metres
+        /// of give at the edges).</summary>
+        private int Ring(Vector3 at, float slack)
+        {
+            if (_outerPen.width <= 0f)
+            {
+                _outerPen = PenOf(true);
+                _innerPen = PenOf(false);
+            }
+            bool In(Rect r) => at.x >= r.xMin - slack && at.x <= r.xMax + slack && at.z >= r.yMin - slack && at.z <= r.yMax + slack;
+            return In(_innerPen) ? 2 : In(_outerPen) ? 1 : 0;
+        }
+
+        /// <summary>SoldierUnit.WallBlocks: the town's side may not strike across a wall either -- a melee fighter on the
+        /// ground never reaches an orc up on the wall-walk (the user's eighth playtest: «Ардан стоит под стеной и бьёт
+        /// орков на стене»), nobody on the ground reaches one on the far side of a wall.</summary>
+        private bool SoldierBlocked(SoldierUnit soldier, OrcUnit orc)
+        {
+            if (soldier == null || orc == null) return false;
+            if (OnTheWall(orc)) return !soldier.OnWall && !soldier.IsRanged;
+            if (soldier.OnWall) return false;
+            return WallBetween(orc, soldier);
         }
 
         // where a piece of wall or a gate has fallen (the user's sixth playtest: orcs standing in the rubble of a wall
@@ -273,7 +305,9 @@ namespace CityBuilder.Campaign
 
         // ------------------------------------------------------------------ the town's people
 
-        private readonly List<(CitizenAgent who, Vector3 door)> _runners = new List<(CitizenAgent, Vector3)>();
+        private readonly List<(CitizenAgent who, Vector3 door, BuildingInstance house)> _runners = new List<(CitizenAgent, Vector3, BuildingInstance)>();
+        // houses broken in the siege: nobody comes out of them or runs into them any more (the user's eighth playtest)
+        private readonly HashSet<BuildingInstance> _fallenHouses = new HashSet<BuildingInstance>();
         private readonly List<float> _comingOut = new List<float>();
 
         private void StartTownsfolk()
@@ -295,7 +329,7 @@ namespace CityBuilder.Campaign
             for (var tries = 0; tries < 8; tries++)
             {
                 var house = _houses[Random.Range(0, _houses.Count)];
-                if (house != null && house.CurrentHealth > 0) return house;
+                if (house != null && house.CurrentHealth > 0 && !_fallenHouses.Contains(house)) return house;
             }
             return null;
         }
@@ -312,14 +346,26 @@ namespace CityBuilder.Campaign
             var who = CitizenVisualsManager.Instance.SpawnLoose(start);
             if (who == null) return;
             who.MoveTo(door);
-            _runners.Add((who, door));
+            _runners.Add((who, door, to));
         }
 
         private void TickTownsfolk(float dt)
         {
             for (var i = _runners.Count - 1; i >= 0; i--)
             {
-                var (who, door) = _runners[i];
+                var (who, door, house) = _runners[i];
+                if (who != null && (house == null || _fallenHouses.Contains(house)))
+                {
+                    // the house he ran for is broken: another one
+                    var other = AnyHouse();
+                    if (other != null)
+                    {
+                        door = DoorOf(other);
+                        who.MoveTo(door);
+                        _runners[i] = (who, door, other);
+                        continue;
+                    }
+                }
                 if (who != null && Flat(who.transform.position - door) > 0.5f && who.CurrentActivity == CitizenAgent.Activity.Order) continue;
                 // in at the door: hidden; another comes out somewhere else after a while
                 if (who != null) Destroy(who.gameObject);
@@ -333,6 +379,41 @@ namespace CityBuilder.Campaign
                 _comingOut.RemoveAt(i);
                 if (CitizenVisualsManager.Instance != null && _houses.Count > 1) RunOne(midway: false);
             }
+        }
+
+        /// <summary>
+        /// The outer gate broken: the town's people who did not get in lie dead in the lower town's streets (the user's
+        /// eighth playtest), m2_corpses of them, by the doors of its houses. The villagers' own figures, laid down still.
+        /// </summary>
+        private void LayTheDead()
+        {
+            var people = CitizenVisualsManager.Instance;
+            if (people == null || _lowerTown.Count == 0) return;
+            var grid = GridManager.Instance;
+            var cell = grid != null ? grid.CellSize : 1f;
+            for (var i = 0; i < B.corpses; i++)
+            {
+                var house = _lowerTown[Random.Range(0, _lowerTown.Count)];
+                if (house == null) continue;
+                var at = OnMesh(DoorOf(house) + new Vector3(Random.Range(-1f, 1f), 0f, Random.Range(-1.2f, -0.2f)) * cell);
+                var who = people.SpawnLoose(at);
+                if (who == null) continue;
+                var body = who.gameObject;
+                Destroy(who);
+                var controller = body.GetComponent<CharacterController>();
+                if (controller != null) Destroy(controller);
+                body.name = "Fallen";
+                body.transform.position = at + Vector3.up * 0.06f;
+                body.transform.rotation = Quaternion.Euler(Random.value < 0.5f ? 90f : -90f, Random.Range(0f, 360f), 0f);
+                StartCoroutine(StillAfterAFrame(body));
+            }
+        }
+
+        private static System.Collections.IEnumerator StillAfterAFrame(GameObject body)
+        {
+            yield return null;
+            if (body == null) yield break;
+            foreach (var animator in body.GetComponentsInChildren<Animator>()) animator.speed = 0f;
         }
     }
 }

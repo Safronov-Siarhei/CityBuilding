@@ -41,9 +41,18 @@ namespace CityBuilder.Campaign
             _wreckThink -= dt;
             if (_wreckThink > 0f) return;
             _wreckThink = 0.5f;
-            // the house each is after is down: on to the next one
+            var town = PenOf(true);
             foreach (var orc in _wreckers)
             {
+                // in through the broken gate: off the road, free among the houses
+                if (orc.Lane != null)
+                {
+                    var p = orc.transform.position;
+                    if (!town.Contains(new Vector2(p.x, p.z))) continue;
+                    orc.FollowLane(null);
+                    orc.LaneOnly = false;
+                }
+                // the house each is after is down: on to the next one
                 var house = orc.OnlyTarget;
                 if (house != null && house.CurrentHealth > 0) continue;
                 orc.OnlyTarget = NextHouse(orc.transform.position);
@@ -57,16 +66,18 @@ namespace CityBuilder.Campaign
             var b = B;
             var row = BalanceConfig.Instance.M2Wave(1, Mathf.Max(1, Wave));
             var level = row != null ? row.level : 1;
-            // in through the broken outer gate
-            var at = OnMesh(World(50.5f, NorthWallY + 2f));
+            // from the north ford, like the waves, up the road and in through the broken outer gate (the user's eighth
+            // playtest: «орки начали спавниться прямо в городе»)
+            const int lane = 1;
+            if (_lanes[lane] == null) return;
             for (var i = 0; i < b.wreckers; i++)
             {
-                var orc = raids.SpawnOrcOfKind(at + new Vector3(Random.Range(-1.5f, 1.5f), 0f, Random.Range(-1f, 1f)), level, OrcKind.Raider);
+                var orc = raids.SpawnOrcOfKind(_spawns[lane] + new Vector3(Random.Range(-1.5f, 1.5f), 0f, Random.Range(-1.5f, 1.5f)), level, OrcKind.Raider);
                 if (orc == null) continue;
                 orc.Toughen(b.orcHealthMult, b.orcDamageMult);
-                orc.LaneOnly = false;
-                orc.FollowLane(null);
-                orc.OnlyTarget = NextHouse(orc.transform.position);
+                orc.FollowLane(_lanes[lane]);
+                orc.LaneOnly = true;
+                orc.OnlyTarget = NextHouse(World(50.5f, NorthWallY + 3f));
                 _wreckers.Add(orc);
             }
         }

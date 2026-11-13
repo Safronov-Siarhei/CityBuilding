@@ -465,6 +465,31 @@
   8. Where are ram/tower hp: m2_ram_health_mult / m2_tower_health_mult (x a brute's health), tab «Кампания: оборона города».
   9. Only rams/towers left -> the next wave comes (TickWaves counts only orcs without `IgnoresSoldiers`).
   10. Ардан's XP: EVERY orc that falls on the map = 1 point (any killer); m2_arden_max_level 20 levels spread evenly over ALL orcs of all waves of both parts (m2waves tab; a tower counts 1 + m2_tower_crew); skills open at m2_cry_level 1 / m2_whirl_level 5 / m2_dash_level 10 / m2_breath_level 15; part 2 credits all of part 1's orcs (`CreditPart1`); health/damage per level 20 / 2. m2_arden_xp2-4 deleted (sheet + CSV + code).
+- **PLAYTEST 8 (the user, 2026-11-13, on the one-part mission) -- BUILT 2026-11-13 (setup green; not seen):**
+  1. Gate HP: the HUD bar -> the gate's PICTURE (FortifiedGate_L3 icon, `CityDefenceMode.gateIcon`) on a disc with a
+     radial ring (event_rim, Filled Radial360) that runs down, green/amber/red (`CityDefenceHud.BuildGateBadge`).
+  2. Orcs aggro/throw at Ардан through a wall -> `WallBetween` for a pen-less soldier compares RINGS (outside /
+     between the walls / inside the inner ones, `Ring`), a breach lets through.
+  3. Hero cannot get on the wall -> running INTO a Barbican end tower (a WallWalk stair, within 1,6 cells, stick
+     towards it) climbs him up (`TickArdenWall`). Doors on the towers: still a MODEL, renders for approval first.
+  4. Ардан under the wall hit orcs on it -> `SoldierUnit.WallBlocks` (set by the mode, `SoldierBlocked`): a melee man
+     on the ground never strikes an orc on the wall-walk; nobody on the ground strikes across a wall. Checked in
+     `CanStrike` and `OrcAtHand`.
+  5. Orcs «spawned in the town» = the wreckers -> they now come from the north ford up its road and leave the road
+     once inside the outer walls. A ram reaching the broken outer gate rolls on to the inner gate (then the castle).
+  6. Siege machines thrown by skills -> `OrcUnit.Knock` ignores machines and wall-steered orcs.
+  7. «Подкрепление» without the time -> the minimap label best-fits in mission 2 («Подкрепление через: 0:18»).
+  8. Few defenders at the inner gate -> m2_inner_guards 6, m2_inner_archers 6 (sheet).
+  9. Throwers over walls -> same as 2 (Ардан had no pen, so no wall check).
+  10. Orcs broke the wall beside the inner gate -> wave orcs and rams carry `OrcUnit.OnlyTarget` = their gate; a
+      lane blocker that is a wall piece is swapped for that gate.
+  11. Residents kept coming out of broken houses -> `_fallenHouses`; runners re-aim. On the outer gate falling
+      m2_corpses (12) villagers lie dead by lower-town doors (`LayTheDead`: the villager figure laid flat, animator
+      stopped).
+  12. «Towers don't shoot» -> the Barbicans had no DefensiveBuilding; the mode shoots arrows from each end tower
+      (`CityDefenceMode.Towers.cs`): m2_gate_tower_range_cells 7, m2_gate_tower_shot_sec 1,5, m2_gate_tower_damage 20.
+  13. White defeat window -> the mission-2 HUD art lacked panel/pills/glyphs (only mission 1 set them); wired in
+      SetupProjectCityScene.
 - **ONE PART, 11 MINUTES (the user, 2026-11-13) -- BUILT 2026-11-13 (setup green; not seen). Supersedes the
   two parts, the courier and «Part 2» everywhere above.**
   - Goals in turn, shown on the top plaque with the gate's health as a HUD bar under it (the world bar over the

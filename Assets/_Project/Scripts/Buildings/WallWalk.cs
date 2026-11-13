@@ -319,6 +319,15 @@ namespace CityBuilder.Buildings
             return Nodes.ContainsKey(cell);
         }
 
+        /// <summary>Every stair (tower) cell of the walk, into `into` (cleared first).</summary>
+        public static void StairsInto(List<Vector2Int> into)
+        {
+            Ensure();
+            into.Clear();
+            foreach (var pair in Nodes)
+                if (pair.Value.Kind == Kind.Tower) into.Add(pair.Key);
+        }
+
         public static bool IsStair(Vector2Int cell)
         {
             Ensure();

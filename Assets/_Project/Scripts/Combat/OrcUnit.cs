@@ -505,6 +505,8 @@ namespace CityBuilder.Combat
         /// </summary>
         public void Knock(Vector3 offset, float seconds)
         {
+            // a siege machine is not thrown, nor one steered along the wall (the user's eighth playtest)
+            if (IgnoresSoldiers || Steered) return;
             offset.y = 0f;
             _knockLeft = Mathf.Max(0.05f, seconds);
             _knock = offset / _knockLeft;
@@ -1568,6 +1570,10 @@ namespace CityBuilder.Combat
             // Nothing on the line itself (only the NavMesh's margin round the pieces either side of
             // a gap): walk on -- reaching for the nearest piece here broke the wall beside a gap.
             _laneBlocker = BuildingOnTheLine(at, goal);
+            // one sent at a gate breaks the gate, never the wall beside it (campaign mission 2, the user's eighth playtest)
+            if (_laneBlocker != null && OnlyTarget != null && OnlyTarget.CurrentHealth > 0 && _laneBlocker != OnlyTarget
+                && _laneBlocker.Data != null && _laneBlocker.Data.connectsToFences)
+                _laneBlocker = OnlyTarget;
             if (_laneBlocker != null)
             {
                 _laneStep = LaneStep.Break;

@@ -611,6 +611,17 @@ namespace CityBuilder.EditorTools
             DefenceSprite(defenceArt.FindPropertyRelative("rim"), UiTextureImport.SkinFolder + "/event_rim.png");
             DefenceSprite(defenceArt.FindPropertyRelative("mask"), UiTextureImport.SkinFolder + "/circle_mask.png");
             DefenceSprite(defenceArt.FindPropertyRelative("portrait"), UiTextureImport.IconsFolder + "/PortraitArdan.png");
+            // the end window's art (the user's eighth playtest: «окно поражения имеет неполноценный вид» -- it was white)
+            DefenceSprite(defenceArt.FindPropertyRelative("panel"), UiTextureImport.SkinFolder + "/panel.png");
+            DefenceSprite(defenceArt.FindPropertyRelative("pillParchment"), UiTextureImport.SkinFolder + "/pill_parchment.png");
+            DefenceSprite(defenceArt.FindPropertyRelative("pillWood"), UiTextureImport.SkinFolder + "/pill_wood.png");
+            DefenceSprite(defenceArt.FindPropertyRelative("menuGlyph"), UiTextureImport.GlyphsFolder + "/Hud_Menu.png");
+            DefenceSprite(defenceArt.FindPropertyRelative("closeGlyph"), UiTextureImport.GlyphsFolder + "/Hud_Cancel.png");
+            DefenceSprite(defenceArt.FindPropertyRelative("playGlyph"), UiTextureImport.GlyphsFolder + "/Hud_Play.png");
+            DefenceSprite(defenceArt.FindPropertyRelative("restartGlyph"), UiTextureImport.GlyphsFolder + "/Hud_Rotate.png");
+            DefenceSprite(defenceArt.FindPropertyRelative("homeGlyph"), UiTextureImport.GlyphsFolder + "/Hud_Home.png");
+            // the goal gate's picture, its health a ring round it (the user's eighth playtest)
+            DefenceSprite(cityDefenceSO.FindProperty("gateIcon"), UiTextureImport.IconsFolder + "/FortifiedGate_L3.png");
             // Ардан's four skills (the user, 2026-11-12): cry, whirl, dash, second wind -- the heroes' pictures for now
             var skillGlyphs = cityDefenceSO.FindProperty("skillGlyphs");
             var skillFiles = new[] { "Skill_captain_might", "Skill_king_rage", "Skill_captain_rescue", "Skill_king_heal" };

@@ -78,10 +78,12 @@ namespace CityBuilder.Campaign
         [SerializeField] private MissionHud.Art hudArt;
         [SerializeField] private Sprite[] skillGlyphs = new Sprite[0];
         [SerializeField] private Sprite lockGlyph;
+        [SerializeField] private Sprite gateIcon;
 
         public MissionHud.Art HudArt => hudArt;
         public Sprite SkillGlyph(int skill) => skill >= 0 && skill < skillGlyphs.Length ? skillGlyphs[skill] : null;
         public Sprite LockGlyph => lockGlyph;
+        public Sprite GateIcon => gateIcon;
 
         private bool _active;
 
@@ -168,6 +170,7 @@ namespace CityBuilder.Campaign
             // nobody fights across a wall (the user's fourth playtest)
             OrcUnit.WallBetween = WallBetween;
             SoldierUnit.PenBreach = Breach;
+            SoldierUnit.WallBlocks = SoldierBlocked;
             // no residents grow in the houses (their bars stood over every roof, the user's first playtest)
             var people = GetComponent<Citizens.HousePeople>();
             if (people != null) people.enabled = false;
@@ -187,6 +190,7 @@ namespace CityBuilder.Campaign
                 MeleeReach.Factor = 1f;
                 OrcUnit.WallBetween = null;
                 SoldierUnit.PenBreach = null;
+                SoldierUnit.WallBlocks = null;
             }
         }
 
@@ -367,6 +371,7 @@ namespace CityBuilder.Campaign
             TickArdenWall(dt);
             TickGates(dt);
             TickWreckers(dt);
+            TickTowerShots(dt);
             if (Current == Stage.Lost) return;
 
             TimeLeft -= dt;
@@ -429,12 +434,16 @@ namespace CityBuilder.Campaign
             foreach (var lane in _laneOrcs)
                 foreach (var orc in lane)
                 {
-                    if (orc == null || orc.Lane == null || orc.IgnoresSoldiers || _toInner.Contains(orc)) continue;
+                    if (orc == null || orc.Lane == null || _toInner.Contains(orc)) continue;
+                    // of the machines only a ram rolls on (a tower stays at its wall)
+                    if (orc.IgnoresSoldiers && !IsRam(orc)) continue;
                     var at = orc.transform.position;
                     if (!town.Contains(new Vector2(at.x, at.z))) continue;
                     ToInnerGate(orc);
                 }
         }
+
+        private static bool IsRam(OrcUnit orc) => orc != null && orc.name == "OrcRam";
 
         // the orcs already sent on to the inner gate
         private readonly HashSet<OrcUnit> _toInner = new HashSet<OrcUnit>();
@@ -455,11 +464,15 @@ namespace CityBuilder.Campaign
                 orc.FollowLane(new OrcLane(new[] { orc.transform.position, OnMesh(World(50.5f, InnerNorthWallY - 1.5f)),
                     OnMesh(World(50.5f, InnerNorthWallY + 1.5f)), _square }));
                 orc.LaneOnly = true;
+                orc.OnlyTarget = null;
+                if (IsRam(orc)) orc.OnlyTarget = Castle;
                 return;
             }
             var front = OnMesh(World(50.5f + Random.Range(-1f, 1f), InnerNorthWallY - 1.3f));
             orc.FollowLane(new OrcLane(new[] { orc.transform.position, OnMesh(World(50.5f, 44f)), front }));
             orc.LaneOnly = true;
+            // the inner gate only, never the wall beside it (the user's eighth playtest)
+            orc.OnlyTarget = InnerGates[0];
         }
 
         private void SendWave()
@@ -503,6 +516,8 @@ namespace CityBuilder.Campaign
                     if (orc.IsRanged) orc.SetUnitRange(SoldierStats.Row(SoldierType.Archer).attackRangeUnits * b.rangedRangeMult);
                     orc.FollowLane(_lanes[lane]);
                     orc.LaneOnly = true;
+                    // at the road's end only the gate is broken, not the wall beside it (the user's eighth playtest)
+                    orc.OnlyTarget = OuterGates[lane];
                     _laneOrcs[lane].Add(orc);
                     if (lead != null) Escort(lead, orc);
                 }
@@ -532,6 +547,7 @@ namespace CityBuilder.Campaign
             if (Current == Stage.Won || Current == Stage.Lost || building == null) return;
             NoteBreach(building);
             if (building == Castle) { Lose(LossReason.Castle); return; }
+            if (_houses.Contains(building)) _fallenHouses.Add(building);
             var outer = false;
             var inner = false;
             for (var i = 0; i < 3; i++)
@@ -545,6 +561,7 @@ namespace CityBuilder.Campaign
                 CurrentGoal = InnerGates[0] != null ? Goal.InnerGate : Goal.Square;
                 GoalChanged?.Invoke(CurrentGoal);
                 StartWreckers();
+                LayTheDead();
             }
             if (inner && CurrentGoal != Goal.Square)
             {

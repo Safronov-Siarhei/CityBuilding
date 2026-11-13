@@ -33,8 +33,10 @@ namespace CityBuilder.Campaign
         private FloatingJoystick _stick;
         private Text _goal, _banner, _middle, _level;
         private Text _wave;   // the wave's number under the goal, for testing (the user's fourth playtest); not in a release
-        // the goal's gate's health, under the goal plaque (the user, 2026-11-13)
-        private Image _gateBar;
+        // the goal's gate under the goal plaque, its health a ring round its picture that runs down (the user's
+        // eighth playtest: «иконка ворот и убывающая окантовка хп у неё»)
+        private GameObject _gateBadge;
+        private Image _gateRing;
         private Image _ardenBar, _xpBar;
         private readonly Image[] _skillShade = new Image[CityDefenceMode.SkillCount];
         private readonly GameObject[] _skillLock = new GameObject[CityDefenceMode.SkillCount];
@@ -116,9 +118,9 @@ namespace CityBuilder.Campaign
             _goal.resizeTextForBestFit = true;
             _goal.resizeTextMaxSize = 22;
             _goal.resizeTextMinSize = 12;
-            _gateBar = Bar(safe, new Vector2(0f, -74f), new Vector2(360f, 16f), new Vector2(0.5f, 1f));
+            BuildGateBadge(safe, art);
 #if !CB_RELEASE
-            _wave = MissionSkin.Label(plaque.transform, "", UiTheme.Bold, 18, Color.white, TextAnchor.MiddleCenter, new Vector2(0f, -1.05f), new Vector2(1f, -0.45f), Vector2.zero);
+            _wave = MissionSkin.Label(plaque.transform, "", UiTheme.Bold, 18, Color.white, TextAnchor.MiddleCenter, new Vector2(0f, -2.25f), new Vector2(1f, -1.65f), Vector2.zero);
             _wave.raycastTarget = false;
             _wave.gameObject.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.8f);
 #endif
@@ -285,6 +287,26 @@ namespace CityBuilder.Campaign
             _hintLine.text = line;
         }
 
+        private void BuildGateBadge(RectTransform safe, MissionHud.Art art)
+        {
+            const float size = 76f;
+            var disc = Picture(safe, "GateBadge", art.disc, new Vector2(0.5f, 1f), new Vector2(0f, -74f - size * 0.5f), new Vector2(size, size));
+            if (art.disc == null) disc.color = new Color(0.2f, 0.12f, 0.06f, 0.9f);
+            _gateBadge = disc.gameObject;
+            var icon = Picture(disc.transform, "Gate", _mode.GateIcon, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(size - 18f, size - 18f));
+            icon.preserveAspect = true;
+            // the spent part of the ring, dark under the live one
+            var back = Picture(disc.transform, "RingBack", art.rim, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(size + 8f, size + 8f));
+            back.type = Image.Type.Simple;
+            back.color = new Color(0.12f, 0.05f, 0.03f, 0.85f);
+            _gateRing = Picture(disc.transform, "Ring", art.rim, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(size + 8f, size + 8f));
+            _gateRing.type = Image.Type.Filled;
+            _gateRing.fillMethod = Image.FillMethod.Radial360;
+            _gateRing.fillOrigin = (int)Image.Origin360.Top;
+            _gateRing.fillClockwise = false;
+            _gateRing.fillAmount = 1f;
+        }
+
         private static Image Bar(Transform parent, Vector2 at, Vector2 size, Vector2 anchor)
         {
             var back = new GameObject("Bar", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
@@ -428,12 +450,12 @@ namespace CityBuilder.Campaign
 
             _goal.text = Localization.Get(GoalKey(_mode.CurrentGoal));
             var gate = _mode.GoalGate;
-            _gateBar.transform.parent.gameObject.SetActive(gate != null);
+            _gateBadge.SetActive(gate != null);
             if (gate != null)
             {
                 var gk = gate.MaxHealth > 0 ? Mathf.Clamp01(gate.CurrentHealth / (float)gate.MaxHealth) : 0f;
-                _gateBar.rectTransform.anchorMax = new Vector2(gk, _gateBar.rectTransform.anchorMax.y);
-                _gateBar.color = gk > 0.5f ? UiTheme.Good : gk > 0.25f ? UiTheme.Warning : UiTheme.Danger;
+                _gateRing.fillAmount = gk;
+                _gateRing.color = gk > 0.5f ? UiTheme.Good : gk > 0.25f ? UiTheme.Warning : UiTheme.Danger;
             }
             if (_wave != null) _wave.text = _mode.Wave > 0 ? string.Format(Localization.Get("#m2_wave_number"), _mode.Wave) : string.Empty;
 
