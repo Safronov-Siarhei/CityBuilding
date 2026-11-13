@@ -1,6 +1,6 @@
 ---
 name: project-pending-2026-11-12-mission2
-description: "Mission 2 playtest 4 (2026-11-12): 5 items NOT built -- the user said «просто запомни, делать будем завтра»: hay on the road, orcs aggro through the wall, ranged range /2, three roads mixed before the gate, new hp-heart look to propose."
+description: "Mission 2 playtest 4 (2026-11-12): 6 items NOT built -- the user said «просто запомни, делать будем завтра»: hay on the road, orcs aggro through the wall, ranged range /2, three roads mixed before the gate, new hp-heart look to propose; RULE: a siege tower leads its road, the orcs follow and climb it."
 metadata:
   node_type: memory
   type: project
@@ -15,6 +15,7 @@ The user's mission-2 «Оборона города» playtest 4 (2026-11-12, scr
 3. **Ranged soldiers' attack radius is too far.** Cut it to about half (sheet numbers, in the mission at least).
 4. **Three roads mix in front of the main gate.** The lanes converge at (50.5, 31.6), and the sand ribbons overlap there and look strange. Merge them into one road before the gate, or join them cleanly.
 5. **The health «heart» (icon by the hp bar) of soldiers and orcs.** The user dislikes it. PROPOSE a new look first (pictures for approval), then build.
+6. **RULE (2026-11-13): a siege tower leads its road.** In a wave with a tower on a road, the tower goes FIRST and that road's orcs walk BEHIND it, so they can climb it onto the wall once it docks (not only its own crew). Today it spawns with the rest and drives alone (CityDefenceMode.Siege.cs).
 
 **Why:** the user is playtesting v3+ of mission 2 and queues fixes for the next session.
 

@@ -450,6 +450,7 @@
   3. Ranged soldiers' attack radius too far: about half.
   4. The three roads mix in front of the main gate (lanes converge at (50.5,31.6), the sand ribbons overlap): looks strange.
   5. The hp «heart» icon over soldiers/orcs: the user dislikes it -- PROPOSE a new look (pictures) before building.
+  6. RULE (the user, 2026-11-13): a wave with a siege TOWER on a road -- the tower goes FIRST on that road, the road's other orcs walk BEHIND it (escort pace), so that at the wall they can CLIMB the tower onto the wall (not only its own crew). Today the tower spawns with the rest and drives alone at m2_siege_speed (Siege.cs), crew m2_tower_crew lands inside.
 - **SWORD + SIEGE (approved by the user 2026-11-12, «Утверждаю, ставь») -> IN THE GAME (not seen).**
   - Ардан WITH THE SWORD replaces the Латник's look: CineArdanSword.fbx from
     Tools/blender/cinematic/export_ardan_sword.py (poses from ardan_sword.py; clips Idle, Run, Attack, Whirl, Cry,
