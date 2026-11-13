@@ -131,7 +131,48 @@ namespace CityBuilder.EditorTools
             Debug.Log($"[Аккаунт] «{gone}» удалён, теперь «{DefaultName}»");
         }
 
-        private static void Refresh() => MainToolbar.Refresh(ElementPath);
+        private static void Refresh()
+        {
+            MainToolbar.Refresh(ElementPath);
+            AccountWindow.RepaintOpen();
+        }
+
+        [MenuItem("CityBuilder/Аккаунт…", priority = 1)]
+        private static void OpenWindow() => EditorWindow.GetWindow<AccountWindow>(false, "Аккаунт", true);
+
+        /// <summary>The same choices in a small window (CityBuilder → Аккаунт…): the toolbar element may be hidden until
+        /// it is ticked in the toolbar's right-click menu.</summary>
+        private class AccountWindow : EditorWindow
+        {
+            private static AccountWindow _open;
+
+            public static void RepaintOpen()
+            {
+                if (_open != null) _open.Repaint();
+            }
+
+            private void OnEnable() => _open = this;
+
+            private void OnGUI()
+            {
+                EditorGUILayout.LabelField("Сейчас: " + Current, EditorStyles.boldLabel);
+                if (EditorApplication.isPlayingOrWillChangePlaymode)
+                    EditorGUILayout.HelpBox("Остановите игру, чтобы сменить аккаунт.", MessageType.Info);
+                using (new EditorGUI.DisabledScope(EditorApplication.isPlayingOrWillChangePlaymode))
+                {
+                    foreach (var name in Accounts())
+                    {
+                        using (new EditorGUI.DisabledScope(name == Current))
+                            if (GUILayout.Button(name == Current ? name + "  ✓" : name)) SwitchTo(name);
+                    }
+                    EditorGUILayout.Space();
+                    if (GUILayout.Button("Новый аккаунт")) SwitchTo(NextFreeName());
+                    if (GUILayout.Button("Сбросить прогресс «" + Current + "»")) ResetCurrent();
+                    using (new EditorGUI.DisabledScope(Current == DefaultName))
+                        if (GUILayout.Button("Удалить «" + Current + "»")) DeleteCurrent();
+                }
+            }
+        }
 
         // ------------------------------------------------------------------ the state: PlayerPrefs + persistentDataPath
 

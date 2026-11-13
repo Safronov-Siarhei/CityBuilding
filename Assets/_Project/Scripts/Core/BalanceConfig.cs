@@ -2747,6 +2747,9 @@ namespace CityBuilder.Core
             }
             foreach (var m in monsters)
             {
+                // an entry the asset kept from before (the kingdom's bot_soldier / bot_archer) has no mon_ keys in the
+                // sheet: it keeps its numbers, without 60 errors on every load (seen 2026-11-13)
+                if (System.Array.IndexOf(MonsterIds, m.id) < 0) continue;
                 m.maxHealth = (int)Read(economy, $"mon_{m.id}_health", m.maxHealth);
                 m.attackDamage = (int)Read(economy, $"mon_{m.id}_damage", m.attackDamage);
                 m.attackIntervalSeconds = Read(economy, $"mon_{m.id}_attack_interval_sec", m.attackIntervalSeconds);

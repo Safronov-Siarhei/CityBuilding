@@ -112,6 +112,10 @@ namespace CityBuilder.EditorTools
             AttachRecipes(runBuildings, recipes);
             var runEconomy = new Dictionary<string, float>(economy);
             foreach (var pair in invasion.Keys) runEconomy[pair.Key] = pair.Value;
+            // keys only the sandbox's own tabs carry (decor, boosters, hints, tutorial) -- the run does not use them,
+            // but without them every rebuild logged ~60 "economy tab has no key" errors (seen 2026-11-13)
+            foreach (var pair in sandboxEconomy)
+                if (!runEconomy.ContainsKey(pair.Key)) runEconomy[pair.Key] = pair.Value;
             WriteConfig(RunConfigAssetPath, runUnits, runBuildings, runEconomy);
 
             var localizationKeys = RebuildLocalization();
