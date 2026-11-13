@@ -217,21 +217,45 @@ namespace CityBuilder.Campaign
         }
 
         /// <summary>
-        /// Ардан and the towers: at a docked tower's foot he climbs it onto the wall; up there the stick walks him along
-        /// the wall (sideways) or brings him down (towards the town or out over the tower).
+        /// Ардан and the wall (the user's ninth playtest): he goes up only by stepping on the small yellow circle at a
+        /// Barbican tower's door (town side) -- or at a docked orc tower's foot; up there the stick walks him freely
+        /// along the wall (SoldierUnit.SlideAlongWall) and, pushed towards the town, brings him down by the nearest
+        /// tower door. Never down on the field side.
         /// </summary>
         private void TickArdenWall(float dt)
         {
             if (!ArdenAlive) return;
+            var stick = new Vector3(Stick.x, 0f, Stick.y);
+            // along the wall, every frame
+            if (Arden.OnWall && stick.sqrMagnitude > 0.04f && Mathf.Abs(stick.x) >= Mathf.Abs(stick.z))
+            {
+                Arden.SlideAlongWall(stick.normalized, dt);
+                return;
+            }
             _ardenWallIn -= dt;
             if (_ardenWallIn > 0f) return;
-            _ardenWallIn = 0.35f;
+            _ardenWallIn = 0.1f;
             var grid = GridManager.Instance;
             if (grid == null) return;
-            var stick = new Vector3(Stick.x, 0f, Stick.y);
             var at = Arden.transform.position;
             if (!Arden.WallBound)
             {
+                // a door circle: stepped on (after having stepped off it since he came down)
+                var onCircle = false;
+                foreach (var door in _doorCircles)
+                {
+                    if (door.mark == null || !WallWalk.IsStair(door.stair)) continue;
+                    if (Flat(at - door.at) > DoorCircleRadius * Cell) continue;
+                    onCircle = true;
+                    if (_ardenOffCircle && Arden.GoToWall(door.stair))
+                    {
+                        _ardenOffCircle = false;
+                        _ardenWallIn = 1f;
+                    }
+                    break;
+                }
+                if (!onCircle) _ardenOffCircle = true;
+                if (onCircle) return;
                 foreach (var t in _towers)
                 {
                     if (!t.docked || !t.onWall || t.orc == null || t.orc.CurrentHealth <= 0) continue;
@@ -241,41 +265,77 @@ namespace CityBuilder.Campaign
                     if (Arden.GoToWall(t.wallCell)) _ardenWallIn = 1f;
                     return;
                 }
-                // a wall's own stair tower (its door, the user's eighth playtest: «герой не может попасть на стену»):
-                // running into it takes him up
-                if (stick.sqrMagnitude < 0.25f) return;
-                var cell = grid.WorldToCell(at);
-                for (var dx = -2; dx <= 2; dx++)
-                    for (var dy = -2; dy <= 2; dy++)
-                    {
-                        var c = cell + new Vector2Int(dx, dy);
-                        if (!WallWalk.IsStair(c) || WallWalk.IsDockStair(c)) continue;
-                        var centre = grid.GetFootprintCenterWorld(c, Vector2Int.one);
-                        var to = centre - at;
-                        to.y = 0f;
-                        if (to.magnitude > ArdenClimbReach * Cell || Vector3.Dot(stick.normalized, to.normalized) < 0.5f) continue;
-                        if (Arden.GoToWall(c)) _ardenWallIn = 1f;
-                        return;
-                    }
                 return;
             }
-            if (!Arden.OnWall || stick.sqrMagnitude < 0.25f) return;
-            var here = grid.WorldToCell(at);
-            if (Mathf.Abs(stick.x) >= Mathf.Abs(stick.z))
-            {
-                // along the (north) wall: two cells on that way
-                var along = here + new Vector2Int(stick.x > 0f ? 2 : -2, 0);
-                if (WallWalk.IsWalk(along)) Arden.GoToWall(along);
-                else if (WallWalk.IsWalk(here + new Vector2Int(stick.x > 0f ? 1 : -1, 0))) Arden.GoToWall(here + new Vector2Int(stick.x > 0f ? 1 : -1, 0));
-                return;
-            }
-            // down: into the town (south) or out (north, by a tower)
-            Arden.LeaveWall(at + stick.normalized * (3f * Cell));
+            // down: only towards the town (south, the stick pulled down)
+            if (!Arden.OnWall || stick.z > -0.5f || Mathf.Abs(stick.z) < Mathf.Abs(stick.x)) return;
+            Arden.LeaveWall(at + Vector3.back * (3f * Cell));
+            _ardenOffCircle = false;
             _ardenWallIn = 1.5f;
         }
 
         // Ардан this near a docked tower climbs it (cells)
         private const float ArdenClimbReach = 1.6f;
+
+        // ------------------------------------------------------------------ the Barbican tower doors
+
+        private class DoorCircle
+        {
+            public Vector2Int stair;
+            public Vector3 at;
+            public GameObject mark;
+        }
+
+        private readonly List<DoorCircle> _doorCircles = new List<DoorCircle>();
+        private bool _ardenOffCircle = true;
+        // the circle's radius (cells): a step onto it takes him up
+        private const float DoorCircleRadius = 0.32f;
+        // the door stands this far from the tower cell's middle, on its town face (cells): 0,485 + the step
+        private const float DoorOut = 0.72f;
+
+        /// <summary>The town-side door of each Barbican end tower: a yellow circle on the ground before it, and the
+        /// way up and down for everyone (SoldierUnit.StairFootAt).</summary>
+        private void MarkTowerDoors()
+        {
+            var grid = GridManager.Instance;
+            if (grid == null) return;
+            WallWalk.Ensure();
+            WallWalk.StairsInto(_stairs);
+            foreach (var cell in _stairs)
+            {
+                if (WallWalk.IsDockStair(cell)) continue;
+                var centre = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
+                var at = OnMesh(centre + Vector3.back * (DoorOut * grid.CellSize));
+                at.y = grid.GroundHeight;
+                var mark = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                mark.name = "M2DoorCircle";
+                Destroy(mark.GetComponent<Collider>());
+                mark.transform.position = at + Vector3.up * 0.02f;
+                mark.transform.localScale = new Vector3(DoorCircleRadius * 2f * grid.CellSize, 0.01f, DoorCircleRadius * 2f * grid.CellSize);
+                var r = mark.GetComponent<Renderer>();
+                r.sharedMaterial = DoorCircleMaterial();
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                r.receiveShadows = false;
+                _doorCircles.Add(new DoorCircle { stair = cell, at = at, mark = mark });
+            }
+            SoldierUnit.StairFootAt = DoorOf;
+        }
+
+        private Vector3? DoorOf(Vector2Int stair)
+        {
+            foreach (var door in _doorCircles)
+                if (door.stair == stair) return door.at;
+            return null;
+        }
+
+        private static Material _doorCircleMaterial;
+
+        private static Material DoorCircleMaterial()
+        {
+            if (_doorCircleMaterial != null) return _doorCircleMaterial;
+            _doorCircleMaterial = new Material(Core.RuntimeShaders.Unlit) { color = new Color(1f, 0.85f, 0.15f, 1f), name = "M2DoorCircle" };
+            return _doorCircleMaterial;
+        }
 
         private void ForgetWallFight()
         {

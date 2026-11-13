@@ -1274,16 +1274,6 @@ MonoBehaviour:
     values:
     - "\u041B\u0435\u0447\u0435\u0431\u043D\u0438\u0446\u0430"
     - Infirmary
-  - key: '#healer_card'
-    values:
-    - "\u041A\u043E\u0439\u043A\u0438: {0}/{1} \xB7 \u043B\u0435\u0447\u0435\u043D\u0438\u0435
-      {2} \u0441 \xB7 \u0431\u0435\u0437 \u043C\u0435\u0441\u0442\u0430 \u0436\u0438\u0432\u0451\u0442
-      {3} \u0441"
-    - "Beds: {0}/{1} \xB7 treatment {2} s \xB7 without a bed lives {3} s"
-  - key: '#healer_bed_level'
-    values:
-    - "\u0423\u0440. {0}"
-    - Lvl {0}
   - key: '#building_firebrigade'
     values:
     - "\u041F\u043E\u0436\u0430\u0440\u043D\u0430\u044F \u0431\u0440\u0438\u0433\u0430\u0434\u0430"
@@ -1545,6 +1535,16 @@ MonoBehaviour:
     values:
     - "+{0} \u043C\u043E\u043D\u0435\u0442\u044B \u0436\u0438\u0442\u0435\u043B\u044E"
     - +{0} coins per resident
+  - key: '#healer_card'
+    values:
+    - "\u041A\u043E\u0439\u043A\u0438: {0}/{1} \xB7 \u043B\u0435\u0447\u0435\u043D\u0438\u0435
+      {2} \u0441 \xB7 \u0431\u0435\u0437 \u043C\u0435\u0441\u0442\u0430 \u0436\u0438\u0432\u0451\u0442
+      {3} \u0441"
+    - "Beds: {0}/{1} \xB7 treatment {2} s \xB7 without a bed lives {3} s"
+  - key: '#healer_bed_level'
+    values:
+    - "\u0423\u0440. {0}"
+    - Lvl {0}
   - key: '#army_summary'
     values:
     - "\u0410\u0440\u043C\u0438\u044F: {0}/{1}   \u0421\u043E\u0434\u0435\u0440\u0436\u0430\u043D\u0438\u0435:
@@ -2505,16 +2505,6 @@ MonoBehaviour:
     - "\u0423\u043C\u0435\u0440\u043B\u0438 \u043E\u0442 \u0431\u043E\u043B\u0435\u0437\u043D\u0438:
       {0}"
     - 'Died of illness: {0}'
-  - key: '#log_infirmary_full'
-    values:
-    - "\u041D\u0430 \u043E\u0441\u0442\u0440\u043E\u0432\u0435 \u043D\u0435 \u0445\u0432\u0430\u0442\u0430\u0435\u0442
-      \u043C\u0435\u0441\u0442 \u0432 \u043B\u0435\u0447\u0435\u0431\u043D\u0438\u0446\u0435"
-    - Not enough beds in the infirmary on this island
-  - key: '#log_infirmary_no_worker'
-    values:
-    - "\u041D\u0430\u0437\u043D\u0430\u0447\u044C\u0442\u0435 \u0440\u0430\u0431\u043E\u0447\u0435\u0433\u043E
-      \u043B\u0435\u0447\u0435\u0431\u043D\u0438\u0446\u044B"
-    - Assign a healer to the infirmary
   - key: '#log_no_well'
     values:
     - "\u0416\u0438\u043B\u044C\u044E \u043D\u0435 \u0445\u0432\u0430\u0442\u0430\u0435\u0442
@@ -2847,6 +2837,16 @@ MonoBehaviour:
       \u2014 \u043F\u043E\u0441\u0442\u0440\u043E\u0439\u0442\u0435 \u0437\u0434\u0435\u0441\u044C
       \u0434\u043E\u043C\u0430"
     - "{0}: no free people on this island \u2014 build houses here"
+  - key: '#log_infirmary_full'
+    values:
+    - "\u041D\u0430 \u043E\u0441\u0442\u0440\u043E\u0432\u0435 \u043D\u0435 \u0445\u0432\u0430\u0442\u0430\u0435\u0442
+      \u043C\u0435\u0441\u0442 \u0432 \u043B\u0435\u0447\u0435\u0431\u043D\u0438\u0446\u0435"
+    - Not enough beds in the infirmary on this island
+  - key: '#log_infirmary_no_worker'
+    values:
+    - "\u041D\u0430\u0437\u043D\u0430\u0447\u044C\u0442\u0435 \u0440\u0430\u0431\u043E\u0447\u0435\u0433\u043E
+      \u043B\u0435\u0447\u0435\u0431\u043D\u0438\u0446\u044B"
+    - Assign a healer to the infirmary
   - key: '#research_tab_buildings'
     values:
     - "\u0417\u0434\u0430\u043D\u0438\u044F"

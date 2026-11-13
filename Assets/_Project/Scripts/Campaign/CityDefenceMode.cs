@@ -191,6 +191,7 @@ namespace CityBuilder.Campaign
                 OrcUnit.WallBetween = null;
                 SoldierUnit.PenBreach = null;
                 SoldierUnit.WallBlocks = null;
+                SoldierUnit.StairFootAt = null;
             }
         }
 
@@ -354,6 +355,7 @@ namespace CityBuilder.Campaign
             RaiseArden();
             HangDoors(OuterGates[0]);
             HangDoors(InnerGates[0]);
+            MarkTowerDoors();
             PartBegan?.Invoke(1);
         }
 
