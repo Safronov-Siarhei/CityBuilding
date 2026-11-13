@@ -531,17 +531,26 @@ namespace CityBuilder.EditorTools
         /// a file is written only when every one of its tabs came down.
         /// </summary>
         [MenuItem("CityBuilder/Balance/Pull From Google Sheets")]
-        public static void PullFromGoogleSheets()
+        public static void PullFromGoogleSheets() => Pull(quiet: false);
+
+        /// <summary>The pull; `quiet` (the auto-run on opening the project, AutoSetupOnOpen) logs instead of dialogs.
+        /// True if anything came down.</summary>
+        public static bool Pull(bool quiet)
         {
             var settings = LoadOrCreateSettings();
             if (string.IsNullOrWhiteSpace(settings.publishedUrl))
             {
+                if (quiet)
+                {
+                    Debug.LogWarning("BalanceImporter: no published sheet URL in BalanceSheetSettings -- pull skipped.");
+                    return false;
+                }
                 Selection.activeObject = settings;
                 EditorUtility.DisplayDialog("Баланс",
                     "Ссылка на опубликованную таблицу не задана.\n\n" +
                     "В Google Sheets: Файл → Поделиться → Опубликовать в интернете → весь документ → CSV.\n" +
                     "Ссылку (до /pub включительно) вставь в BalanceSheetSettings (открыт в инспекторе).", "OK");
-                return;
+                return false;
             }
 
             var downloaded = DownloadAll(settings.publishedUrl.Trim(), ReadSheetTabs());
@@ -549,12 +558,15 @@ namespace CityBuilder.EditorTools
             AssetDatabase.Refresh();
             if (downloaded == 0)
             {
-                EditorUtility.DisplayDialog("Баланс", "Ничего не скачалось — см. ошибки в консоли. CSV в проекте не тронуты.", "OK");
-                return;
+                if (quiet) Debug.LogWarning("BalanceImporter: nothing came down from the sheet -- the CSVs are left as they were.");
+                else EditorUtility.DisplayDialog("Баланс", "Ничего не скачалось — см. ошибки в консоли. CSV в проекте не тронуты.", "OK");
+                return false;
             }
 
             RebuildConfig();
-            EditorUtility.DisplayDialog("Баланс", $"Обновлено файлов: {downloaded}. Конфиг пересобран.", "OK");
+            if (quiet) Debug.Log($"BalanceImporter: pulled {downloaded} files from the sheet, config rebuilt.");
+            else EditorUtility.DisplayDialog("Баланс", $"Обновлено файлов: {downloaded}. Конфиг пересобран.", "OK");
+            return true;
         }
 
         private const int DownloadTimeoutSeconds = 30;
