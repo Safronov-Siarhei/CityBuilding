@@ -2010,6 +2010,7 @@ MonoBehaviour:
       inputs: []
       output: 2
       outputAmount: 1
+      seconds: 0
     productionIntervalSeconds: 24
     fogRevealRadius: 12
     citizensOnBuild: 0
@@ -2111,6 +2112,7 @@ MonoBehaviour:
       inputs: []
       output: 2
       outputAmount: 1
+      seconds: 0
     productionIntervalSeconds: 24
     fogRevealRadius: 10
     citizensOnBuild: 0
@@ -2220,6 +2222,7 @@ MonoBehaviour:
       inputs: []
       output: 0
       outputAmount: 1
+      seconds: 0
     productionIntervalSeconds: 6
     fogRevealRadius: 15
     citizensOnBuild: 0
@@ -2337,6 +2340,7 @@ MonoBehaviour:
       inputs: []
       output: 1
       outputAmount: 1
+      seconds: 0
     productionIntervalSeconds: 6
     fogRevealRadius: 14
     citizensOnBuild: 0
@@ -2454,6 +2458,7 @@ MonoBehaviour:
       inputs: []
       output: 5
       outputAmount: 1
+      seconds: 0
     productionIntervalSeconds: 12
     fogRevealRadius: 14
     citizensOnBuild: 0
@@ -2571,6 +2576,7 @@ MonoBehaviour:
       inputs: []
       output: 6
       outputAmount: 1
+      seconds: 0
     productionIntervalSeconds: 6
     fogRevealRadius: 14
     citizensOnBuild: 0
@@ -5783,6 +5789,7 @@ MonoBehaviour:
       inputs: []
       output: 2
       outputAmount: 1
+      seconds: 0
     productionIntervalSeconds: 24
     fogRevealRadius: 10
     citizensOnBuild: 0
@@ -5894,6 +5901,7 @@ MonoBehaviour:
         amount: 2
       output: 9
       outputAmount: 1
+      seconds: 0
     productionIntervalSeconds: 24
     fogRevealRadius: 12
     citizensOnBuild: 0
@@ -6003,6 +6011,7 @@ MonoBehaviour:
       inputs: []
       output: 2
       outputAmount: 1
+      seconds: 0
     productionIntervalSeconds: 24
     fogRevealRadius: 10
     citizensOnBuild: 0
@@ -6112,6 +6121,7 @@ MonoBehaviour:
       inputs: []
       output: 2
       outputAmount: 1
+      seconds: 0
     productionIntervalSeconds: 24
     fogRevealRadius: 10
     citizensOnBuild: 0
@@ -6219,6 +6229,7 @@ MonoBehaviour:
       inputs: []
       output: 2
       outputAmount: 1
+      seconds: 0
     productionIntervalSeconds: 24
     fogRevealRadius: 10
     citizensOnBuild: 0
@@ -6324,6 +6335,7 @@ MonoBehaviour:
         amount: 1
       output: 12
       outputAmount: 1
+      seconds: 20
     - id: copper_bar
       displayName: "\u041C\u0435\u0434\u043D\u044B\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
       inputs:
@@ -6333,6 +6345,7 @@ MonoBehaviour:
         amount: 1
       output: 13
       outputAmount: 1
+      seconds: 10
     - id: gold_bar
       displayName: "\u0417\u043E\u043B\u043E\u0442\u043E\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
       inputs:
@@ -6342,6 +6355,7 @@ MonoBehaviour:
         amount: 1
       output: 14
       outputAmount: 1
+      seconds: 30
     productionIntervalSeconds: 12
     fogRevealRadius: 12
     citizensOnBuild: 0
@@ -6451,6 +6465,7 @@ MonoBehaviour:
       inputs: []
       output: 11
       outputAmount: 1
+      seconds: 0
     productionIntervalSeconds: 12
     fogRevealRadius: 14
     citizensOnBuild: 0
@@ -6560,6 +6575,7 @@ MonoBehaviour:
       inputs: []
       output: 3
       outputAmount: 1
+      seconds: 0
     productionIntervalSeconds: 12
     fogRevealRadius: 14
     citizensOnBuild: 0
@@ -7911,6 +7927,8 @@ MonoBehaviour:
     part2Seconds: 480
     firstWaveSeconds: 10
     meleeReachMult: 0.6
+    rangedRangeMult: 0.5
+    rangedDamageMult: 0.34
     orcHealthMult: 1.2
     orcDamageMult: 1.2
     squadInfantry: 6
@@ -7927,11 +7945,17 @@ MonoBehaviour:
     townsfolkRespawnSeconds: 4
     ardenHealth: 400
     ardenDamage: 30
-    ardenHealthPerLevel: 60
-    ardenDamagePerLevel: 6
-    ardenXp2: 300
-    ardenXp3: 900
-    ardenXp4: 1800
+    ardenHealthPerLevel: 20
+    ardenDamagePerLevel: 2
+    ardenMaxLevel: 20
+    cryLevel: 1
+    whirlLevel: 5
+    dashLevel: 10
+    breathLevel: 15
+    ardenEngageCells: 3
+    outerGateHealth: 2500
+    innerGateHealth: 2500
+    gateBarHeight: 1.3
     cryCooldownSeconds: 20
     cryRadius: 7
     crySeconds: 6
@@ -7972,9 +7996,9 @@ MonoBehaviour:
     wheatEarsMax: 300
     wallPatrolCells: 3
     wallPatrolSeconds: 8
-    ramHealthMult: 6
+    ramHealthMult: 30
     ramDamageMult: 8
-    towerHealthMult: 5
+    towerHealthMult: 30
     siegeSpeed: 0.6
     towerCrew: 4
     towerDockCells: 0.8
@@ -7988,7 +8012,7 @@ MonoBehaviour:
   tutorialStartPeople: 3
   tutorialKingHealBelow: 0.25
   tutorialOrcDamageMult: 0.2
-  tutorialRaidOrcs: 2
+  tutorialRaidOrcs: 5
   tutorialPortalSeconds: 7
   tutorialBirthSeconds: 7
   tutorialOrcGuards: 3
@@ -8376,7 +8400,7 @@ MonoBehaviour:
     engageRadius: 8
     healthPerLevel: 20
     damagePerLevel: 2
-    price: 0
+    price: 100
     castleLevel: 1
     fleeRadius: 0
     fleeDistance: 0
@@ -8407,7 +8431,7 @@ MonoBehaviour:
     fleeRadius: 0
     fleeDistance: 0
   invasionHouses: 6
-  personRespawnSeconds: 15
+  personRespawnSeconds: 30
   invasionStartWood: 60
   invasionStartStone: 40
   invasionStartCoins: 50

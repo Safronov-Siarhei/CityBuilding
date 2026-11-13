@@ -273,7 +273,14 @@ namespace CityBuilder.Combat
         // IDamageTarget: what the player's army sees when it looks for something to hit. An orc is
         // a unit, not a structure, so a group set to prioritise structures walks past it.
         Transform IDamageTarget.Transform => this != null ? transform : null;
-        bool IDamageTarget.IsAlive => this != null && CurrentHealth > 0;
+        bool IDamageTarget.IsAlive => this != null && CurrentHealth > 0 && !Untargetable;
+
+        /// <summary>Out of sight and out of reach (an orc waiting inside a siege tower, or climbing it): nobody aims at it.</summary>
+        public bool Untargetable { get; set; }
+
+        /// <summary>Set by a mode that has walls nobody fights across (campaign mission 2, the user's fourth playtest:
+        /// «орки агрятся через стену»): true = a wall stands between this orc and that soldier.</summary>
+        public static System.Func<OrcUnit, SoldierUnit, bool> WallBetween;
         bool IDamageTarget.IsStructure => false;
         void IDamageTarget.TakeDamage(int amount) => TakeDamage(amount);
 
@@ -586,6 +593,14 @@ namespace CityBuilder.Combat
         /// sandbox raid's (inv_orc_health_mult), or a tower's arrow drops each with one shot; its
         /// blows times `damage` (inv_orc_damage_mult).
         /// </summary>
+        /// <summary>Its reach against soldiers, set from outside (campaign level 2, the user 2026-11-13: an orc shooter
+        /// outranged the kingdom's and killed them unanswered -- now the same reach as the garrison's archers).</summary>
+        public void SetUnitRange(float range)
+        {
+            _soldierAttackRange = Mathf.Max(0.5f, range);
+            if (_guardRadius > 0f) _guardRadius = _soldierAttackRange + _perchBonus;
+        }
+
         public void Toughen(float factor, float damage = 1f)
         {
             _maxHealth = Mathf.Max(1, Mathf.RoundToInt(_maxHealth * factor));
@@ -646,7 +661,7 @@ namespace CityBuilder.Combat
                 var feet = transform.position.y;
                 var top = feet + 0.6f;
                 foreach (var r in GetComponentsInChildren<Renderer>()) top = Mathf.Max(top, r.bounds.max.y);
-                _healthBar = BuildingHealthBar.CreateFor(transform, top - feet + 0.2f, IsBossKind(Kind) ? 1.2f : 0.7f);
+                _healthBar = BuildingHealthBar.CreateFor(transform, top - feet + 0.2f, IsBossKind(Kind) ? 1.2f : 0.7f, BuildingHealthBar.Icon.Enemy);
             }
             _healthBar.Report(CurrentHealth / (float)Mathf.Max(1, _maxHealth));
         }
@@ -1137,6 +1152,7 @@ namespace CityBuilder.Combat
         // in a moat's water it fights no one (the user, 2026-11-02) -- a wall it stands against it still breaks
         // an eel bites only a hero wading in its water (the user, 2026-11-04: «на сушу не выходит»)
         private bool CanReach(SoldierUnit soldier) => !Buildings.Moat.Wading(transform.position) && (IsRanged || !soldier.OnWall)
+            && (WallBetween == null || !WallBetween(this, soldier))
             && (Kind != OrcKind.Eel || Maps.DungeonFloor.Wading(soldier.transform.position));
 
         public bool IsRanged => Kind == OrcKind.Thrower || Kind == OrcKind.Kobold || Kind == OrcKind.TidePuffer || Kind == OrcKind.TideShaman

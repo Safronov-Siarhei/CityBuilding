@@ -48,6 +48,8 @@ namespace CityBuilder.UI
                 if (researchPanel != null) researchPanel.Close();
                 return;
             }
+            // campaign level 2: the town is not the player's to manage -- no building is picked by a tap (the user, 2026-11-13)
+            if (Campaign.CityDefenceMode.IsActive) return;
 
             var nearest = FindBuilding(screenPosition);
             var foreign = nearest == null && focus != null ? FindForeign(screenPosition) : null;
@@ -169,7 +171,7 @@ namespace CityBuilder.UI
         }
 
         /// <summary>Whether a tap here would open a building's card.</summary>
-        public bool HasBuildingAt(Vector2 screenPosition) => targetCamera != null && FindBuilding(screenPosition) != null;
+        public bool HasBuildingAt(Vector2 screenPosition) => targetCamera != null && !Campaign.CityDefenceMode.IsActive && FindBuilding(screenPosition) != null;
 
         /// <summary>The nearest standing building of another side (an orc camp's) along the ray.</summary>
         private Combat.OrcCampBuilding FindForeign(Vector2 screenPosition)

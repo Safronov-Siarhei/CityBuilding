@@ -89,17 +89,13 @@ namespace CityBuilder.Campaign
             var v = new List<Vector3>();
             var uv = new List<Vector2>();
             var tri = new List<int>();
-            var gate = World(50.5f, 34.5f);   // the one gate all three roads come to
+            // the middle (north) road runs on to the gate; the side roads end where they join it (the user's fourth
+            // playtest: three ribbons on top of each other before the gate looked strange)
+            var middle = SandRoadLine(1);
             for (var lane = 0; lane < 3 && lane < _plan.lanes.Count; lane++)
             {
-                var p = _plan.lanes[lane].points;
-                var pts = new List<Vector3>();
-                for (var k = 0; k + 1 < p.Length; k += 2)
-                {
-                    var at = World(p[k], p[k + 1]);
-                    pts.Add(at);
-                    if (Flat(at - gate) < 1f) break;
-                }
+                var pts = SandRoadLine(lane);
+                if (pts.Count < 2) continue;
                 // finely, so the ribbon follows the ground
                 var fine = new List<Vector3>();
                 for (var k = 0; k + 1 < pts.Count; k++)
@@ -108,6 +104,13 @@ namespace CityBuilder.Campaign
                     for (var s = 0; s < n; s++) fine.Add(Vector3.Lerp(pts[k], pts[k + 1], s / (float)n));
                 }
                 fine.Add(pts[pts.Count - 1]);
+                if (lane != 1 && middle.Count > 1)
+                    for (var k = 1; k < fine.Count; k++)
+                    {
+                        if (DistanceToLine(fine[k], middle) > width * 0.35f) continue;
+                        fine.RemoveRange(k + 1, fine.Count - k - 1);
+                        break;
+                    }
                 var along = 0f;
                 var start = v.Count;
                 for (var k = 0; k < fine.Count; k++)
@@ -119,9 +122,10 @@ namespace CityBuilder.Campaign
                     if (k > 0) along += Flat(fine[k] - fine[k - 1]);
                     var l = fine[k] - side;
                     var r = fine[k] + side;
-                    // each road a hair over the last where they run together before the gate (no flicker)
-                    l.y = GroundAt(l) + 0.03f + lane * 0.006f;
-                    r.y = GroundAt(r) + 0.03f + lane * 0.006f;
+                    // the middle road a hair over the side ones where they join it (no flicker)
+                    var lift = 0.03f + (lane == 1 ? 0.008f : 0f);
+                    l.y = GroundAt(l) + lift;
+                    r.y = GroundAt(r) + lift;
                     v.Add(l);
                     v.Add(r);
                     uv.Add(new Vector2(along / width, -0.5f));
@@ -133,6 +137,37 @@ namespace CityBuilder.Campaign
                 }
             }
             Slab("M2SandRoads", v, uv, tri, sandMaterial);
+        }
+
+        /// <summary>A lane's corners in the world, from its spawn up to the gate all three roads come to.</summary>
+        private List<Vector3> SandRoadLine(int lane)
+        {
+            var pts = new List<Vector3>();
+            if (lane < 0 || lane >= _plan.lanes.Count || _plan.lanes[lane].points == null) return pts;
+            var gate = World(50.5f, 34.5f);
+            var p = _plan.lanes[lane].points;
+            for (var k = 0; k + 1 < p.Length; k += 2)
+            {
+                var at = World(p[k], p[k + 1]);
+                pts.Add(at);
+                if (Flat(at - gate) < 1f) break;
+            }
+            return pts;
+        }
+
+        /// <summary>How far a point is (on the ground) from a polyline.</summary>
+        private static float DistanceToLine(Vector3 at, List<Vector3> line)
+        {
+            var best = float.MaxValue;
+            var q = new Vector2(at.x, at.z);
+            for (var k = 0; k + 1 < line.Count; k++)
+            {
+                var a = new Vector2(line[k].x, line[k].z);
+                var ab = new Vector2(line[k + 1].x, line[k + 1].z) - a;
+                var s = ab.sqrMagnitude > 1e-6f ? Mathf.Clamp01(Vector2.Dot(q - a, ab) / ab.sqrMagnitude) : 0f;
+                best = Mathf.Min(best, Vector2.Distance(q, a + ab * s));
+            }
+            return best;
         }
 
         private void Slab(string name, List<Vector3> v, List<Vector2> uv, List<int> tri, Material material)
@@ -259,11 +294,18 @@ namespace CityBuilder.Campaign
             if (_plan.decor == null) return;
             var root = new GameObject("M2Decor").transform;
             root.SetParent(_lookRoot, false);
+            // nothing on the orcs' sand roads (the user's fourth playtest: a haystack stood on one)
+            var roads = new List<List<Vector3>>();
+            for (var lane = 0; lane < 3; lane++) roads.Add(SandRoadLine(lane));
+            var keepOff = B.sandRoadWidth * 0.5f + 1.2f;
             foreach (var d in _plan.decor)
             {
                 var model = PropNamed(d.id);
                 if (model == null) continue;
                 var at = World(d.x, d.y);
+                var onRoad = false;
+                foreach (var road in roads) onRoad |= road.Count > 1 && DistanceToLine(at, road) < keepOff;
+                if (onRoad) continue;
                 at.y = GroundAt(at);
                 var go = Instantiate(model, root);
                 go.transform.SetPositionAndRotation(at, Quaternion.Euler(0f, d.rot, 0f) * model.transform.rotation);

@@ -107,6 +107,9 @@ OrcRaidManager.RaidNow/EndRaidWait, GameCalendar.EndDayNow, LighthouseAim.ResetC
 RELEASE: build scripts take `-release` -> extraScriptingDefines CB_RELEASE -> the panel compiles empty.
 Also `ResourceCheat`, `ResearchCheat`, `OrcSpawnCheat` (Inspector), `Editor/CheatInspectors.cs`.
 User has NOT checked the window in game yet.
+- **Editor account switcher (the user, 2026-11-13):** «Аккаунт: <имя>» dropdown in the editor's MAIN TOOLBAR next to Play/Pause/Step (`Scripts/Editor/AccountToolbar.cs`, Unity 6.3+ `[MainToolbarElement]`, Windows editor only). An account = every PlayerPrefs key of the project (registry HKCU/Software/Unity/UnityEditor/Depigo Games/CityBuilding) + everything under persistentDataPath; inactive accounts sit in `Library/CB_Accounts/<name>/` (prefs.json + data/). Menu: pick an account, «Новый аккаунт» (fresh player), «Сбросить прогресс» (current only), «Удалить», open folder. Only out of Play mode. Current name in EditorPrefs `CB_Account`. TRAP (seen 2026-11-13): Unity does NOT show a new custom toolbar element by itself -- right-click the toolbar (empty space by Play) and tick «CityBuilder/Аккаунт». Same choices also in a window: menu **CityBuilder → Аккаунт…** (`AccountWindow`). Compiles in batchmode (setup green 2026-11-13).
+- **Balance log noise fixed 2026-11-13:** the Invasion run config (`RunConfigAssetPath`) now also gets the sandbox-only keys (decor_*, booster_*, hint_*, tutorial_*) it lacked, and `OverwriteFrom` skips monster entries not in `MonsterIds` (old bot_soldier/bot_archer) -- together ~800 "economy tab has no key" errors per load were gone.
+
 ## General run 2026-11-02 (923e2c5f)
 EditMode 460/460, PlayMode 359/378 (18 skipped). 31 failures fixed: real bugs (tide monsters missing from
 `BalanceConfig.MonsterIds` -> fallback stats; the hire camp's «!» re-shown by BuildingFocus.Update; moat at 6

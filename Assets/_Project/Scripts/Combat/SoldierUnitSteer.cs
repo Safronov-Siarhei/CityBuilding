@@ -29,7 +29,11 @@ namespace CityBuilder.Combat
 
         private bool InReachOfPen(Vector3 at)
         {
-            var reach = IsRanged ? UnitAttackRange + 0.3f : 0.1f;   // melee: only what stands at the pen's edge
+            // melee -- and a shooter down on the ground -- only what stands at the pen's edge: no fighting through the
+            // wall (the user's fourth playtest); a shooter up on the wall over it, as far as he shoots
+            var reach = IsRanged && OnWall ? UnitAttackRange + 0.3f : 0.1f;
+            // an orc up on a BROKEN stretch of the wall is in the town already (the user's sixth playtest)
+            if (PenBreach != null && PenBreach(at)) return true;
             return at.x >= Pen.xMin - reach && at.x <= Pen.xMax + reach && at.z >= Pen.yMin - reach && at.z <= Pen.yMax + reach;
         }
 

@@ -1408,17 +1408,21 @@ namespace CityBuilder.Core
         [SerializeField] private List<BotWaveRow> botWaves = new List<BotWaveRow>();
 
         /// <summary>One wave of campaign mission 2 (the m2waves tab, the user 2026-11-12): who comes, at what level,
-        /// and the pause after the wave before it is beaten. Spread over the three roads in turn.</summary>
+        /// and the pause after the wave before it is beaten. Each kind's count is set PER ROAD (the user, 2026-11-13):
+        /// index 0 = the west road, 1 = the north, 2 = the east (the order of Mission2Town.json's lanes).</summary>
         [System.Serializable]
         public class M2WaveRow
         {
-            public int part, wave, raiders, brutes, throwers, rams, towers, level;
+            public int part, wave, level;
+            public int[] raiders = new int[3], brutes = new int[3], throwers = new int[3], rams = new int[3], towers = new int[3];
             public float pause;
         }
 
         [SerializeField] private List<M2WaveRow> m2Waves = new List<M2WaveRow>();
 
         /// <summary>Wave `wave` (1 = the first) of part `part`; past the last row of the part, the last again. Null when the part has none.</summary>
+        public IReadOnlyList<M2WaveRow> M2Waves => m2Waves;
+
         public M2WaveRow M2Wave(int part, int wave)
         {
             M2WaveRow last = null, hit = null;
@@ -2745,6 +2749,9 @@ namespace CityBuilder.Core
             }
             foreach (var m in monsters)
             {
+                // an entry the asset kept from before (the kingdom's bot_soldier / bot_archer) has no mon_ keys in the
+                // sheet: it keeps its numbers, without 60 errors on every load (seen 2026-11-13)
+                if (System.Array.IndexOf(MonsterIds, m.id) < 0) continue;
                 m.maxHealth = (int)Read(economy, $"mon_{m.id}_health", m.maxHealth);
                 m.attackDamage = (int)Read(economy, $"mon_{m.id}_damage", m.attackDamage);
                 m.attackIntervalSeconds = Read(economy, $"mon_{m.id}_attack_interval_sec", m.attackIntervalSeconds);
@@ -2877,6 +2884,8 @@ namespace CityBuilder.Core
         // each wave's make-up is a row of the m2waves tab (the user's third playtest: «удобный лист с волнами»)
         public float firstWaveSeconds = 10f;
         public float meleeReachMult = 0.6f;
+        // the shooters' reach and blow (the user's fourth playtest: range about half, damage a third)
+        public float rangedRangeMult = 0.5f, rangedDamageMult = 0.34f;
         public float orcHealthMult = 1f, orcDamageMult = 1f;
         // the garrison: a squad inside each gate, shooters on the walls, patrols on the streets
         public int squadInfantry = 4, squadCrossbows = 3, squadMonks = 1, wallArchers = 3, wallCrossbows = 2;
@@ -2886,7 +2895,12 @@ namespace CityBuilder.Core
         public float townsfolkRespawnSeconds = 4f;
         // Ардан: mortal (dies = lost), levels on his own kills, four skills opened by level
         public int ardenHealth = 400, ardenDamage = 30, ardenHealthPerLevel = 60, ardenDamagePerLevel = 6;
-        public int ardenXp2 = 300, ardenXp3 = 900, ardenXp4 = 1800;
+        // 20 levels over all the level's orcs (the user, 2026-11-13); the skills open at these levels
+        public int ardenMaxLevel = 20, cryLevel = 1, whirlLevel = 5, dashLevel = 10, breathLevel = 15;
+        public float ardenEngageCells = 3f;
+        // the gates' own health (a level-3 Barbican has 850) and the height of their bar over the ground (cells)
+        public int outerGateHealth = 2500, innerGateHealth = 2500;
+        public float gateBarHeight = 1.3f;
         public float cryCooldownSeconds = 20f, cryRadius = 7f, crySeconds = 6f, cryDamageMult = 1.5f, cryStunSeconds = 1.5f;
         public float whirlCooldownSeconds = 12f, whirlRadius = 3f, whirlDamageMult = 2f, whirlPush = 2.5f;
         public float dashCooldownSeconds = 14f, dashDistance = 7f, dashSeconds = 0.35f, dashWidth = 1.5f, dashDamageMult = 1.5f, dashStunSeconds = 1.5f;
@@ -2924,6 +2938,8 @@ namespace CityBuilder.Core
             part2Seconds = F("m2_part2_sec", part2Seconds);
             firstWaveSeconds = F("m2_first_wave_sec", firstWaveSeconds);
             meleeReachMult = F("m2_melee_reach_mult", meleeReachMult);
+            rangedRangeMult = F("m2_ranged_range_mult", rangedRangeMult);
+            rangedDamageMult = F("m2_ranged_damage_mult", rangedDamageMult);
             orcHealthMult = F("m2_orc_health_mult", orcHealthMult);
             orcDamageMult = F("m2_orc_damage_mult", orcDamageMult);
             squadInfantry = I("m2_squad_infantry", squadInfantry);
@@ -2942,9 +2958,15 @@ namespace CityBuilder.Core
             ardenDamage = I("m2_arden_damage", ardenDamage);
             ardenHealthPerLevel = I("m2_arden_health_per_level", ardenHealthPerLevel);
             ardenDamagePerLevel = I("m2_arden_damage_per_level", ardenDamagePerLevel);
-            ardenXp2 = I("m2_arden_xp2", ardenXp2);
-            ardenXp3 = I("m2_arden_xp3", ardenXp3);
-            ardenXp4 = I("m2_arden_xp4", ardenXp4);
+            ardenMaxLevel = I("m2_arden_max_level", ardenMaxLevel);
+            cryLevel = I("m2_cry_level", cryLevel);
+            whirlLevel = I("m2_whirl_level", whirlLevel);
+            dashLevel = I("m2_dash_level", dashLevel);
+            breathLevel = I("m2_breath_level", breathLevel);
+            ardenEngageCells = F("m2_arden_engage_cells", ardenEngageCells);
+            outerGateHealth = I("m2_outer_gate_health", outerGateHealth);
+            innerGateHealth = I("m2_inner_gate_health", innerGateHealth);
+            gateBarHeight = F("m2_gate_bar_height", gateBarHeight);
             ardenRespawnSeconds = F("m2_arden_respawn_sec", ardenRespawnSeconds);
             cryCooldownSeconds = F("m2_cry_cooldown_sec", cryCooldownSeconds);
             cryRadius = F("m2_cry_radius", cryRadius);

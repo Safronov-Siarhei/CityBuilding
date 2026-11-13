@@ -1296,7 +1296,7 @@ MonoBehaviour:
     - Theatre
   - key: '#building_colosseum'
     values:
-    - "\u041A\u043E\u043B\u043B\u0438\u0437\u0435\u0439"
+    - "\u041A\u043E\u043B\u0438\u0437\u0435\u0439"
     - Colosseum
   - key: '#recipe_wood'
     values:
@@ -1350,10 +1350,6 @@ MonoBehaviour:
     values:
     - "\u0417\u043E\u043B\u043E\u0442\u043E\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
     - Gold Bar
-  - key: '#recipe_coins'
-    values:
-    - "\u041C\u043E\u043D\u0435\u0442\u044B"
-    - Coins
   - key: '#building_upgrade_locked'
     values:
     - "\u0423\u0440\u043E\u0432\u0435\u043D\u044C {0} \u0435\u0449\u0451 \u043D\u0435
@@ -1520,6 +1516,25 @@ MonoBehaviour:
     values:
     - "\u0421\u043D\u0435\u0441\u0442\u0438"
     - Clear
+  - key: '#decor_card_gives'
+    values:
+    - "\u0416\u0438\u0442\u0435\u043B\u044F\u043C \u0434\u043E\u043C\u043E\u0432
+      \u0432 \u0440\u0430\u0434\u0438\u0443\u0441\u0435 {1} \u043A\u043B\u0435\u0442\u043E\u043A:
+      +{0} \u043C\u043E\u043D\u0435\u0442\u044B \u0432 \u0434\u0435\u043D\u044C \u043A\u0430\u0436\u0434\u043E\u043C\u0443"
+    - 'Residents of houses within {1} cells: +{0} coins a day each'
+  - key: '#decor_card_house'
+    values:
+    - "\u0423\u044E\u0442: +{0} \u043C\u043E\u043D\u0435\u0442\u044B \u0432 \u0434\u0435\u043D\u044C
+      \u043A\u0430\u0436\u0434\u043E\u043C\u0443 \u0436\u0438\u0442\u0435\u043B\u044E"
+    - 'Cosiness: +{0} coins a day for each resident'
+  - key: '#place_decor_gives'
+    values:
+    - "+{0} \u043C\u043E\u043D\u0435\u0442\u044B \xD7 {1} \u0434\u043E\u043C."
+    - "+{0} coins \xD7 {1} houses"
+  - key: '#place_decor_house'
+    values:
+    - "+{0} \u043C\u043E\u043D\u0435\u0442\u044B \u0436\u0438\u0442\u0435\u043B\u044E"
+    - +{0} coins per resident
   - key: '#army_summary'
     values:
     - "\u0410\u0440\u043C\u0438\u044F: {0}/{1}   \u0421\u043E\u0434\u0435\u0440\u0436\u0430\u043D\u0438\u0435:
@@ -2303,6 +2318,11 @@ MonoBehaviour:
     values:
     - "\u0417\u0434\u043E\u0440\u043E\u0432\u044C\u0435"
     - Health
+  - key: '#army_no_citizens_island'
+    values:
+    - "\u041D\u0430 \u044D\u0442\u043E\u043C \u043E\u0441\u0442\u0440\u043E\u0432\u0435
+      \u043D\u0435\u0442 \u0441\u0432\u043E\u0431\u043E\u0434\u043D\u044B\u0445 \u0436\u0438\u0442\u0435\u043B\u0435\u0439"
+    - No free people on this island
   - key: '#log_day'
     values:
     - "\u0414\u0435\u043D\u044C {0}: {1}"
@@ -2349,6 +2369,11 @@ MonoBehaviour:
     - "\u0413\u043E\u043B\u043E\u0434: \u0443\u043C\u0435\u0440\u043B\u043E \u0436\u0438\u0442\u0435\u043B\u0435\u0439
       \u2014 {0}"
     - "Starvation: citizens lost \u2014 {0}"
+  - key: '#log_crowded'
+    values:
+    - "\u0416\u0438\u0442\u0435\u043B\u044E \u043D\u0435\u0433\u0434\u0435 \u0436\u0438\u0442\u044C
+      \u2014 \u043E\u043D \u0443\u0448\u0451\u043B"
+    - A citizen had nowhere to live and left
   - key: '#log_build_no_resources'
     values:
     - "\u041D\u0435 \u0445\u0432\u0430\u0442\u0430\u0435\u0442 \u0440\u0435\u0441\u0443\u0440\u0441\u043E\u0432:
@@ -2790,6 +2815,18 @@ MonoBehaviour:
       \u0447\u0442\u043E\u0431\u044B \u0432\u043E\u0441\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C:
       {0}"
     - 'Not enough resources to restore: {0}'
+  - key: '#log_house_lost'
+    values:
+    - "\u0414\u043E\u043C \u0440\u0430\u0437\u0440\u0443\u0448\u0435\u043D: \u0443\u0448\u043B\u0438
+      \u0436\u0438\u0442\u0435\u043B\u0438 \u2014 {0}"
+    - "A house is gone: residents left \u2014 {0}"
+  - key: '#log_no_people_on_island'
+    values:
+    - "{0}: \u043D\u0430 \u044D\u0442\u043E\u043C \u043E\u0441\u0442\u0440\u043E\u0432\u0435
+      \u043D\u0435\u0442 \u0441\u0432\u043E\u0431\u043E\u0434\u043D\u044B\u0445 \u0436\u0438\u0442\u0435\u043B\u0435\u0439
+      \u2014 \u043F\u043E\u0441\u0442\u0440\u043E\u0439\u0442\u0435 \u0437\u0434\u0435\u0441\u044C
+      \u0434\u043E\u043C\u0430"
+    - "{0}: no free people on this island \u2014 build houses here"
   - key: '#research_tab_buildings'
     values:
     - "\u0417\u0434\u0430\u043D\u0438\u044F"
@@ -3526,6 +3563,147 @@ MonoBehaviour:
     values:
     - "\u041F\u0440\u043E\u043F\u0443\u0441\u0442\u0438\u0442\u044C"
     - Skip
+  - key: '#m2_part1_banner'
+    values:
+    - "\u0423\u0434\u0435\u0440\u0436\u0438\u0442\u0435 \u0432\u043D\u0435\u0448\u043D\u0438\u0435
+      \u0441\u0442\u0435\u043D\u044B!"
+    - Hold the outer walls!
+  - key: '#m2_part2_banner'
+    values:
+    - "\u0423\u0434\u0435\u0440\u0436\u0438\u0442\u0435 \u0446\u0435\u043D\u0442\u0440
+      \u0433\u043E\u0440\u043E\u0434\u0430!"
+    - Hold the town centre!
+  - key: '#m2_goal_part1'
+    values:
+    - "\u041D\u0435 \u0434\u0430\u0439\u0442\u0435 \u043E\u0440\u043A\u0430\u043C
+      \u043F\u0440\u043E\u0431\u0438\u0442\u044C\u0441\u044F \u043A \u0446\u0435\u043D\u0442\u0440\u0443"
+    - Keep the orcs from the centre
+  - key: '#m2_wave_number'
+    values:
+    - "\u0412\u043E\u043B\u043D\u0430 {0}"
+    - Wave {0}
+  - key: '#m2_goal_part2'
+    values:
+    - "\u0414\u0435\u0440\u0436\u0438\u0442\u0435\u0441\u044C \u0434\u043E \u043F\u043E\u0434\u043A\u0440\u0435\u043F\u043B\u0435\u043D\u0438\u044F"
+    - Hold on until help comes
+  - key: '#m2_clock_courier'
+    values:
+    - "\u0413\u043E\u043D\u0435\u0446 \u0432 \u043F\u0443\u0442\u0438: {0}"
+    - 'Courier on the road: {0}'
+  - key: '#m2_clock_help'
+    values:
+    - "\u041F\u043E\u0434\u043A\u0440\u0435\u043F\u043B\u0435\u043D\u0438\u0435 \u0447\u0435\u0440\u0435\u0437
+      {0}"
+    - Help in {0}
+  - key: '#m2_courier'
+    values:
+    - "\u0413\u043E\u043D\u0435\u0446 \u0434\u043E\u0431\u0440\u0430\u043B\u0441\u044F
+      \u0434\u043E \u0441\u0442\u043E\u043B\u0438\u0446\u044B... \u041E\u0440\u043A\u0438
+      \u043F\u0440\u043E\u0440\u0432\u0430\u043B\u0438 \u0432\u043D\u0435\u0448\u043D\u0438\u0435
+      \u0441\u0442\u0435\u043D\u044B!"
+    - The courier reached the capital... The orcs broke through the outer walls!
+  - key: '#m2_stick_hint'
+    values:
+    - "\u0412\u0435\u0434\u0438\u0442\u0435 \u043F\u0430\u043B\u044C\u0446\u0435\u043C,
+      \u0447\u0442\u043E\u0431\u044B \u0431\u0435\u0436\u0430\u0442\u044C; \u043C\u0435\u0447
+      \u0431\u044C\u0451\u0442 \u0441\u0430\u043C"
+    - Drag to run; the sword strikes by itself
+  - key: '#m2_won'
+    values:
+    - "\u0413\u043E\u0440\u043E\u0434 \u0432\u044B\u0441\u0442\u043E\u044F\u043B!"
+    - The town held!
+  - key: '#m2_won_line'
+    values:
+    - "\u041F\u043E\u0434\u043A\u0440\u0435\u043F\u043B\u0435\u043D\u0438\u0435 \u043F\u0440\u0438\u0448\u043B\u043E
+      \u0432\u043E\u0432\u0440\u0435\u043C\u044F."
+    - Help came in time.
+  - key: '#m2_lost'
+    values:
+    - "\u041F\u043E\u0440\u0430\u0436\u0435\u043D\u0438\u0435"
+    - Defeat
+  - key: '#m2_lost_line'
+    values:
+    - "\u041E\u0440\u043A\u0438 \u0441\u043B\u043E\u043C\u0430\u043B\u0438 \u0432\u043D\u0443\u0442\u0440\u0435\u043D\u043D\u0438\u0435
+      \u0432\u043E\u0440\u043E\u0442\u0430."
+    - The orcs broke an inner gate.
+  - key: '#m2_lost_castle'
+    values:
+    - "\u041E\u0440\u043A\u0438 \u0441\u043B\u043E\u043C\u0430\u043B\u0438 \u0437\u0430\u043C\u043E\u043A."
+    - The orcs broke the castle.
+  - key: '#m2_lost_arden'
+    values:
+    - "\u0410\u0440\u0434\u0430\u043D \u043F\u0430\u043B \u0432 \u0431\u043E\u044E."
+    - Ardan fell in battle.
+  - key: '#m2_level_up'
+    values:
+    - "\u0410\u0440\u0434\u0430\u043D: \u0443\u0440\u043E\u0432\u0435\u043D\u044C
+      {0}!"
+    - 'Ardan: level {0}!'
+  - key: '#m2_restart'
+    values:
+    - "\u0417\u0430\u043D\u043E\u0432\u043E"
+    - Again
+  - key: '#m2_to_map'
+    values:
+    - "\u041A \u043A\u0430\u0440\u0442\u0435"
+    - To the map
+  - key: '#m2_skill_0'
+    values:
+    - "\u0411\u043E\u0435\u0432\u043E\u0439 \u043A\u043B\u0438\u0447"
+    - Battle Cry
+  - key: '#m2_skill_0_line'
+    values:
+    - "\u0410\u0440\u0434\u0430\u043D \u0438 \u0441\u043E\u044E\u0437\u043D\u0438\u043A\u0438
+      \u0440\u044F\u0434\u043E\u043C \u0431\u044C\u044E\u0442 \u0441\u0438\u043B\u044C\u043D\u0435\u0435,
+      \u043E\u0440\u043A\u0438 \u0432\u043E\u043A\u0440\u0443\u0433 \u043E\u0433\u043B\u0443\u0448\u0435\u043D\u044B"
+    - Ardan and the allies near strike harder, the orcs around are stunned
+  - key: '#m2_skill_1'
+    values:
+    - "\u041A\u0440\u0443\u0433\u043E\u0432\u043E\u0439 \u0443\u0434\u0430\u0440"
+    - Whirlwind
+  - key: '#m2_skill_1_line'
+    values:
+    - "\u0423\u0434\u0430\u0440 \u043C\u0435\u0447\u043E\u043C \u043F\u043E \u043A\u0440\u0443\u0433\u0443:
+      \u0440\u0430\u043D\u0438\u0442 \u0432\u0441\u0435\u0445 \u043E\u0440\u043A\u043E\u0432
+      \u0440\u044F\u0434\u043E\u043C \u0438 \u043E\u0442\u0431\u0440\u0430\u0441\u044B\u0432\u0430\u0435\u0442
+      \u0438\u0445"
+    - 'A sweep of the sword: wounds every orc near and throws them back'
+  - key: '#m2_skill_2'
+    values:
+    - "\u041D\u0430\u0442\u0438\u0441\u043A"
+    - Charge
+  - key: '#m2_skill_2_line'
+    values:
+    - "\u0420\u044B\u0432\u043E\u043A \u0432\u043F\u0435\u0440\u0451\u0434: \u0431\u044C\u0451\u0442
+      \u0438 \u043E\u0433\u043B\u0443\u0448\u0430\u0435\u0442 \u043E\u0440\u043A\u043E\u0432
+      \u043D\u0430 \u043F\u0443\u0442\u0438"
+    - 'A dash forward: strikes and stuns the orcs on the way'
+  - key: '#m2_skill_3'
+    values:
+    - "\u0412\u0442\u043E\u0440\u043E\u0435 \u0434\u044B\u0445\u0430\u043D\u0438\u0435"
+    - Second Wind
+  - key: '#m2_skill_3_line'
+    values:
+    - "\u0410\u0440\u0434\u0430\u043D \u0431\u044B\u0441\u0442\u0440\u043E \u0432\u043E\u0441\u0441\u0442\u0430\u043D\u0430\u0432\u043B\u0438\u0432\u0430\u0435\u0442
+      \u0437\u0434\u043E\u0440\u043E\u0432\u044C\u0435, \u0441\u043E\u044E\u0437\u043D\u0438\u043A\u0438
+      \u0440\u044F\u0434\u043E\u043C \u0442\u043E\u0436\u0435 \u043B\u0435\u0447\u0430\u0442\u0441\u044F"
+    - Ardan heals fast, the allies near heal too
+  - key: '#m2_skill_locked'
+    values:
+    - "\u041E\u0442\u043A\u0440\u043E\u0435\u0442\u0441\u044F \u043D\u0430 {0}-\u043C
+      \u0443\u0440\u043E\u0432\u043D\u0435"
+    - Opens at level {0}
+  - key: '#m2_respawn'
+    values:
+    - "\u0410\u0440\u0434\u0430\u043D \u043F\u043E\u0434\u043D\u0438\u043C\u0435\u0442\u0441\u044F
+      \u0447\u0435\u0440\u0435\u0437 {0}"
+    - Ardan rises in {0}
+  - key: '#m2_end_stats'
+    values:
+    - "\u0412\u043E\u043B\u043D \u043E\u0442\u0431\u0438\u0442\u043E: {0}   \u041F\u0440\u043E\u0434\u0435\u0440\u0436\u0430\u043B\u0438\u0441\u044C:
+      {1}   \u0423\u0440\u043E\u0432\u0435\u043D\u044C \u0410\u0440\u0434\u0430\u043D\u0430:
+      {2}"
+    - 'Waves beaten: {0}   Held: {1}   Ardan''s level: {2}'
   - key: '#tip_1'
     values:
     - "\u0420\u0430\u0442\u0443\u0448\u0430 \u2014 \u0441\u0435\u0440\u0434\u0446\u0435
@@ -3770,6 +3948,66 @@ MonoBehaviour:
     values:
     - "\xD7{0}"
     - "\xD7{0}"
+  - key: '#booster_used'
+    values:
+    - "\u0412\u043A\u043B\u044E\u0447\u0451\u043D \u0431\u0443\u0441\u0442\u0435\u0440:
+      {0}"
+    - 'Booster on: {0}'
+  - key: '#booster_minutes'
+    values:
+    - "{0} \u043C\u0438\u043D"
+    - '{0} min'
+  - key: '#booster_instant'
+    values:
+    - "\u0441\u0440\u0430\u0437\u0443"
+    - instant
+  - key: '#booster_bought'
+    values:
+    - "\u0411\u0443\u0441\u0442\u0435\u0440 \u0432 \u0437\u0430\u043F\u0430\u0441\u0435"
+    - Booster added to stock
+  - key: '#shop_tab_offers'
+    values:
+    - "\u041F\u0440\u0435\u0434\u043B\u043E\u0436\u0435\u043D\u0438\u044F"
+    - Offers
+  - key: '#shop_tab_boosters'
+    values:
+    - "\u0411\u0443\u0441\u0442\u0435\u0440\u044B"
+    - Boosters
+  - key: '#inventory_resources'
+    values:
+    - "\u0420\u0435\u0441\u0443\u0440\u0441\u044B"
+    - Resources
+  - key: '#inventory_boosters'
+    values:
+    - "\u0411\u0443\u0441\u0442\u0435\u0440\u044B"
+    - Boosters
+  - key: '#inventory_no_boosters'
+    values:
+    - "\u0411\u0443\u0441\u0442\u0435\u0440\u043E\u0432 \u043F\u043E\u043A\u0430
+      \u043D\u0435\u0442 \u2014 \u0438\u0445 \u043C\u043E\u0436\u043D\u043E \u043F\u043E\u043B\u0443\u0447\u0438\u0442\u044C
+      \u0432 \u041B\u0430\u0432\u043A\u0435"
+    - 'No boosters yet: get them in the Shop'
+  - key: '#booster_on'
+    values:
+    - "\u0412\u043A\u043B\u044E\u0447\u0438\u0442\u044C"
+    - Activate
+  - key: '#booster_extend'
+    values:
+    - "\u041F\u0440\u043E\u0434\u043B\u0438\u0442\u044C"
+    - Extend
+  - key: '#booster_in_stock'
+    values:
+    - "\u0412 \u0437\u0430\u043F\u0430\u0441\u0435 \xD7{0}"
+    - "In stock \xD7{0}"
+  - key: '#booster_left'
+    values:
+    - "\u041E\u0441\u0442\u0430\u043B\u043E\u0441\u044C {0}"
+    - '{0} left'
+  - key: '#booster_time_note'
+    values:
+    - "\u0412\u0440\u0435\u043C\u044F \u0438\u0434\u0451\u0442 \u0442\u043E\u043B\u044C\u043A\u043E
+      \u0432\u043E \u0432\u0440\u0435\u043C\u044F \u0438\u0433\u0440\u044B"
+    - Time runs only while you play
   - key: '#bundle_builder'
     values:
     - "\u041D\u0430\u0431\u043E\u0440 \u0441\u0442\u0440\u043E\u0438\u0442\u0435\u043B\u044F"
@@ -3946,3 +4184,99 @@ MonoBehaviour:
     values:
     - "\u0421\u043E\u043A\u0440\u043E\u0432\u0438\u0449\u043D\u0438\u0446\u0430"
     - Treasure vault
+  - key: '#booster_lumberjack'
+    values:
+    - "\u041B\u0435\u0441\u043E\u0440\u0443\u0431"
+    - Lumberjack
+  - key: '#booster_desc_lumberjack'
+    values:
+    - "\u0420\u0443\u0431\u043A\u0430 \u0434\u0435\u0440\u0435\u0432\u0430 \u0431\u044B\u0441\u0442\u0440\u0435\u0435
+      \xD7{0}"
+    - "Woodcutting \xD7{0} faster"
+  - key: '#booster_stonecutter'
+    values:
+    - "\u041A\u0430\u043C\u0435\u043D\u043E\u0442\u0451\u0441"
+    - Stonecutter
+  - key: '#booster_desc_stonecutter'
+    values:
+    - "\u0414\u043E\u0431\u044B\u0447\u0430 \u043A\u0430\u043C\u043D\u044F \u0431\u044B\u0441\u0442\u0440\u0435\u0435
+      \xD7{0}"
+    - "Stone mining \xD7{0} faster"
+  - key: '#booster_abundance'
+    values:
+    - "\u0418\u0437\u043E\u0431\u0438\u043B\u0438\u0435"
+    - Abundance
+  - key: '#booster_desc_abundance'
+    values:
+    - "\u0415\u0434\u0430 +{0} \u0441 \u043A\u0430\u0436\u0434\u043E\u0433\u043E
+      \u043F\u0438\u0449\u0435\u0432\u043E\u0433\u043E \u0437\u0434\u0430\u043D\u0438\u044F"
+    - Food +{0} from every food building
+  - key: '#booster_treasury'
+    values:
+    - "\u041A\u0430\u0437\u043D\u0430"
+    - Treasury
+  - key: '#booster_desc_treasury'
+    values:
+    - "\u041D\u0430\u043B\u043E\u0433 \xD7{0}"
+    - "Taxes \xD7{0}"
+  - key: '#booster_architect'
+    values:
+    - "\u0417\u043E\u0434\u0447\u0438\u0439"
+    - Architect
+  - key: '#booster_desc_architect'
+    values:
+    - "\u0421\u0442\u0440\u043E\u0439\u043A\u0430 \u0438 \u0443\u043B\u0443\u0447\u0448\u0435\u043D\u0438\u044F
+      \u2014 \u043C\u0433\u043D\u043E\u0432\u0435\u043D\u043D\u043E"
+    - Building and upgrades are instant
+  - key: '#booster_scholar'
+    values:
+    - "\u0423\u0447\u0451\u043D\u044B\u0439"
+    - Scholar
+  - key: '#booster_desc_scholar'
+    values:
+    - "\u0418\u0441\u0441\u043B\u0435\u0434\u043E\u0432\u0430\u043D\u0438\u044F \u2014
+      \u043C\u0433\u043D\u043E\u0432\u0435\u043D\u043D\u043E"
+    - Research is instant
+  - key: '#booster_battle_spirit'
+    values:
+    - "\u0411\u043E\u0435\u0432\u043E\u0439 \u0434\u0443\u0445"
+    - Battle spirit
+  - key: '#booster_desc_battle_spirit'
+    values:
+    - "\u0423\u0440\u043E\u043D \u0430\u0440\u043C\u0438\u0438 +{0}%"
+    - Army damage +{0}%
+  - key: '#booster_fortitude'
+    values:
+    - "\u0421\u0442\u043E\u0439\u043A\u043E\u0441\u0442\u044C"
+    - Fortitude
+  - key: '#booster_desc_fortitude'
+    values:
+    - "\u041F\u0440\u043E\u0447\u043D\u043E\u0441\u0442\u044C \u0437\u0434\u0430\u043D\u0438\u0439
+      +{0}%"
+    - Building strength +{0}%
+  - key: '#booster_recruit'
+    values:
+    - "\u0412\u0435\u0440\u0431\u043E\u0432\u043A\u0430"
+    - Recruitment
+  - key: '#booster_desc_recruit'
+    values:
+    - "\u041D\u0430\u0451\u043C \u0432\u043E\u0439\u0441\u043A \u0432 {0} \u0440\u0430\u0437\u0430
+      \u0434\u0435\u0448\u0435\u0432\u043B\u0435"
+    - "Recruiting is {0}\xD7 cheaper"
+  - key: '#booster_repair'
+    values:
+    - "\u0420\u0435\u043C\u043E\u043D\u0442"
+    - Repair
+  - key: '#booster_desc_repair'
+    values:
+    - "\u0427\u0438\u043D\u0438\u0442 \u0432\u0441\u0435 \u043F\u043E\u0432\u0440\u0435\u0436\u0434\u0451\u043D\u043D\u044B\u0435
+      \u0437\u0434\u0430\u043D\u0438\u044F"
+    - Repairs every damaged building
+  - key: '#booster_settlers'
+    values:
+    - "\u041D\u043E\u0432\u043E\u0441\u0451\u043B\u044B"
+    - Settlers
+  - key: '#booster_desc_settlers'
+    values:
+    - "+{0} \u0436\u0438\u0442\u0435\u043B\u0435\u0439 \u0441\u0440\u0430\u0437\u0443"
+    - +{0} citizens at once

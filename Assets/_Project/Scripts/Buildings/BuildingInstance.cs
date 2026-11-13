@@ -52,7 +52,19 @@ namespace CityBuilder.Buildings
         public int CurrentHealth { get; private set; }
 
         /// <summary>Hit points at full repair, for the level this building currently stands at.</summary>
-        public int MaxHealth => HealthAt(Level);
+        public int MaxHealth => _healthOverride > 0 ? _healthOverride : HealthAt(Level);
+
+        private int _healthOverride;
+
+        /// <summary>A mode's own health for this building, full again (campaign level 2's gates: m2_*_gate_health); 0 = the sheet's.</summary>
+        public void OverrideMaxHealth(int health)
+        {
+            _healthOverride = Mathf.Max(0, health);
+            CurrentHealth = MaxHealth;
+        }
+
+        /// <summary>Metres over its feet for its health bar; 0 = over the model's top (a gatehouse's flag poles lifted it off the screen, 2026-11-13).</summary>
+        public float HealthBarHeight { get; set; }
 
         /// <summary>Its construction or upgrade under way (both modes since 2026-10-25), or null.</summary>
         public ConstructionSite Site { get; internal set; }
@@ -431,7 +443,7 @@ namespace CityBuilder.Buildings
         {
             if (Data == null || MaxHealth <= 0) return;
 
-            if (_healthBar == null) _healthBar = BuildingHealthBar.CreateFor(transform);
+            if (_healthBar == null) _healthBar = BuildingHealthBar.CreateFor(transform, HealthBarHeight);
             _healthBar.Report(CurrentHealth / (float)MaxHealth);
         }
 
@@ -442,7 +454,7 @@ namespace CityBuilder.Buildings
             if (_healthBar == null)
             {
                 if (!pinned) return;
-                _healthBar = BuildingHealthBar.CreateFor(transform);
+                _healthBar = BuildingHealthBar.CreateFor(transform, HealthBarHeight);
             }
             _healthBar.Pin(pinned, CurrentHealth / (float)MaxHealth);
         }

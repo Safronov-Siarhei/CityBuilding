@@ -7791,6 +7791,8 @@ MonoBehaviour:
     part2Seconds: 480
     firstWaveSeconds: 10
     meleeReachMult: 0.6
+    rangedRangeMult: 0.5
+    rangedDamageMult: 0.34
     orcHealthMult: 1.2
     orcDamageMult: 1.2
     squadInfantry: 6
@@ -7807,11 +7809,17 @@ MonoBehaviour:
     townsfolkRespawnSeconds: 4
     ardenHealth: 400
     ardenDamage: 30
-    ardenHealthPerLevel: 60
-    ardenDamagePerLevel: 6
-    ardenXp2: 300
-    ardenXp3: 900
-    ardenXp4: 1800
+    ardenHealthPerLevel: 20
+    ardenDamagePerLevel: 2
+    ardenMaxLevel: 20
+    cryLevel: 1
+    whirlLevel: 5
+    dashLevel: 10
+    breathLevel: 15
+    ardenEngageCells: 3
+    outerGateHealth: 2500
+    innerGateHealth: 2500
+    gateBarHeight: 1.3
     cryCooldownSeconds: 20
     cryRadius: 7
     crySeconds: 6
@@ -7852,9 +7860,9 @@ MonoBehaviour:
     wheatEarsMax: 300
     wallPatrolCells: 3
     wallPatrolSeconds: 8
-    ramHealthMult: 6
+    ramHealthMult: 30
     ramDamageMult: 8
-    towerHealthMult: 5
+    towerHealthMult: 30
     siegeSpeed: 0.6
     towerCrew: 4
     towerDockCells: 0.8
@@ -8776,183 +8784,183 @@ MonoBehaviour:
   m2Waves:
   - part: 1
     wave: 1
-    raiders: 5
-    brutes: 0
-    throwers: 0
-    rams: 0
-    towers: 0
     level: 1
+    raiders: 030000000500000003000000
+    brutes: 000000000000000000000000
+    throwers: 010000000100000001000000
+    rams: 000000000000000000000000
+    towers: 000000000000000000000000
     pause: 10
   - part: 1
     wave: 2
-    raiders: 6
-    brutes: 0
-    throwers: 0
-    rams: 0
-    towers: 0
     level: 1
+    raiders: 040000000400000004000000
+    brutes: 000000000100000000000000
+    throwers: 010000000000000001000000
+    rams: 000000000000000000000000
+    towers: 000000000000000000000000
     pause: 10
   - part: 1
     wave: 3
-    raiders: 6
-    brutes: 1
-    throwers: 0
-    rams: 0
-    towers: 0
     level: 1
+    raiders: 040000000200000004000000
+    brutes: 010000000200000001000000
+    throwers: 010000000100000001000000
+    rams: 000000000000000000000000
+    towers: 000000000000000000000000
     pause: 10
   - part: 1
     wave: 4
-    raiders: 7
-    brutes: 0
-    throwers: 1
-    rams: 0
-    towers: 0
     level: 1
+    raiders: 050000000500000005000000
+    brutes: 010000000100000001000000
+    throwers: 010000000100000001000000
+    rams: 000000000000000000000000
+    towers: 010000000000000000000000
     pause: 10
   - part: 1
     wave: 5
-    raiders: 7
-    brutes: 1
-    throwers: 1
-    rams: 0
-    towers: 0
     level: 1
+    raiders: 050000000000000005000000
+    brutes: 000000000300000001000000
+    throwers: 000000000300000000000000
+    rams: 000000000100000000000000
+    towers: 000000000000000001000000
     pause: 10
   - part: 1
     wave: 6
-    raiders: 8
-    brutes: 1
-    throwers: 1
-    rams: 0
-    towers: 0
     level: 2
+    raiders: 050000000500000005000000
+    brutes: 020000000200000002000000
+    throwers: 020000000200000002000000
+    rams: 000000000000000000000000
+    towers: 000000000000000000000000
     pause: 10
   - part: 1
     wave: 7
-    raiders: 8
-    brutes: 1
-    throwers: 1
-    rams: 1
-    towers: 0
     level: 2
+    raiders: 000000000000000000000000
+    brutes: 030000000300000003000000
+    throwers: 030000000300000003000000
+    rams: 010000000000000000000000
+    towers: 000000000000000000000000
     pause: 10
   - part: 1
     wave: 8
-    raiders: 9
-    brutes: 1
-    throwers: 2
-    rams: 0
-    towers: 1
     level: 2
+    raiders: 060000000600000006000000
+    brutes: 010000000100000001000000
+    throwers: 010000000100000001000000
+    rams: 000000000000000000000000
+    towers: 000000000000000001000000
     pause: 10
   - part: 1
     wave: 9
-    raiders: 9
-    brutes: 2
-    throwers: 1
-    rams: 1
-    towers: 0
     level: 2
+    raiders: 080000000800000008000000
+    brutes: 010000000100000001000000
+    throwers: 010000000100000001000000
+    rams: 000000000000000001000000
+    towers: 000000000000000000000000
     pause: 10
   - part: 1
     wave: 10
-    raiders: 10
-    brutes: 2
-    throwers: 2
-    rams: 0
-    towers: 1
     level: 2
+    raiders: 060000000600000006000000
+    brutes: 010000000100000001000000
+    throwers: 000000000000000000000000
+    rams: 000000000000000000000000
+    towers: 000000000000000000000000
     pause: 10
   - part: 1
     wave: 11
-    raiders: 10
-    brutes: 2
-    throwers: 2
-    rams: 1
-    towers: 1
     level: 2
+    raiders: 0c0000000c0000000c000000
+    brutes: 040000000400000004000000
+    throwers: 030000000300000003000000
+    rams: 000000000100000000000000
+    towers: 010000000000000001000000
     pause: 10
   - part: 1
     wave: 12
-    raiders: 12
-    brutes: 2
-    throwers: 2
-    rams: 1
-    towers: 1
     level: 3
+    raiders: 0e0000000e0000000e000000
+    brutes: 050000000500000005000000
+    throwers: 030000000300000003000000
+    rams: 000000000000000000000000
+    towers: 000000000000000000000000
     pause: 10
   - part: 2
     wave: 1
-    raiders: 6
-    brutes: 1
-    throwers: 0
-    rams: 0
-    towers: 0
     level: 2
+    raiders: 020000000200000002000000
+    brutes: 000000000100000000000000
+    throwers: 000000000000000000000000
+    rams: 000000000000000000000000
+    towers: 000000000000000000000000
     pause: 10
   - part: 2
     wave: 2
-    raiders: 7
-    brutes: 1
-    throwers: 1
-    rams: 0
-    towers: 0
     level: 2
+    raiders: 030000000200000002000000
+    brutes: 000000000000000001000000
+    throwers: 000000000100000000000000
+    rams: 000000000000000000000000
+    towers: 000000000000000000000000
     pause: 10
   - part: 2
     wave: 3
-    raiders: 8
-    brutes: 1
-    throwers: 1
-    rams: 1
-    towers: 0
     level: 2
+    raiders: 020000000300000003000000
+    brutes: 010000000000000000000000
+    throwers: 010000000000000000000000
+    rams: 000000000100000000000000
+    towers: 000000000000000000000000
     pause: 10
   - part: 2
     wave: 4
-    raiders: 9
-    brutes: 2
-    throwers: 1
-    rams: 0
-    towers: 1
     level: 2
+    raiders: 030000000300000003000000
+    brutes: 000000000100000001000000
+    throwers: 010000000000000000000000
+    rams: 000000000000000000000000
+    towers: 000000000100000000000000
     pause: 10
   - part: 2
     wave: 5
-    raiders: 10
-    brutes: 2
-    throwers: 2
-    rams: 1
-    towers: 0
     level: 3
+    raiders: 030000000400000003000000
+    brutes: 010000000000000001000000
+    throwers: 010000000000000001000000
+    rams: 000000000100000000000000
+    towers: 000000000000000000000000
     pause: 10
   - part: 2
     wave: 6
-    raiders: 10
-    brutes: 2
-    throwers: 2
-    rams: 1
-    towers: 1
     level: 3
+    raiders: 030000000300000004000000
+    brutes: 010000000100000000000000
+    throwers: 010000000100000000000000
+    rams: 000000000000000001000000
+    towers: 010000000000000000000000
     pause: 10
   - part: 2
     wave: 7
-    raiders: 12
-    brutes: 2
-    throwers: 2
-    rams: 1
-    towers: 1
     level: 3
+    raiders: 040000000400000004000000
+    brutes: 000000000100000001000000
+    throwers: 010000000100000000000000
+    rams: 000000000000000001000000
+    towers: 010000000000000000000000
     pause: 10
   - part: 2
     wave: 8
-    raiders: 12
-    brutes: 3
-    throwers: 3
-    rams: 1
-    towers: 1
     level: 3
+    raiders: 040000000400000004000000
+    brutes: 010000000100000001000000
+    throwers: 010000000100000001000000
+    rams: 000000000000000001000000
+    towers: 010000000000000000000000
     pause: 10
   boosters:
   - id: lumberjack
