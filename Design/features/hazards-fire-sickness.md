@@ -53,9 +53,13 @@ The user's rules, SANDBOX ONLY (other modes keep the radius healer above):
   economy `infirmary_treat_sec` 60, `infirmary_wait_sec` 30.
 - Workers: in the sandbox EVERY workplace is AutoStaffed (lab, healer, brigade too); the player's own
   count caps it (WorkersCapped); emptied by hand = no-worker mark stays, nobody sent.
-- Traps / open: the patient list is not saved (rebuilt from the sick count, timers fresh); the healer
-  still shows its old service radius when placed; a patient's figure on another island than its healer
-  never walks (no healer there = he dies, by the rules).
+- SAVED (2026-11-13): `GameSaveData.patients` (PatientEntry: home cell, bed cell, waited, treated,
+  order, inside) -> `Infirmary.RestoreFromSave` after the buildings; each gets a figure of his own house
+  back (`TakeForPatient(home)`), inside ones hidden at the door. An old save (no list) rebuilds them
+  from the sick count with fresh clocks.
+- NO RADIUS in the sandbox: «Песочница: Здания (Город)» has `service_radius..service_radius_5` for its
+  12 rows -- HealerHouse 0, Well/FireBrigade copy the base (keep them in step with «Здания»).
+- Trap: a patient's figure on another island than its healer never walks (no healer there = he dies, by the rules).
 
 ## Code
 `Buildings/FireManager.cs`, `Buildings/BuildingFire.cs`, `Citizens/SicknessManager.cs`,

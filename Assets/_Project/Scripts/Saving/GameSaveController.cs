@@ -336,6 +336,31 @@ namespace CityBuilder.Saving
             RestoreRocks(data);
             RestoreFires(data);
             Citizens.SicknessManager.Instance?.RestoreFromSave(data.sicknessUntreatedDays);
+            RestorePatients(data);
+        }
+
+        /// <summary>The sandbox Лечебница's patients, each back in his house and his bed with his clocks (after the buildings).</summary>
+        private static void RestorePatients(GameSaveData data)
+        {
+            var infirmary = Citizens.Infirmary.Instance;
+            if (infirmary == null || data.patients == null) return;
+            var patients = new List<Citizens.Infirmary.Patient>();
+            foreach (var entry in data.patients)
+            {
+                var home = entry.hasHome ? FindBuildingAt(new Vector2Int(entry.homeX, entry.homeY)) : null;
+                var bed = entry.hasBed ? FindBuildingAt(new Vector2Int(entry.bedX, entry.bedY)) : null;
+                patients.Add(new Citizens.Infirmary.Patient
+                {
+                    Home = home,
+                    Island = home != null ? Citizens.HousePeople.IslandOf(home) : -1,
+                    Bed = Citizens.Infirmary.IsHealer(bed) ? bed : null,
+                    Waited = entry.waited,
+                    Treated = entry.treated,
+                    Order = entry.order,
+                    Inside = entry.inside && Citizens.Infirmary.IsHealer(bed),
+                });
+            }
+            infirmary.RestoreFromSave(patients);
         }
 
         /// <summary>
@@ -873,6 +898,25 @@ namespace CityBuilder.Saving
             data.sicknessUntreatedDays = Citizens.SicknessManager.Instance != null
                 ? Citizens.SicknessManager.Instance.UntreatedDaysInARow
                 : 0;
+            if (Citizens.Infirmary.Instance != null)
+            {
+                foreach (var p in Citizens.Infirmary.Instance.Patients)
+                {
+                    data.patients.Add(new PatientEntry
+                    {
+                        hasHome = p.Home != null,
+                        homeX = p.Home != null ? p.Home.OriginCell.x : 0,
+                        homeY = p.Home != null ? p.Home.OriginCell.y : 0,
+                        hasBed = p.Bed != null,
+                        bedX = p.Bed != null ? p.Bed.OriginCell.x : 0,
+                        bedY = p.Bed != null ? p.Bed.OriginCell.y : 0,
+                        waited = p.Waited,
+                        treated = p.Treated,
+                        order = p.Order,
+                        inside = p.Inside,
+                    });
+                }
+            }
 
             foreach (var instance in FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
             {
