@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CityBuilder.Buildings;
 using CityBuilder.Core;
 using CityBuilder.UI;
 using UnityEngine;
@@ -37,6 +38,11 @@ namespace CityBuilder.Campaign
         // eighth playtest: «иконка ворот и убывающая окантовка хп у неё»)
         private GameObject _gateBadge;
         private Image _gateRing;
+        // a red rim that blinks while the gate is being struck (the user's ninth playtest)
+        private Image _gateHurt;
+        private BuildingInstance _gateSeen;
+        private int _gateHealthSeen;
+        private float _gateHurtFor;
         private Image _ardenBar, _xpBar;
         private readonly Image[] _skillShade = new Image[CityDefenceMode.SkillCount];
         private readonly GameObject[] _skillLock = new GameObject[CityDefenceMode.SkillCount];
@@ -305,6 +311,10 @@ namespace CityBuilder.Campaign
             _gateRing.fillOrigin = (int)Image.Origin360.Top;
             _gateRing.fillClockwise = false;
             _gateRing.fillAmount = 1f;
+            _gateHurt = Picture(disc.transform, "Hurt", art.rim, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(size + 18f, size + 18f));
+            _gateHurt.type = Image.Type.Simple;
+            _gateHurt.color = new Color(1f, 0.12f, 0.08f, 0f);
+            _gateHurt.transform.SetAsFirstSibling();
         }
 
         private static Image Bar(Transform parent, Vector2 at, Vector2 size, Vector2 anchor)
@@ -456,6 +466,16 @@ namespace CityBuilder.Campaign
                 var gk = gate.MaxHealth > 0 ? Mathf.Clamp01(gate.CurrentHealth / (float)gate.MaxHealth) : 0f;
                 _gateRing.fillAmount = gk;
                 _gateRing.color = gk > 0.5f ? UiTheme.Good : gk > 0.25f ? UiTheme.Warning : UiTheme.Danger;
+                // struck: the red rim blinks for a while after each blow
+                if (gate == _gateSeen && gate.CurrentHealth < _gateHealthSeen) _gateHurtFor = 0.6f;
+                _gateSeen = gate;
+                _gateHealthSeen = gate.CurrentHealth;
+            }
+            _gateHurtFor = Mathf.Max(0f, _gateHurtFor - dt);
+            if (_gateHurt != null)
+            {
+                var blink = _gateHurtFor > 0f ? (Mathf.Sin(Time.unscaledTime * 25f) > 0f ? 1f : 0.25f) : 0f;
+                _gateHurt.color = new Color(1f, 0.12f, 0.08f, blink);
             }
             if (_wave != null) _wave.text = _mode.Wave > 0 ? string.Format(Localization.Get("#m2_wave_number"), _mode.Wave) : string.Empty;
 

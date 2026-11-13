@@ -2946,9 +2946,8 @@ namespace CityBuilder.Core
         // (cells); this many of the town's infantry climb up against each orc on the wall
         public float wallOrcSpeed = 1.5f, wallFightCells = 10f;
         public int wallDefendersPerOrc = 2;
-        // the gatehouses' end towers shoot (the user's eighth playtest): reach in cells, seconds between arrows, damage
-        public float gateTowerRangeCells = 7f, gateTowerShotSeconds = 1.5f;
-        public int gateTowerDamage = 20;
+        // the gatehouses' end towers shoot (the user's eighth playtest) this far (cells); pace and damage a crossbowman's
+        public float gateTowerRangeCells = 7f;
         public float cryCooldownSeconds = 20f, cryRadius = 7f, crySeconds = 6f, cryDamageMult = 1.5f, cryStunSeconds = 1.5f;
         public float whirlCooldownSeconds = 12f, whirlRadius = 3f, whirlDamageMult = 2f, whirlPush = 2.5f;
         public float dashCooldownSeconds = 14f, dashDistance = 7f, dashSeconds = 0.35f, dashWidth = 1.5f, dashDamageMult = 1.5f, dashStunSeconds = 1.5f;
@@ -3022,8 +3021,6 @@ namespace CityBuilder.Core
             wallFightCells = F("m2_wall_fight_cells", wallFightCells);
             wallDefendersPerOrc = I("m2_wall_defenders_per_orc", wallDefendersPerOrc);
             gateTowerRangeCells = F("m2_gate_tower_range_cells", gateTowerRangeCells);
-            gateTowerShotSeconds = F("m2_gate_tower_shot_sec", gateTowerShotSeconds);
-            gateTowerDamage = I("m2_gate_tower_damage", gateTowerDamage);
             ardenRespawnSeconds = F("m2_arden_respawn_sec", ardenRespawnSeconds);
             cryCooldownSeconds = F("m2_cry_cooldown_sec", cryCooldownSeconds);
             cryRadius = F("m2_cry_radius", cryRadius);

@@ -363,13 +363,72 @@ namespace CityBuilder.Combat
             _wallPhase = WallPhase.Down;
         }
 
+        /// <summary>A mode's own foot for a stair (campaign mission 2: the tower door on the town side), or null.</summary>
+        public static System.Func<Vector2Int, Vector3?> StairFootAt;
+
         private static Vector3 StairFoot(Vector2Int cell)
         {
+            if (StairFootAt != null)
+            {
+                var own = StairFootAt(cell);
+                if (own.HasValue) return own.Value;
+            }
             var grid = GridManager.Instance;
             if (grid == null) return Vector3.zero;
             var at = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
             at.y = grid.GroundHeight;
             return at;
+        }
+
+        /// <summary>
+        /// Steered along the wall-walk (campaign mission 2's Ардан, the user's ninth playtest: «свободное передвижение
+        /// влево и вправо», not cell to cell): `dir` (world, flat) taken along the walk's own line where he stands, at
+        /// his walking pace; he keeps to the walk's middle and stops where it ends (or at a stair tower). False when he
+        /// is not up there standing or walking.
+        /// </summary>
+        public bool SlideAlongWall(Vector3 dir, float dt)
+        {
+            if (_wallPhase != WallPhase.Posted && _wallPhase != WallPhase.Walking) return false;
+            // already on his way down through a tower: let him go
+            if (_wallLeaving) return false;
+            var grid = GridManager.Instance;
+            if (grid == null) return false;
+            // the walk's line here: along x where it goes on east or west, else along z
+            var alongX = WallWalk.IsWalk(_wallAt + Vector2Int.right) || WallWalk.IsWalk(_wallAt + Vector2Int.left);
+            var axis = alongX ? Vector3.right : Vector3.forward;
+            var amount = Vector3.Dot(dir, axis);
+            if (Mathf.Abs(amount) < 0.2f) return false;
+            _wallLeaving = false;
+            _wallPhase = WallPhase.Posted;
+            var p = transform.position + axis * (Mathf.Sign(amount) * _walkSpeed * dt);
+            var cell = grid.WorldToCell(p);
+            // walked into a stair tower (the user's tenth playtest: «не могу зайти в башню и слезть, Ардан упирается
+            // в башню»): in through it and down by its town-side door
+            if (cell != _wallAt && WallWalk.IsStair(cell) && !WallWalk.IsDockStair(cell) && WallWalk.Path(_wallAt, cell, _wallPath))
+            {
+                WallWalk.Release(this);
+                _wallStair = cell;
+                _wallStep = 1;
+                _wallLeaving = true;
+                _wallPhase = WallPhase.Walking;
+                return true;
+            }
+            if (cell != _wallAt && (!WallWalk.IsWalk(cell) || WallWalk.IsStair(cell) || WallWalk.IsDockStair(cell))) return true;
+            var mid = WallWalk.Top(cell);
+            // into the walk's middle across it
+            if (alongX) p.z = Mathf.MoveTowards(p.z, mid.z, _walkSpeed * dt);
+            else p.x = Mathf.MoveTowards(p.x, mid.x, _walkSpeed * dt);
+            p.y = mid.y;
+            transform.position = p;
+            FaceTowards(p + axis * Mathf.Sign(amount));
+            if (cell != _wallAt)
+            {
+                WallWalk.Release(this);
+                WallWalk.Claim(cell, this);
+                _wallAt = cell;
+                _wallPost = cell;
+            }
+            return true;
         }
 
         /// <summary>Down on the ground where he stands, alive (a dungeon, a way down that is gone).</summary>

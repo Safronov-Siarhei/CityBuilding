@@ -9,7 +9,8 @@ namespace CityBuilder.Campaign
     /// <summary>
     /// The gatehouses' towers shoot (the user's eighth playtest: «в чём смысл башен если они не стреляют?»). The town's
     /// only towers are the end towers of the two Barbicans -- WallWalk's stair cells; each, while its gate stands,
-    /// looses an arrow every m2_gate_tower_shot_sec at the nearest orc within m2_gate_tower_range_cells for m2_gate_tower_damage.
+    /// looses a bolt at the nearest orc within m2_gate_tower_range_cells AS A CROSSBOWMAN of the garrison does: his
+    /// interval and his damage (the user's ninth playtest: «стрелять со скоростью арбалетчика и урон такой же»).
     /// </summary>
     public partial class CityDefenceMode
     {
@@ -50,8 +51,9 @@ namespace CityBuilder.Campaign
                     _towerIn[i] = 0.3f;
                     continue;
                 }
-                _towerIn[i] = Mathf.Max(0.2f, b.gateTowerShotSeconds);
-                CombatProjectiles.Fire(ProjectileKind.Arrow, from, best, Mathf.Max(1, b.gateTowerDamage));
+                var bow = SoldierStats.StatsAt(SoldierType.Crossbowman, b.guardLevel);
+                _towerIn[i] = Mathf.Max(0.2f, bow.attackIntervalSeconds);
+                CombatProjectiles.Fire(ProjectileKind.Arrow, from, best, Mathf.Max(1, Mathf.RoundToInt(bow.attackDamage * b.rangedDamageMult)));
             }
         }
 

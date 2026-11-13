@@ -17,6 +17,11 @@ namespace CityBuilder.UI
     {
         private readonly HashSet<Object> _owners = new HashSet<Object>();
         private readonly List<CanvasGroup> _groups = new List<CanvasGroup>();
+        // each group's look before the hide, given back as it was: a piece hidden by its mode (campaign mission 2 hides
+        // the sandbox HUD the same way) stays hidden (the user's tenth playtest: the menu brought the sandbox HUD back)
+        private readonly List<float> _alphas = new List<float>();
+        private readonly List<bool> _raycasts = new List<bool>();
+        private readonly List<bool> _interactables = new List<bool>();
 
         public bool IsHidden => _owners.Count > 0;
 
@@ -37,11 +42,17 @@ namespace CityBuilder.UI
             if (hidden)
             {
                 _groups.Clear();
+                _alphas.Clear();
+                _raycasts.Clear();
+                _interactables.Clear();
                 foreach (Transform child in transform)
                 {
                     if (child.GetComponent<HudOverlay>() != null) continue;
                     var group = child.GetComponent<CanvasGroup>();
                     if (group == null) group = child.gameObject.AddComponent<CanvasGroup>();
+                    _alphas.Add(group.alpha);
+                    _raycasts.Add(group.blocksRaycasts);
+                    _interactables.Add(group.interactable);
                     group.alpha = 0f;
                     group.blocksRaycasts = false;
                     group.interactable = false;
@@ -50,12 +61,13 @@ namespace CityBuilder.UI
                 return;
             }
 
-            foreach (var group in _groups)
+            for (var i = 0; i < _groups.Count; i++)
             {
+                var group = _groups[i];
                 if (group == null) continue;
-                group.alpha = 1f;
-                group.blocksRaycasts = true;
-                group.interactable = true;
+                group.alpha = _alphas[i];
+                group.blocksRaycasts = _raycasts[i];
+                group.interactable = _interactables[i];
             }
             _groups.Clear();
         }

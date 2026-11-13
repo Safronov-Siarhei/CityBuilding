@@ -465,6 +465,28 @@
   8. Where are ram/tower hp: m2_ram_health_mult / m2_tower_health_mult (x a brute's health), tab «Кампания: оборона города».
   9. Only rams/towers left -> the next wave comes (TickWaves counts only orcs without `IgnoresSoldiers`).
   10. Ардан's XP: EVERY orc that falls on the map = 1 point (any killer); m2_arden_max_level 20 levels spread evenly over ALL orcs of all waves of both parts (m2waves tab; a tower counts 1 + m2_tower_crew); skills open at m2_cry_level 1 / m2_whirl_level 5 / m2_dash_level 10 / m2_breath_level 15; part 2 credits all of part 1's orcs (`CreditPart1`); health/damage per level 20 / 2. m2_arden_xp2-4 deleted (sheet + CSV + code).
+- **PLAYTEST 10 (the user, 2026-11-13) -- BUILT 2026-11-13 (setup green; not seen):**
+  1. A tree stood before a tower door -> `Tools/campaign/mission2_town.py` puts no yard decor within 4 cells of
+     x 50 and 1-3 rows town-side of either gate (4 pieces gone: trees 46,37 / 51,37 / 51,52, well 46,52; the rng
+     is still drawn so nothing else moved). Regenerate with `python Tools/campaign/mission2_town.py`.
+  2. Ардан on the wall struck orcs below it -> `SoldierBlocked`: a MELEE fighter up on the walk reaches only orcs on
+     the walk and a docked siege tower (`DockedTower`); shooters up there still shoot down.
+  3. On the wall he ran into a tower and stuck -> `SlideAlongWall` walking into a (non-dock) stair cell takes him in
+     and down by that tower's town-side door (`_wallLeaving`, the slide does not interrupt the way down).
+  4. The game menu brought the sandbox HUD back on closing -> `HudHider` remembers each group's alpha/raycast/
+     interactable at the hide and gives them back (it used to set them all on), so the mission's own hiding holds.
+- **PLAYTEST 9 (the user, 2026-11-13) -- BUILT 2026-11-13 (setup green; not seen):**
+  1. Walking through the gate pulled Ардан into a tower -> no climbing by running at a stair any more: a small YELLOW
+     CIRCLE on the ground before each Barbican tower door (town side, 0,72 cell out; `MarkTowerDoors`, unlit
+     cylinder) takes him up when he steps on it (he must step off it once after coming down). A docked orc tower
+     still takes him up at its foot. Every stair's foot is now its door (`SoldierUnit.StairFootAt`): men go up and
+     come down on the TOWN side, not out of the far side of the tower.
+  2. Moving on the wall was cell-hopping -> `SoldierUnit.SlideAlongWall`: the stick's sideways part walks him freely
+     along the walk's line at his pace, kept to its middle, stopping at its ends/stair towers. Down only with the
+     stick pulled towards the town (south); pushing outwards does nothing.
+  3. Towers shot too fast and too hard -> a garrison crossbowman's interval and damage (guard level, x
+     m2_ranged_damage_mult); m2_gate_tower_shot_sec / m2_gate_tower_damage removed (sheet too), range kept.
+  4. The gate icon blinks a red rim for 0,6 s after each blow (`_gateHurt`).
 - **PLAYTEST 8 (the user, 2026-11-13, on the one-part mission) -- BUILT 2026-11-13 (setup green; not seen):**
   1. Gate HP: the HUD bar -> the gate's PICTURE (FortifiedGate_L3 icon, `CityDefenceMode.gateIcon`) on a disc with a
      radial ring (event_rim, Filled Radial360) that runs down, green/amber/red (`CityDefenceHud.BuildGateBadge`).
