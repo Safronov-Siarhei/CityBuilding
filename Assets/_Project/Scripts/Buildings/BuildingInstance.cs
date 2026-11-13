@@ -66,6 +66,9 @@ namespace CityBuilder.Buildings
         /// <summary>Metres over its feet for its health bar; 0 = over the model's top (a gatehouse's flag poles lifted it off the screen, 2026-11-13).</summary>
         public float HealthBarHeight { get; set; }
 
+        /// <summary>No bar over it: its health is shown elsewhere (mission 2's gates, a bar under the goal, 2026-11-13).</summary>
+        public bool HideHealthBar { get; set; }
+
         /// <summary>Its construction or upgrade under way (both modes since 2026-10-25), or null.</summary>
         public ConstructionSite Site { get; internal set; }
 
@@ -441,7 +444,7 @@ namespace CityBuilder.Buildings
         /// <summary>Created on first damage rather than up front -- most buildings are never attacked at all, and this way they carry no extra objects or per-frame work for a bar nobody will see.</summary>
         private void ShowHealthBar()
         {
-            if (Data == null || MaxHealth <= 0) return;
+            if (Data == null || MaxHealth <= 0 || HideHealthBar) return;
 
             if (_healthBar == null) _healthBar = BuildingHealthBar.CreateFor(transform, HealthBarHeight);
             _healthBar.Report(CurrentHealth / (float)MaxHealth);

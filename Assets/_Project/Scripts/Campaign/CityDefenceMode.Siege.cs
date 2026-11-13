@@ -82,7 +82,8 @@ namespace CityBuilder.Campaign
                 return null;
             }
             // the tower's own road: the lane to the gate's front, then along the wall to a section either side of the gate
-            var inner = Current == Stage.Part2;
+            // the outer gate broken: the towers go for the inner wall
+            var inner = OuterGates[0] == null && InnerGates[0] != null;
             var side = (_towerSide++ % 2 == 0) ? -1f : 1f;
             var from = b.towerWallFromCells;
             var to = inner ? Mathf.Min(b.towerWallToCells, 7f) : b.towerWallToCells;

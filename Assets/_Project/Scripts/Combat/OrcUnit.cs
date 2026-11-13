@@ -1306,6 +1306,7 @@ namespace CityBuilder.Combat
                 // raid beelining for the nearest stray road tile instead of an actual building
                 // would make combat feel broken rather than threatening.
                 if (instance.Data == null || instance.Data.IsGroundWork) continue;
+                if (OnlyTarget != null && instance != OnlyTarget) continue;
                 if (BotSide && instance.IsBot) continue;
                 // A run's walls and gates are obstacles (the user, 2026-10-22): broken only where
                 // they stand in the way (AttackWhateverIsBlockingTheWay), never gone after; once
@@ -1451,6 +1452,10 @@ namespace CityBuilder.Combat
         /// <summary>Keeps to its way and turns aside for no building (campaign mission 2: the orcs go for the gates,
         /// not the walls beside their road -- the user, 2026-11-12); what stands ON the way it still breaks.</summary>
         public bool LaneOnly { get; set; }
+
+        /// <summary>The one building it goes for, nothing else (campaign mission 2: the wreckers after houses, never a
+        /// wall or a tower -- the user, 2026-11-13); null for the usual nearest one.</summary>
+        public BuildingInstance OnlyTarget { get; set; }
 
         /// <summary>A siege machine (campaign mission 2): it never turns on the fighters around it, only rolls on
         /// to what its lane ends at.</summary>

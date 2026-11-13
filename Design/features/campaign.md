@@ -465,10 +465,30 @@
   8. Where are ram/tower hp: m2_ram_health_mult / m2_tower_health_mult (x a brute's health), tab «Кампания: оборона города».
   9. Only rams/towers left -> the next wave comes (TickWaves counts only orcs without `IgnoresSoldiers`).
   10. Ардан's XP: EVERY orc that falls on the map = 1 point (any killer); m2_arden_max_level 20 levels spread evenly over ALL orcs of all waves of both parts (m2waves tab; a tower counts 1 + m2_tower_crew); skills open at m2_cry_level 1 / m2_whirl_level 5 / m2_dash_level 10 / m2_breath_level 15; part 2 credits all of part 1's orcs (`CreditPart1`); health/damage per level 20 / 2. m2_arden_xp2-4 deleted (sheet + CSV + code).
+- **ONE PART, 11 MINUTES (the user, 2026-11-13) -- BUILT 2026-11-13 (setup green; not seen). Supersedes the
+  two parts, the courier and «Part 2» everywhere above.**
+  - Goals in turn, shown on the top plaque with the gate's health as a HUD bar under it (the world bar over the
+    gate is hidden, `BuildingInstance.HideHealthBar`): «Не дайте пробить внешние ворота» -> (outer gate broken)
+    «Не дайте пробить внутренние ворота» -> (inner gate broken) «Не дайте оркам попасть на центральную площадь».
+    Each change is also a banner. `CityDefenceMode.Goal`, `CurrentGoal`, `GoalGate`, `GoalChanged`.
+  - LOSS: an orc OF THE WAVES within m2_square_loss_cells (4) of the square once both gates are down
+    (`WatchTheSquare`, LossReason.Square, #m2_lost_square); Ардан dying / the castle broken as before. The inner
+    gate falling is no longer a loss: its orcs re-route to the square.
+  - Clock: m2_mission_sec 660 s; the minimap says «Гонец в пути: m:ss» until m2_reinforce_sec (180) before the end,
+    then «Подкрепление через: m:ss» (`HelpComing`). The capital cutscene at that turn: LATER, not built.
+  - Waves: only part 1's rows (12) kept; part-2 rows deleted from m2waves (CSV + sheet). The sheet's waves are
+    the user's own tuning (heavier than the old CSV) -- pulled into the CSV. The first wave shuts BOTH gates.
+  - WRECKERS (`CityDefenceMode.Wreckers.cs`): once the outer gate falls, m2_wreckers (5) Raiders come in through it
+    and break houses only (`OrcUnit.OnlyTarget` = one house at a time; never walls/gates/towers); not a wave: no
+    «!», not counted for waves/square/Ардан XP; when the whole band is dead the next comes after
+    m2_wreckers_respawn_sec (8). Inner gate standing -> only lower-town houses.
+  - The inner gate's guard (m2_inner_guards + m2_inner_archers) is raised AT THE START, its pen the inner town
+    (they never go out past it). `WallBetween` now uses each soldier's own `Pen`; `Breach` is pen-agnostic.
+  - Siege towers aim at the inner wall once the outer gate is down. `Part2Key` is only cleared now.
 - **PLAYTEST 7 (the user, 2026-11-13) -- BUILT 2026-11-13 (setup green; not seen by the user):**
-  1. Gate hp bar now sits INSIDE the gatehouse (1,3 cells is under its roof) -> the user asked for another look: OPEN, variants offered (HUD bar under the goal plaque / bar over the roof ridge / bar on the gate's town face).
+  1. Gate hp bar now sits INSIDE the gatehouse (1,3 cells is under its roof) -> the user asked for another look: DONE 2026-11-13: the user chose the HUD bar under the goal plaque (see ONE PART above).
   2. Wall shooters all on the LEFT of the gate -> `WallCellsBeside` took every second candidate, and candidates alternate sides; now distances step by 2 and both sides are taken in turn.
-  3. No doors at the foot of the gatehouse for the defenders -> needs a model (door on the town face of each gate tower): renders to be approved FIRST. OPEN.
+  3. No doors at the foot of the gatehouse for the defenders -> needs a model: the user chose «a door in each gate tower» (town face); renders to be approved FIRST. OPEN.
   4. Escorts walked ahead of their tower and hit the wall -> `HoldEscorts`: an escort no farther from the dock spot than the tower + 1,5 waits (BusyFor 0,3). FootReach 3,5.
   5. Tower climbers jumped straight over, at the wrong place -> the dock finds the wall-walk cell where the tower ACTUALLY stands (`wallCell`, up to 4 cells south of its foot) and `WallWalk.Dock(orcTower, towerCell, wallCell, top)` makes it a stair (WallWalk docks now keyed by UnityEngine.Object). Climbers step ONTO the walk (`PutOnWall`: OrcUnit.Steered, positioned by CityDefenceMode.WallFight.cs): walk the WallWalk path to the nearest defender up there (m2_wall_orc_speed cells/s), strike (`OrcUnit.StrikeSoldier`, `AttackInterval`, `UnitRange`); no defender on the wall within m2_wall_fight_cells -> `JumpIn` (0,6 s hop 2,2 cells south) then `ToInnerGate`. The town's infantry (squads, not patrols, not monks) go up, m2_wall_defenders_per_orc per orc (`TickWallDefence`), follow it along the walk, come down when it is gone. No walk cell found -> the old straight jump in.
   6. Ардан at a docked tower's foot (1,6 cells, not walking away) climbs it (`TickArdenWall` -> GoToWall(wallCell)); on the wall the stick sideways walks him 2 cells along, up/down brings him down (LeaveWall(toward): the nearest stair that way, or a jump off a dock stair behind him). Releasing the stick on the wall no longer orders him down (`!Arden.WallBound`).
