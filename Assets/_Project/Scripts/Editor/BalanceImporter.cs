@@ -302,7 +302,7 @@ namespace CityBuilder.EditorTools
             return result;
         }
 
-        /// <summary>The m2waves tab: part, wave, raiders, brutes, throwers, rams, towers, level, pause_sec, comment.</summary>
+        /// <summary>The m2waves tab: part, wave, then raiders/brutes/throwers/rams/towers each per road (_w, _n, _e), level, pause_sec, comment.</summary>
         private static List<BalanceConfig.M2WaveRow> ReadM2Waves(string path)
         {
             var result = new List<BalanceConfig.M2WaveRow>();
@@ -326,10 +326,11 @@ namespace CityBuilder.EditorTools
                 if (!int.TryParse(Cell(part), System.Globalization.NumberStyles.Integer, culture, out var p)) continue;
                 if (!int.TryParse(Cell(wave), System.Globalization.NumberStyles.Integer, culture, out var w)) continue;
                 float.TryParse(Cell(Col("pause_sec")), System.Globalization.NumberStyles.Float, culture, out var pause);
+                int[] Roads(string kind) => new[] { Int(kind + "_w"), Int(kind + "_n"), Int(kind + "_e") };
                 result.Add(new BalanceConfig.M2WaveRow
                 {
-                    part = p, wave = w, raiders = Int("raiders"), brutes = Int("brutes"), throwers = Int("throwers"),
-                    rams = Int("rams"), towers = Int("towers"), level = Mathf.Max(1, Int("level")), pause = Mathf.Max(0f, pause)
+                    part = p, wave = w, raiders = Roads("raiders"), brutes = Roads("brutes"), throwers = Roads("throwers"),
+                    rams = Roads("rams"), towers = Roads("towers"), level = Mathf.Max(1, Int("level")), pause = Mathf.Max(0f, pause)
                 });
             }
             return result;

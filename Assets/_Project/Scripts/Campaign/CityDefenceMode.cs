@@ -456,17 +456,26 @@ namespace CityBuilder.Campaign
             Wave++;
             // the part's first wave shuts its gate (the user's third playtest)
             if (Wave == 1) ShutGate(Current == Stage.Part2 ? InnerGates[0] : OuterGates[0]);
-            // the m2waves tab's row (the user's third playtest): its orcs over the three roads in turn, its machines too
+            // the m2waves tab's row (the user's third playtest): each kind's count per road (the user, 2026-11-13)
             var row = BalanceConfig.Instance.M2Wave(Current == Stage.Part2 ? 2 : 1, Wave);
             if (row == null) return;
             var b = B;
-            var next = Wave;   // the road the next one takes
-            void Send(OrcKind kind, int count)
+            for (var road = 0; road < 3; road++)
             {
+                Send(OrcKind.Brute, road, At(row.brutes, road));
+                Send(OrcKind.Raider, road, At(row.raiders, road));
+                Send(OrcKind.Thrower, road, At(row.throwers, road));
+                for (var i = 0; i < At(row.rams, road); i++) SpawnMachine(true, road, row.level);
+                for (var i = 0; i < At(row.towers, road); i++) SpawnMachine(false, road, row.level);
+            }
+
+            static int At(int[] perRoad, int road) => perRoad != null && road < perRoad.Length ? perRoad[road] : 0;
+
+            void Send(OrcKind kind, int lane, int count)
+            {
+                if (_lanes[lane] == null) return;
                 for (var i = 0; i < count; i++)
                 {
-                    var lane = next++ % 3;
-                    if (_lanes[lane] == null) continue;
                     var at = _spawns[lane] + new Vector3(Random.Range(-1.5f, 1.5f), 0f, Random.Range(-1.5f, 1.5f));
                     var orc = raids.SpawnOrcOfKind(at, row.level, kind);
                     if (orc == null) continue;
@@ -476,11 +485,6 @@ namespace CityBuilder.Campaign
                     _laneOrcs[lane].Add(orc);
                 }
             }
-            Send(OrcKind.Brute, row.brutes);
-            Send(OrcKind.Raider, row.raiders);
-            Send(OrcKind.Thrower, row.throwers);
-            for (var i = 0; i < row.rams; i++) SpawnMachine(true, next++ % 3, row.level);
-            for (var i = 0; i < row.towers; i++) SpawnMachine(false, next++ % 3, row.level);
         }
 
         /// <summary>The foremost orc of a lane's wave (nearest the castle) -- the minimap's «!».</summary>

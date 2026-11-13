@@ -1408,11 +1408,13 @@ namespace CityBuilder.Core
         [SerializeField] private List<BotWaveRow> botWaves = new List<BotWaveRow>();
 
         /// <summary>One wave of campaign mission 2 (the m2waves tab, the user 2026-11-12): who comes, at what level,
-        /// and the pause after the wave before it is beaten. Spread over the three roads in turn.</summary>
+        /// and the pause after the wave before it is beaten. Each kind's count is set PER ROAD (the user, 2026-11-13):
+        /// index 0 = the west road, 1 = the north, 2 = the east (the order of Mission2Town.json's lanes).</summary>
         [System.Serializable]
         public class M2WaveRow
         {
-            public int part, wave, raiders, brutes, throwers, rams, towers, level;
+            public int part, wave, level;
+            public int[] raiders = new int[3], brutes = new int[3], throwers = new int[3], rams = new int[3], towers = new int[3];
             public float pause;
         }
 
