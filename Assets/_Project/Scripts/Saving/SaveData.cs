@@ -128,6 +128,9 @@ namespace CityBuilder.Saving
 
         public int sicknessUntreatedDays;
 
+        /// <summary>The sandbox Лечебница's patients (Citizens/Infirmary): where each lives, his bed, his clocks.</summary>
+        public List<PatientEntry> patients = new List<PatientEntry>();
+
         /// <summary>
         /// Everything alight, and how far into its burn it is. Without this a reload was a fire
         /// brigade: every fire went out at once, the buildings kept whatever health the flames had
@@ -262,6 +265,30 @@ namespace CityBuilder.Saving
 
         /// <summary>Seconds burnt so far. Not seconds REMAINING: how long a fire has left depends on how many firefighters can reach it, which is a question about the town as it stands after the load, not before the save.</summary>
         public float elapsedSeconds;
+    }
+
+    [Serializable]
+    public class PatientEntry
+    {
+        /// <summary>His house's origin cell (hasHome false: the house is gone or he had none).</summary>
+        public bool hasHome;
+        public int homeX;
+        public int homeY;
+
+        /// <summary>His Лечебница's origin cell (hasBed false: still waiting for a bed).</summary>
+        public bool hasBed;
+        public int bedX;
+        public int bedY;
+
+        /// <summary>Seconds waited without a bed (the death clock) and seconds treated.</summary>
+        public float waited;
+        public float treated;
+
+        /// <summary>When he fell ill, among the others (the queue).</summary>
+        public int order;
+
+        /// <summary>Already inside the Лечебница (his figure hidden).</summary>
+        public bool inside;
     }
 
     [Serializable]

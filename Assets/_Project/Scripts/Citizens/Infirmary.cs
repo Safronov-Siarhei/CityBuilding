@@ -59,6 +59,25 @@ namespace CityBuilder.Citizens
         private int _order;
         private static Mesh _quad;
 
+        // a loaded town's patients, waiting for their figures (Reconcile takes them first)
+        private readonly List<Patient> _pending = new List<Patient>();
+
+        /// <summary>A save's patients (GameSaveController.RestorePatients): each back in his house and bed, his clocks as they were.</summary>
+        public void RestoreFromSave(List<Patient> patients)
+        {
+            ClearAll();
+            _pending.Clear();
+            if (patients == null) return;
+            patients.Sort((a, b) => a.Order.CompareTo(b.Order));
+            foreach (var p in patients)
+            {
+                p.Figure = null;
+                p.Mark = null;
+                _pending.Add(p);
+                _order = Mathf.Max(_order, p.Order);
+            }
+        }
+
         private const float MarkSize = 0.75f;
         private const float NoticeEverySeconds = 20f;
         private const float DoorReach = 1.6f;
@@ -222,6 +241,30 @@ namespace CityBuilder.Citizens
         private Patient MakePatient()
         {
             var visuals = CitizenVisualsManager.Instance;
+            if (_pending.Count > 0)
+            {
+                // one from the save: a figure of his own house if there is one, back where he was
+                var saved = _pending[0];
+                _pending.RemoveAt(0);
+                saved.Figure = visuals != null ? visuals.TakeForPatient(this, saved.Home) : null;
+                if (saved.Home == null && saved.Figure != null)
+                {
+                    saved.Home = saved.Figure.Home;
+                    saved.Island = saved.Home != null ? HousePeople.IslandOf(saved.Home) : HousePeople.IslandOf(saved.Figure.transform.position);
+                }
+                if (saved.Figure != null && saved.Bed != null)
+                {
+                    if (saved.Inside)
+                    {
+                        saved.Figure.Teleport(Door(saved.Bed));
+                        saved.Figure.gameObject.SetActive(false);
+                    }
+                    else saved.Figure.MoveTo(Door(saved.Bed));
+                }
+                else saved.Inside = false;
+                HousePeople.Instance?.LayOffIslandExcess();
+                return saved;
+            }
             var figure = visuals != null ? visuals.TakeForPatient(this) : null;
             var p = new Patient { Figure = figure, Order = ++_order };
             if (figure != null)

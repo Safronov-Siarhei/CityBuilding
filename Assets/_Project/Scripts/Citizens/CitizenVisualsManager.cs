@@ -526,9 +526,20 @@ namespace CityBuilder.Citizens
         /// one taken off his work (the place stays wanted, someone else steps in). He leaves the idle
         /// and working lists -- the Infirmary walks him from now on -- but stays one of the town's figures.
         /// </summary>
-        public CitizenAgent TakeForPatient(Infirmary infirmary)
+        public CitizenAgent TakeForPatient(Infirmary infirmary, BuildingInstance home = null)
         {
             CitizenAgent agent = null;
+            // a loaded patient: one living in his own house, if one is free
+            if (home != null)
+            {
+                for (var i = 0; i < _idleAgents.Count; i++)
+                {
+                    if (_idleAgents[i] == null || _idleAgents[i].Home != home) continue;
+                    agent = _idleAgents[i];
+                    _idleAgents.RemoveAt(i);
+                    return agent;
+                }
+            }
             if (_idleAgents.Count > 0)
             {
                 var index = UnityEngine.Random.Range(0, _idleAgents.Count);
