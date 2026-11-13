@@ -222,7 +222,7 @@ namespace CityBuilder.Campaign
             var steer = new Vector3(Stick.x, 0f, Stick.y);
             var was = Arden.IsSteered;
             Arden.Steer = steer;
-            if (was && !Arden.IsSteered) _ardenGroup.OrderMoveTo(Arden.transform.position);   // let go: he holds there and fights
+            if (was && !Arden.IsSteered && !Arden.WallBound) _ardenGroup.OrderMoveTo(Arden.transform.position);   // let go: he holds there and fights
             RTSCameraController.Instance?.FocusOn(Arden.transform.position);
         }
 

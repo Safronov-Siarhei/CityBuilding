@@ -174,7 +174,9 @@ namespace CityBuilder.Campaign
                 else { fixedC = 59; from = 52; to = 65; gateAt = 56; vertical = true; }
             }
             // nearest the gate first, alternating sides
-            for (var d = 2; d <= Mathf.Max(gateAt - from, to - gateAt); d++)
+            // every other cell out from the gate, BOTH sides of it in turn (all the posts went to the left, the user's
+            // seventh playtest: the candidates alternate sides, and taking every second one took one side only)
+            for (var d = 2; d <= Mathf.Max(gateAt - from, to - gateAt); d += 2)
             {
                 foreach (var a in new[] { gateAt - d, gateAt + d })
                 {
@@ -183,7 +185,7 @@ namespace CityBuilder.Campaign
                     candidates.Add(vertical ? (CellOf(fixedC, a), CellOf(fixedC, further)) : (CellOf(a, fixedC), CellOf(further, fixedC)));
                 }
             }
-            for (var i = 0; i < candidates.Count && found.Count < count; i += 2) found.Add(candidates[i]);
+            for (var i = 0; i < candidates.Count && found.Count < count; i++) found.Add(candidates[i]);
             return found;
         }
 

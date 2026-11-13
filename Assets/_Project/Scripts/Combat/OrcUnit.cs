@@ -270,6 +270,18 @@ namespace CityBuilder.Combat
         public int MaxHealth => _maxHealth;
         public int AttackDamage => _attackDamage;
 
+        /// <summary>Seconds between its blows.</summary>
+        public float AttackInterval => _attackIntervalSeconds;
+
+        /// <summary>Its reach against a soldier.</summary>
+        public float UnitRange => _soldierAttackRange;
+
+        /// <summary>A blow (or a shot) at this soldier, from whoever steers it (campaign level 2's fight on the wall-walk).</summary>
+        public void StrikeSoldier(SoldierUnit soldier)
+        {
+            if (soldier != null) Strike(soldier);
+        }
+
         // IDamageTarget: what the player's army sees when it looks for something to hit. An orc is
         // a unit, not a structure, so a group set to prioritise structures walks past it.
         Transform IDamageTarget.Transform => this != null ? transform : null;

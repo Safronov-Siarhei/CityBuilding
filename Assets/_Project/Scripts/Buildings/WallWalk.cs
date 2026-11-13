@@ -60,16 +60,17 @@ namespace CityBuilder.Buildings
             public float Top;
         }
 
-        private static readonly Dictionary<Combat.SoldierUnit, DockInfo> Docks = new Dictionary<Combat.SoldierUnit, DockInfo>();
+        // keyed by the tower: the player's (a SoldierUnit) or campaign level 2's orc tower (an OrcUnit) -- both a stair
+        private static readonly Dictionary<Object, DockInfo> Docks = new Dictionary<Object, DockInfo>();
 
         /// <summary>A siege tower docked at `wall` from `tower` (cells); `top` the gangway's height over a low fence.</summary>
-        public static void Dock(Combat.SoldierUnit who, Vector2Int tower, Vector2Int wall, float top)
+        public static void Dock(Object who, Vector2Int tower, Vector2Int wall, float top)
         {
             Docks[who] = new DockInfo { Tower = tower, Wall = wall, Top = top };
             _dirty = true;
         }
 
-        public static void Undock(Combat.SoldierUnit who)
+        public static void Undock(Object who)
         {
             if (Docks.Remove(who)) _dirty = true;
         }

@@ -2901,6 +2901,11 @@ namespace CityBuilder.Core
         // the gates' own health (a level-3 Barbican has 850) and the height of their bar over the ground (cells)
         public int outerGateHealth = 2500, innerGateHealth = 2500;
         public float gateBarHeight = 1.3f;
+        // the fight on the wall-walk (the user's seventh playtest): an orc off a tower walks the wall at this speed
+        // (cells a second), fights the defenders up there and jumps into the town only when none is this near
+        // (cells); this many of the town's infantry climb up against each orc on the wall
+        public float wallOrcSpeed = 1.5f, wallFightCells = 10f;
+        public int wallDefendersPerOrc = 2;
         public float cryCooldownSeconds = 20f, cryRadius = 7f, crySeconds = 6f, cryDamageMult = 1.5f, cryStunSeconds = 1.5f;
         public float whirlCooldownSeconds = 12f, whirlRadius = 3f, whirlDamageMult = 2f, whirlPush = 2.5f;
         public float dashCooldownSeconds = 14f, dashDistance = 7f, dashSeconds = 0.35f, dashWidth = 1.5f, dashDamageMult = 1.5f, dashStunSeconds = 1.5f;
@@ -2967,6 +2972,9 @@ namespace CityBuilder.Core
             outerGateHealth = I("m2_outer_gate_health", outerGateHealth);
             innerGateHealth = I("m2_inner_gate_health", innerGateHealth);
             gateBarHeight = F("m2_gate_bar_height", gateBarHeight);
+            wallOrcSpeed = F("m2_wall_orc_speed", wallOrcSpeed);
+            wallFightCells = F("m2_wall_fight_cells", wallFightCells);
+            wallDefendersPerOrc = I("m2_wall_defenders_per_orc", wallDefendersPerOrc);
             ardenRespawnSeconds = F("m2_arden_respawn_sec", ardenRespawnSeconds);
             cryCooldownSeconds = F("m2_cry_cooldown_sec", cryCooldownSeconds);
             cryRadius = F("m2_cry_radius", cryRadius);

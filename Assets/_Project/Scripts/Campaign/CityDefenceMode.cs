@@ -390,6 +390,8 @@ namespace CityBuilder.Campaign
             TickGarrison(dt);
             TickTownsfolk(dt);
             TickSiege(dt);
+            TickWallOrcs(dt);
+            TickArdenWall(dt);
             TickGates(dt);
             if (Current == Stage.Courier || Current == Stage.Lost) return;
 
