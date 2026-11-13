@@ -89,3 +89,4 @@
 - [Editor account switcher (2026-11-13)](project_account_switcher.md) — toolbar «Аккаунт» needs ticking via toolbar right-click; fallback CityBuilder → Аккаунт…; user not confirmed yet.
 - [Mission 2 playtest 6 (2026-11-13)](project_pending_2026_11_13_mission2.md) — 10 items ALL BUILT, not seen: orc range, gate hp 2500 + bar, no building taps, Ардан engage 3 + 20 levels by all orcs, tower bridge/stuck dock, orcs to inner gate, rubble fights, machines don't hold waves.
 - [Auto Pull + Setup on open (2026-11-13)](project_auto_setup_on_open.md) — the user's Editor pulls the sheet then runs Setup on every open; sync the sheet before the user opens Unity or CSV edits are lost.
+- [Sandbox healer v2 (2026-11-13)](project_sandbox_healer_v2.md) — beds instead of radius, 30 s/60 s, manual worker count beats auto; concepts sent, not built.
