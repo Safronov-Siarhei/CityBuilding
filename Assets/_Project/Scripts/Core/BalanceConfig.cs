@@ -2893,6 +2893,8 @@ namespace CityBuilder.Core
         // the wreckers: a band loosed in the town once the outer gate falls, after houses only; the next band
         // this long after the last one is gone
         public int wreckers = 5;
+        // the town's people lying dead in the lower town once the outer gate falls (the user's eighth playtest)
+        public int corpses = 12;
         public float wreckersRespawnSeconds = 8f;
         // each wave's make-up is a row of the m2waves tab (the user's third playtest: «удобный лист с волнами»)
         public float firstWaveSeconds = 10f;
@@ -2919,6 +2921,9 @@ namespace CityBuilder.Core
         // (cells); this many of the town's infantry climb up against each orc on the wall
         public float wallOrcSpeed = 1.5f, wallFightCells = 10f;
         public int wallDefendersPerOrc = 2;
+        // the gatehouses' end towers shoot (the user's eighth playtest): reach in cells, seconds between arrows, damage
+        public float gateTowerRangeCells = 7f, gateTowerShotSeconds = 1.5f;
+        public int gateTowerDamage = 20;
         public float cryCooldownSeconds = 20f, cryRadius = 7f, crySeconds = 6f, cryDamageMult = 1.5f, cryStunSeconds = 1.5f;
         public float whirlCooldownSeconds = 12f, whirlRadius = 3f, whirlDamageMult = 2f, whirlPush = 2.5f;
         public float dashCooldownSeconds = 14f, dashDistance = 7f, dashSeconds = 0.35f, dashWidth = 1.5f, dashDamageMult = 1.5f, dashStunSeconds = 1.5f;
@@ -2955,6 +2960,7 @@ namespace CityBuilder.Core
             reinforceSeconds = F("m2_reinforce_sec", reinforceSeconds);
             squareLossCells = F("m2_square_loss_cells", squareLossCells);
             wreckers = I("m2_wreckers", wreckers);
+            corpses = I("m2_corpses", corpses);
             wreckersRespawnSeconds = F("m2_wreckers_respawn_sec", wreckersRespawnSeconds);
             firstWaveSeconds = F("m2_first_wave_sec", firstWaveSeconds);
             meleeReachMult = F("m2_melee_reach_mult", meleeReachMult);
@@ -2990,6 +2996,9 @@ namespace CityBuilder.Core
             wallOrcSpeed = F("m2_wall_orc_speed", wallOrcSpeed);
             wallFightCells = F("m2_wall_fight_cells", wallFightCells);
             wallDefendersPerOrc = I("m2_wall_defenders_per_orc", wallDefendersPerOrc);
+            gateTowerRangeCells = F("m2_gate_tower_range_cells", gateTowerRangeCells);
+            gateTowerShotSeconds = F("m2_gate_tower_shot_sec", gateTowerShotSeconds);
+            gateTowerDamage = I("m2_gate_tower_damage", gateTowerDamage);
             ardenRespawnSeconds = F("m2_arden_respawn_sec", ardenRespawnSeconds);
             cryCooldownSeconds = F("m2_cry_cooldown_sec", cryCooldownSeconds);
             cryRadius = F("m2_cry_radius", cryRadius);

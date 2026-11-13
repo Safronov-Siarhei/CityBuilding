@@ -241,6 +241,22 @@ namespace CityBuilder.Campaign
                     if (Arden.GoToWall(t.wallCell)) _ardenWallIn = 1f;
                     return;
                 }
+                // a wall's own stair tower (its door, the user's eighth playtest: «герой не может попасть на стену»):
+                // running into it takes him up
+                if (stick.sqrMagnitude < 0.25f) return;
+                var cell = grid.WorldToCell(at);
+                for (var dx = -2; dx <= 2; dx++)
+                    for (var dy = -2; dy <= 2; dy++)
+                    {
+                        var c = cell + new Vector2Int(dx, dy);
+                        if (!WallWalk.IsStair(c) || WallWalk.IsDockStair(c)) continue;
+                        var centre = grid.GetFootprintCenterWorld(c, Vector2Int.one);
+                        var to = centre - at;
+                        to.y = 0f;
+                        if (to.magnitude > ArdenClimbReach * Cell || Vector3.Dot(stick.normalized, to.normalized) < 0.5f) continue;
+                        if (Arden.GoToWall(c)) _ardenWallIn = 1f;
+                        return;
+                    }
                 return;
             }
             if (!Arden.OnWall || stick.sqrMagnitude < 0.25f) return;

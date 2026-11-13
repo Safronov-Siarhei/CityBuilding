@@ -19,6 +19,8 @@ namespace CityBuilder.Campaign
         [SerializeField] private GameObject gatePassageModel;   // Models/Buildings/FortifiedGate1-Passage.fbx
         [SerializeField] private GameObject gateLeafModel;      // Models/Buildings/FortifiedGate1-Leaf.fbx
         [SerializeField] private GameObject gateGrilleModel;    // Models/Buildings/FortifiedGate1-Grille.fbx
+        // the doors at the foot of the two flanking towers, the way up onto the wall (approved 2026-11-13, variant A)
+        [SerializeField] private GameObject gateTowerDoorsModel; // Models/Buildings/FortifiedGate1-TowerDoors.fbx
 
         // gatehouse sizes in cells (gate_close_drafts.py)
         private const float GateFace = 0.38f, GateHalfWidth = 0.21f, GrilleUp = 0.52f;
@@ -53,6 +55,7 @@ namespace CityBuilder.Campaign
             pivot.localPosition = Vector3.zero;
             pivot.localScale = Vector3.one * (cell / Mathf.Max(0.01f, gate.transform.lossyScale.x));
             if (gatePassageModel != null) Instantiate(gatePassageModel, pivot, false).name = "Passage";
+            if (gateTowerDoorsModel != null) Instantiate(gateTowerDoorsModel, pivot, false).name = "TowerDoors";
             var d = new Doors { gate = gate };
             d.left = Hinge(pivot, "LeafL", new Vector3(GateFace + 0.004f, 0f, -GateHalfWidth), false);
             d.right = Hinge(pivot, "LeafR", new Vector3(GateFace + 0.004f, 0f, GateHalfWidth), true);

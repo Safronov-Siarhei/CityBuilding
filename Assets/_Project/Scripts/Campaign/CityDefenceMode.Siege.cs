@@ -79,6 +79,7 @@ namespace CityBuilder.Campaign
             if (ram)
             {
                 orc.FollowLane(_lanes[lane]);
+                orc.OnlyTarget = OuterGates[lane];
                 return null;
             }
             // the tower's own road: the lane to the gate's front, then along the wall to a section either side of the gate

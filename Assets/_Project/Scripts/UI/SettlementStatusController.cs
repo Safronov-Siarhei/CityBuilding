@@ -56,6 +56,16 @@ namespace CityBuilder.UI
                 var help = mode.HelpComing || mode.Current == Campaign.CityDefenceMode.Stage.Won;
                 var left = help ? mode.TimeLeft : mode.TimeLeft - mode.ReinforceSeconds;
                 var seconds = Mathf.Max(0, Mathf.CeilToInt(left));
+                // the plaque is narrow: the words shrink to fit so the time after them shows (the user's eighth
+                // playtest: only «Подкрепление» was seen)
+                if (!statusText.resizeTextForBestFit)
+                {
+                    statusText.resizeTextForBestFit = true;
+                    statusText.resizeTextMaxSize = statusText.fontSize;
+                    statusText.resizeTextMinSize = Mathf.Max(8, statusText.fontSize / 2);
+                    statusText.horizontalOverflow = HorizontalWrapMode.Wrap;
+                    statusText.verticalOverflow = VerticalWrapMode.Truncate;
+                }
                 statusText.text = Localization.Format(help ? "#m2_clock_help" : "#m2_clock_courier", $"{seconds / 60}:{seconds % 60:00}");
                 return;
             }

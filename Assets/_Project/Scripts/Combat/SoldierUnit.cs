@@ -95,6 +95,9 @@ namespace CityBuilder.Combat
         /// <summary>A point by a broken stretch of the pen's wall (campaign level 2 sets it): a soldier penned in reaches it.</summary>
         public static System.Func<Vector3, bool> PenBreach;
 
+        /// <summary>A wall between this soldier and that orc (campaign level 2 sets it): he does not strike it.</summary>
+        public static System.Func<SoldierUnit, OrcUnit, bool> WallBlocks;
+
         /// <summary>How far off he picks a fight by himself: cut in a dungeon by dungeon_engage_factor.</summary>
         private float EngageRadius => EngageOverride > 0f ? EngageOverride : Dungeon.DungeonMode.IsActive && BalanceConfig.Instance != null
             ? _engageRadius * BalanceConfig.Instance.DungeonEngageFactor
@@ -431,6 +434,7 @@ namespace CityBuilder.Combat
                 if (orc == null || orc.CurrentHealth <= 0) continue;
                 var d = HorizontalDistance(orc.transform.position, transform.position);
                 if (d > best) continue;
+                if (WallBlocks != null && WallBlocks(this, orc)) continue;
                 best = d;
                 nearest = orc;
             }

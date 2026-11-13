@@ -48,6 +48,7 @@ namespace CityBuilder.Combat
         /// <summary>Whether this one may pick that target at all: the ram only gates, the catapult nothing inside its dead zone, the healer and the tower nothing.</summary>
         private bool CanStrike(IDamageTarget target)
         {
+            if (WallBlocks != null && target is OrcUnit orc && WallBlocks(this, orc)) return false;
             if (_row == null || target == null) return true;
             if (_row.healer || _row.carrier) return false;
             if (_row.gatesOnly && !IsGate(target)) return false;
