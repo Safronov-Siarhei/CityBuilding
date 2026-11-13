@@ -61,3 +61,16 @@ languages — sweeps every row; no string starts with `= + - @`).
   formula columns (`total_cost`, `per_day`, `payback_days`, `up*`).
 - Google caches published CSVs — cache-bust when diffing. Cyrillic can't be typed via the extension
   (fails silently); Chrome screenshots time out on this machine — read Name Box / formula bar via JS.
+
+## Prices of up to 4 resources (the user, 2026-11-13, layout A)
+- The SANDBOX building tabs (gids 2000071-77) hold a price as four slot pairs: `cost_1`/`cost_1_n` ..
+  `cost_4`/`cost_4_n` for building, `up2_1`/`up2_1_n` .. `up5_4`/`up5_4_n` for each upgrade. The name
+  cell is a dropdown of 11 Russian names (Дерево, Камень, Уголь, Медная руда, Железная руда, Золотая
+  руда, Медный слиток, Железный слиток, Золотой слиток, Монеты, Еда); any resource in any slot.
+- `BalanceImporter.ReadCost` reads both the old per-resource columns (base `Здания` tab and the
+  Invasion tab still use them) and the slots (`TryResourceByName`, `PriceSlots` = 4; more than 4 warns).
+  The overlay rule is unchanged: a sandbox table with any `cost_`/`upN_` column is the WHOLE price.
+- As the user asked, every sandbox UPGRADE costs only wood and stone for now (2026-11-13); he will set
+  the prices himself. Recruiting is coins only (recruit_ironbar/copperbar/wood emptied on «Юниты»).
+- `Tools/docs/reference.py` `price()` reads the slots too.
+

@@ -804,6 +804,20 @@ namespace CityBuilder.EditorTools
             }
             else Debug.LogWarning("[SetupProject] Shaders/IconBillboard is missing -- no worker-shortage marks.");
             shortageSO.FindProperty("material").objectReferenceValue = shortageMaterial;
+            // its twin for a building short of an input (UI/Icons/NoResource.png, Tools/ui/no_resource_icon.py; the user, 2026-11-13)
+            const string noResourcePath = "Assets/_Project/Materials/NoResourceMark.mat";
+            var noResource = AssetDatabase.LoadAssetAtPath<Material>(noResourcePath);
+            if (noResource == null && billboard != null)
+            {
+                noResource = new Material(billboard) { name = "NoResourceMark" };
+                AssetDatabase.CreateAsset(noResource, noResourcePath);
+            }
+            if (noResource != null)
+            {
+                noResource.SetTexture("_MainTex", AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/_Project/UI/Icons/NoResource.png"));
+                EditorUtility.SetDirty(noResource);
+            }
+            shortageSO.FindProperty("resourceMaterial").objectReferenceValue = noResource;
             shortageSO.ApplyModifiedPropertiesWithoutUndo();
             // the boosters' violet stream round the buildings they work on (Shaders/BoosterStream; the user, 2026-11-12)
             var auras = managers.AddComponent<Shop.BoosterAuras>();

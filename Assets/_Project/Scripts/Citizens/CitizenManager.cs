@@ -137,15 +137,22 @@ namespace CityBuilder.Citizens
         public void RefillWantedJobs()
         {
             if (IdlePopulation <= 0) return;
-            // the oldest building first (the user, 2026-11-02); one being built waits till it stands
+            // In ROUNDS (the user, 2026-11-13): every building gets its first hand before any gets a
+            // second, its second before any gets a third, and so on -- the oldest building first in
+            // each round (2026-11-02); one being built waits till it stands. A building whose island
+            // has nobody free is skipped (TryAssignWorker), the others go on.
+            var rounds = 0;
             foreach (var building in ProductionBuilding.All)
+                if (building != null) rounds = Mathf.Max(rounds, building.WantedWorkers);
+            for (var round = 1; round <= rounds; round++)
             {
-                if (building == null || building.Instance == null || !building.Instance.IsOperational) continue;
-                while (building.AssignedWorkers < building.WantedWorkers && IdlePopulation > 0)
+                foreach (var building in ProductionBuilding.All)
                 {
-                    if (!building.TryAssignWorker()) break;
+                    if (building == null || building.Instance == null || !building.Instance.IsOperational) continue;
+                    if (building.AssignedWorkers >= Mathf.Min(round, building.WantedWorkers)) continue;
+                    building.TryAssignWorker();
+                    if (IdlePopulation <= 0) return;
                 }
-                if (IdlePopulation <= 0) return;
             }
         }
 

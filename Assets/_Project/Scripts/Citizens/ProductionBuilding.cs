@@ -106,8 +106,12 @@ namespace CityBuilder.Citizens
             get
             {
                 var recipe = SelectedRecipe;
-                if (recipe != null && recipe.seconds > 0f) return recipe.seconds;
-                return Data != null ? Data.productionIntervalSeconds : 0f;
+                var own = recipe != null ? recipe.SecondsAt(CurrentLevel) : 0f;
+                if (own > 0f) return own;
+                if (Data == null) return 0f;
+                // the level's own cycle (mines, the user 2026-11-13), else the building's single interval
+                var level = Data.LevelStats(CurrentLevel).intervalSeconds;
+                return level > 0f ? level : Data.productionIntervalSeconds;
             }
         }
 
@@ -260,30 +264,41 @@ namespace CityBuilder.Citizens
             }
             var working = data != null && AssignedWorkers > 0 && IntervalSeconds > 0f
                 && (_buildingInstance == null || _buildingInstance.IsOperational);   // not while built or upgraded (ConstructionSite)
-            ShowSmeltBar(working && !_starved, data);
-            if (!working) return;
+            if (!working)
+            {
+                _starved = _storeFull = false;
+                ShowSmeltBar(false, data);
+                return;
+            }
 
             // A gatherer earns nothing here. Its wood and stone arrive on a worker's back, and
             // ticking as well would pay it twice -- and would keep paying after the last boulder
             // in reach was gone, which is exactly the thing depletion is supposed to mean.
             if (GathersFromNodes) return;
 
+            var recipe = SelectedRecipe;
+            if (recipe == null) return;
+            var resources = ResourceManager.Instance;
+
+            // Waiting, the clock stopped (the user, 2026-11-13): a mine whose store is full stands
+            // instead of digging into nothing; a furnace short of ore or coal waits and goes on the
+            // moment they come -- the resource-shortage mark over it meanwhile (WorkerShortageMarks).
+            _storeFull = resources != null && resources.GetAmount(recipe.output) >= resources.GetCapacity(recipe.output);
+            _starved = recipe.HasInputs && AffordableBatches(1, recipe.inputs, StocksFor(recipe, resources)) <= 0;
+            ShowSmeltBar(true, data);
+            if (_storeFull || _starved) return;
+
             _timer += Time.deltaTime;
             var interval = IntervalSeconds;
             if (_timer < interval) return;
             _timer -= interval;
 
-            var recipe = SelectedRecipe;
-            if (recipe == null) return;
-
-            var resources = ResourceManager.Instance;
             var wanted = AssignedWorkers * data.LevelStats(CurrentLevel).batchesPerWorkerPerTick;
             if (wanted <= 0) return;
 
             // A workshop runs as many batches as it has material for: a mill with three hands and
             // grain for two mills two sacks' worth this tick, not none.
             var batches = AffordableBatches(wanted, recipe.inputs, StocksFor(recipe, resources));
-            _starved = recipe.HasInputs && batches <= 0;
 
             if (recipe.HasInputs && !ReportMissingInput(recipe, batches <= 0)) return;
 
@@ -313,7 +328,20 @@ namespace CityBuilder.Citizens
 
             var stored = resources != null ? resources.AddProduced(recipe.output, amount) : amount;
             ReportOverflow(data, amount - stored);
+            // «+N» over the building after each cycle (the user, 2026-11-13)
+            if (stored > 0) UI.ResourceGainPopups.Instance?.Show(transform.position + Vector3.up * PopupHeight, stored, recipe.output);
         }
+
+        private bool _storeFull;
+
+        /// <summary>
+        /// At work but waiting for an input it has none of (the Плавильня with no ore or coal): the
+        /// resource-shortage mark goes up over it (WorkerShortageMarks; the user, 2026-11-13).
+        /// </summary>
+        public bool ShortOfResources => _starved && AssignedWorkers > 0 && Instance != null && Instance.IsOperational;
+
+        /// <summary>At work but its output store is full, so it stands (a mine, a furnace).</summary>
+        public bool StoreFull => _storeFull && AssignedWorkers > 0;
 
         private int _shoalShare;
 
@@ -332,7 +360,7 @@ namespace CityBuilder.Citizens
         private void ShowSmeltBar(bool on, BuildingData data)
         {
             var recipe = SelectedRecipe;
-            if (!on || recipe == null || !recipe.HasInputs || data == null || IntervalSeconds <= 0f)
+            if (!on || recipe == null || data == null || IntervalSeconds <= 0f)
             {
                 if (_smeltBar != null) _smeltBar.Hide();
                 return;

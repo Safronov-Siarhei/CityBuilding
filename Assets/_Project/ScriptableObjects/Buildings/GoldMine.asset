@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: GoldMine
   displayName: "\u0417\u043E\u043B\u043E\u0442\u043E\u0439 \u0440\u0443\u0434\u043D\u0438\u043A"
-  prefab: {fileID: 9178505423542136827, guid: 2b142c2fca7a31943add246c4660c0c5, type: 3}
+  prefab: {fileID: 6452649611176294809, guid: 2b142c2fca7a31943add246c4660c0c5, type: 3}
   footprintSize: {x: 2, y: 2}
   cost:
   - type: 0
@@ -34,56 +34,61 @@ MonoBehaviour:
   - maxHealth: 120
     defense: 0
     housingCapacity: 0
-    maxWorkers: 3
-    batchesPerWorkerPerTick: 2
+    maxWorkers: 2
+    batchesPerWorkerPerTick: 1
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
     residentCoins: 0
+    intervalSeconds: 29
     happiness: 0
     buildSeconds: 16
   - maxHealth: 192
     defense: 0
     housingCapacity: 0
-    maxWorkers: 4
-    batchesPerWorkerPerTick: 3
+    maxWorkers: 3
+    batchesPerWorkerPerTick: 1
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
     residentCoins: 0
+    intervalSeconds: 26
     happiness: 0
     buildSeconds: 18
   - maxHealth: 300
     defense: 0
     housingCapacity: 0
-    maxWorkers: 5
-    batchesPerWorkerPerTick: 4
+    maxWorkers: 4
+    batchesPerWorkerPerTick: 1
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
     residentCoins: 0
+    intervalSeconds: 23
     happiness: 0
     buildSeconds: 27
   - maxHealth: 432
     defense: 0
     housingCapacity: 0
-    maxWorkers: 6
-    batchesPerWorkerPerTick: 5
+    maxWorkers: 5
+    batchesPerWorkerPerTick: 1
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
     residentCoins: 0
+    intervalSeconds: 20
     happiness: 0
     buildSeconds: 43
   - maxHealth: 600
     defense: 0
     housingCapacity: 0
-    maxWorkers: 7
-    batchesPerWorkerPerTick: 6
+    maxWorkers: 6
+    batchesPerWorkerPerTick: 1
     storageCapacity: 0
     harvestRadius: 0
     serviceRadius: 0
     residentCoins: 0
+    intervalSeconds: 17
     happiness: 0
     buildSeconds: 70
   recipes:
@@ -93,7 +98,8 @@ MonoBehaviour:
     output: 3
     outputAmount: 1
     seconds: 0
-  productionIntervalSeconds: 12
+    secondsByLevel: []
+  productionIntervalSeconds: 29
   storageGroup: 0
   upgradeToLevel2Cost:
   - type: 0

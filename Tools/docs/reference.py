@@ -126,6 +126,13 @@ def price(row, lv):
         v = num(row.get(col, ""))
         if v:
             parts.append(f"{label} {fmt(v)}")
+    # the four price slots (2026-11-13): cost_1 / cost_1_n ... up5_4 / up5_4_n -- a resource name and its amount
+    prefix = "cost_" if lv == 1 else f"up{lv}_"
+    for k in range(1, 5):
+        name = (row.get(f"{prefix}{k}", "") or "").strip()
+        v = num(row.get(f"{prefix}{k}_n", ""))
+        if name and v:
+            parts.append(f"{name.lower()} {fmt(v)}")
     return ", ".join(parts) if parts else "—"
 
 

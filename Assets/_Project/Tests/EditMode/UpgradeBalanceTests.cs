@@ -67,12 +67,19 @@ namespace CityBuilder.Tests.EditMode
                 if (IsGatherer(building)) continue;
                 checkedAny = true;
 
+                // per worker per SECOND (the user, 2026-11-13: a mine digs 1 ore a worker a cycle, the
+                // cycle shortens each level; the Smelter's recipes have their own seconds per level)
+                float Rate(int level)
+                {
+                    var stats = building.levels[level - 1];
+                    var seconds = building.recipes[0].SecondsAt(level);
+                    if (seconds <= 0f) seconds = stats.intervalSeconds > 0f ? stats.intervalSeconds : building.productionIntervalSeconds;
+                    return stats.batchesPerWorkerPerTick / UnityEngine.Mathf.Max(0.001f, seconds);
+                }
                 for (var level = 1; level < BuildingInstance.MaxLevel; level++)
                 {
-                    var before = building.levels[level - 1].batchesPerWorkerPerTick;
-                    var after = building.levels[level].batchesPerWorkerPerTick;
-                    Assert.Greater(after, before,
-                        $"{building.id} gets through no more batches per worker at level {level + 1} than at level {level}. " +
+                    Assert.Greater(Rate(level + 1), Rate(level),
+                        $"{building.id} makes no more per worker at level {level + 1} than at level {level}. " +
                         "An upgrade that only adds worker slots is a more expensive way to hire somebody -- a second building would do the same for less.");
                 }
             }

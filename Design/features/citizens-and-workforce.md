@@ -105,6 +105,10 @@ house, the hall last). Nothing of it is saved: after a load the reconcile re-hom
   figure from its own island (else any, teleported to its door); removal prefers figures of a house
   that has too many; `Rehome()` every node-retry pass moves surplus idle figures to homes short of
   figures (teleport across islands); `KillAgent` -> `HousePeople.Lose(home)`.
+- WORKERS IN ROUNDS (the user, 2026-11-13): `CitizenManager.RefillWantedJobs` gives every self-staffing
+  building its 1st hand (oldest first), then a 2nd to each, then a 3rd... up to what it wants; a
+  building whose island has nobody free is skipped. A building the player took a worker off still
+  keeps only what he left (WorkersCapped).
 - Decor money and gifts now count a house's LIVE residents (`CitizensOf`), not its places.
 
 ## Code

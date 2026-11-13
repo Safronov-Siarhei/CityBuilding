@@ -76,6 +76,13 @@ namespace CityBuilder.Buildings
         public float residentCoins;
 
         /// <summary>
+        /// Seconds one production cycle takes at this level (the sheet's production_interval_sec(_N);
+        /// the user, 2026-11-13: mines dig faster each level -- coal 20/17/14/11/8 ...). A blank higher
+        /// level repeats the one below.
+        /// </summary>
+        public float intervalSeconds;
+
+        /// <summary>
         /// What standing here does for the settlement's mood -- the design's third happiness factor,
         /// "each entertainment building contributes its own happiness value". Zero for everything
         /// outside the Развлечения category, which is most of the roster.
@@ -281,6 +288,7 @@ namespace CityBuilder.Buildings
                     harvestRadius = level.harvestRadius,
                     serviceRadius = level.serviceRadius,
                     residentCoins = level.residentCoins,
+                    intervalSeconds = level.intervalSeconds,
                     buildSeconds = level.buildSeconds,
                 });
             }
@@ -303,6 +311,7 @@ namespace CityBuilder.Buildings
                     output = recipe.output,
                     outputAmount = recipe.outputAmount,
                     seconds = recipe.seconds,
+                    secondsByLevel = recipe.secondsByLevel != null ? (float[])recipe.secondsByLevel.Clone() : null,
                 });
             }
             return copy;

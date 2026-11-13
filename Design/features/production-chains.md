@@ -52,6 +52,20 @@ picker (iron / copper / gold bar / coins). A starved converter logs once; a full
   batches_per_tick batches. L1 (2 workers x 2): copper 48 bars/day, iron 24, gold 16 (a day = 120 s).
 - Concepts: `Tools/ui/smelter_bar_concepts.py` (A/B/C sheet, `final` -> `Design/ui/Smelter_Final_Concept.png`).
 
+## Mines and Smelter v2 (the user, 2026-11-13) -- BUILT, setup pending at writing, not seen
+- MINES: 1 ore per worker per cycle (`batches_per_tick` = 1 = the «+N» on the sheet); the cycle is
+  `production_interval_sec(_2.._5)` on the buildings tab (new per-level columns): coal 20/17/14/11/8,
+  copper 23/20/17/14/11, iron 26/23/20/17/14, gold 29/26/23/20/17 s; workers 2/3/4/5/6.
+- SMELTER: 1 worker at every level, 1 bar per cycle; recipes (recipes tab, `seconds`..`seconds_5`):
+  copper bar = 1 ore + 1 coal 24/21/18/15/12 s; iron bar = 2 ore + 1 coal 27/24/21/18/15 s;
+  gold bar = 3 ore + 2 coal 30/27/24/21/18 s (`BuildingRecipe.secondsByLevel`, `SecondsAt`).
+- Every cycling producer (mines, Smelter) shows the bar over it and «+N» after a cycle; it WAITS, the
+  clock stopped, while its output store is full or an input is short (`_storeFull`, `_starved`).
+- A building short of an input shows the RESOURCE-SHORTAGE mark (`UI/Icons/NoResource.png`, made by
+  `Tools/ui/no_resource_icon.py`; `WorkerShortageMarks.resourceMaterial`, `ProductionBuilding.ShortOfResources`);
+  the worker mark wins when both apply.
+- `ProductionBuilding.IntervalSeconds`: recipe seconds at the level > the level's interval > the building's.
+
 ## Planned (agreed in talk 2026-11-12, NOT built)
 - Оружейня: iron bar + coal -> melee weapons; melee soldiers hired for melee weapons + coins.
 - Мастерская стрелка: ranged weapons (the user doubts copper fits; proposed wood + iron bar) -> ranged

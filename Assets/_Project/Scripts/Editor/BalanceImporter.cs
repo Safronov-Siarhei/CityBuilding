@@ -997,6 +997,7 @@ namespace CityBuilder.EditorTools
                     output = ParseEnum(header, row, "out", ResourceType.Wood, path),
                     outputAmount = (int)Number(header, row, "out_amount", path),
                     seconds = Mathf.Max(0f, OptionalNumber(header, row, "seconds", 0f, path)),
+                    secondsByLevel = RecipeSeconds(header, row, path),
                     inputs = ReadRecipeInputs(header, row, path),
                 };
 
@@ -1101,6 +1102,9 @@ namespace CityBuilder.EditorTools
                     residentCoins = level == 1 ? OptionalNumber(header, row, "resident_coins", path)
                         : LevelFloat(header, row, "resident_coins", level, previous?.residentCoins, path),
                     buildSeconds = LevelNumber(header, row, "build_sec", level, previous?.buildSeconds, path),
+                    // optional: a blank level repeats the one below; no column at all = the building's single interval
+                    intervalSeconds = header.IndexOf("production_interval_sec") < 0 ? 0f
+                        : LevelFloat(header, row, "production_interval_sec", level, previous?.intervalSeconds, path),
                 });
             }
 
@@ -1165,7 +1169,70 @@ namespace CityBuilder.EditorTools
                 var amount = CostAmount(header, row, prefix + type.ToString().ToLowerInvariant(), path);
                 if (amount > 0) cost.Add(new ResourceAmount { type = type, amount = amount });
             }
+
+            // the four price slots (the user, 2026-11-13, layout A): `cost_1` names the resource (a
+            // dropdown -- «Дерево», «Медный слиток» ...), `cost_1_n` the amount; up2_1 .. up5_4 the same
+            // for each upgrade. Any resource in any slot; an empty slot is no resource.
+            for (var slot = 1; slot <= PriceSlots; slot++)
+            {
+                var column = prefix + slot;
+                if (header.IndexOf(column) < 0) continue;
+                var name = Text(header, row, column);
+                if (name.Length == 0) continue;
+                var amount = CostAmount(header, row, column + "_n", path);
+                if (amount <= 0) continue;
+                if (!TryResourceByName(name, out var type))
+                {
+                    Debug.LogError($"BalanceImporter: {path} has '{name}' in '{column}' of {row[0]} -- not a resource. Skipped.");
+                    continue;
+                }
+                var known = cost.Find(c => c.type == type);
+                if (known != null) known.amount += amount;
+                else cost.Add(new ResourceAmount { type = type, amount = amount });
+            }
+            if (cost.Count > PriceSlots)
+                Debug.LogWarning($"BalanceImporter: {path}: {row[0]} '{prefix}' asks for {cost.Count} resources; the cards show four.");
             return cost;
+        }
+
+        /// <summary>How many resources one price may hold (the user, 2026-11-13).</summary>
+        public const int PriceSlots = 4;
+
+        /// <summary>A slot's resource: the sheet's Russian dropdown names, or the enum's own name.</summary>
+        private static bool TryResourceByName(string name, out ResourceType type)
+        {
+            switch (name.Trim().ToLowerInvariant())
+            {
+                case "дерево": type = ResourceType.Wood; return true;
+                case "камень": type = ResourceType.Stone; return true;
+                case "уголь": type = ResourceType.Coal; return true;
+                case "медная руда": type = ResourceType.CopperOre; return true;
+                case "железная руда": case "железо": type = ResourceType.Iron; return true;
+                case "золотая руда": case "золото": type = ResourceType.Gold; return true;
+                case "медный слиток": type = ResourceType.CopperBar; return true;
+                case "железный слиток": type = ResourceType.IronBar; return true;
+                case "золотой слиток": type = ResourceType.GoldBar; return true;
+                case "монеты": type = ResourceType.Coins; return true;
+                case "еда": type = ResourceType.Food; return true;
+            }
+            return Enum.TryParse(name.Trim(), true, out type);
+        }
+
+        /// <summary>A recipe's seconds at levels 1..5: seconds, seconds_2 .. seconds_5, a blank repeating the level below; null when none is given.</summary>
+        private static float[] RecipeSeconds(List<string> header, List<string> row, string path)
+        {
+            if (header.IndexOf("seconds_2") < 0) return null;
+            var levels = new float[5];
+            var last = Mathf.Max(0f, OptionalNumber(header, row, "seconds", 0f, path));
+            var any = false;
+            for (var level = 1; level <= 5; level++)
+            {
+                var column = level == 1 ? "seconds" : "seconds_" + level;
+                var value = OptionalNumber(header, row, column, 0f, path);
+                if (value > 0f) { last = value; any = true; }
+                levels[level - 1] = last;
+            }
+            return any ? levels : null;
         }
 
         /// <summary>

@@ -47,6 +47,20 @@ namespace CityBuilder.Buildings
         /// </summary>
         public float seconds;
 
+        /// <summary>
+        /// The recipe's seconds at levels 1..5 of its building (the recipes tab's seconds, seconds_2 ..
+        /// seconds_5; the user, 2026-11-13: a copper bar 24/21/18/15/12 s). Null or a 0 entry = `seconds`.
+        /// </summary>
+        public float[] secondsByLevel;
+
+        /// <summary>This recipe's seconds at the building's `level`, 0 when it has none of its own.</summary>
+        public float SecondsAt(int level)
+        {
+            if (secondsByLevel != null && level >= 1 && level <= secondsByLevel.Length && secondsByLevel[level - 1] > 0f)
+                return secondsByLevel[level - 1];
+            return seconds;
+        }
+
         public bool HasInputs => inputs != null && inputs.Count > 0;
 
         /// <summary>
