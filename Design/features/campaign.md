@@ -716,7 +716,7 @@
     rig (body, neck, head, tail, fore/hind_upper/lower.L/.R); head frame x, N, D (`D` down-forward, `N` the
     forehead side). `CineRider` (`cinematic/rider.py`, Ардан's rig): leather jerkin over a blue tunic, short blue
     cloak + hood, nasal helmet, tall boots, gloves, short sword on the left hip, the dispatch tube on a strap
-    across the back. Render `Design/buildings/RiderHorse_review.png` SENT FOR APPROVAL 2026-11-14.
+    across the back. Render `Design/buildings/RiderHorse_review.png` APPROVED 2026-11-14 (exported with their animations later).
     Note: on the cine rig the figure's RIGHT is -x (fg.limbs "R" = k -1); the captain's scabbard sits at -x.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right
