@@ -57,7 +57,7 @@ namespace CityBuilder.Campaign
         private float _bannerFor, _endPop = -1f;
         // the skill hint: shown while a skill's button is held (the user's third playtest)
         private GameObject _hint;
-        private Text _hintTitle, _hintLine;
+        private Text _hintTitle;
 
         public void Bind(CityDefenceMode mode)
         {
@@ -236,6 +236,7 @@ namespace CityBuilder.Campaign
             for (var i = 0; i < CityDefenceMode.SkillCount; i++)
             {
                 var x = -width * 0.5f + size * 0.5f + i * (size + gap);
+                _skillX[i] = x;
                 var button = MissionSkin.Round(safe, "Skill" + i, "round", HudInk.Keep, _mode.SkillGlyph(i), new Vector2(0.5f, 0f), new Vector2(x, size * 0.5f + 14f), size);
                 var skill = i;
                 var hold = button.gameObject.AddComponent<SkillHold>();
@@ -271,19 +272,62 @@ namespace CityBuilder.Campaign
             }
         }
 
-        /// <summary>The plaque over the skills while one is held: its name and what it does.</summary>
+        /// <summary>
+        /// The label over a held skill (the user's choice 2026-11-14, concept A «ярлык с цифрами»): a small plaque right
+        /// above that button -- the skill's name, then its figures as pictures with numbers (damage, radius, stun,
+        /// heal, cooldown); no sentence. Locked: the name and the level it opens at.
+        /// </summary>
         private void BuildHint(RectTransform safe)
         {
-            var plaque = MissionSkin.Image(safe, "SkillHint", "plaque", new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 112f), new Vector2(520f, 104f));
+            var plaque = MissionSkin.Image(safe, "SkillHint", "plaque", new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 104f), new Vector2(HintWidth, 86f));
             plaque.raycastTarget = false;
-            _hintTitle = MissionSkin.Label(plaque.transform, "", UiTheme.Heavy, 24, UiTheme.Ink, TextAnchor.UpperCenter, Vector2.zero, Vector2.one, new Vector2(18f, 10f));
-            _hintLine = MissionSkin.Label(plaque.transform, "", UiTheme.Bold, 18, UiTheme.InkSoft, TextAnchor.LowerCenter, Vector2.zero, new Vector2(1f, 0.66f), new Vector2(18f, 10f));
-            _hintLine.resizeTextForBestFit = true;
-            _hintLine.resizeTextMaxSize = 18;
-            _hintLine.resizeTextMinSize = 11;
+            _hintRect = plaque.rectTransform;
+            _hintTitle = MissionSkin.Label(plaque.transform, "", UiTheme.Heavy, 22, UiTheme.Ink, TextAnchor.UpperCenter, Vector2.zero, Vector2.one, new Vector2(12f, 8f));
+            // the figures' row: up to four picture + number pairs, centred
+            var row = new GameObject("Stats", typeof(RectTransform), typeof(HorizontalLayoutGroup)).GetComponent<RectTransform>();
+            row.SetParent(plaque.transform, false);
+            row.anchorMin = new Vector2(0f, 0f);
+            row.anchorMax = new Vector2(1f, 0.55f);
+            row.offsetMin = new Vector2(10f, 8f);
+            row.offsetMax = new Vector2(-10f, 0f);
+            var layout = row.GetComponent<HorizontalLayoutGroup>();
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.spacing = 14f;
+            layout.childControlWidth = layout.childControlHeight = true;
+            layout.childForceExpandWidth = layout.childForceExpandHeight = false;
+            for (var i = 0; i < _hintStat.Length; i++)
+            {
+                var cell = new GameObject("Stat" + i, typeof(RectTransform), typeof(HorizontalLayoutGroup)).GetComponent<RectTransform>();
+                cell.SetParent(row, false);
+                var cl = cell.GetComponent<HorizontalLayoutGroup>();
+                cl.childAlignment = TextAnchor.MiddleCenter;
+                cl.spacing = 4f;
+                cl.childControlWidth = cl.childControlHeight = true;
+                cl.childForceExpandWidth = cl.childForceExpandHeight = false;
+                var pic = new GameObject("Pic", typeof(RectTransform), typeof(Image), typeof(LayoutElement)).GetComponent<Image>();
+                pic.transform.SetParent(cell, false);
+                pic.preserveAspect = true;
+                pic.raycastTarget = false;
+                pic.color = UiTheme.Ink;
+                var le = pic.GetComponent<LayoutElement>();
+                le.preferredWidth = le.preferredHeight = 24f;
+                var text = MissionSkin.Label(cell, "", UiTheme.Bold, 19, UiTheme.Ink, TextAnchor.MiddleLeft, Vector2.zero, Vector2.one, Vector2.zero);
+                text.horizontalOverflow = HorizontalWrapMode.Overflow;
+                _hintPic[i] = pic;
+                _hintStat[i] = text;
+                _hintCell[i] = cell.gameObject;
+            }
             _hint = plaque.gameObject;
             _hint.SetActive(false);
         }
+
+        private const float HintWidth = 330f;
+        private RectTransform _hintRect;
+        private readonly Image[] _hintPic = new Image[4];
+        private readonly Text[] _hintStat = new Text[4];
+        private readonly GameObject[] _hintCell = new GameObject[4];
+        private readonly List<(CityDefenceMode.Stat stat, string text)> _stats = new List<(CityDefenceMode.Stat, string)>();
+        private readonly float[] _skillX = new float[CityDefenceMode.SkillCount];
 
         private void ShowHint(int skill)
         {
@@ -291,9 +335,25 @@ namespace CityBuilder.Campaign
             _hint.SetActive(skill >= 0);
             if (skill < 0) return;
             _hintTitle.text = Localization.Get("#m2_skill_" + skill);
-            var line = Localization.Get("#m2_skill_" + skill + "_line");
-            if (!_mode.SkillOpen(skill)) line = Localization.Format("#m2_skill_locked", CityDefenceMode.SkillLevel(skill)) + "\n" + line;
-            _hintLine.text = line;
+            // right over its own button, kept on the screen
+            var half = ((RectTransform)_hintRect.parent).rect.width * 0.5f - HintWidth * 0.5f - 8f;
+            _hintRect.anchoredPosition = new Vector2(Mathf.Clamp(_skillX[skill], -half, half), _hintRect.anchoredPosition.y);
+            if (_mode.SkillOpen(skill)) _mode.SkillStats(skill, _stats);
+            else
+            {
+                _stats.Clear();
+                _stats.Add((CityDefenceMode.Stat.Cooldown, Localization.Format("#m2_skill_locked", CityDefenceMode.SkillLevel(skill))));
+            }
+            for (var i = 0; i < _hintCell.Length; i++)
+            {
+                var on = i < _stats.Count;
+                _hintCell[i].SetActive(on);
+                if (!on) continue;
+                var locked = !_mode.SkillOpen(skill);
+                _hintPic[i].sprite = locked ? _mode.LockGlyph : _mode.StatGlyph(_stats[i].stat);
+                _hintPic[i].enabled = _hintPic[i].sprite != null;
+                _hintStat[i].text = _stats[i].text;
+            }
         }
 
         private void BuildGateBadge(RectTransform safe, MissionHud.Art art)

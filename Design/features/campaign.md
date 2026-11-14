@@ -481,7 +481,14 @@
   7. The outer gate fallen: towers still rolling turn for the inner wall (`TowersToInnerWall`); docked ones stay.
   8. XP: CLOCK ONLY now (kills gave the last skill a minute before the courier's end): the last skill's level
      exactly m2_skills_open_before_end_sec (60) before the mission's end.
-  OPEN: a new look for the skill hints (concepts proposed to the user), campaign monetization (ideas proposed).
+  OPEN: campaign monetization (ideas proposed, none picked).
+  - **Skill label, concept A (the user's pick 2026-11-14 of A/B/C):** holding a skill shows a small plaque right
+    over ITS button (clamped on screen): the name, then pictures + numbers, no sentence (`CityDefenceHud.ShowHint`,
+    figures from `CityDefenceMode.SkillStats`, read from the sheet). Pictures (`statGlyphs`, setup): Swords =
+    damage, Hud_Radius = radius/reach, Star = stun, Hud_Rotate = cooldown, Heal = heal, Hud_People = allies.
+    Cry: ×mult · seconds, stun, radius; Whirl: damage, radius; Dash: stun, damage, seek reach; Breath: heal %,
+    allies %, radius; cooldown last. Locked: lock + «Откроется на N-м уровне». Units: #m2_stat_sec/_cells/_pct/_mult.
+    The #m2_skill_N_line sentences are no longer shown (kept on the sheet).
 - **PLAYTEST 12 (the user, 2026-11-14) -- BUILT 2026-11-14 (setup green; not seen):**
   1. The «hanging triangle» by every archer (asked twice) = the archer's HOOD POINT: soldiers.py's prism leaned it
      y 0,05 + 0,6 z, so it floated ~0,3 m behind the head. Now it hangs on the hood and leans back as it falls;

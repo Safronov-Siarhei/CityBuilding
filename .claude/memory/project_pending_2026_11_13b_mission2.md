@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 979576c4-7a0c-49a0-b236-1e57adabdab9
-  modified: 2026-11-14T06:36:36.286Z
+  modified: 2026-11-14T06:48:18.354Z
 ---
 
 Playtest 7 of campaign level 2 BUILT (not seen): shooters both sides of the gate; escorts behind their tower; climbers fight on the wall-walk, infantry and Ардан climb the docked tower.
@@ -20,7 +20,7 @@ PLAYTEST 11 BUILT 2026-11-14 (card «PLAYTEST 11»), not seen: help clock shows 
 
 PLAYTEST 12 BUILT 2026-11-14 (card «PLAYTEST 12»), not seen: archer hood point fixed in the model (the «triangle»), monks don't heal across walls, ram hp x20 + no rams without gates, haystacks sunk, short square goal, app pause opens the menu, Ардан XP = kills + clock (last skill 60 s before the end).
 
-PLAYTEST 13 BUILT 2026-11-14 (card «PLAYTEST 13»), not seen: menu hides mission HUD, music + wave roar, dash auto-aims/short/stun-first (1/3 orc hp), whirl 2/3 orc hp, stun spiral, no hero on orc towers, towers to inner wall after breach, XP clock only. OPEN: skill hint new look (3 concepts offered, user to pick), campaign monetization ideas offered.
+PLAYTEST 13 BUILT 2026-11-14 (card «PLAYTEST 13»), not seen: menu hides mission HUD, music + wave roar, dash auto-aims/short/stun-first (1/3 orc hp), whirl 2/3 orc hp, stun spiral, no hero on orc towers, towers to inner wall after breach, XP clock only. Skill hint: the user picked concept A (label with pictures + numbers over the held button) -- BUILT 2026-11-14, not seen. OPEN: campaign monetization ideas offered (paid chapters, rewarded continue/x2, Ардан skins, stars -> sandbox rewards, starter pack, no-ads), none picked.
 
 Tower doors: the user picked A; IN THE GAME 2026-11-13 (FortifiedGate1-TowerDoors.fbx via HangDoors), not seen.
 

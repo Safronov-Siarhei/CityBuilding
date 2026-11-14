@@ -78,11 +78,52 @@ namespace CityBuilder.Campaign
         [SerializeField] private MissionHud.Art hudArt;
         [SerializeField] private Sprite[] skillGlyphs = new Sprite[0];
         [SerializeField] private Sprite lockGlyph;
+        // the skill label's stat pictures (the user's choice 2026-11-14, concept A): damage, radius, stun, cooldown,
+        // heal, allies -- Swords, Hud_Radius, Star, Hud_Rotate, Heal, Hud_People
+        [SerializeField] private Sprite[] statGlyphs = new Sprite[0];
         [SerializeField] private Sprite gateIcon;
 
         public MissionHud.Art HudArt => hudArt;
         public Sprite SkillGlyph(int skill) => skill >= 0 && skill < skillGlyphs.Length ? skillGlyphs[skill] : null;
         public Sprite LockGlyph => lockGlyph;
+        public Sprite StatGlyph(Stat stat) => (int)stat < statGlyphs.Length ? statGlyphs[(int)stat] : null;
+
+        public enum Stat { Damage, Radius, Stun, Cooldown, Heal, Allies }
+
+        /// <summary>A skill's label figures (concept A): picture + the number as shown, cooldown last.</summary>
+        public void SkillStats(int skill, List<(Stat stat, string text)> into)
+        {
+            into.Clear();
+            var b = B;
+            string Sec(float v) => Localization.Format("#m2_stat_sec", Num(v));
+            string Cells(float v) => Localization.Format("#m2_stat_cells", Num(v));
+            string Pct(float v) => Localization.Format("#m2_stat_pct", Mathf.RoundToInt(v * 100f));
+            switch (skill)
+            {
+                case Cry:
+                    into.Add((Stat.Damage, Localization.Format("#m2_stat_mult", Num(b.cryDamageMult)) + " · " + Sec(b.crySeconds)));
+                    into.Add((Stat.Stun, Sec(b.cryStunSeconds)));
+                    into.Add((Stat.Radius, Cells(b.cryRadius)));
+                    break;
+                case Whirl:
+                    into.Add((Stat.Damage, OrcShare(b.whirlOrcShare).ToString()));
+                    into.Add((Stat.Radius, Cells(b.whirlRadius)));
+                    break;
+                case Dash:
+                    into.Add((Stat.Stun, Sec(b.dashStunSeconds)));
+                    into.Add((Stat.Damage, OrcShare(b.dashOrcShare).ToString()));
+                    into.Add((Stat.Radius, Cells(b.dashSeekCells)));
+                    break;
+                default:
+                    into.Add((Stat.Heal, Pct(b.breathHeal)));
+                    into.Add((Stat.Allies, Pct(b.breathAllyHeal)));
+                    into.Add((Stat.Radius, Cells(b.breathRadius)));
+                    break;
+            }
+            into.Add((Stat.Cooldown, Sec(CooldownOf(skill))));
+        }
+
+        private static string Num(float v) => Mathf.Approximately(v, Mathf.Round(v)) ? Mathf.RoundToInt(v).ToString() : v.ToString("0.#", System.Globalization.CultureInfo.GetCultureInfo("ru-RU"));
         public Sprite GateIcon => gateIcon;
 
         private bool _active;

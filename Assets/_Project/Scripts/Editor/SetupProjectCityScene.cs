@@ -631,6 +631,12 @@ namespace CityBuilder.EditorTools
             for (var i = 0; i < skillFiles.Length; i++)
                 DefenceSprite(skillGlyphs.GetArrayElementAtIndex(i), UiTextureImport.GlyphsFolder + "/" + skillFiles[i] + ".png");
             DefenceSprite(cityDefenceSO.FindProperty("lockGlyph"), UiTextureImport.GlyphsFolder + "/Hud_Lock.png");
+            // the skill label's stat pictures (concept A, the user 2026-11-14): damage, radius, stun, cooldown, heal, allies
+            var statGlyphs = cityDefenceSO.FindProperty("statGlyphs");
+            var statFiles = new[] { "Swords", "Hud_Radius", "Star", "Hud_Rotate", "Heal", "Hud_People" };
+            statGlyphs.arraySize = statFiles.Length;
+            for (var i = 0; i < statFiles.Length; i++)
+                DefenceSprite(statGlyphs.GetArrayElementAtIndex(i), UiTextureImport.GlyphsFolder + "/" + statFiles[i] + ".png");
             // the siege's look (the user's second playtest): fires, smoke, the healing sparks, the wheat, the sand roads, props
             var defenceDot = SoftDot();
             cityDefenceSO.FindProperty("fxGlow").objectReferenceValue = ParticleMaterial("DefenceGlow", defenceDot, true);
