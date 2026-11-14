@@ -82,6 +82,8 @@ namespace CityBuilder.Campaign
         // heal, allies -- Swords, Hud_Radius, Star, Hud_Rotate, Heal, Hud_People
         [SerializeField] private Sprite[] statGlyphs = new Sprite[0];
         [SerializeField] private Sprite gateIcon;
+        // the captain of the town guard (Tools/blender/soldier_captain.py, approved 2026-11-14): a man-at-arms in his own figure
+        [SerializeField] private GameObject captainModel;
 
         public MissionHud.Art HudArt => hudArt;
         public Sprite SkillGlyph(int skill) => skill >= 0 && skill < skillGlyphs.Length ? skillGlyphs[skill] : null;

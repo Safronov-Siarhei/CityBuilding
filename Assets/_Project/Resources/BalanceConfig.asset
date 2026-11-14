@@ -7541,7 +7541,7 @@ MonoBehaviour:
       amount: 257
     - type: 1
       amount: 129
-    startsUnlocked: 0
+    startsUnlocked: 1
     unlockResearch:
       coins: 25
       seconds: 60
@@ -7661,7 +7661,7 @@ MonoBehaviour:
       amount: 257
     - type: 1
       amount: 129
-    startsUnlocked: 0
+    startsUnlocked: 1
     unlockResearch:
       coins: 25
       seconds: 60
@@ -8868,14 +8868,16 @@ MonoBehaviour:
     cryStunSeconds: 1.5
     whirlCooldownSeconds: 12
     whirlRadius: 3
-    whirlDamageMult: 2
+    whirlOrcShare: 0.667
     whirlPush: 2.5
     dashCooldownSeconds: 14
-    dashDistance: 7
+    dashDistance: 3.5
     dashSeconds: 0.35
     dashWidth: 1.5
-    dashDamageMult: 1.5
-    dashStunSeconds: 1.5
+    dashOrcShare: 0.333
+    dashStunSeconds: 2.5
+    dashSeekCells: 6
+    skillOrcLevel: 2
     breathCooldownSeconds: 40
     breathHeal: 0.5
     breathSeconds: 3
@@ -8903,6 +8905,8 @@ MonoBehaviour:
     ramHealthMult: 20
     haystackSinkShare: 0.18
     skillsOpenBeforeEndSeconds: 60
+    musicVolume: 0.35
+    roarVolume: 0.8
     ramDamageMult: 8
     towerHealthMult: 30
     siegeSpeed: 0.6

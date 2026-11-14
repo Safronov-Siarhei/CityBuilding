@@ -176,6 +176,15 @@ namespace CityBuilder.Campaign
                 else
                 {
                     Squad(SoldierType.ManAtArms, b.innerGuards, OnMesh(gate + inward * 2.5f), side);
+                    // the captain of the guard (the user, 2026-11-14): a man-at-arms' numbers in his own figure,
+                    // with the defenders behind the inner wall, a step behind his men
+                    var captainPost = OnMesh(gate + inward * 3.6f);
+                    var captain = Hire(SoldierType.ManAtArms, captainPost, new ArmyGroup(SoldierType.ManAtArms, captainPost));
+                    if (captain != null)
+                    {
+                        captain.name = "Captain";
+                        ArmyManager.Instance.Redress(captain, captainModel);
+                    }
                 }
                 var shooters = outer ? b.wallArchers + b.wallCrossbows : b.innerArchers;
                 var cells = WallCellsBeside(lane, outer, shooters);

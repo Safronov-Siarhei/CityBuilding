@@ -702,7 +702,7 @@
     like the soldiers) and cutscene `CineCaptain` (`Tools/blender/cinematic/captain.py`, Ардан's rig): darker
     steel breastplate, blue skirt, wine half cloak + sash, white plume on an open burgonet, grey moustache, scar,
     spare sword on the left hip (Ардан's), round blue buckler with the town's gold tower (game). Render
-    `Design/buildings/Captain_review.png` v2 SENT FOR APPROVAL 2026-11-14 (v1 notes fixed: cloak over the skirt, the sash wraps the breastplate via `kit.band_on_box`, the gold comb replaced by a plume socket); not exported, not in the game.
+    `Design/buildings/Captain_review.png` v2 APPROVED 2026-11-14 (v1 notes fixed: cloak over the skirt, the sash wraps the breastplate via `kit.band_on_box`, the gold comb replaced by a plume socket). IN THE GAME: `Models/Soldiers/SoldierCaptain.fbx`; `CityDefenceMode.Man(false)` hires one more man-at-arms ("Captain", same numbers) 3.6 m in from the inner gate and `ArmyManager.Redress(unit, model)` puts him in `captainModel`. CineCaptain is exported with its animations (export_cast) later. Not seen in game.
     Next models: lookout, rider + horse, gate doors.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right

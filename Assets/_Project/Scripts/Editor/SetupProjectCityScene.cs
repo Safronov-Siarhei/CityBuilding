@@ -601,6 +601,9 @@ namespace CityBuilder.EditorTools
             var cityDefenceSO = new SerializedObject(cityDefence);
             cityDefenceSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
             cityDefenceSO.FindProperty("town").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Mission2Town.json");
+            var captainModel = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Soldiers/SoldierCaptain.fbx");
+            if (captainModel == null) Debug.LogWarning("[SetupProject] Models/Soldiers/SoldierCaptain.fbx is missing -- run Tools/blender/export_fbx.py.");
+            cityDefenceSO.FindProperty("captainModel").objectReferenceValue = captainModel;
             WriteArray(cityDefenceSO.FindProperty("notInAMission"), new Object[] { raidManager, sicknessManager, fireManager, foodConsumptionManager, taxManager, happinessManager, migrationManager });
             var defenceArt = cityDefenceSO.FindProperty("hudArt");
             void DefenceSprite(SerializedProperty into, string path)
