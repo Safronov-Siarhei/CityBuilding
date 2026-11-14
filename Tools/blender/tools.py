@@ -13,6 +13,10 @@ The root is a speck inside the body (a model must have a mesh).
 - ToolHoe:     a long hoe for the field.
 - ToolBasket:  a wicker basket of fruit on the arm.
 - ToolBucket:  a wooden pail of swill for the pigs.
+- ToolFireBucket: the fire brigade's bucket (sandbox fires v2, the user 2026-11-14: «нормальная модель
+               ведра»): a tall red-painted leather bucket, two iron hoops, a rolled rim, a little gold
+               crest on the front, a rope handle into the fist. Its water ("Water", a child the game
+               shows only while it is full) sits just under the rim, with a splash over the lip.
 
     blender --background Buildings-Size1-Models.blend --python tools.py
 """
@@ -113,8 +117,49 @@ def bucket(b):
     b.rod((x + 0.05, y, z + 0.09), (FIST[0], FIST[1], FIST[2] - 0.02), 0.008, IRON)
 
 
+FB = (FIST[0] + 0.012, FIST[1] - 0.02, FIST[2] - 0.185)    # the fire bucket's foot
+FB_H, FB_R0, FB_R1 = 0.11, 0.043, 0.055
+RIM = 0.016                                                  # how deep the rim stands above the inside
+
+
+def fire_bucket(b):
+    fist(b)
+    x, y, z = FB
+    top = z + FB_H
+    # the body (closed under the rim: the inside below is dark), a darker seam band at the foot
+    b.frustum(x, y, z + 0.01, top - RIM, FB_R0 + 0.002, FB_R1 - 0.002, 'banner_red', sides=10)
+    b.frustum(x, y, z, z + 0.012, FB_R0 - 0.002, FB_R0 + 0.003, 'roof_red_dark', sides=10)
+    b.cylinder(x, y, top - RIM, top - RIM + 0.002, FB_R1 - 0.006, 'wood_dark', sides=10)
+    # the rolled rim: a hollow band standing above the inside
+    b.ring(x, y, top - RIM - 0.002, top + 0.003, FB_R1 - 0.007, FB_R1 + 0.004, ['roof_red_dark'], sides=10)
+    # two iron hoops
+    for k in (0.28, 0.68):
+        r = FB_R0 + (FB_R1 - FB_R0) * k
+        b.cylinder(x, y, z + FB_H * k - 0.005, z + FB_H * k + 0.005, r + 0.004, 'iron', sides=10)
+    # the brigade's crest on the front (facing -y): a little gold shield with a red flame
+    fy = y - (FB_R0 + (FB_R1 - FB_R0) * 0.48) - 0.004
+    b.box(x - 0.015, x + 0.015, fy - 0.004, fy + 0.004, z + 0.038, z + 0.07, 'gold')
+    b.box(x - 0.007, x + 0.007, fy - 0.007, fy - 0.003, z + 0.044, z + 0.062, 'fire')
+    # the rope handle: two iron lugs, then up into the fist
+    for k in (-1, 1):
+        lug = (x + k * (FB_R1 + 0.003), y, top - 0.018)
+        b.box(lug[0] - 0.005, lug[0] + 0.005, y - 0.007, y + 0.007, lug[2] - 0.01, lug[2] + 0.01, 'iron')
+        mid = (x + k * 0.028, y - 0.006, top + 0.035)
+        b.rod(lug, mid, 0.008, 'roof_straw_dark')
+        b.rod(mid, (FIST[0], FIST[1], FIST[2] - 0.02), 0.008, 'roof_straw_dark')
+
+
+def fire_water(b):
+    # full to the brim: the water stands in the rim, a little dome over it
+    x, y, z = FB
+    top = z + FB_H
+    b.cylinder(x, y, top - RIM, top - 0.003, FB_R1 - 0.008, 'water', sides=10)
+    b.ball(x, y, top - 0.004, FB_R1 - 0.012, 0.01, 'water', sides=10)
+
+
 TOOLS = [("ToolAxe", axe, None), ("ToolPickaxe", pickaxe, None), ("ToolRod", rod, catch),
-         ("ToolHoe", hoe, None), ("ToolBasket", basket, None), ("ToolBucket", bucket, None)]
+         ("ToolHoe", hoe, None), ("ToolBasket", basket, None), ("ToolBucket", bucket, None),
+         ("ToolFireBucket", fire_bucket, fire_water)]
 
 
 def mesh_of(name, fn, pivot, mat):
@@ -160,7 +205,8 @@ def main():
         root = install(name, mesh_of(name, speck, (0, 0, 0), mat), None, base + Vector((i * 0.8, 0, 0)), coll)
         swing = install(f"{name}-Swing", mesh_of(f"{name}-Swing", fn, SHOULDER, mat), root, Vector(SHOULDER), coll)
         if extra is not None:
-            install(f"{name}-Catch", mesh_of(f"{name}-Catch", extra, SHOULDER, mat), swing, Vector((0, 0, 0)), coll)
+            part = "Water" if name == "ToolFireBucket" else "Catch"
+            install(f"{name}-{part}", mesh_of(f"{name}-{part}", extra, SHOULDER, mat), swing, Vector((0, 0, 0)), coll)
         print("TOOL", name)
     kit.file_display_settings()
     bpy.ops.wm.save_mainfile()

@@ -143,8 +143,15 @@ SANDBOX ONLY (other modes: no fires at all).
   `Models/Orcs/OrcTorchbearer.fbx` from `Tools/blender/orctorch.py`.
 - `UI/PauseBanner` (base) -> `PlagueBanner`, `FireBanner`; editor `BuildDisasterBanner<T>`; art
   `Tools/ui/fire_banner_art.py` -> `UI/Fire/`. Quiet start: `MigrationManager.HazardGraceRemaining` (saved).
-- Traps: the old BurnSeconds tests were deleted (the old fire is gone); old sheet keys `fire_burn_seconds`
-  etc. are unused now. Simplifications to revisit after a look: primitive bucket, line bolt.
+- Traps: the old BurnSeconds tests were deleted (the old fire is gone); the old keys (`fire_burn_seconds`,
+  `fire_chance_per_day_at_full_decay` and 5 more) were DELETED 2026-11-14 from code, CSV and sheet.
+- Notices (the user, 2026-11-14, «как с чумой»): «Пожар! Постройте пожарную бригаду» -- a tap opens the
+  build menu on the brigade's card (`BuildHints.LeadToBuild(id)`; locked = the way to its research in the
+  Laboratory); «Назначьте пожарного» -- the camera goes to the brigade and selects it.
+- Unlock: FireBrigade is `starts_unlocked 0`: a research in the Laboratory, 25 coins, 60 s.
+- Bucket: `ToolFireBucket` in `Tools/blender/tools.py` (red leather, iron hoops, gold crest, child
+  "Water" shown only while full) -- render `Design/buildings/FireBucket_review.png` SENT FOR APPROVAL
+  2026-11-14, NOT exported; the game still uses the primitive cylinder. Line bolt also still to revisit.
 
 ## Code
 `Buildings/FireManager.cs`, `Buildings/BuildingFire.cs`, `Buildings/FireRules.cs`, `Buildings/FireLook.cs`,

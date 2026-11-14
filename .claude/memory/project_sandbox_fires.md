@@ -12,3 +12,8 @@ Illness start delay becomes 10 min too.
 
 **Why:** user's design; same shape as [[project-plague-cemetery]] and [[project-sandbox-healer-v2]].
 **How to apply:** read the card section first; flag and decor DO burn (the user corrected me).
+
+2026-11-14 round 2: old fire keys deleted (code/CSV/sheet); «build a brigade» notice opens the build menu on
+it (BuildHints.LeadToBuild(id)); fire bucket model ToolFireBucket rendered and SENT FOR APPROVAL (not exported,
+game still has the cylinder) -- after approval: export, add to SetupProjectCityScene tools, use in FireManager.Bucket
+with the Water child shown while full.

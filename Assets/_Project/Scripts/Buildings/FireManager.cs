@@ -356,8 +356,22 @@ namespace CityBuilder.Buildings
             }
             if (staffed) return;
             _told[island] = Time.time;
-            EventLogManager.Instance?.Post(GameEvent.At(Localization.Get(any ? "#log_brigade_no_worker" : "#log_fire_no_brigade"),
-                EventSeverity.Warning, EventGlyph.Fire, BrigadeId, building.transform.position));
+            if (any)
+            {
+                // a brigade stands but nobody works there: the camera goes to it, its card opens to assign one
+                BuildingInstance brigade = null;
+                foreach (var b in BuildingInstance.All)
+                    if (IsBrigade(b) && HousePeople.Same(HousePeople.IslandOf(b), island)) { brigade = b; break; }
+                var notice = GameEvent.About(brigade, Localization.Get("#log_brigade_no_worker"), EventSeverity.Warning, EventGlyph.Fire);
+                notice.Tapped = () => { if (brigade != null) UI.BuildingFocus.Instance?.Select(brigade); };
+                EventLogManager.Instance?.Post(notice);
+                return;
+            }
+            // no brigade on the island: a tap opens the build menu on the Пожарная бригада (or the way to
+            // it -- its research in the Laboratory), the plague's notices' shape (the user, 2026-11-14)
+            var build = GameEvent.Nowhere(Localization.Get("#log_fire_no_brigade"), EventSeverity.Warning, EventGlyph.Fire, BrigadeId);
+            build.Tapped = () => UI.BuildHints.LeadToBuild(BrigadeId);
+            EventLogManager.Instance?.Post(build);
         }
 
         // ---------------------------------------------------------------- looks

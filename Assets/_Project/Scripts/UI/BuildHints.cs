@@ -32,6 +32,12 @@ namespace CityBuilder.UI
         /// <summary>A locked card tapped: to what it waits on.</summary>
         public static void LeadToBuild(BuildingData data) => LeadToBuild(data, 0);
 
+        /// <summary>
+        /// A notice asks for this building («Пожар! Постройте пожарную бригаду»): its card in the build menu,
+        /// or, while it is locked, the way to it (the Laboratory's research).
+        /// </summary>
+        public static void LeadToBuild(string buildingId) => LeadToBuild(Find(buildingId), 0);
+
         /// <summary>A level this building lacks (a soldier, a hero, a ship waits on it): to its «Улучшить».</summary>
         public static void LeadToUpgrade(BuildingInstance building) => LeadToUpgrade(building, 0);
 
