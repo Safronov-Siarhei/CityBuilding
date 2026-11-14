@@ -324,6 +324,8 @@ namespace CityBuilder.EditorTools
                 ("DiplomacyHall", new Vector2Int(4, 4), 2.8f, new Color(0.95f, 0.94f, 0.9f), new Color(0.25f, 0.43f, 0.85f), BuildingStyle.Hut, BuildingMotif.Colonnade),
                 // the Кладбище (Tools/blender/cemetery1.py, the user 2026-11-13): takes the island's dead, graves appear on it
                 ("Cemetery", new Vector2Int(2, 2), 1f, new Color(0.45f, 0.62f, 0.3f), new Color(0.4f, 0.27f, 0.16f), BuildingStyle.Plot, BuildingMotif.Cross),
+                // the paid Рудник кристаллов (Tools/blender/crystalmine1.py, the user 2026-11-14): mines crystals into its store
+                ("CrystalMine", new Vector2Int(2, 2), 1.8f, new Color(0.62f, 0.6f, 0.58f), new Color(0.49f, 0.34f, 0.85f), BuildingStyle.Hut, BuildingMotif.Headframe),
                 ("Colosseum", new Vector2Int(4, 6), 3.6f, new Color(0.72f, 0.68f, 0.6f), new Color(0.5f, 0.47f, 0.42f), BuildingStyle.Plot, BuildingMotif.Arena),
             })
             {
@@ -520,6 +522,11 @@ namespace CityBuilder.EditorTools
             decorGiftsSO.FindProperty("coinIcon").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>(UiTextureImport.IconsFolder + "/Res_Coins.png");
             decorGiftsSO.FindProperty("crystalIcon").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>(UiTextureImport.IconsFolder + "/Res_UpgradeCrystal.png");
             decorGiftsSO.ApplyModifiedPropertiesWithoutUndo();
+            // the paid Crystal Mine's store and its crystal to tap (the user, 2026-11-14; sheet crystal_mine_*)
+            var crystalMines = managers.AddComponent<CityBuilder.UI.CrystalMines>();
+            var crystalMinesSO = new SerializedObject(crystalMines);
+            crystalMinesSO.FindProperty("crystalIcon").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>(UiTextureImport.IconsFolder + "/Res_UpgradeCrystal.png");
+            crystalMinesSO.ApplyModifiedPropertiesWithoutUndo();
 
             // What contentment is finally FOR: it sets how fast people find their way here, or
             // away. Needs the placer as well as the citizens, because the settling-in grace period

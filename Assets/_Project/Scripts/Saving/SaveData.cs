@@ -134,6 +134,9 @@ namespace CityBuilder.Saving
         /// <summary>The sandbox's dead still lying out (Citizens/Remains), each where he fell.</summary>
         public List<Vector3> bodies = new List<Vector3>();
 
+        /// <summary>The crystals waiting in the map's Рудник кристаллов (UI/CrystalMines; one mine a map).</summary>
+        public float crystalMineStored;
+
         /// <summary>Each Кладбище's dead (its origin cell and count).</summary>
         public List<GraveEntry> graves = new List<GraveEntry>();
 

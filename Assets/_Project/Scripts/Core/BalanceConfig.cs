@@ -528,6 +528,12 @@ namespace CityBuilder.Core
         // the Tax House's research in the Laboratory: its opening and levels 2..5 cost these upgrade
         // crystals (tax_house_research_crystals_<1..5>; the user, 2026-11-02)
         [SerializeField] private int[] taxHouseResearchCrystals = { 3, 5, 7, 9, 11 };
+        // the paid Crystal Mine (the user, 2026-11-14; crystal_mine_* keys, UI/CrystalMines): a crystal every N s by
+        // level, its store's cap by level, the «almost full» notice share and how often it comes again
+        [SerializeField] private float[] crystalMineSeconds = { 60f, 50f, 40f, 30f, 20f };
+        [SerializeField] private int[] crystalMineCap = { 10, 20, 30, 40, 50 };
+        [SerializeField] private float crystalMineNoticeShare = 0.8f;
+        [SerializeField] private float crystalMineNoticeRepeatSeconds = 60f;
         // the walk along the walls (the user, 2026-11-02): from which level a Fence/Gate/Tower takes
         // part, the walk's height by level 3..5 (cells), the range a fighter up there gains (cells),
         // how far an idle ranged fighter looks for orcs and a free wall cell, the climb's seconds
@@ -1688,6 +1694,17 @@ namespace CityBuilder.Core
         public float WallWalkHeight(int level) =>
             wallWalkHeight == null || wallWalkHeight.Length == 0 ? 1f : wallWalkHeight[Mathf.Clamp(level - 3, 0, wallWalkHeight.Length - 1)];
 
+        /// <summary>The Crystal Mine's seconds a crystal at this level (1..5).</summary>
+        public float CrystalMineSeconds(int level) =>
+            crystalMineSeconds == null || crystalMineSeconds.Length == 0 ? 60f : crystalMineSeconds[Mathf.Clamp(level - 1, 0, crystalMineSeconds.Length - 1)];
+
+        /// <summary>The crystals the Crystal Mine's store holds at this level (1..5).</summary>
+        public int CrystalMineCap(int level) =>
+            crystalMineCap == null || crystalMineCap.Length == 0 ? 10 : crystalMineCap[Mathf.Clamp(level - 1, 0, crystalMineCap.Length - 1)];
+
+        public float CrystalMineNoticeShare => crystalMineNoticeShare;
+        public float CrystalMineNoticeRepeatSeconds => crystalMineNoticeRepeatSeconds;
+
         /// <summary>The crystals the Tax House's research costs: its opening (level 0 or 1) and levels 2..5.</summary>
         public int TaxHouseResearchCrystals(int level)
         {
@@ -2471,6 +2488,10 @@ namespace CityBuilder.Core
             decorGiftCrystalChance = Read(economy, "decor_gift_crystal_chance", decorGiftCrystalChance);
             decorGiftCrystals = (int)Read(economy, "decor_gift_crystals", decorGiftCrystals);
             for (var l = 0; l < taxHouseResearchCrystals.Length; l++) taxHouseResearchCrystals[l] = (int)Read(economy, $"tax_house_research_crystals_{l + 1}", taxHouseResearchCrystals[l]);
+            for (var l = 0; l < crystalMineSeconds.Length; l++) crystalMineSeconds[l] = Read(economy, $"crystal_mine_seconds_{l + 1}", crystalMineSeconds[l]);
+            for (var l = 0; l < crystalMineCap.Length; l++) crystalMineCap[l] = (int)Read(economy, $"crystal_mine_cap_{l + 1}", crystalMineCap[l]);
+            crystalMineNoticeShare = Read(economy, "crystal_mine_notice_share", crystalMineNoticeShare);
+            crystalMineNoticeRepeatSeconds = Read(economy, "crystal_mine_notice_repeat_sec", crystalMineNoticeRepeatSeconds);
             islandStartRocks = (int)Read(economy, "island_start_rocks", islandStartRocks);
             loadingSecondsEnter = Read(economy, "loading_seconds_enter", loadingSecondsEnter);
             loadingSecondsExit = Read(economy, "loading_seconds_exit", loadingSecondsExit);

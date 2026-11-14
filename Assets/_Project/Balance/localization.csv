@@ -277,21 +277,6 @@ key,ru,en,comment
 #building_goldmine,Золотой рудник,Gold Mine,
 #building_laboratory,Лаборатория,Laboratory,
 #building_healerhouse,Лечебница,Infirmary,
-#healer_card,Койки: {0}/{1} · лечение {2} с · без места живёт {3} с,Beds: {0}/{1} · treatment {2} s · without a bed lives {3} s,"карточка лечебницы в песочнице: {0} занято, {1} коек, {2} и {3} секунды"
-#healer_bed_level,Ур. {0},Lvl {0},"закрытая койка на нижней панели лечебницы: уровень, с которого она открывается"
-#building_cemetery,Кладбище,Cemetery,
-#cemetery_card,Могилы: {0}/{1},Graves: {0}/{1},"карточка кладбища: {0} погребено, {1} вместимость"
-#demolish_confirm_crystals,Снести {0}? Это стоит {1} кристаллов,Demolish {0}? It costs {1} crystals,снос кладбища за кристаллы
-#plague_banner_title,Чума!,Plague!,баннер чумы: заголовок
-#plague_banner_text,Болезнь унесла почти половину жителей острова. Остановить чуму сейчас?,Illness has taken nearly half the island. Stop the plague now?,баннер чумы: текст
-#plague_banner_ad,Смотреть рекламу,Watch an ad,баннер чумы: кнопка
-#plague_banner_ad_playing,Реклама…,Ad playing…,баннер чумы: пока идёт реклама
-#plague_banner_crystals,За {0} кристаллов,For {0} crystals,баннер чумы: кнопка с ценой
-#fire_banner_title,Пожар!,Fire!,баннер пожара: заголовок
-#fire_banner_text,Огонь уничтожает город! Потушить все пожары сейчас?,Fire is destroying the town! Put out every fire now?,баннер пожара: текст
-#fire_banner_ad,Смотреть рекламу,Watch an ad,баннер пожара: кнопка
-#fire_banner_ad_playing,Реклама…,Ad playing…,баннер пожара: пока идёт реклама
-#fire_banner_crystals,{0},{0},баннер пожара: кнопка с ценой (в игре показывается только число)
 #building_firebrigade,Пожарная бригада,Fire Brigade,
 #building_well,Колодец,Well,
 #building_church,Церковь,Church,
@@ -353,6 +338,24 @@ key,ru,en,comment
 #decor_card_house,Уют: +{0} монеты в день каждому жителю,Cosiness: +{0} coins a day for each resident,карточка дома: бонус от украшений вокруг
 #place_decor_gives,+{0} монеты × {1} дом.,+{0} coins × {1} houses,над украшением при выставлении: бонус жителю и сколько домов достанет
 #place_decor_house,+{0} монеты жителю,+{0} coins per resident,над домом при выставлении: бонус от украшений рядом
+#healer_card,Койки: {0}/{1} · лечение {2} с · без места живёт {3} с,Beds: {0}/{1} · treatment {2} s · without a bed lives {3} s,"карточка лечебницы в песочнице: {0} занято, {1} коек, {2} и {3} секунды"
+#healer_bed_level,Ур. {0},Lvl {0},"закрытая койка на нижней панели лечебницы: уровень, с которого она открывается"
+#building_cemetery,Кладбище,Cemetery,
+#building_crystalmine,Рудник кристаллов,Crystal Mine,платное здание
+#crystal_mine_almost_full,Рудник кристаллов почти заполнен — соберите кристаллы,The Crystal Mine is almost full — collect the crystals,уведомление при 80% хранилища рудника
+#crystal_mine_in_shop,Рудник кристаллов продаётся в магазине,The Crystal Mine is sold in the shop,тап по закрытой карточке рудника (пока не куплен)
+#cemetery_card,Могилы: {0}/{1},Graves: {0}/{1},"карточка кладбища: {0} погребено, {1} вместимость"
+#demolish_confirm_crystals,Снести {0}? Это стоит {1} кристаллов,Demolish {0}? It costs {1} crystals,снос кладбища за кристаллы
+#plague_banner_title,Чума!,Plague!,баннер чумы: заголовок
+#plague_banner_text,Болезнь унесла почти половину жителей острова. Остановить чуму сейчас?,Illness has taken nearly half the island. Stop the plague now?,баннер чумы: текст
+#plague_banner_ad,Смотреть рекламу,Watch an ad,баннер чумы: кнопка
+#plague_banner_ad_playing,Реклама…,Ad playing…,баннер чумы: пока идёт реклама
+#plague_banner_crystals,За {0} кристаллов,For {0} crystals,баннер чумы: кнопка с ценой
+#fire_banner_title,Пожар!,Fire!,баннер пожара: заголовок
+#fire_banner_text,Огонь уничтожает город! Потушить все пожары сейчас?,Fire is destroying the town! Put out every fire now?,баннер пожара: текст
+#fire_banner_ad,Смотреть рекламу,Watch an ad,баннер пожара: кнопка
+#fire_banner_ad_playing,Реклама…,Ad playing…,баннер пожара: пока идёт реклама
+#fire_banner_crystals,{0},{0},баннер пожара: кнопка с ценой (в игре показывается только число)
 #army_summary,Армия: {0}/{1}   Содержание: {2} мон./день,Army: {0}/{1}   Upkeep: {2} coins/day,
 #army_summary_run,Армия: {0}/{1},Army: {0}/{1},
 #army_target_units,Цель: враги,Target: enemies,
@@ -551,23 +554,9 @@ key,ru,en,comment
 #log_fire_started,Пожар: {0},Fire: {0},
 #log_fire_spread,Огонь перекинулся на {0},The fire spread to {0},
 #log_fire_out,Пожар потушен: {0},Fire out: {0},
-#log_fire_torch,Орк-факельщик поджёг: {0},An orc torchbearer set fire to: {0},песочница: факельщик поджёг здание
-#log_fire_lightning,Молния ударила в {0}!,Lightning struck {0}!,песочница: молния подожгла здание
-#log_fire_victim,Житель сгорел в здании: {0},A resident burned in: {0},песочница: житель был внутри при начале пожара
-#log_fire_no_brigade,Пожар! Постройте пожарную бригаду,Fire! Build a fire brigade,песочница: пожар на острове без бригады
-#log_brigade_no_worker,Назначьте пожарного,Assign a firefighter,песочница: у бригады на острове нет рабочего
-#log_fire_shield,Пожары потушены! Защита от пожаров на {0} мин,The fires are out! Protected from fire for {0} min,"песочница: пожары потушены баннером, {0} минут защиты"
-#log_storm,Надвигается гроза!,A thunderstorm is coming!,песочница: начало грозы
 #log_sick,Заболели: {0},Fell ill: {0},
 #log_healed,Выздоровели: {0},Recovered: {0},
 #log_plague_deaths,Умерли от болезни: {0},Died of illness: {0},
-#log_infirmary_full,На острове не хватает мест в лечебнице,Not enough beds in the infirmary on this island,"песочница: больной без места, через 30 с умрёт"
-#log_infirmary_no_worker,Назначьте рабочего лечебницы,Assign a healer to the infirmary,песочница: лечебница без лекаря больных не принимает
-#log_remains_build_cemetery,"Тела лежат непогребёнными — постройте кладбище, иначе начнётся чума",Bodies lie unburied — build a cemetery or the plague will come,песочница: тел больше 10% жителей острова
-#log_plague_start,Чума на острове! Стройте лечебницы,Plague on the island! Build infirmaries,"песочница: начало чумы, дома острова не дают жителей"
-#log_plague_end,Чума на острове закончилась,The plague on the island is over,
-#log_plague_shield,Чума побеждена! Защита от чумы на {0} мин,The plague is beaten! Protected from plague for {0} min,"песочница: чуму убрали баннером, {0} минут защиты"
-#demolish_no_crystals,Не хватает кристаллов: снос стоит {0},Not enough crystals: demolishing costs {0},снос кладбища без кристаллов
 #log_no_well,Жилью не хватает колодца — люди болеют,Homes without a well -- people are falling ill,
 #log_demolished,Снесено: {0},Demolished: {0},
 #log_raid_levelled,"Орки начали набег ({0}, уровень {1})","The orcs are raiding ({0}, level {1})",
@@ -632,6 +621,20 @@ key,ru,en,comment
 #log_ruin_no_resources,"Не хватает ресурсов, чтобы восстановить: {0}",Not enough resources to restore: {0},журнал: на восстановление не хватает
 #log_house_lost,Дом разрушен: ушли жители — {0},A house is gone: residents left — {0},"журнал: дом сгорел или снесён, его жильцы покинули город"
 #log_no_people_on_island,{0}: на этом острове нет свободных жителей — постройте здесь дома,{0}: no free people on this island — build houses here,журнал: здание не нашло рабочих на своём острове (1 раз)
+#log_infirmary_full,На острове не хватает мест в лечебнице,Not enough beds in the infirmary on this island,"песочница: больной без места, через 30 с умрёт"
+#log_infirmary_no_worker,Назначьте рабочего лечебницы,Assign a healer to the infirmary,песочница: лечебница без лекаря больных не принимает
+#log_remains_build_cemetery,"Тела лежат непогребёнными — постройте кладбище, иначе начнётся чума",Bodies lie unburied — build a cemetery or the plague will come,песочница: тел больше 10% жителей острова
+#log_plague_start,Чума на острове! Стройте лечебницы,Plague on the island! Build infirmaries,"песочница: начало чумы, дома острова не дают жителей"
+#log_plague_end,Чума на острове закончилась,The plague on the island is over,
+#demolish_no_crystals,Не хватает кристаллов: снос стоит {0},Not enough crystals: demolishing costs {0},снос кладбища без кристаллов
+#log_plague_shield,Чума побеждена! Защита от чумы на {0} мин,The plague is beaten! Protected from plague for {0} min,"песочница: чуму убрали баннером, {0} минут защиты"
+#log_fire_torch,Орк-факельщик поджёг: {0},An orc torchbearer set fire to: {0},песочница: факельщик поджёг здание
+#log_fire_lightning,Молния ударила в {0}!,Lightning struck {0}!,песочница: молния подожгла здание
+#log_fire_victim,Житель сгорел в здании: {0},A resident burned in: {0},песочница: житель был внутри при начале пожара
+#log_fire_no_brigade,Пожар! Постройте пожарную бригаду,Fire! Build a fire brigade,песочница: пожар на острове без бригады
+#log_brigade_no_worker,Назначьте пожарного,Assign a firefighter,песочница: у бригады на острове нет рабочего
+#log_fire_shield,Пожары потушены! Защита от пожаров на {0} мин,The fires are out! Protected from fire for {0} min,"песочница: пожары потушены баннером, {0} минут защиты"
+#log_storm,Надвигается гроза!,A thunderstorm is coming!,песочница: начало грозы
 #research_tab_buildings,Здания,Buildings,
 #research_tab_units,Армия,Army,
 #research_empty,Здесь пока нечего изучать,Nothing to research here yet,
@@ -799,6 +802,10 @@ key,ru,en,comment
 #m2_level_up,Ардан: уровень {0}!,Ardan: level {0}!,"кампания, миссия 2: крупная надпись, когда Ардан получил уровень ({0} = уровень; каждый уровень открывает способность)"
 #m2_restart,Заново,Again,"кампания, миссия 2: кнопка окна поражения (после части 1 начинается с части 2)"
 #m2_to_map,К карте,To the map,"кампания, миссия 2: кнопка окна конца: на карту кампании"
+#m2_stat_sec,{0} с,{0} s,"кампания, миссия 2: ярлык умения: секунды (оглушение, перезарядка); {0} = число"
+#m2_stat_cells,{0} кл.,{0} cells,"кампания, миссия 2: ярлык умения: радиус/дальность в клетках; {0} = число"
+#m2_stat_pct,{0}%,{0}%,"кампания, миссия 2: ярлык умения: доля здоровья (лечение); {0} = проценты"
+#m2_stat_mult,×{0},×{0},"кампания, миссия 2: ярлык умения: во сколько раз сильнее удары (клич); {0} = число"
 ,,,
 #m2_skill_0,Боевой клич,Battle Cry,"кампания, миссия 2: название умения 1 в подсказке при зажатии кнопки"
 #m2_skill_0_line,"Ардан и союзники рядом бьют сильнее, орки вокруг оглушены","Ardan and the allies near strike harder, the orcs around are stunned","кампания, миссия 2: что делает умение 1 (подсказка при зажатии)"
@@ -809,10 +816,6 @@ key,ru,en,comment
 #m2_skill_3,Второе дыхание,Second Wind,"кампания, миссия 2: название умения 4"
 #m2_skill_3_line,"Ардан быстро восстанавливает здоровье, союзники рядом тоже лечатся","Ardan heals fast, the allies near heal too","кампания, миссия 2: что делает умение 4"
 #m2_skill_locked,Откроется на {0}-м уровне,Opens at level {0},"кампания, миссия 2: строка подсказки умения, которое ещё закрыто; {0} = уровень"
-#m2_stat_sec,{0} с,{0} s,"кампания, миссия 2: ярлык умения: секунды (оглушение, перезарядка); {0} = число"
-#m2_stat_cells,{0} кл.,{0} cells,"кампания, миссия 2: ярлык умения: радиус/дальность в клетках; {0} = число"
-#m2_stat_pct,{0}%,{0}%,"кампания, миссия 2: ярлык умения: доля здоровья (лечение); {0} = проценты"
-#m2_stat_mult,×{0},×{0},"кампания, миссия 2: ярлык умения: во сколько раз сильнее удары (клич); {0} = число"
 #m2_respawn,Ардан поднимется через {0},Ardan rises in {0},"кампания, миссия 2: надпись посреди экрана, пока павший Ардан не поднялся; {0} = секунды"
 #m2_end_stats,Волн отбито: {0}   Продержались: {1}   Уровень Ардана: {2},Waves beaten: {0}   Held: {1}   Ardan's level: {2},"кампания, миссия 2: строка итогов в окне конца; {0} волны, {1} время, {2} уровень"
 #tip_1,"Ратуша — сердце поселения: если её разрушат, игра окончена.",The Town Hall is the heart of the settlement: lose it and the game is over.,подсказка экрана загрузки (показывается случайная; пустая не показывается)

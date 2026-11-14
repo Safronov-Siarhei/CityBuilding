@@ -10,7 +10,7 @@ metadata:
 
 The user's monetization ideas, as of 2026-10-14. None of them is built yet.
 
-2026-11-14 AGREED, NOT BUILT: paid CRYSTAL MINE (~$8, 1 per sandbox map, Lab levels not for crystals, 1 crystal / 60-50-40-30-20 s, caps 10-50, manual collect with blinking icon, 80 % notice -> camera + arrow, repeats). Full spec: Design/features/monetization.md «Crystal Mine».
+2026-11-14 BUILT (logic + lvl1/2 models approved, lvl3-5 shown; shop offer = next task; not seen in game): paid CRYSTAL MINE (~$8, 1 per sandbox map, Lab levels not for crystals, 1 crystal / 60-50-40-30-20 s, caps 10-50, manual collect with blinking icon, 80 % notice -> camera + arrow, repeats). Full spec: Design/features/monetization.md «Crystal Mine».
 
 1. **Rewarded-ad offer icon (2026-10-14).** From time to time an icon with a good offer pops up in a corner of the HUD. Tapping it offers resources in exchange for watching an ad. The offers rotate: different resources and amounts each time.
    - Open questions, not yet discussed: how often it appears, how long it stays, which corner (the HUD layout in [[project_ui_skin]] is the user's sketch, so ask where it goes), what an offer is worth relative to the economy ([[project_balance_audit]]; resources are tight on purpose), and the ad SDK (Unity Ads / LevelPlay / AdMob).

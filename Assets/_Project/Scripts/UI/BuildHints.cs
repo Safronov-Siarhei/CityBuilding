@@ -1,4 +1,5 @@
 using CityBuilder.Buildings;
+using CityBuilder.Core;
 using CityBuilder.Research;
 using UnityEngine;
 
@@ -25,6 +26,8 @@ namespace CityBuilder.UI
         public static bool IsLocked(BuildingData data)
         {
             if (data == null || !Allowed) return false;
+            // the paid Crystal Mine stands under a padlock until it is bought (the user, 2026-11-14)
+            if (data.buildingName == BuildingIds.CrystalMine && !Wallet.CrystalMineOwned) return true;
             if (!ResearchManager.BuildingUnlocked(data.buildingName)) return true;
             return data.requiredBuilding != null && !BuildingInstance.HasAny(data.requiredBuilding.buildingName);
         }
@@ -47,6 +50,13 @@ namespace CityBuilder.UI
         private static void LeadToBuild(BuildingData data, int step)
         {
             if (data == null || step > MaxSteps || !Allowed) return;
+            if (data.buildingName == BuildingIds.CrystalMine && !Wallet.CrystalMineOwned)
+            {
+                // not bought: a word for now; the shop's offer comes with the shop's next task
+                EventLogManager.Instance?.Post(GameEvent.Nowhere(Localization.Get("#crystal_mine_in_shop"),
+                    EventSeverity.Warning, EventGlyph.Alert, data.buildingName));
+                return;
+            }
             if (!ResearchManager.BuildingUnlocked(data.buildingName))
             {
                 LeadToResearch(ResearchCatalog.ById(ResearchTopic.UnlockBuildingId(data.buildingName)), step + 1);

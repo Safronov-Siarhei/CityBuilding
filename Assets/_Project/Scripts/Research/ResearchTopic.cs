@@ -81,6 +81,8 @@ namespace CityBuilder.Research
                 if (IsBuildingTopic && TargetId == BuildingIds.TaxHouse) return config.TaxHouseResearchCrystals(Level);
                 // the Moat is opened for crystals (the user, 2026-11-02); it has one level
                 if (IsBuildingTopic && TargetId == Moat.Id) return config.MoatResearchCrystals;
+                // the paid Crystal Mine is never levelled for crystals (the user, 2026-11-14)
+                if (IsBuildingTopic && TargetId == BuildingIds.CrystalMine) return 0;
                 return Level >= config.ResearchCrystalsFromLevel ? config.ResearchCrystals : 0;
             }
         }

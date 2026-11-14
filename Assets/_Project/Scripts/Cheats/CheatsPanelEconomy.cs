@@ -84,6 +84,13 @@ namespace CityBuilder.Cheats
             if (Button("0", 60f)) Wallet.UpgradeCrystals = 0;
             if (Button("=", 60f)) Wallet.UpgradeCrystals = Typed;
             GUILayout.EndHorizontal();
+
+            // the paid Crystal Mine (until the shop sells it, only here)
+            GUILayout.BeginHorizontal();
+            var owned = Switch("Рудник кристаллов куплен", Wallet.CrystalMineOwned);
+            if (owned != Wallet.CrystalMineOwned) Wallet.CrystalMineOwned = owned;
+            if (Button("Наполнить рудник")) CrystalMines.Instance?.FillCheat();
+            GUILayout.EndHorizontal();
         }
 
         // -- Здания -------------------------------------------------------------------------

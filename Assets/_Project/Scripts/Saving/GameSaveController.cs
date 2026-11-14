@@ -338,6 +338,7 @@ namespace CityBuilder.Saving
             Citizens.SicknessManager.Instance?.RestoreFromSave(data.sicknessUntreatedDays);
             RestorePatients(data);
             RestoreTheDead(data);
+            UI.CrystalMines.Instance?.RestoreFromSave(data.crystalMineStored);
         }
 
         /// <summary>The sandbox's dead, graves and plague (after the buildings).</summary>
@@ -928,6 +929,7 @@ namespace CityBuilder.Saving
                     data.graves.Add(new GraveEntry { cellX = pair.Key.OriginCell.x, cellY = pair.Key.OriginCell.y, dead = pair.Value });
             }
             if (Citizens.Plague.Instance != null) data.plagueShield = Citizens.Plague.Instance.ShieldLeft;
+            if (UI.CrystalMines.Instance != null) data.crystalMineStored = UI.CrystalMines.Instance.Stored;
             if (Citizens.Plague.Instance != null)
                 foreach (var o in Citizens.Plague.Instance.Outbreaks)
                     data.outbreaks.Add(new OutbreakEntry { island = o.Island, people = o.People, deaths = o.Deaths, calm = o.Calm, bannerShown = o.BannerShown });

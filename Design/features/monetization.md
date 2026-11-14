@@ -5,16 +5,38 @@
 > **Rule for the whole game (the user, 2026-11-11): an amount of crystals is the NUMBER LEFT, the icon
 > RIGHT** (other resources keep icon-then-number) -- see hud-and-ui.md.
 
-## Crystal Mine -- paid building (the user's design 2026-11-14, AGREED, NOT BUILT)
-- Bought once in the shop for ~$8 (non-consumable IAP: needs «Restore purchases» for iOS). No IAP SDK yet.
-- Placed on sandbox maps, AT MOST 1 per map; levelled in the Laboratory, the upgrade costs NO crystals.
-- Mines 1 crystal every 60/50/40/30/20 s (lvl 1-5) only while the player is on that map.
-- Store cap per level 10/20/30/40/50 -> it stops when full (no overnight farming).
-- Manual collect like Clash of Clans: a shimmering, blinking crystal icon floats over the mine; tap = collect.
-- At 80 % full: a notice «хранилище почти заполнено»; tapping it moves the camera to the mine and an arrow points
-  at the icon; the notice comes back periodically until the crystals are collected.
-- Open: Lab upgrade price (coins/resources), the model (renders to the user first), notice repeat interval.
-  Note: lvl 1 fills in 10 min, so the 80 % notice comes every ~8 min of play.
+## Crystal Mine -- paid building (the user's design 2026-11-14; BUILT 2026-11-14, not seen in the game)
+- **Rules (the user):** bought once in the shop for ~$8 (non-consumable IAP, needs «Restore purchases» for
+  iOS; the shop's offer is the NEXT task -- until then only the cheat «Рудник кристаллов куплен» in Читы ->
+  economy). Sandbox only, AT MOST 1 per map (`BuildingIds.OnlyOne`). Levelled in the Laboratory, never for
+  crystals (`ResearchTopic.Crystals` = 0 for it). Upgrade prices are PLACEHOLDERS the user will set: Lab
+  research_coins_2..5 = 100/200/400/800, sandbox up2..5 = Монеты 100/200/400/800 + Дерево 40/80/160/320;
+  build = 20 wood.
+- Mines 1 crystal every crystal_mine_seconds_1..5 = 60/50/40/30/20 s into its own store, cap
+  crystal_mine_cap_1..5 = 10/20/30/40/50; full = stops. Real seconds while the game runs (paused = stopped,
+  the speed buttons do not hurry it; the app in background = stopped).
+- Collect like Clash of Clans: a violet bubble with the crystal icon over the mine (bobs, breathes, a white
+  glint flashes; faster when full) and «n/cap» under it; tap = all whole crystals to `Wallet`.
+- At crystal_mine_notice_share (0.8) a feed notice «#crystal_mine_almost_full»; its tap sends the camera to
+  the mine (feed) and `GuideHint` points the yellow arrow at the bubble; it repeats every
+  crystal_mine_notice_repeat_sec (60) while >= 80 %.
+- Not bought: the build card stands under the padlock (`BuildHints.IsLocked`); a tap says «#crystal_mine_in_shop».
+- **Code:** `UI/CrystalMines.cs` (store, bubble, notice; on Managers, wired in SetupProjectCityScene),
+  `Wallet.CrystalMineOwned` (PlayerPrefs), `BalanceConfig.CrystalMineSeconds/Cap/...`, save
+  `GameSaveData.crystalMineStored` (one mine a map), cheat in CheatsPanelEconomy. Sheet: «Здания» row,
+  «Песочница: Здания (Производство)» row, keys on «Здания и постройки», texts on «Тексты: здания и ресурсы».
+- **Model:** `Tools/blender/crystalmine1.py` (pure builders, `build_level(n)`) + `crystalmine_install.py`;
+  2x2, front -y. Lvl1 APPROVED (rock hill with violet clusters, gold-trimmed stone portal OPEN into a violet
+  crystal cave, crown in relief on the pediment, cart, chest, cutter's bench), lvl2 APPROVED (hill 1.35,
+  bigger great crystal, the map trees' own fir/round tree (not d.tree: reads as a gem), shrubs+flowers, ivy,
+  hoist with a basket). Lvl3 (finials, crystal lamps, garden wall + gold-ball piers, crystal monument),
+  lvl4 (violet pediment roof with gold diamonds + crest, floating shard halo), lvl5 (gilded roof, gold bands)
+  SHOWN 2026-11-14, waiting for approval. Hill 1.05/1.35/1.5/1.6/1.7; side/back clumps stop growing at lvl3
+  and the great clump steps forward (plot edge). Tris 3134/4607/5251/5483/5707.
+- **Traps:** the cave glow in the renders is a point light added only for the review (scratchpad
+  glow_preview.py); the game has no light there -- the violet reveals/floor/walls carry it (a CrystalHalo glow
+  at the mouth is a possible later touch). A portal thicker than ~0.14 hid the cave from the 50-degree camera.
+- Open: real IAP + the shop's offer (next task), final upgrade prices (the user), notice repeat interval.
 
 ## Boosters: how they are built (2026-11-12, IN THE CODE, user not seen, untested)
 - **Sheet:** «Песочница (Лавка): Бустеры» (gid 2000065) -> `Balance/boosters.csv`: a `booster` table

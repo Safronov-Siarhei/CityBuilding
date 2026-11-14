@@ -767,64 +767,6 @@ MonoBehaviour:
     unlockResearch:
       coins: 0
       seconds: 0
-  - id: orc_torchbearer
-    displayName: "\u041E\u0440\u043A-\u0444\u0430\u043A\u0435\u043B\u044C\u0449\u0438\u043A"
-    attackRangeUnits: 1.4
-    attackRangeStructures: 3
-    engageRadius: 6
-    levels:
-    - maxHealth: 16
-      attackDamage: 3
-      attackIntervalSeconds: 1.5
-      walkSpeed: 1.5
-      recruitCoins: 0
-      upkeepCoinsPerDay: 0
-    - maxHealth: 16
-      attackDamage: 3
-      attackIntervalSeconds: 1.5
-      walkSpeed: 1.5
-      recruitCoins: 0
-      upkeepCoinsPerDay: 0
-    - maxHealth: 16
-      attackDamage: 3
-      attackIntervalSeconds: 1.5
-      walkSpeed: 1.5
-      recruitCoins: 0
-      upkeepCoinsPerDay: 0
-    startsUnlocked: 1
-    barracksLevel: 1
-    hiredAt: Barracks
-    armySlots: 1
-    capPerLevel: 0
-    armoured: 0
-    cavalry: 0
-    vsArmoured: 1
-    vsCavalry: 1
-    chargeMultiplier: 1
-    chargeRun: 0
-    healer: 0
-    crew: 1
-    vsBuildings: 1
-    gatesOnly: 0
-    splash: 0
-    minRange: 0
-    rangedTaken: 1
-    carrier: 0
-    capacity: 0
-    capacityUp: 00000000000000000000000000000000
-    shipyardLevel: 1
-    maxCount: 0
-    recruitIronBars: 0
-    recruitCopperBars: 0
-    recruitWood: 0
-    levelResearch:
-    - coins: 0
-      seconds: 0
-    - coins: 0
-      seconds: 0
-    unlockResearch:
-      coins: 0
-      seconds: 0
   - id: orc_chief
     displayName: "\u0412\u043E\u0436\u0434\u044C \u043E\u0440\u043A\u043E\u0432"
     attackRangeUnits: 1.6
@@ -971,6 +913,64 @@ MonoBehaviour:
     armySlots: 1
     capPerLevel: 0
     armoured: 1
+    cavalry: 0
+    vsArmoured: 1
+    vsCavalry: 1
+    chargeMultiplier: 1
+    chargeRun: 0
+    healer: 0
+    crew: 1
+    vsBuildings: 1
+    gatesOnly: 0
+    splash: 0
+    minRange: 0
+    rangedTaken: 1
+    carrier: 0
+    capacity: 0
+    capacityUp: 00000000000000000000000000000000
+    shipyardLevel: 1
+    maxCount: 0
+    recruitIronBars: 0
+    recruitCopperBars: 0
+    recruitWood: 0
+    levelResearch:
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    unlockResearch:
+      coins: 0
+      seconds: 0
+  - id: orc_torchbearer
+    displayName: "\u041E\u0440\u043A-\u0444\u0430\u043A\u0435\u043B\u044C\u0449\u0438\u043A"
+    attackRangeUnits: 1.4
+    attackRangeStructures: 3
+    engageRadius: 6
+    levels:
+    - maxHealth: 16
+      attackDamage: 3
+      attackIntervalSeconds: 1.5
+      walkSpeed: 1.5
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 16
+      attackDamage: 3
+      attackIntervalSeconds: 1.5
+      walkSpeed: 1.5
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    - maxHealth: 16
+      attackDamage: 3
+      attackIntervalSeconds: 1.5
+      walkSpeed: 1.5
+      recruitCoins: 0
+      upkeepCoinsPerDay: 0
+    startsUnlocked: 1
+    barracksLevel: 1
+    hiredAt: Barracks
+    armySlots: 1
+    capPerLevel: 0
+    armoured: 0
     cavalry: 0
     vsArmoured: 1
     vsCavalry: 1
@@ -7541,7 +7541,7 @@ MonoBehaviour:
       amount: 257
     - type: 1
       amount: 129
-    startsUnlocked: 0
+    startsUnlocked: 1
     unlockResearch:
       coins: 25
       seconds: 60
@@ -7661,7 +7661,7 @@ MonoBehaviour:
       amount: 257
     - type: 1
       amount: 129
-    startsUnlocked: 0
+    startsUnlocked: 1
     unlockResearch:
       coins: 25
       seconds: 60
@@ -8618,6 +8618,124 @@ MonoBehaviour:
       seconds: 180
     - coins: 200
       seconds: 240
+  - id: CrystalMine
+    displayName: "\u0420\u0443\u0434\u043D\u0438\u043A \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B\u043E\u0432"
+    category: 4
+    cost:
+    - type: 0
+      amount: 20
+    recipes: []
+    productionIntervalSeconds: 0
+    fogRevealRadius: 8
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    fireproofLevel: 0
+    levels:
+    - maxHealth: 250
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      beds: 0
+      graves: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      residentCoins: 0
+      intervalSeconds: 0
+      happiness: 0
+      buildSeconds: 20
+    - maxHealth: 330
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      beds: 0
+      graves: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      residentCoins: 0
+      intervalSeconds: 0
+      happiness: 0
+      buildSeconds: 20
+    - maxHealth: 420
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      beds: 0
+      graves: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      residentCoins: 0
+      intervalSeconds: 0
+      happiness: 0
+      buildSeconds: 25
+    - maxHealth: 520
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      beds: 0
+      graves: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      residentCoins: 0
+      intervalSeconds: 0
+      happiness: 0
+      buildSeconds: 30
+    - maxHealth: 640
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 0
+      beds: 0
+      graves: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      residentCoins: 0
+      intervalSeconds: 0
+      happiness: 0
+      buildSeconds: 35
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 7
+      amount: 100
+    - type: 0
+      amount: 40
+    upgradeToLevel3Cost:
+    - type: 7
+      amount: 200
+    - type: 0
+      amount: 80
+    upgradeToLevel4Cost:
+    - type: 7
+      amount: 400
+    - type: 0
+      amount: 160
+    upgradeToLevel5Cost:
+    - type: 7
+      amount: 800
+    - type: 0
+      amount: 320
+    startsUnlocked: 1
+    unlockResearch:
+      coins: 0
+      seconds: 0
+    levelResearch:
+    - coins: 100
+      seconds: 60
+    - coins: 200
+      seconds: 90
+    - coins: 400
+      seconds: 120
+    - coins: 800
+      seconds: 180
   armyMaxSize: 80
   armyMaxSquads: 5
   garrisonDefendCells: 30
@@ -8724,6 +8842,15 @@ MonoBehaviour:
   decorGiftCrystalChance: 0.03
   decorGiftCrystals: 1
   taxHouseResearchCrystals: 030000000500000007000000090000000b000000
+  crystalMineSeconds:
+  - 60
+  - 50
+  - 40
+  - 30
+  - 20
+  crystalMineCap: 0a000000140000001e0000002800000032000000
+  crystalMineNoticeShare: 0.8
+  crystalMineNoticeRepeatSeconds: 60
   wallWalkFromLevel: 3
   wallWalkHeight:
   - 0.9
@@ -8868,14 +8995,16 @@ MonoBehaviour:
     cryStunSeconds: 1.5
     whirlCooldownSeconds: 12
     whirlRadius: 3
-    whirlDamageMult: 2
+    whirlOrcShare: 0.667
     whirlPush: 2.5
     dashCooldownSeconds: 14
-    dashDistance: 7
+    dashDistance: 3.5
     dashSeconds: 0.35
     dashWidth: 1.5
-    dashDamageMult: 1.5
-    dashStunSeconds: 1.5
+    dashOrcShare: 0.333
+    dashStunSeconds: 2.5
+    dashSeekCells: 6
+    skillOrcLevel: 2
     breathCooldownSeconds: 40
     breathHeal: 0.5
     breathSeconds: 3
@@ -8903,6 +9032,8 @@ MonoBehaviour:
     ramHealthMult: 20
     haystackSinkShare: 0.18
     skillsOpenBeforeEndSeconds: 60
+    musicVolume: 0.35
+    roarVolume: 0.8
     ramDamageMult: 8
     towerHealthMult: 30
     siegeSpeed: 0.6
@@ -9875,43 +10006,43 @@ MonoBehaviour:
     throwers: 010000000100000001000000
     rams: 000000000000000000000000
     towers: 000000000000000000000000
-    pause: 10
+    pause: 3
   - part: 1
     wave: 2
     level: 1
-    raiders: 040000000400000004000000
-    brutes: 000000000100000000000000
-    throwers: 010000000000000001000000
-    rams: 000000000000000000000000
-    towers: 000000000000000000000000
-    pause: 10
-  - part: 1
-    wave: 3
-    level: 1
-    raiders: 040000000200000004000000
+    raiders: 050000000300000005000000
     brutes: 010000000200000001000000
     throwers: 010000000100000001000000
     rams: 000000000000000000000000
     towers: 000000000000000000000000
-    pause: 10
+    pause: 3
+  - part: 1
+    wave: 3
+    level: 1
+    raiders: 040000000500000004000000
+    brutes: 010000000200000001000000
+    throwers: 010000000100000001000000
+    rams: 000000000000000000000000
+    towers: 000000000000000000000000
+    pause: 3
   - part: 1
     wave: 4
     level: 1
     raiders: 050000000500000005000000
     brutes: 010000000100000001000000
-    throwers: 010000000100000001000000
+    throwers: 010000000200000001000000
     rams: 000000000000000000000000
     towers: 010000000000000000000000
-    pause: 10
+    pause: 3
   - part: 1
     wave: 5
-    level: 1
+    level: 2
     raiders: 050000000000000005000000
     brutes: 000000000300000001000000
     throwers: 000000000300000000000000
     rams: 000000000100000000000000
     towers: 000000000000000001000000
-    pause: 10
+    pause: 3
   - part: 1
     wave: 6
     level: 2
@@ -9920,7 +10051,7 @@ MonoBehaviour:
     throwers: 020000000200000002000000
     rams: 000000000000000000000000
     towers: 000000000000000000000000
-    pause: 10
+    pause: 3
   - part: 1
     wave: 7
     level: 2
@@ -9929,7 +10060,7 @@ MonoBehaviour:
     throwers: 030000000300000003000000
     rams: 010000000000000000000000
     towers: 000000000000000000000000
-    pause: 10
+    pause: 3
   - part: 1
     wave: 8
     level: 2
@@ -9938,7 +10069,7 @@ MonoBehaviour:
     throwers: 010000000100000001000000
     rams: 000000000000000000000000
     towers: 000000000000000001000000
-    pause: 10
+    pause: 3
   - part: 1
     wave: 9
     level: 2
@@ -9947,7 +10078,7 @@ MonoBehaviour:
     throwers: 010000000100000001000000
     rams: 000000000000000001000000
     towers: 000000000000000000000000
-    pause: 10
+    pause: 3
   - part: 1
     wave: 10
     level: 2
@@ -9956,7 +10087,7 @@ MonoBehaviour:
     throwers: 000000000000000000000000
     rams: 000000000000000000000000
     towers: 000000000000000000000000
-    pause: 10
+    pause: 3
   - part: 1
     wave: 11
     level: 2
@@ -9965,7 +10096,7 @@ MonoBehaviour:
     throwers: 030000000300000003000000
     rams: 000000000100000000000000
     towers: 010000000000000001000000
-    pause: 10
+    pause: 3
   - part: 1
     wave: 12
     level: 3
@@ -9974,7 +10105,7 @@ MonoBehaviour:
     throwers: 030000000300000003000000
     rams: 000000000000000000000000
     towers: 000000000000000000000000
-    pause: 10
+    pause: 3
   boosters:
   - id: lumberjack
     nameKey: '#booster_lumberjack'

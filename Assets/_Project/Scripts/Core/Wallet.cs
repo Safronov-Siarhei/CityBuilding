@@ -25,5 +25,22 @@ namespace CityBuilder.Core
                 UpgradeCrystalsChanged?.Invoke();
             }
         }
+
+        private const string CrystalMineKey = "wallet.crystal_mine_owned";
+
+        /// <summary>
+        /// The Рудник кристаллов was bought (the user, 2026-11-14: a paid building, ~$8 in the shop). Bought
+        /// once, it may stand on every sandbox map (one per map). The shop's offer comes in a later task:
+        /// until then only the cheats set it. Kept on the device, like the crystals.
+        /// </summary>
+        public static bool CrystalMineOwned
+        {
+            get => PlayerPrefs.GetInt(CrystalMineKey, 0) == 1;
+            set
+            {
+                PlayerPrefs.SetInt(CrystalMineKey, value ? 1 : 0);
+                PlayerPrefs.Save();
+            }
+        }
     }
 }
