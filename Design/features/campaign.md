@@ -681,6 +681,20 @@
     keys removed, #m2_lost_castle/#m2_lost_arden/#m2_level_up added, #m2_lost = «Поражение». Test:
     `Tests/PlayMode/CityDefenceTests.cs` (the mission starts; Ардан dying loses it). Cheat window: «Ардан:
     +уровень».
+- **CUTSCENES -- discussion opened 2026-11-14 (the user: «второй уровень готов, осталось сделать катсцены»).**
+  Claude's draft storyboard (NOT agreed; the user replied with a message instead of the four questions):
+  1. «У ворот» ~45 s before the fight, shot in the mission's own town: wide over the fields to the N gate; Ардан
+     runs in to the captain; «Капитан! На нашу деревню напали…»; a lookout shouts «Враг! Из леса идут!» (torches at
+     the forest edge); horn, guards run up the wall, townsfolk scatter; the gates close (the open gate-doors
+     renders); the captain sends a rider to the capital over the causeway; to Ардан: «Держи меч. Нам остаётся
+     только надеяться, что помощь успеет вовремя» -> play.
+  2. «Столица» ~15 s, paused, at «Подкрепление через 3:00»: rider into the capital gate; throne room, kneels;
+     the King rises «Седлать коней!»; cavalry rides out. (Options asked: throne room / capital yard / no scene.)
+  3. «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
+     orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя
+     этот камень?») as the mission-3 hook.
+  New models it needs: captain, lookout, rider + HORSE (gallop), cinematic King, cavalry (rider repeats), maybe
+  a throne room set.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right
   (IMGUI in `CampaignMapScreen.OnGUI`); in mission 2 the cheat window's «Служебное» tab has «Закончить часть»
