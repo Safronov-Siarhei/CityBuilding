@@ -148,7 +148,8 @@ SANDBOX ONLY (other modes: no fires at all).
 - Notices (the user, 2026-11-14, «как с чумой»): «Пожар! Постройте пожарную бригаду» -- a tap opens the
   build menu on the brigade's card (`BuildHints.LeadToBuild(id)`; locked = the way to its research in the
   Laboratory); «Назначьте пожарного» -- the camera goes to the brigade and selects it.
-- Unlock: FireBrigade is `starts_unlocked 0`: a research in the Laboratory, 25 coins, 60 s.
+- Unlock (the user, 2026-11-14): FireBrigade AND HealerHouse level 1 are open from the start
+  (`starts_unlocked 1`) so a fire or plague never waits on research; their levels 2+ still go through the Lab.
 - Bucket: `ToolFireBucket` in `Tools/blender/tools.py` (red leather, iron hoops, gold crest, child
   "Water" shown only while full) -- APPROVED 2026-11-14 (render `Design/buildings/FireBucket_review.png`),
   exported to `Models/Citizens/ToolFireBucket.fbx`, FireManager.bucketModel; laid under `CitizenWaddle.Figure`
