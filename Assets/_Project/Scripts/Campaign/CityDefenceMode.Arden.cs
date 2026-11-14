@@ -170,7 +170,28 @@ namespace CityBuilder.Campaign
             if (orc == null) return;
             _woundedByArden.Remove(orc);
             if (Current != Stage.Part1 || _wreckers.Contains(orc)) return;
-            ArdenXp++;
+            _killXp++;
+            ArdenXp = _killXp + _timeXp;
+            LevelFromXp();
+        }
+
+        // the user's twelfth playtest («меньше 2 минут до конца, а у Ардана только 8 уровень»): the clock pays him too.
+        // On the clock alone he reaches the last skill's level m2_skills_open_before_end_sec before the end; every orc
+        // that falls still adds its point on top.
+        private int _killXp, _timeXp;
+
+        private void TickArdenXp()
+        {
+            if (Current != Stage.Part1) return;
+            var b = B;
+            var lastSkill = 1;
+            for (var s = 0; s < SkillCount; s++) lastSkill = Mathf.Max(lastSkill, SkillLevel(s));
+            var span = Mathf.Max(1f, b.missionSeconds - b.skillsOpenBeforeEndSeconds);
+            var share = Mathf.Clamp01(HeldSeconds / span);
+            var time = Mathf.FloorToInt(XpAt(Mathf.Min(lastSkill, MaxLevel)) * share);
+            if (time == _timeXp) return;
+            _timeXp = time;
+            ArdenXp = _killXp + _timeXp;
             LevelFromXp();
         }
 
@@ -179,6 +200,7 @@ namespace CityBuilder.Campaign
         {
             if (Arden == null || ArdenLevel >= MaxLevel) return;
             ArdenXp = Mathf.Max(ArdenXp, XpForNext);
+            _killXp = Mathf.Max(_killXp, ArdenXp - _timeXp);
             ArdenLevel++;
             ApplyLevel(fullHealth: true);
             ArdenLeveled?.Invoke(ArdenLevel);

@@ -90,6 +90,10 @@ namespace CityBuilder.Combat
             return Mathf.Max(1, Mathf.RoundToInt(damage));
         }
 
+        /// <summary>A mode's own rule that a healer may not reach a hurt soldier (campaign mission 2: a wall between
+        /// them -- the user's twelfth playtest, the monks followed Ардан along the far side of the wall).</summary>
+        public static System.Func<SoldierUnit, SoldierUnit, bool> HealBlocks;
+
         /// <summary>The healer's turn: true when he did something (healed or walked to a hurt soldier).</summary>
         private bool TickHealer()
         {
@@ -101,6 +105,7 @@ namespace CityBuilder.Combat
             foreach (var other in _all)
             {
                 if (other == null || other == this || other.CurrentHealth <= 0 || other.CurrentHealth >= other.MaxHealth) continue;
+                if (HealBlocks != null && HealBlocks(this, other)) continue;
                 var d = HorizontalDistance(other.transform.position, transform.position);
                 if (d <= reach)
                 {

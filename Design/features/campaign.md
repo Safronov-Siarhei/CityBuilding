@@ -465,6 +465,22 @@
   8. Where are ram/tower hp: m2_ram_health_mult / m2_tower_health_mult (x a brute's health), tab «Кампания: оборона города».
   9. Only rams/towers left -> the next wave comes (TickWaves counts only orcs without `IgnoresSoldiers`).
   10. Ардан's XP: EVERY orc that falls on the map = 1 point (any killer); m2_arden_max_level 20 levels spread evenly over ALL orcs of all waves of both parts (m2waves tab; a tower counts 1 + m2_tower_crew); skills open at m2_cry_level 1 / m2_whirl_level 5 / m2_dash_level 10 / m2_breath_level 15; part 2 credits all of part 1's orcs (`CreditPart1`); health/damage per level 20 / 2. m2_arden_xp2-4 deleted (sheet + CSV + code).
+- **PLAYTEST 12 (the user, 2026-11-14) -- BUILT 2026-11-14 (setup green; not seen):**
+  1. The «hanging triangle» by every archer (asked twice) = the archer's HOOD POINT: soldiers.py's prism leaned it
+     y 0,05 + 0,6 z, so it floated ~0,3 m behind the head. Now it hangs on the hood and leans back as it falls;
+     SoldierArcher / -lvl2 / -lvl3 rebuilt in Blender/Buildings-Size1-Models.blend and re-exported.
+  2. Monks followed Ардан along the far side of the wall to heal him -> `SoldierUnit.HealBlocks` hook; mission 2's
+     `HealBlocked`: no healing across a wall ring (Ring, breach lets through) nor between the wall-walk and the ground.
+  3. Ram health x30 -> x20 (m2_ram_health_mult, sheet too). No gate left standing -> no more rams (`AnyGateStands`).
+  4. Haystacks looked hung in the air: CineHaystack's mound is round underneath and touches the ground at a point;
+     sunk by m2_haystack_sink_share (0,18) of its height in `Decor()`.
+  5. Square goal shortened: «Не пустите орков на площадь».
+  6. The game put away mid-mission -> `CityDefenceMode.OnApplicationPause` opens the game menu (frozen); closing
+     it goes on. A phone that kills the app while away still loses the mission (no mission save) -- the user only
+     asked how it should be, nothing was broken.
+  7. XP: Ардан's experience = fallen orcs (1 each, as before) + THE CLOCK: on the clock alone he reaches the last
+     skill's level (m2_breath_level, 15) m2_skills_open_before_end_sec (60) before the end (`TickArdenXp`,
+     `_killXp + _timeXp`); kills still take him further, up to 20.
 - **PLAYTEST 11 (the user, 2026-11-14) -- BUILT 2026-11-14 (setup green; not seen):**
   1. «Подкрепление» still without its time -> the sandbox plaque comes from SetupProjectHud with best fit ON at min 18,
      so SettlementStatusController's one-time switch never ran; now set every refresh in mission 2 (min 6, max =
