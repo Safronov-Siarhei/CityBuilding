@@ -696,6 +696,14 @@
      этот камень?») as the mission-3 hook.
   New models it needs: captain, lookout, rider + HORSE (gallop), cinematic King, cavalry (rider repeats), maybe
   a throne room set.
+  - **Scene 1 storyboard OK'd (the user, 2026-11-14: «да, к моделям»).** The CAPTAIN: his own model with a
+    man-at-arms' numbers; in play he stands with the defenders BEHIND THE INNER WALL (the user: the story reads
+    better). Two builds of one design: game `SoldierCaptain` (`Tools/blender/soldier_captain.py`, «Солдаты», jointed
+    like the soldiers) and cutscene `CineCaptain` (`Tools/blender/cinematic/captain.py`, Ардан's rig): darker
+    steel breastplate, blue skirt, wine half cloak + sash, white plume on an open burgonet, grey moustache, scar,
+    spare sword on the left hip (Ардан's), round blue buckler with the town's gold tower (game). Render
+    `Design/buildings/Captain_review.png` SENT FOR APPROVAL 2026-11-14; not exported, not in the game.
+    Next models: lookout, rider + horse, gate doors.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right
   (IMGUI in `CampaignMapScreen.OnGUI`); in mission 2 the cheat window's «Служебное» tab has «Закончить часть»
