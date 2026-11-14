@@ -14,12 +14,14 @@ import elder  # noqa: E402
 import priest  # noqa: E402
 import mage  # noqa: E402
 import captain  # noqa: E402
+import lookout  # noqa: E402
 import townsfolk  # noqa: E402
 import orcs_cast  # noqa: E402
 from mathutils import Vector  # noqa: E402
 
 BUILDERS = {"CineArdan": lambda: ardan.make(Vector((0, 0, 0))), "CineElder": elder.make, "CinePriest": priest.make, "CineMage": mage.make,
-            "CineCaptain": captain.make}
+            "CineCaptain": captain.make,
+            "CineLookout": lookout.make}
 BUILDERS.update({n: (lambda nn: (lambda: townsfolk.make(nn)))(n) for n in townsfolk.FIGURES})
 BUILDERS.update({n: (lambda nn: (lambda: orcs_cast.make(nn)))(n) for n in orcs_cast.FIGURES})
 
@@ -81,5 +83,5 @@ for n in solos:
     shot(short + "_front", a + Vector((0, 0, h * 0.5)), (0, -1.9, 0.25), 80)
     shot(short + "_three_quarter", a + Vector((0, 0, h * 0.5)), (1.25, -1.45, 0.4), 80)
     shot(short + "_back", a + Vector((0, 0, h * 0.5)), (-0.8, 1.7, 0.4), 80)
-    face_z = {"captain": 0.52}.get(short, h - 0.08)   # a tall plume: aim at the face, not the hat
+    face_z = {"captain": 0.52, "lookout": 0.47}.get(short, h - 0.08)   # a tall plume: aim at the face, not the hat
     shot(short + "_face", a + Vector((0, -0.02, face_z)), (0.25, -0.75, 0.08), 85)
