@@ -262,16 +262,8 @@ namespace CityBuilder.Campaign
                     break;
                 }
                 if (!onCircle) _ardenOffCircle = true;
-                if (onCircle) return;
-                foreach (var t in _towers)
-                {
-                    if (!t.docked || !t.onWall || t.orc == null || t.orc.CurrentHealth <= 0) continue;
-                    if (Flat(at - t.orc.transform.position) > ArdenClimbReach * Cell) continue;
-                    // not while he is walking away from it
-                    if (stick.sqrMagnitude > 0.25f && Vector3.Dot(stick, t.orc.transform.position - at) < 0f) continue;
-                    if (Arden.GoToWall(t.wallCell)) _ardenWallIn = 1f;
-                    return;
-                }
+                // never up an orc siege tower (the user's thirteenth playtest: he climbed one that had not reached the
+                // wall, and it stood there for good)
                 return;
             }
             // down: only towards the town (south, the stick pulled down)
@@ -281,8 +273,6 @@ namespace CityBuilder.Campaign
             _ardenWallIn = 1.5f;
         }
 
-        // Ардан this near a docked tower climbs it (cells)
-        private const float ArdenClimbReach = 1.6f;
 
         // ------------------------------------------------------------------ the Barbican tower doors
 

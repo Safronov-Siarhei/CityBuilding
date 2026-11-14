@@ -3084,8 +3084,10 @@ namespace CityBuilder.Core
         // the gatehouses' end towers shoot (the user's eighth playtest) this far (cells); pace and damage a crossbowman's
         public float gateTowerRangeCells = 7f;
         public float cryCooldownSeconds = 20f, cryRadius = 7f, crySeconds = 6f, cryDamageMult = 1.5f, cryStunSeconds = 1.5f;
-        public float whirlCooldownSeconds = 12f, whirlRadius = 3f, whirlDamageMult = 2f, whirlPush = 2.5f;
-        public float dashCooldownSeconds = 14f, dashDistance = 7f, dashSeconds = 0.35f, dashWidth = 1.5f, dashDamageMult = 1.5f, dashStunSeconds = 1.5f;
+        public float whirlCooldownSeconds = 12f, whirlRadius = 3f, whirlOrcShare = 0.667f, whirlPush = 2.5f;
+        public float dashCooldownSeconds = 14f, dashDistance = 3.5f, dashSeconds = 0.35f, dashWidth = 1.5f, dashOrcShare = 0.333f, dashStunSeconds = 2.5f, dashSeekCells = 6f;
+        // the skills' damage is a share of this level's plain orc's (Raider) health in this mission (m2_skill_orc_level)
+        public int skillOrcLevel = 2;
         public float breathCooldownSeconds = 40f, breathHeal = 0.5f, breathSeconds = 3f, breathRadius = 6f, breathAllyHeal = 0.4f;
         // the healers on the square
         public int squareHealers = 2;
@@ -3106,6 +3108,8 @@ namespace CityBuilder.Core
         public float haystackSinkShare = 0.18f;
         // on the clock alone Ардан reaches the last skill's level this long before the mission's end (m2_skills_open_before_end_sec)
         public float skillsOpenBeforeEndSeconds = 60f;
+        // the mission's music loop and the roar each wave sets off with (m2_music_volume, m2_roar_volume)
+        public float musicVolume = 0.35f, roarVolume = 0.8f;
         public float ramDamageMult = 8f;
         public float towerHealthMult = 5f;
         public float siegeSpeed = 0.6f;
@@ -3168,13 +3172,15 @@ namespace CityBuilder.Core
             cryStunSeconds = F("m2_cry_stun_sec", cryStunSeconds);
             whirlCooldownSeconds = F("m2_whirl_cooldown_sec", whirlCooldownSeconds);
             whirlRadius = F("m2_whirl_radius", whirlRadius);
-            whirlDamageMult = F("m2_whirl_damage_mult", whirlDamageMult);
+            whirlOrcShare = F("m2_whirl_damage_orc_share", whirlOrcShare);
             whirlPush = F("m2_whirl_push", whirlPush);
             dashCooldownSeconds = F("m2_dash_cooldown_sec", dashCooldownSeconds);
             dashDistance = F("m2_dash_distance", dashDistance);
             dashSeconds = F("m2_dash_sec", dashSeconds);
             dashWidth = F("m2_dash_width", dashWidth);
-            dashDamageMult = F("m2_dash_damage_mult", dashDamageMult);
+            dashOrcShare = F("m2_dash_damage_orc_share", dashOrcShare);
+            dashSeekCells = F("m2_dash_seek_cells", dashSeekCells);
+            skillOrcLevel = I("m2_skill_orc_level", skillOrcLevel);
             dashStunSeconds = F("m2_dash_stun_sec", dashStunSeconds);
             breathCooldownSeconds = F("m2_breath_cooldown_sec", breathCooldownSeconds);
             breathHeal = F("m2_breath_heal", breathHeal);
@@ -3202,6 +3208,8 @@ namespace CityBuilder.Core
             ramHealthMult = F("m2_ram_health_mult", ramHealthMult);
             haystackSinkShare = F("m2_haystack_sink_share", haystackSinkShare);
             skillsOpenBeforeEndSeconds = F("m2_skills_open_before_end_sec", skillsOpenBeforeEndSeconds);
+            musicVolume = F("m2_music_volume", musicVolume);
+            roarVolume = F("m2_roar_volume", roarVolume);
             ramDamageMult = F("m2_ram_damage_mult", ramDamageMult);
             towerHealthMult = F("m2_tower_health_mult", towerHealthMult);
             siegeSpeed = F("m2_siege_speed", siegeSpeed);

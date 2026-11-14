@@ -375,6 +375,7 @@ namespace CityBuilder.Campaign
             HangDoors(OuterGates[0]);
             HangDoors(InnerGates[0]);
             MarkTowerDoors();
+            StartSound();
             PartBegan?.Invoke(1);
         }
 
@@ -391,6 +392,7 @@ namespace CityBuilder.Campaign
             TickWallOrcs(dt);
             TickArdenWall(dt);
             TickArdenXp();
+            TickStuns();
             TickGates(dt);
             TickWreckers(dt);
             TickTowerShots(dt);
@@ -502,6 +504,7 @@ namespace CityBuilder.Campaign
             var raids = OrcRaidManager.Instance;
             if (raids == null) return;
             Wave++;
+            RoarForWave();
             // the first wave shuts the gates (the user's third playtest)
             if (Wave == 1)
             {
@@ -586,6 +589,7 @@ namespace CityBuilder.Campaign
                 GoalChanged?.Invoke(CurrentGoal);
                 StartWreckers();
                 LayTheDead();
+                if (InnerGates[0] != null) TowersToInnerWall();
             }
             if (inner && CurrentGoal != Goal.Square)
             {
@@ -638,6 +642,7 @@ namespace CityBuilder.Campaign
                 if (orc != null) orc.TakeDamage(orc.CurrentHealth * 10 + 1);
             PlayerPrefs.DeleteKey(Part2Key);
             CampaignProgress.MarkDone(LevelId);
+            StopMusic();
             Ended?.Invoke(true);
         }
 
@@ -647,6 +652,7 @@ namespace CityBuilder.Campaign
             Current = Stage.Lost;
             Loss = why;
             if (Arden != null) Arden.Steer = Vector3.zero;
+            StopMusic();
             Ended?.Invoke(false);
         }
 

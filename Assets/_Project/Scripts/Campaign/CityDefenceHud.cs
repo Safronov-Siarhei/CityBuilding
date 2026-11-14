@@ -31,6 +31,8 @@ namespace CityBuilder.Campaign
         };
 
         private CityDefenceMode _mode;
+        private Canvas _canvas;
+        private GameMenuController _menu;
         private FloatingJoystick _stick;
         private Text _goal, _banner, _middle, _level;
         private Text _wave;   // the wave's number under the goal, for testing (the user's fourth playtest); not in a release
@@ -103,6 +105,7 @@ namespace CityBuilder.Campaign
             var go = new GameObject("CityDefenceHud", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             go.transform.SetParent(transform, false);
             var canvas = go.GetComponent<Canvas>();
+            _canvas = canvas;
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 40;
             var scaler = go.GetComponent<CanvasScaler>();
@@ -456,6 +459,11 @@ namespace CityBuilder.Campaign
         {
             if (_mode == null) return;
             var dt = Time.unscaledDeltaTime;
+            // the game menu (and its settings) open: the mission's own HUD goes too (the user's thirteenth playtest)
+            if (_menu == null) _menu = FindAnyObjectByType<GameMenuController>();
+            var menuOpen = _menu != null && _menu.IsOpen;
+            if (_canvas != null && _canvas.enabled == menuOpen) _canvas.enabled = !menuOpen;
+            if (menuOpen) return;
             if (_stick != null) _mode.Stick = _stick.Locked ? Vector2.zero : _stick.Value;
 
             _goal.text = Localization.Get(GoalKey(_mode.CurrentGoal));

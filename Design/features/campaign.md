@@ -465,6 +465,23 @@
   8. Where are ram/tower hp: m2_ram_health_mult / m2_tower_health_mult (x a brute's health), tab «Кампания: оборона города».
   9. Only rams/towers left -> the next wave comes (TickWaves counts only orcs without `IgnoresSoldiers`).
   10. Ардан's XP: EVERY orc that falls on the map = 1 point (any killer); m2_arden_max_level 20 levels spread evenly over ALL orcs of all waves of both parts (m2waves tab; a tower counts 1 + m2_tower_crew); skills open at m2_cry_level 1 / m2_whirl_level 5 / m2_dash_level 10 / m2_breath_level 15; part 2 credits all of part 1's orcs (`CreditPart1`); health/damage per level 20 / 2. m2_arden_xp2-4 deleted (sheet + CSV + code).
+- **PLAYTEST 13 (the user, 2026-11-14) -- BUILT 2026-11-14 (setup x2 green; not seen):**
+  1. The game menu (and its settings) left the mission HUD showing -> CityDefenceHud turns its canvas off while
+     `GameMenuController.IsOpen`.
+  2. Sound: mus_attack loops under the mission, sfx_roar with every wave (`CityDefenceMode.Sound.cs`; clips wired in
+     SetupProjectCityScene; m2_music_volume 0,35, m2_roar_volume 0,8). Stops at the end.
+  3. Dash: aims itself at the nearest reachable orc within m2_dash_seek_cells (6), never past it, at most
+     m2_dash_distance (3,5); none near: a short step ahead. A stun first (m2_dash_stun_sec 2,5); damage = 1/3 of a
+     plain (Raider) orc's health at m2_skill_orc_level (2) x m2_orc_health_mult (`OrcShare`, `OrcUnit.BaseHealthAt`).
+     m2_dash_damage_mult -> m2_dash_damage_orc_share 0,333.
+  4. Whirl: damage = 2/3 of that orc's health (m2_whirl_damage_mult -> m2_whirl_damage_orc_share 0,667).
+  5. Stunned orcs show a turning yellow spiral over the head (`CityDefenceMode.Stun.cs`, one procedural mesh,
+     pooled); cry and dash stun through `Stun()`.
+  6. Heroes never climb an orc siege tower (Ардан climbed one that had not docked and it stood for good).
+  7. The outer gate fallen: towers still rolling turn for the inner wall (`TowersToInnerWall`); docked ones stay.
+  8. XP: CLOCK ONLY now (kills gave the last skill a minute before the courier's end): the last skill's level
+     exactly m2_skills_open_before_end_sec (60) before the mission's end.
+  OPEN: a new look for the skill hints (concepts proposed to the user), campaign monetization (ideas proposed).
 - **PLAYTEST 12 (the user, 2026-11-14) -- BUILT 2026-11-14 (setup green; not seen):**
   1. The «hanging triangle» by every archer (asked twice) = the archer's HOOD POINT: soldiers.py's prism leaned it
      y 0,05 + 0,6 z, so it floated ~0,3 m behind the head. Now it hangs on the hood and leans back as it falls;

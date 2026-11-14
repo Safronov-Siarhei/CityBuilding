@@ -98,6 +98,27 @@ namespace CityBuilder.Campaign
             return tower;
         }
 
+        /// <summary>The outer gate fallen (the user's thirteenth playtest): the towers still rolling make for a section of the inner wall instead.</summary>
+        private void TowersToInnerWall()
+        {
+            var b = B;
+            foreach (var t in _towers)
+            {
+                // a docked one is already unloading over the outer wall: it stays till its time is up
+                if (t.orc == null || t.orc.CurrentHealth <= 0 || t.docked || t.wallY == InnerNorthWallY) continue;
+                var side = t.wallX < 50.5f ? -1f : 1f;
+                var to = Mathf.Min(b.towerWallToCells, 7f);
+                t.wallX = 50.5f + side * Random.Range(Mathf.Min(b.towerWallFromCells, to), to);
+                t.wallY = InnerNorthWallY;
+                t.road = TowerRoad(t.lane, t.wallX, t.wallY);
+                t.stillFor = 0f;
+                t.orc.BusyFor = 0f;
+                t.orc.FollowLane(t.road);
+                foreach (var e in t.escorts)
+                    if (e != null && e.CurrentHealth > 0) e.FollowLane(t.road);
+            }
+        }
+
         /// <summary>An orc of the tower's road walks behind it at its pace, to climb it at the wall.</summary>
         private void Escort(Tower tower, OrcUnit orc)
         {

@@ -169,15 +169,13 @@ namespace CityBuilder.Campaign
         {
             if (orc == null) return;
             _woundedByArden.Remove(orc);
-            if (Current != Stage.Part1 || _wreckers.Contains(orc)) return;
-            _killXp++;
-            ArdenXp = _killXp + _timeXp;
-            LevelFromXp();
+            // no experience for kills any more (the user's thirteenth playtest: with kills on top he had the last skill a
+            // minute before the courier's end, not before the help's): the clock alone, see TickArdenXp
         }
 
-        // the user's twelfth playtest («меньше 2 минут до конца, а у Ардана только 8 уровень»): the clock pays him too.
-        // On the clock alone he reaches the last skill's level m2_skills_open_before_end_sec before the end; every orc
-        // that falls still adds its point on top.
+        // the user's twelfth and thirteenth playtests: the CLOCK is his experience -- he reaches the last skill's level
+        // m2_skills_open_before_end_sec before the mission's end (the help's arrival), no sooner; _killXp holds only
+        // what the cheat gave
         private int _killXp, _timeXp;
 
         private void TickArdenXp()
@@ -251,10 +249,11 @@ namespace CityBuilder.Campaign
                     foreach (var guard in _garrison)
                         if (guard != null && guard.CurrentHealth > 0 && Flat(guard.transform.position - at) <= b.cryRadius) guard.Enrage(b.cryDamageMult, b.crySeconds);
                     foreach (var orc in OrcUnit.All)
-                        if (orc != null && orc.CurrentHealth > 0 && Flat(orc.transform.position - at) <= b.cryRadius) orc.BusyFor = Mathf.Max(orc.BusyFor, b.cryStunSeconds);
+                        if (orc != null && orc.CurrentHealth > 0 && Flat(orc.transform.position - at) <= b.cryRadius) Stun(orc, b.cryStunSeconds);
                     break;
                 case Whirl:
-                    var blow = Mathf.RoundToInt(Arden.AttackDamage * b.whirlDamageMult);
+                    // 2/3 of a plain level-2 orc's health (the user's thirteenth playtest: it killed nearly everyone)
+                    var blow = OrcShare(b.whirlOrcShare);
                     foreach (var orc in new List<OrcUnit>(OrcUnit.All))
                     {
                         if (orc == null || orc.CurrentHealth <= 0) continue;
@@ -267,8 +266,19 @@ namespace CityBuilder.Campaign
                     }
                     break;
                 case Dash:
-                    var dir = Stick.sqrMagnitude > 0.01f ? new Vector3(Stick.x, 0f, Stick.y) : Arden.transform.forward;
-                    StartCoroutine(Dashing(dir));
+                    // at the nearest orc by itself (the user's thirteenth playtest: «уносит непонятно куда»), no further
+                    // than it stands; none near: a short step ahead
+                    var dir = Arden.transform.forward;
+                    var reach = b.dashDistance;
+                    var seek = DashTarget(at, b.dashSeekCells);
+                    if (seek != null)
+                    {
+                        var to = seek.transform.position - at;
+                        to.y = 0f;
+                        if (to.sqrMagnitude > 0.01f) dir = to.normalized;
+                        reach = Mathf.Min(b.dashDistance, Mathf.Max(0.5f, to.magnitude - 0.6f));
+                    }
+                    StartCoroutine(Dashing(dir, reach));
                     break;
                 default:
                     StartCoroutine(Breathing());
@@ -279,12 +289,36 @@ namespace CityBuilder.Campaign
             return true;
         }
 
-        private IEnumerator Dashing(Vector3 dir)
+        /// <summary>A skill's blow: `share` of a plain orc's health at m2_skill_orc_level, as this mission toughens it.</summary>
+        private static int OrcShare(float share)
         {
             var b = B;
-            Arden.Dash(dir, b.dashDistance, b.dashSeconds);
+            return Mathf.Max(1, Mathf.RoundToInt(OrcUnit.BaseHealthAt(OrcKind.Raider, b.skillOrcLevel) * b.orcHealthMult * share));
+        }
+
+        /// <summary>The nearest live orc of the waves within `cells` that he can reach (not over a wall), or null.</summary>
+        private OrcUnit DashTarget(Vector3 at, float cells)
+        {
+            OrcUnit best = null;
+            var bestD = cells * Cell;
+            foreach (var orc in OrcUnit.All)
+            {
+                if (orc == null || orc.CurrentHealth <= 0 || orc.IgnoresSoldiers) continue;
+                var d = Flat(orc.transform.position - at);
+                if (d > bestD || SoldierBlocked(Arden, orc)) continue;
+                bestD = d;
+                best = orc;
+            }
+            return best;
+        }
+
+        private IEnumerator Dashing(Vector3 dir, float reach)
+        {
+            var b = B;
+            Arden.Dash(dir, reach, b.dashSeconds);
             var hit = new HashSet<OrcUnit>();
-            var blow = Mathf.RoundToInt(Arden.AttackDamage * b.dashDamageMult);
+            // above all a stun; the blow is a third of a plain level-2 orc's health (the user's thirteenth playtest)
+            var blow = OrcShare(b.dashOrcShare);
             while (Arden != null && Arden.IsDashing)
             {
                 var at = Arden.transform.position;
@@ -292,7 +326,7 @@ namespace CityBuilder.Campaign
                 {
                     if (orc == null || orc.CurrentHealth <= 0 || hit.Contains(orc) || Flat(orc.transform.position - at) > b.dashWidth) continue;
                     hit.Add(orc);
-                    orc.BusyFor = Mathf.Max(orc.BusyFor, b.dashStunSeconds);
+                    Stun(orc, b.dashStunSeconds);
                     orc.TakeDamage(blow, Arden);
                 }
                 yield return null;

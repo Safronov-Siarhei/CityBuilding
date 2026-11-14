@@ -150,6 +150,13 @@ namespace CityBuilder.Combat
         // them per orc at Awake. Level scales health and damage on top -- raids spawn level 1, and
         // higher levels currently only come from the OrcSpawn cheat.
         /// <summary>The row an orc of this kind reads in the balance sheet's units tab.</summary>
+        /// <summary>The health an orc of this kind and level is born with (before any mode's toughening).</summary>
+        public static int BaseHealthAt(OrcKind kind, int level)
+        {
+            var row = BalanceConfig.Instance != null ? BalanceConfig.Instance.Unit(SheetIdOf(kind)) : null;
+            return row != null ? row.LevelStats(1).maxHealth * Mathf.Max(1, level) : 100;
+        }
+
         public static string SheetIdOf(OrcKind kind)
         {
             switch (kind)
