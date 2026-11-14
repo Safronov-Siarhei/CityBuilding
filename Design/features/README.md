@@ -65,7 +65,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | [hints](hints.md) | sandbox «what is missing»: padlock on build cards, arrow + blink leading to the needed building, its «Улучшить», or the Laboratory's research; chains to the first doable step; BUILT 2026-11-11, not played | подсказки, замок, стрелка, не хватает здания, нужно исследование |
 | [hud-and-ui](hud-and-ui.md) | HUD layout, skins/looks, event feed, panels, main menu (modes, live scene), settings | интерфейс, HUD, лента событий, главное меню, экран режимов, знамёна |
 | [save-load](save-load.md) | save format, autosave, restore order | сохранение, автосейв |
-| [monetization](monetization.md) | direction decided; sandbox offer shop BUILT: 4 offers (2 goods, crystals for an ad, crystals for money -- a stand-in), bundles sheet by family x 5 levels, bonus % badge; ideas: paid looks | монетизация, реклама, покупки |
+| [monetization](monetization.md) | direction decided; paid Crystal Mine AGREED (not built); sandbox offer shop BUILT: 4 offers (2 goods, crystals for an ad, crystals for money -- a stand-in), bundles sheet by family x 5 levels, bonus % badge; ideas: paid looks | монетизация, реклама, покупки |
 | [ideas](ideas.md) | the user's PARKED ideas (PvP raids, lane mode, whirlpool, water tower, roulette…) — not to be built until asked | идеи, PvP, тракт, водоворот, водная башня, рулетка |
 | [store-listing](store-listing.md) | Google Play icon candidates (orc over the wall, builder king), Tools/store/make_icons.py; the rate-us window concept (king + orc over a blurred town) | иконка, гугл плей, стор, листинг, оценка, отзыв, окно оценки |
 | **Pipelines** | | |

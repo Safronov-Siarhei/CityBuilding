@@ -5,6 +5,17 @@
 > **Rule for the whole game (the user, 2026-11-11): an amount of crystals is the NUMBER LEFT, the icon
 > RIGHT** (other resources keep icon-then-number) -- see hud-and-ui.md.
 
+## Crystal Mine -- paid building (the user's design 2026-11-14, AGREED, NOT BUILT)
+- Bought once in the shop for ~$8 (non-consumable IAP: needs «Restore purchases» for iOS). No IAP SDK yet.
+- Placed on sandbox maps, AT MOST 1 per map; levelled in the Laboratory, the upgrade costs NO crystals.
+- Mines 1 crystal every 60/50/40/30/20 s (lvl 1-5) only while the player is on that map.
+- Store cap per level 10/20/30/40/50 -> it stops when full (no overnight farming).
+- Manual collect like Clash of Clans: a shimmering, blinking crystal icon floats over the mine; tap = collect.
+- At 80 % full: a notice «хранилище почти заполнено»; tapping it moves the camera to the mine and an arrow points
+  at the icon; the notice comes back periodically until the crystals are collected.
+- Open: Lab upgrade price (coins/resources), the model (renders to the user first), notice repeat interval.
+  Note: lvl 1 fills in 10 min, so the 80 % notice comes every ~8 min of play.
+
 ## Boosters: how they are built (2026-11-12, IN THE CODE, user not seen, untested)
 - **Sheet:** «Песочница (Лавка): Бустеры» (gid 2000065) -> `Balance/boosters.csv`: a `booster` table
   (name_ru/en, desc_ru/en with `{0}`, effect, duration_sec, price_crystals, ad) and a `key` table
