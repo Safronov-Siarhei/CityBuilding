@@ -709,6 +709,14 @@
     the right hand (-x; the left free to point), a brass-banded horn on a leather baldric (kit.band_on_box) over
     the right shoulder, the horn on the LEFT hip, by the free hand (v2, the user: not in the spear hand). Render
     `Design/buildings/Lookout_review.png` v2 APPROVED 2026-11-14 (exported with its animations later).
+  - RIDER + HORSE (the user: «гнедой и лёгкий гонец» -- NOT the sandbox SoldierKnight: twice the cast's size, a
+    lance-armed knight fused to its horse, coarser; `Design/buildings/Knight_vs_cine.png`). `CineHorse`
+    (`cinematic/horse.py`): a bay -- brown coat, dark mane/tail/lower legs, white blaze + star, white hind socks,
+    blue browband, blue saddle cloth hemmed in gold, saddle, breast collar, stirrups; its OWN parts for its own
+    rig (body, neck, head, tail, fore/hind_upper/lower.L/.R); head frame x, N, D (`D` down-forward, `N` the
+    forehead side). `CineRider` (`cinematic/rider.py`, Ардан's rig): leather jerkin over a blue tunic, short blue
+    cloak + hood, nasal helmet, tall boots, gloves, short sword on the left hip, the dispatch tube on a strap
+    across the back. Render `Design/buildings/RiderHorse_review.png` SENT FOR APPROVAL 2026-11-14.
     Note: on the cine rig the figure's RIGHT is -x (fg.limbs "R" = k -1); the captain's scabbard sits at -x.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right
