@@ -1049,6 +1049,21 @@ namespace CityBuilder.Combat
             animator.Bind(AddFigure(unit.transform, model, unit.Type, animate: false).transform);
         }
 
+        /// <summary>
+        /// Puts a living soldier in a figure of its own (mission 2's captain of the guard: a man-at-arms in the
+        /// SoldierCaptain model, the user 2026-11-14). The figure is swapped, the animator kept.
+        /// </summary>
+        public void Redress(SoldierUnit unit, GameObject model)
+        {
+            if (unit == null || model == null) return;
+            var animator = unit.GetComponent<FigureAnimator>();
+            var old = unit.transform.Find(unit.Type.ToString());
+            if (animator == null || old == null) return;
+            Destroy(old.gameObject);
+            old.name = "Undressed";
+            animator.Bind(AddFigure(unit.transform, model, unit.Type, animate: false).transform);
+        }
+
         /// <summary>A jointed figure (a hero's or a soldier's) under the unit's root: it stands, runs, strikes and, on death, falls (OrcCorpse).</summary>
         private static GameObject AddFigure(Transform root, GameObject model, SoldierType type, bool animate = true)
         {

@@ -696,6 +696,20 @@
      этот камень?») as the mission-3 hook.
   New models it needs: captain, lookout, rider + HORSE (gallop), cinematic King, cavalry (rider repeats), maybe
   a throne room set.
+  - **Scene 1 storyboard OK'd (the user, 2026-11-14: «да, к моделям»).** The CAPTAIN: his own model with a
+    man-at-arms' numbers; in play he stands with the defenders BEHIND THE INNER WALL (the user: the story reads
+    better). Two builds of one design: game `SoldierCaptain` (`Tools/blender/soldier_captain.py`, «Солдаты», jointed
+    like the soldiers) and cutscene `CineCaptain` (`Tools/blender/cinematic/captain.py`, Ардан's rig): darker
+    steel breastplate, blue skirt, wine half cloak + sash, white plume on an open burgonet, grey moustache, scar,
+    spare sword on the left hip (Ардан's), round blue buckler with the town's gold tower (game). Render
+    `Design/buildings/Captain_review.png` v2 APPROVED 2026-11-14 (v1 notes fixed: cloak over the skirt, the sash wraps the breastplate via `kit.band_on_box`, the gold comb replaced by a plume socket). IN THE GAME: `Models/Soldiers/SoldierCaptain.fbx`; `CityDefenceMode.Man(false)` hires one more man-at-arms ("Captain", same numbers) 3.6 m in from the inner gate and `ArmyManager.Redress(unit, model)` puts him in `captainModel`. CineCaptain is exported with its animations (export_cast) later. Not seen in game.
+    Next models: lookout, rider + horse, gate doors.
+  - The LOOKOUT (cutscene only, `CineLookout`, `Tools/blender/cinematic/lookout.py`, Ардан's rig): a young town
+    guard -- quilted blue gambeson with a gold stripe, padded coif under a plain steel kettle helmet, a spear in
+    the right hand (-x; the left free to point), a brass-banded horn on a leather baldric (kit.band_on_box) over
+    the right shoulder, the horn on the LEFT hip, by the free hand (v2, the user: not in the spear hand). Render
+    `Design/buildings/Lookout_review.png` v2 APPROVED 2026-11-14 (exported with its animations later).
+    Note: on the cine rig the figure's RIGHT is -x (fg.limbs "R" = k -1); the captain's scabbard sits at -x.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right
   (IMGUI in `CampaignMapScreen.OnGUI`); in mission 2 the cheat window's «Служебное» tab has «Закончить часть»
