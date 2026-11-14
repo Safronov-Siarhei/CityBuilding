@@ -202,7 +202,10 @@ def archer_head(b):
     b.dome(0, 0.005, 0.47, 0.058, 0.08, [GREEN, GREEN], sides=8)
     b.box(-0.058, 0.058, -0.005, 0.05, 0.43, 0.5, GREEN, bevel=0.015)
     b.frustum(0, 0.0, 0.41, 0.435, 0.075, 0.06, GREEN_DARK, sides=8)                          # the cowl
-    b.prism([(-0.02, 0.53), (0.02, 0.53), (0.0, 0.44)], (0, 0.05, 0), (1, 0, 0), (0, 0.6, 1), 0.02, GREEN_DARK,
+    # the point hangs on the hood's back (y 0,05 at its top) and leans further back as it falls; it once leaned the
+    # other way from y 0,05 + 0,6 z and floated 0,3 behind the head (the user's twelfth mission 2 playtest:
+    # «висящий треугольник у лучника»)
+    b.prism([(-0.02, 0.53), (0.02, 0.53), (0.0, 0.44)], (0, 0.05 + 0.6 * 0.53, 0), (1, 0, 0), (0, -0.6, 1), 0.02, GREEN_DARK,
             back_cap=True)
     b.rod((0.045, 0.01, 0.51), (0.07, 0.05, 0.6), 0.012, FEATHER)
 

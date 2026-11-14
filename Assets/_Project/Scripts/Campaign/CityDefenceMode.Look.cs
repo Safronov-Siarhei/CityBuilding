@@ -311,6 +311,22 @@ namespace CityBuilder.Campaign
                 go.transform.SetPositionAndRotation(at, Quaternion.Euler(0f, d.rot, 0f) * model.transform.rotation);
                 go.transform.localScale = model.transform.localScale * CineScale;
                 foreach (var c in go.GetComponentsInChildren<Collider>()) Destroy(c);
+                // a haystack's mound is round underneath and met the ground at a point (the user's twelfth playtest:
+                // «стоги как будто висят в воздухе»): sunk by a share of its height so its wide part sits on the ground
+                if (d.id == "CineHaystack")
+                {
+                    var rs = go.GetComponentsInChildren<Renderer>();
+                    if (rs.Length > 0)
+                    {
+                        float low = float.MaxValue, high = float.MinValue;
+                        foreach (var r in rs)
+                        {
+                            low = Mathf.Min(low, r.bounds.min.y);
+                            high = Mathf.Max(high, r.bounds.max.y);
+                        }
+                        go.transform.position += Vector3.up * (at.y - low - B.haystackSinkShare * (high - low));
+                    }
+                }
             }
         }
 

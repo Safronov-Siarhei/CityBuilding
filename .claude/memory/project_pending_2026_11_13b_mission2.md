@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 979576c4-7a0c-49a0-b236-1e57adabdab9
-  modified: 2026-11-14T04:06:35.580Z
+  modified: 2026-11-14T05:47:07.270Z
 ---
 
 Playtest 7 of campaign level 2 BUILT (not seen): shooters both sides of the gate; escorts behind their tower; climbers fight on the wall-walk, infantry and Ардан climb the docked tower.
@@ -17,6 +17,8 @@ PLAYTEST 8 (13 items) and PLAYTEST 9 (yellow door circles to climb, free walking
 PLAYTEST 10 BUILT 2026-11-13 (card «PLAYTEST 10»), not seen: no trees/wells before the gate doors, melee on the wall hits only the wall/docked tower, walking into a tower takes him down, game menu no longer brings back the sandbox HUD (HudHider restores previous state).
 
 PLAYTEST 11 BUILT 2026-11-14 (card «PLAYTEST 11»), not seen: help clock shows its time (best fit forced), siege towers never strike walls (OrcUnit.NeverStrikes), door circles vanish with their gate.
+
+PLAYTEST 12 BUILT 2026-11-14 (card «PLAYTEST 12»), not seen: archer hood point fixed in the model (the «triangle»), monks don't heal across walls, ram hp x20 + no rams without gates, haystacks sunk, short square goal, app pause opens the menu, Ардан XP = kills + clock (last skill 60 s before the end).
 
 Tower doors: the user picked A; IN THE GAME 2026-11-13 (FortifiedGate1-TowerDoors.fbx via HangDoors), not seen.
 

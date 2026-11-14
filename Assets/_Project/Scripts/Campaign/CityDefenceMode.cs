@@ -106,6 +106,13 @@ namespace CityBuilder.Campaign
         public BuildingInstance[] OuterGates { get; } = new BuildingInstance[3];
         public BuildingInstance[] InnerGates { get; } = new BuildingInstance[3];
 
+        private bool AnyGateStands()
+        {
+            foreach (var g in OuterGates) if (g != null && g.CurrentHealth > 0) return true;
+            foreach (var g in InnerGates) if (g != null && g.CurrentHealth > 0) return true;
+            return false;
+        }
+
         public BuildingInstance Castle { get; private set; }
 
         /// <summary>The mission ended: true won, false lost (the HUD's end panel).</summary>
@@ -171,9 +178,20 @@ namespace CityBuilder.Campaign
             OrcUnit.WallBetween = WallBetween;
             SoldierUnit.PenBreach = Breach;
             SoldierUnit.WallBlocks = SoldierBlocked;
+            SoldierUnit.HealBlocks = HealBlocked;
             // no residents grow in the houses (their bars stood over every roof, the user's first playtest)
             var people = GetComponent<Citizens.HousePeople>();
             if (people != null) people.enabled = false;
+        }
+
+        /// <summary>The game put away mid-mission (the user's twelfth playtest: «свернёт и вернётся -- миссия должна
+        /// продолжиться»): it waits behind the game menu, frozen, and goes on from there when the menu is closed.
+        /// A phone that kills the app while it is away still loses the mission (no mission save).</summary>
+        private void OnApplicationPause(bool paused)
+        {
+            if (!paused || Current != Stage.Part1) return;
+            var menu = FindAnyObjectByType<UI.GameMenuController>();
+            if (menu != null && !menu.IsOpen) menu.Open();
         }
 
         private void OnDestroy()
@@ -191,6 +209,7 @@ namespace CityBuilder.Campaign
                 OrcUnit.WallBetween = null;
                 SoldierUnit.PenBreach = null;
                 SoldierUnit.WallBlocks = null;
+                SoldierUnit.HealBlocks = null;
                 SoldierUnit.StairFootAt = null;
             }
         }
@@ -371,6 +390,7 @@ namespace CityBuilder.Campaign
             TickSiege(dt);
             TickWallOrcs(dt);
             TickArdenWall(dt);
+            TickArdenXp();
             TickGates(dt);
             TickWreckers(dt);
             TickTowerShots(dt);
@@ -497,7 +517,9 @@ namespace CityBuilder.Campaign
                 // a siege tower leads its road and the road's orcs walk behind it (the user, 2026-11-13)
                 Tower lead = null;
                 for (var i = 0; i < At(row.towers, road); i++) lead = SpawnMachine(false, road, row.level) ?? lead;
-                for (var i = 0; i < At(row.rams, road); i++) SpawnMachine(true, road, row.level);
+                // no gate left standing: no more rams (the user's twelfth playtest)
+                if (AnyGateStands())
+                    for (var i = 0; i < At(row.rams, road); i++) SpawnMachine(true, road, row.level);
                 Send(OrcKind.Brute, road, At(row.brutes, road), lead);
                 Send(OrcKind.Raider, road, At(row.raiders, road), lead);
                 Send(OrcKind.Thrower, road, At(row.throwers, road), lead);

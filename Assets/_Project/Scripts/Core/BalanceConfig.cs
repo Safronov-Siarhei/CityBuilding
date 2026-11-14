@@ -3131,6 +3131,10 @@ namespace CityBuilder.Core
         public float wallPatrolSeconds = 8f;
         // the orcs' siege machines from the second half of a part (approved 2026-11-12)
         public float ramHealthMult = 6f;
+        // the share of a haystack prop's height sunk into the ground (m2_haystack_sink_share)
+        public float haystackSinkShare = 0.18f;
+        // on the clock alone Ардан reaches the last skill's level this long before the mission's end (m2_skills_open_before_end_sec)
+        public float skillsOpenBeforeEndSeconds = 60f;
         public float ramDamageMult = 8f;
         public float towerHealthMult = 5f;
         public float siegeSpeed = 0.6f;
@@ -3225,6 +3229,8 @@ namespace CityBuilder.Core
             wallPatrolCells = Mathf.RoundToInt(F("m2_wall_patrol_cells", wallPatrolCells));
             wallPatrolSeconds = F("m2_wall_patrol_sec", wallPatrolSeconds);
             ramHealthMult = F("m2_ram_health_mult", ramHealthMult);
+            haystackSinkShare = F("m2_haystack_sink_share", haystackSinkShare);
+            skillsOpenBeforeEndSeconds = F("m2_skills_open_before_end_sec", skillsOpenBeforeEndSeconds);
             ramDamageMult = F("m2_ram_damage_mult", ramDamageMult);
             towerHealthMult = F("m2_tower_health_mult", towerHealthMult);
             siegeSpeed = F("m2_siege_speed", siegeSpeed);

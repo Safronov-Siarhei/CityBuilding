@@ -95,6 +95,19 @@ namespace CityBuilder.Campaign
             return WallBetween(orc, soldier);
         }
 
+        /// <summary>SoldierUnit.HealBlocks: a healer never goes for a hurt man on the other side of a wall, nor up on
+        /// the wall from the ground (or down from it).</summary>
+        private bool HealBlocked(SoldierUnit healer, SoldierUnit hurt)
+        {
+            if (healer == null || hurt == null) return false;
+            if (healer.OnWall != hurt.OnWall) return true;
+            if (healer.OnWall) return false;
+            var a = healer.transform.position;
+            var b = hurt.transform.position;
+            if (InBreach(a, Rect.zero) || InBreach(b, Rect.zero)) return false;
+            return Ring(a, 0f) != Ring(b, 0f);
+        }
+
         private bool DockedTower(OrcUnit orc)
         {
             foreach (var t in _towers) if (t.orc == orc && t.docked) return true;
