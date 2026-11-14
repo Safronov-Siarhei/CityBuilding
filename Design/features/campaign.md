@@ -707,7 +707,8 @@
   - The LOOKOUT (cutscene only, `CineLookout`, `Tools/blender/cinematic/lookout.py`, Ардан's rig): a young town
     guard -- quilted blue gambeson with a gold stripe, padded coif under a plain steel kettle helmet, a spear in
     the right hand (-x; the left free to point), a brass-banded horn on a leather baldric (kit.band_on_box) over
-    the left shoulder. Render `Design/buildings/Lookout_review.png` SENT FOR APPROVAL 2026-11-14.
+    the right shoulder, the horn on the LEFT hip, by the free hand (v2, the user: not in the spear hand). Render
+    `Design/buildings/Lookout_review.png` v2 SENT FOR APPROVAL 2026-11-14.
     Note: on the cine rig the figure's RIGHT is -x (fg.limbs "R" = k -1); the captain's scabbard sits at -x.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right

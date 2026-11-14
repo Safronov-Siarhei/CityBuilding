@@ -5,7 +5,7 @@ Same style as Ардан and the captain, on Ардан's rig (figure.py). A you
 the captain: a quilted blue gambeson to mid-thigh stitched in rings with a gold stripe down the front, a
 leather belt, brown hose and boots; a plain steel kettle helmet over a padded coif; a spear in his right
 hand (his left is free -- he points with it); a cow horn with brass bands on a leather baldric from the
-left shoulder to the right hip.
+right shoulder to the left hip (the horn away from the spear hand).
 
     blender --background <Buildings-Size1-Models.blend> --python lookout.py
 """
@@ -35,10 +35,11 @@ fg.plain(SKIN, BLUE, BLUE_DARK, GOLD, STEEL, STEEL_DARK, LEATHER, HOSE, BOOT, SO
          EYE, PUPIL)
 
 CHEST = ((0, 0, 0.33), (0.08, 0.056, 0.06), 0.02)      # the gambeson's chest: centre, half sizes, bevel
-# the baldric: from the right hip up the front, over the LEFT shoulder (+x), down the back to the right hip
-BALDRIC = ([(-0.06 + 0.12 * i / 6, -1.0, 0.272 + 0.112 * i / 6) for i in range(7)]
-           + [(0.06, -1.0, 1.0), (0.06, 0.0, 1.0), (0.06, 1.0, 1.0)]
-           + [(0.06 - 0.12 * i / 6, 1.0, 0.384 - 0.112 * i / 6) for i in range(7)])
+# the baldric: from the LEFT hip (+x) up the front, over the right shoulder (-x), down the back to the left hip --
+# the horn hangs on the left, away from the spear hand (the user, 2026-11-14)
+BALDRIC = ([(0.06 - 0.12 * i / 6, -1.0, 0.272 + 0.112 * i / 6) for i in range(7)]
+           + [(-0.06, -1.0, 1.0), (-0.06, 0.0, 1.0), (-0.06, 1.0, 1.0)]
+           + [(-0.06 + 0.12 * i / 6, 1.0, 0.384 - 0.112 * i / 6) for i in range(7)])
 
 
 def foot(b, k):
@@ -67,12 +68,12 @@ def waist(b):
     b.box(-0.01, 0.01, -0.09, -0.08, 0.15, 0.25, GOLD)
     b.cylinder(0, 0, 0.25, 0.27, 0.082, LEATHER, sides=10)
     b.box(-0.015, 0.015, -0.088, -0.08, 0.249, 0.272, STEEL, bevel=0.003)
-    # the horn at the right hip (-x), hung from the baldric's foot: a curved cone, brass bands, a dark tip
-    pts = [(-0.098, -0.03, 0.262), (-0.108, -0.01, 0.235), (-0.11, 0.02, 0.215), (-0.104, 0.045, 0.205)]
+    # the horn at the left hip (+x), hung from the baldric's foot: a curved cone, brass bands, a dark tip
+    pts = [(0.098, -0.03, 0.262), (0.108, -0.01, 0.235), (0.11, 0.02, 0.215), (0.104, 0.045, 0.205)]
     widths = [0.034, 0.028, 0.02, 0.012]
     for (p0, p1), w in zip(zip(pts, pts[1:]), widths):
         b.rod(p0, p1, w, HORN)
-    b.rod(pts[-1], (-0.1, 0.055, 0.204), 0.01, HORN_TIP)
+    b.rod(pts[-1], (0.1, 0.055, 0.204), 0.01, HORN_TIP)
     for p in pts[:2]:
         b.rod((p[0], p[1] - 0.003, p[2]), (p[0], p[1] + 0.003, p[2] - 0.004), 0.038 if p is pts[0] else 0.031, GOLD)
 
@@ -86,7 +87,7 @@ def chest(b):
     b.obox((0, 0, 0.378), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.088, 0.058, 0.016, BLUE_DARK, bevel=0.01)   # padded shoulders
     b.box(-0.009, 0.009, -0.062, -0.054, 0.272, 0.374, GOLD)
     kit.band_on_box(b, c, h, r, BALDRIC, 0.022, 0.0025, LEATHER)
-    b.box(0.02, 0.034, -0.064, -0.058, 0.33, 0.344, GOLD)                                # the baldric's buckle
+    b.box(-0.01, 0.006, -0.065, -0.058, 0.322, 0.338, STEEL)                             # the baldric's buckle
     b.cylinder(0, 0, 0.386, 0.402, 0.05, COIF, sides=8)                                  # the coif at the neck
 
 
