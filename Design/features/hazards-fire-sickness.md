@@ -97,6 +97,37 @@ Cemetery + the dead -- `Citizens/Remains.cs`:
   Remains1 (lying skeleton, 386 tris) APPROVED 2026-11-13 and exported (Models/Buildings/Remains1.fbx).
 - Bodies and graves saved (SaveData bodies / GraveEntry).
 
+## Sandbox fires v2 -- DECIDED 2026-11-14 (the user), NOT BUILT
+Why: decay is OFF since 2026-10-25, and fire chance WAS decay -> no fire has started anywhere since.
+SANDBOX ONLY (other modes: no fires at all).
+- Chance: random, every burnable building, `fire_chance_per_day` (~0.5%/game day), x2 when no water
+  within 8 CELLS (a well, the sea, a river) -- the user: 4 cells would force wells everywhere.
+- No fires and no illness the first 10 minutes of a run (was 7 for illness).
+- Spread ONLY to a burnable building TOUCHING it (no gap); a 1-cell gap stops it. Every 10 s of
+  burning, 30% per touching neighbour.
+- Never burn: Road, Square, TownSquare, Moat, Bridge, Well, Castle (town hall), FortifiedTower
+  (Бастион), FortifiedGate (Барбакан), Lighthouse, Cemetery, Quarry, the mines. Fence, Gate and Tower
+  burn only at levels 1-2 (stone from 3). EVERYTHING ELSE burns, Flag and decor (tree, bush, garden) too.
+- Burning: 1.5% of max hp per second (~65 s to nothing untended); a fire STRENGTH 0..100 grows
+  +2/s, damage scales with it; each bucket takes 25 off; 0 = out. Destroyed -> ruins (existing rule).
+- Orc raids: 1-2 TORCHBEARERS per raid, only from the player's Town Hall level 2: run to the nearest
+  burnable building, 3 s to light it (killable meanwhile), then the next (variant A). Model to approve.
+- THUNDERSTORM (all maps): every 8-12 min a dark cloud with rain crosses part of the map; every
+  15-30 s a 25% strike on the tallest burnable building under it = fire; fires under rain burn half
+  as fast. Later maybe a «Громоотвод» research.
+- Firefighters: take a bucket, run to the nearest water (well / river / sea), fill 1 s, run to the
+  fire, pour; repeat until out; then home.
+- Residents: a wandering resident sometimes goes into a burnable building for 5-15 s (hidden); a fire
+  starting while he is in kills him; the body lies on the nearest free cell that no building covers --
+  a road, Square or TownSquare cell is fine (into Remains / cemetery).
+- BANNER like the plague's: fire destroyed ~15% of the player's buildings within 5 min -> pause,
+  ad or crystals put out every fire (+ a no-fire shield like the plague's 7 min). CONCEPT FIRST.
+- Fire Brigade = variant A (like the Infirmary): no radius, the whole island; the nearest brigade with a
+  free firefighter answers; none on the island = nobody puts it out. Levels: firefighters 1/2/2/3/3;
+  lvl2 big bucket (40 instead of 25); lvl3 a water barrel at the station (first trip skips the water
+  run); lvl4 runners +25% speed; lvl5 prevention -50% fire chance on the island. No worker = mark +
+  «Назначьте пожарного». Fire mark over a burning building, notice «Пожар! Постройте пожарную бригаду».
+
 ## Code
 `Buildings/FireManager.cs`, `Buildings/BuildingFire.cs`, `Citizens/SicknessManager.cs`, `Citizens/Plague.cs`,
 `Citizens/Remains.cs`, `UI/PlagueBanner.cs`,
