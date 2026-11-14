@@ -57,6 +57,21 @@ namespace CityBuilder.Campaign
         private const float FootReach = 3.5f;
         // stuck this near its spot, it docks there
         private const float StuckDockCells = 5f;
+        // a tower standing still this long away from the wall lets its escorts go on without it
+        private const float StuckReleaseSeconds = 6f;
+
+        /// <summary>The wall-walk within two cells ahead of (south of) this point: the tower stands against the wall.</summary>
+        private static bool WallJustAhead(Vector3 at)
+        {
+            var grid = Grid.GridManager.Instance;
+            if (grid == null) return false;
+            for (var k = 1; k <= 2; k++)
+            {
+                var c = grid.WorldToCell(at + Vector3.back * (k * grid.CellSize));
+                if (Buildings.WallWalk.IsWalk(c) && !Buildings.WallWalk.IsStair(c)) return true;
+            }
+            return false;
+        }
         // the drawbridge drops onto the wall-walk in this long
         private const float BridgeDropSeconds = 0.7f;
 
@@ -179,7 +194,15 @@ namespace CityBuilder.Campaign
                     var near = Flat(at - spot);
                     t.stillFor = Flat(at - t.lastAt) < 0.25f * dt ? t.stillFor + dt : 0f;
                     t.lastAt = at;
-                    if (near <= Mathf.Max(B.towerDockCells, 1.2f) || (near <= StuckDockCells && t.stillFor >= 1.2f)) Dock(t);
+                    // docks only against the wall itself (the user's fourteenth playtest: a tower stuck in the field or
+                    // in a street docked there and threw its orcs over the wall from afar)
+                    if (near <= Mathf.Max(B.towerDockCells, 1.2f) || (near <= StuckDockCells && t.stillFor >= 1.2f && WallJustAhead(at)))
+                    {
+                        Dock(t);
+                        continue;
+                    }
+                    // stuck far from the wall for good: its road's orcs go on by themselves, it keeps trying
+                    if (t.stillFor >= StuckReleaseSeconds && t.escorts.Count > 0) ReleaseEscorts(t);
                     continue;
                 }
                 // standing against the wall: it does nothing but stand (and can still be broken)

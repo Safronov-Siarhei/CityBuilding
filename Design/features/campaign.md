@@ -465,6 +465,12 @@
   8. Where are ram/tower hp: m2_ram_health_mult / m2_tower_health_mult (x a brute's health), tab «Кампания: оборона города».
   9. Only rams/towers left -> the next wave comes (TickWaves counts only orcs without `IgnoresSoldiers`).
   10. Ардан's XP: EVERY orc that falls on the map = 1 point (any killer); m2_arden_max_level 20 levels spread evenly over ALL orcs of all waves of both parts (m2waves tab; a tower counts 1 + m2_tower_crew); skills open at m2_cry_level 1 / m2_whirl_level 5 / m2_dash_level 10 / m2_breath_level 15; part 2 credits all of part 1's orcs (`CreditPart1`); health/damage per level 20 / 2. m2_arden_xp2-4 deleted (sheet + CSV + code).
+- **PLAYTEST 14 (the user, 2026-11-14) -- BUILT 2026-11-14 (setup green; not seen):**
+  1-2. A siege tower stuck in the field / in a street docked there (stuck-dock reached 5 cells) and threw its orcs
+     over the wall from afar -> a stuck tower docks only with the wall-walk within 2 cells ahead (`WallJustAhead`);
+     stuck elsewhere for 6 s (`StuckReleaseSeconds`) its escorts go on by themselves, it keeps trying.
+  3. With both gates down a ram rolled on to the square -> no gate standing: every ram stops for good where it is
+     (`ParkRams`/`Park`, BusyFor 1e6; ToInnerGate parks a ram once the inner gate is gone).
 - **PLAYTEST 13 (the user, 2026-11-14) -- BUILT 2026-11-14 (setup x2 green; not seen):**
   1. The game menu (and its settings) left the mission HUD showing -> CityDefenceHud turns its canvas off while
      `GameMenuController.IsOpen`.

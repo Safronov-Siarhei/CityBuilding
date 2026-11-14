@@ -510,6 +510,21 @@ namespace CityBuilder.Campaign
 
         private static bool IsRam(OrcUnit orc) => orc != null && orc.name == "OrcRam";
 
+        /// <summary>A ram with no gate left to break: it stops for good where it stands.</summary>
+        private static void Park(OrcUnit orc)
+        {
+            orc.FollowLane(null);
+            orc.OnlyTarget = null;
+            orc.BusyFor = 1e6f;
+        }
+
+        /// <summary>Every ram on the map stops: no gate stands any more.</summary>
+        private void ParkRams()
+        {
+            foreach (var orc in OrcUnit.All)
+                if (IsRam(orc) && orc.CurrentHealth > 0) Park(orc);
+        }
+
         // the orcs already sent on to the inner gate
         private readonly HashSet<OrcUnit> _toInner = new HashSet<OrcUnit>();
 
@@ -525,12 +540,17 @@ namespace CityBuilder.Campaign
             _toInner.Add(orc);
             if (InnerGates[0] == null)
             {
+                // no gate left: a ram stays where it is (the user's fourteenth playtest: it rolled on to the square)
+                if (IsRam(orc))
+                {
+                    Park(orc);
+                    return;
+                }
                 // the inner gate is broken: through it to the square (the user, 2026-11-13)
                 orc.FollowLane(new OrcLane(new[] { orc.transform.position, OnMesh(World(50.5f, InnerNorthWallY - 1.5f)),
                     OnMesh(World(50.5f, InnerNorthWallY + 1.5f)), _square }));
                 orc.LaneOnly = true;
                 orc.OnlyTarget = null;
-                if (IsRam(orc)) orc.OnlyTarget = Castle;
                 return;
             }
             var front = OnMesh(World(50.5f + Random.Range(-1f, 1f), InnerNorthWallY - 1.3f));
@@ -632,6 +652,7 @@ namespace CityBuilder.Campaign
                 LayTheDead();
                 if (InnerGates[0] != null) TowersToInnerWall();
             }
+            if (!AnyGateStands()) ParkRams();
             if (inner && CurrentGoal != Goal.Square)
             {
                 CurrentGoal = Goal.Square;
