@@ -36,6 +36,9 @@
   commas are expected — don't "clean them up". Notes under a table must sit in ONE cell of column A
   (`IsNoteRow`).
 - A new per-level stat = sheet column + `BalanceImporter.ReadLevels` + `SetupProject.CopyLevels`.
+- **Languages (2026-11-14):** base = English (`Localization.BaseLanguage`); the main menu picker offers
+  more languages than have columns -- a column-less one reads `en` (Localization.ColumnFor); an empty
+  cell still falls back to the FIRST column (ru). New language = sheet column (+ flag in language_flags.py).
 - **Localization:** tab `localization` = `key`, one column per language (`ru`, `en` — adding a column
   adds a language, zero code), `comment`. Keys `#section_name`, lowercase. Keys derived from ids, never
   stored: `#building_<id>`, `#recipe_<id>`, `#resource_<type>`, `#unit_<type>`, `#tier_<code>`,

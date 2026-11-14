@@ -57,6 +57,7 @@ namespace CityBuilder.EditorTools
             discordBadges.Add(Badge(discord.transform));
             var youTube = BrandCorner(main, "YouTubeButton", "YouTube", new Vector2(0.5f, 0f), new Vector2(340f, 120f), CornerButton, YouTubeColour);
             youTubeBadges.Add(Badge(youTube.transform));
+            BuildLanguagePicker(main);   // top-right; last, so its open list lies over the rest
 
             // ---- the modes
             var modes = StretchedChild(canvas, "ModesScreen");

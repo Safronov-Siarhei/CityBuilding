@@ -115,6 +115,19 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
 Live scene behind the menu unchanged (`MainMenuBackground` etc.). Tests: `MainMenuTests`,
 `MapPickerTests` (sandbox screen).
 
+### Language picker (the user, 2026-11-14; concept v2 approved, Design/ui/LanguagePicker_Concept.png) -- BUILT, not seen
+- Main screen, top-right corner: a small parchment pill (244x60: flag, the language's OWN name, chevron);
+  a tap opens a list under it (flag + own name per row, the current one gold with a tick), a tap
+  outside closes it. Own names, not country names (my proposal in the concept, accepted).
+- Base language English (`Localization.BaseLanguage`): no saved choice -> the phone's language if it is
+  in the list, else English. A language with no sheet column yet reads the English text (translations
+  are the LAST step, the user). Release set + cheap wave: en ru de fr es pt it pl tr.
+- Japanese/Korean/Chinese are NOT in the list yet: Rubik has no CJK glyphs; add them with a CJK font
+  (Noto Sans CJK, OFL) -- then the list needs a ScrollRect (9 rows fit now).
+- Code: `UI/LanguagePicker.cs`, `Editor/SetupProjectLanguagePicker.cs` (called last in BuildMainMenu);
+  art + list `Tools/ui/language_flags.py` -> `UI/Icons/Flags/` (Flag_<code>.png, Chevron, Tick, languages.json).
+  The in-game settings still have their ru/en buttons (sheet columns).
+
 ## Loading screen (REDONE 2026-11-10, the user: a painted island map + a ship on the course)
 `UI/LoadingScreen.cs`, prefab `Resources/LoadingScreen.prefab` (built by `SetupProjectLoading.cs`),
 DontDestroyOnLoad, put up by `LoadingScreen.IntoGame` (sandbox Start, saves Load, Run, dungeon) and

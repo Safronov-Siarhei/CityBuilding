@@ -61,15 +61,10 @@ namespace CityBuilder.Core
             var config = Config;
             if (config == null) return;
 
-            var index = config.IndexOfLanguage(code);
-            if (index < 0)
-            {
-                Debug.LogWarning($"Localization: the sheet has no column for '{code}'. Staying on '{_language}'.");
-                return;
-            }
-
+            // a language the sheet has no column for yet (the menu's picker offers more than are
+            // translated, the user 2026-11-14) is still the player's choice: it reads the English text
             _language = code;
-            _languageIndex = index;
+            _languageIndex = ColumnFor(config, code);
             PlayerPrefs.SetString(LanguagePrefsKey, code);
             PlayerPrefs.Save();
             OnLanguageChanged?.Invoke();
@@ -122,21 +117,24 @@ namespace CityBuilder.Core
         }
 
         /// <summary>Which language to start in: what the player last chose, else the system language if the sheet has it, else the sheet's first column.</summary>
+        /// <summary>The base language (the user, 2026-11-14): a player who never chose and whose phone speaks none of ours gets English.</summary>
+        public const string BaseLanguage = "en";
+
         private static void ResolveLanguage()
         {
-            var fallback = _config != null && _config.Languages.Count > 0 ? _config.Languages[0] : "ru";
-
             var saved = PlayerPrefs.GetString(LanguagePrefsKey, string.Empty);
             var candidate = !string.IsNullOrEmpty(saved) ? saved : SystemLanguageCode();
+            _language = !string.IsNullOrEmpty(candidate) ? candidate : BaseLanguage;
+            _languageIndex = ColumnFor(_config, _language);
+        }
 
-            _languageIndex = _config != null ? _config.IndexOfLanguage(candidate) : -1;
-            if (_languageIndex < 0)
-            {
-                _language = fallback;
-                _languageIndex = 0;
-                return;
-            }
-            _language = candidate;
+        /// <summary>The sheet column a language reads: its own, else English's, else the first.</summary>
+        private static int ColumnFor(LocalizationConfig config, string code)
+        {
+            if (config == null) return 0;
+            var index = config.IndexOfLanguage(code);
+            if (index < 0) index = config.IndexOfLanguage(BaseLanguage);
+            return index < 0 ? 0 : index;
         }
 
         private static string SystemLanguageCode()
@@ -145,6 +143,14 @@ namespace CityBuilder.Core
             {
                 case SystemLanguage.Russian: return "ru";
                 case SystemLanguage.English: return "en";
+                // the picker's languages (Tools/ui/language_flags.py): untranslated ones read English for now
+                case SystemLanguage.German: return "de";
+                case SystemLanguage.French: return "fr";
+                case SystemLanguage.Spanish: return "es";
+                case SystemLanguage.Portuguese: return "pt";
+                case SystemLanguage.Italian: return "it";
+                case SystemLanguage.Polish: return "pl";
+                case SystemLanguage.Turkish: return "tr";
                 default: return string.Empty;
             }
         }
