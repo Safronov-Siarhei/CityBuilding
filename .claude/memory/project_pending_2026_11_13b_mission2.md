@@ -5,7 +5,7 @@ metadata:
   node_type: memory
   type: project
   originSessionId: 979576c4-7a0c-49a0-b236-1e57adabdab9
-  modified: 2026-11-14T12:05:10.034Z
+  modified: 2026-11-14T12:33:14.836Z
 ---
 
 Playtest 7 of campaign level 2 BUILT (not seen): shooters both sides of the gate; escorts behind their tower; climbers fight on the wall-walk, infantry and Ардан climb the docked tower.
@@ -21,6 +21,8 @@ PLAYTEST 11 BUILT 2026-11-14 (card «PLAYTEST 11»), not seen: help clock shows 
 PLAYTEST 12 BUILT 2026-11-14 (card «PLAYTEST 12»), not seen: archer hood point fixed in the model (the «triangle»), monks don't heal across walls, ram hp x20 + no rams without gates, haystacks sunk, short square goal, app pause opens the menu, Ардан XP = kills + clock (last skill 60 s before the end).
 
 PLAYTEST 13 BUILT 2026-11-14 (card «PLAYTEST 13»), not seen: menu hides mission HUD, music + wave roar, dash auto-aims/short/stun-first (1/3 orc hp), whirl 2/3 orc hp, stun spiral, no hero on orc towers, towers to inner wall after breach, XP clock only. PLAYTEST 14 BUILT 2026-11-14, not seen: towers dock only against the wall (stuck far = escorts released), rams park when no gate stands.
+
+PLAYTEST 15 CODED 9f92a1447, NOT BUILT (user's Unity was open): Ардан walk after respawn, gate guards freed when their gate falls. OPEN: siege tower crew -- the user asked whether orcs ride inside (they don't: 4 Raiders spawn at docking); waiting for their call.
 
 Skill hint: the user picked concept A (label with pictures + numbers over the held button) -- BUILT 2026-11-14, not seen. OPEN: campaign monetization ideas offered (paid chapters, rewarded continue/x2, Ардан skins, stars -> sandbox rewards, starter pack, no-ads), none picked.
 
