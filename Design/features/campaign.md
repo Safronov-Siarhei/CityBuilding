@@ -682,7 +682,8 @@
     `Tests/PlayMode/CityDefenceTests.cs` (the mission starts; Ардан dying loses it). Cheat window: «Ардан:
     +уровень».
 - **CUTSCENES -- discussion opened 2026-11-14 (the user: «второй уровень готов, осталось сделать катсцены»).**
-  Claude's draft storyboard (NOT agreed; the user replied with a message instead of the four questions):
+  The user (2026-11-14): «пока что делаем сцену 1» -- only scene 1 now; scenes 2-3 later.
+  Claude's draft storyboard (scene 1 awaiting the user's OK on its shot list):
   1. «У ворот» ~45 s before the fight, shot in the mission's own town: wide over the fields to the N gate; Ардан
      runs in to the captain; «Капитан! На нашу деревню напали…»; a lookout shouts «Враг! Из леса идут!» (torches at
      the forest edge); horn, guards run up the wall, townsfolk scatter; the gates close (the open gate-doors
