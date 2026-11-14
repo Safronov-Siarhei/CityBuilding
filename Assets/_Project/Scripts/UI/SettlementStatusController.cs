@@ -22,6 +22,7 @@ namespace CityBuilder.UI
         private const float WaveRefreshSeconds = 0.25f;
 
         private float _refreshIn;
+        private int _baseFont;
 
         private void Start()
         {
@@ -58,14 +59,14 @@ namespace CityBuilder.UI
                 var seconds = Mathf.Max(0, Mathf.CeilToInt(left));
                 // the plaque is narrow: the words shrink to fit so the time after them shows (the user's eighth
                 // playtest: only «Подкрепление» was seen)
-                if (!statusText.resizeTextForBestFit)
-                {
-                    statusText.resizeTextForBestFit = true;
-                    statusText.resizeTextMaxSize = statusText.fontSize;
-                    statusText.resizeTextMinSize = Mathf.Max(8, statusText.fontSize / 2);
-                    statusText.horizontalOverflow = HorizontalWrapMode.Wrap;
-                    statusText.verticalOverflow = VerticalWrapMode.Truncate;
-                }
+                // (the user's eleventh playtest: still «Подкрепление» alone -- the plaque came with best fit already
+                // on at a large minimum, so the old one-time switch never ran; set it every time, small minimum)
+                if (_baseFont == 0) _baseFont = statusText.resizeTextMaxSize > 0 ? statusText.resizeTextMaxSize : statusText.fontSize;
+                statusText.resizeTextForBestFit = true;
+                statusText.resizeTextMaxSize = _baseFont;
+                statusText.resizeTextMinSize = 6;
+                statusText.horizontalOverflow = HorizontalWrapMode.Wrap;
+                statusText.verticalOverflow = VerticalWrapMode.Truncate;
                 statusText.text = Localization.Format(help ? "#m2_clock_help" : "#m2_clock_courier", $"{seconds / 60}:{seconds % 60:00}");
                 return;
             }

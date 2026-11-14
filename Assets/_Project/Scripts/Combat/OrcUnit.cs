@@ -1222,6 +1222,7 @@ namespace CityBuilder.Combat
 
         private void Strike(BuildingInstance building)
         {
+            if (NeverStrikes) return;
             StrikeAt(building.transform.position);
             if (IsRanged) CombatProjectiles.Fire(Shot, CombatProjectiles.MuzzleOfUnit(transform), building, _attackDamage);
             else building.TryDamage(_attackDamage);
@@ -1462,6 +1463,10 @@ namespace CityBuilder.Combat
         /// <summary>A siege machine (campaign mission 2): it never turns on the fighters around it, only rolls on
         /// to what its lane ends at.</summary>
         public bool IgnoresSoldiers { get; set; }
+
+        /// <summary>Never strikes a building (campaign mission 2's siege tower: it only rolls up to the wall for its crew
+        /// to climb, the user's eleventh playtest: the wall's health bar showed as it rolled up).</summary>
+        public bool NeverStrikes { get; set; }
 
         /// <summary>Its pace times `factor` (a siege machine rolls slower than an orc walks).</summary>
         public void Slow(float factor) => _walkSpeed *= Mathf.Max(0.05f, factor);

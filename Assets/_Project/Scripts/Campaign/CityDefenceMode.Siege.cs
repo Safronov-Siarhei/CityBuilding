@@ -92,6 +92,7 @@ namespace CityBuilder.Campaign
             var wallY = inner ? InnerNorthWallY : NorthWallY;
             var road = TowerRoad(lane, wallX, wallY);
             orc.FollowLane(road);
+            orc.NeverStrikes = true;
             var tower = new Tower { orc = orc, lane = lane, wallX = wallX, wallY = wallY, road = road };
             _towers.Add(tower);
             return tower;
