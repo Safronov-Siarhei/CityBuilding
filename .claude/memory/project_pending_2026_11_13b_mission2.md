@@ -22,7 +22,7 @@ PLAYTEST 12 BUILT 2026-11-14 (card «PLAYTEST 12»), not seen: archer hood point
 
 PLAYTEST 13 BUILT 2026-11-14 (card «PLAYTEST 13»), not seen: menu hides mission HUD, music + wave roar, dash auto-aims/short/stun-first (1/3 orc hp), whirl 2/3 orc hp, stun spiral, no hero on orc towers, towers to inner wall after breach, XP clock only. PLAYTEST 14 BUILT 2026-11-14, not seen: towers dock only against the wall (stuck far = escorts released), rams park when no gate stands.
 
-PLAYTEST 15 CODED 9f92a1447, NOT BUILT (user's Unity was open): Ардан walk after respawn, gate guards freed when their gate falls. OPEN: siege tower crew -- the user asked whether orcs ride inside (they don't: 4 Raiders spawn at docking); waiting for their call.
+PLAYTEST 15 CODED 9f92a1447, NOT BUILT (user's Unity was open): Ардан walk after respawn, gate guards freed when their gate falls. Then the user's NEW TOWER CONCEPT (coded, not built): tower rolls alone with its crew inside (spawned at docking), wave orcs no longer escort it and attack at once, next wave doesn't wait for a rolling tower.
 
 Skill hint: the user picked concept A (label with pictures + numbers over the held button) -- BUILT 2026-11-14, not seen. OPEN: campaign monetization ideas offered (paid chapters, rewarded continue/x2, Ардан skins, stars -> sandbox rewards, starter pack, no-ads), none picked.
 

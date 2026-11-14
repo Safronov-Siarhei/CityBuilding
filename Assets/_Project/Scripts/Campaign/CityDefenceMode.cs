@@ -585,9 +585,10 @@ namespace CityBuilder.Campaign
             var b = B;
             for (var road = 0; road < 3; road++)
             {
-                // a siege tower leads its road and the road's orcs walk behind it (the user, 2026-11-13)
-                Tower lead = null;
-                for (var i = 0; i < At(row.towers, road); i++) lead = SpawnMachine(false, road, row.level) ?? lead;
+                Tower lead = null;   // stays null: Send() makes no escorts now
+                // the tower rolls ALONE with its crew inside; the road's orcs run at the gate without waiting for it
+                // (the user, 2026-11-14, replacing «the tower leads its road»): no escorts any more
+                for (var i = 0; i < At(row.towers, road); i++) SpawnMachine(false, road, row.level);
                 // no gate left standing: no more rams (the user's twelfth playtest)
                 if (AnyGateStands())
                     for (var i = 0; i < At(row.rams, road); i++) SpawnMachine(true, road, row.level);

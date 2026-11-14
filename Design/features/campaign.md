@@ -470,8 +470,11 @@
      (a clip he fell in held the new figure: the looping Idle never "finishes").
   2. A gate's guard may go out once ITS gate is down: OnBuildingDown frees the men kept in that pen (`FreePen`:
      Pen = Rect.zero for every soldier whose pen was PenOf(outer)/PenOf(inner)).
-  3. Asked: are there orcs in the siege towers? -> answered (crew spawned at docking, none ride inside); waiting for
-     the user's decision.
+  3. Asked: are there orcs in the siege towers? -> answered (crew spawned at docking, none ride inside).
+  4. NEW TOWER-WAVE CONCEPT (the user's answer): the tower rolls ALONE with its crew inside (crew still appears at
+     docking); the road's orcs no longer escort it and run at the gate at once (SendWave passes no lead -> no
+     Escort). The next wave comes when the wave's orcs are dead even if a tower still rolls (TickWaves never
+     counted machines). Replaces «siege tower leads its road» of 2026-11-13.
 - **PLAYTEST 14 (the user, 2026-11-14) -- BUILT 2026-11-14 (setup green; not seen):**
   1-2. A siege tower stuck in the field / in a street docked there (stuck-dock reached 5 cells) and threw its orcs
      over the wall from afar -> a stuck tower docks only with the wall-walk within 2 cells ahead (`WallJustAhead`);
