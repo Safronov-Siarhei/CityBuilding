@@ -314,6 +314,12 @@ namespace CityBuilder.Citizens
         /// (see CitizenSelector: click a citizen, then click a destination). Resumes the
         /// interrupted behavior on arrival -- see OnArrived's ManualMove branch.
         /// </summary>
+        /// <summary>Walking somewhere it was sent (MoveTo) rather than about its own business.</summary>
+        public bool ManualMoving => _mode == Mode.ManualMove;
+
+        /// <summary>A multiplier on its walking speed (a level-4 brigade's firefighters, FireManager). 1 = its own.</summary>
+        public float SpeedBonus { get; set; } = 1f;
+
         public void MoveTo(Vector3 destination)
         {
             if (_mode != Mode.ManualMove)
@@ -619,10 +625,10 @@ namespace CityBuilder.Citizens
             // campaign mission 2: the town's roads are only its look (the user, 2026-11-12)
             if (grid != null && roads != null && !Campaign.CityDefenceMode.IsActive && roads.IsRoad(grid.WorldToCell(transform.position)))
             {
-                return WalkSpeed * RoadSpeedMultiplier;
+                return WalkSpeed * RoadSpeedMultiplier * SpeedBonus;
             }
             // wading a moat (Buildings.Moat)
-            return WalkSpeed * Moat.SpeedAt(transform.position);
+            return WalkSpeed * Moat.SpeedAt(transform.position) * SpeedBonus;
         }
 
         private void OnArrived()

@@ -150,6 +150,12 @@ namespace CityBuilder.Saving
         /// </summary>
         public List<FireEntry> fires = new List<FireEntry>();
 
+        /// <summary>Seconds left of the fire banner's shield (Buildings.FireManager.ShieldLeft).</summary>
+        public float fireShield;
+
+        /// <summary>Seconds left of the sandbox's quiet start for fires and illness (MigrationManager.HazardGraceRemaining).</summary>
+        public float hazardGraceRemaining;
+
         /// <summary>
         /// Whether the map has opened its portals at all. Without it a reload healed the map's
         /// objective: the portals are placed relative to the Town Hall on the first frame one
@@ -277,6 +283,9 @@ namespace CityBuilder.Saving
 
         /// <summary>Seconds burnt so far. Not seconds REMAINING: how long a fire has left depends on how many firefighters can reach it, which is a question about the town as it stands after the load, not before the save.</summary>
         public float elapsedSeconds;
+
+        /// <summary>Its strength 0..100 (sandbox fires v2). 0 in an old save: a fresh fire's.</summary>
+        public float strength;
     }
 
     [Serializable]

@@ -97,7 +97,7 @@ Cemetery + the dead -- `Citizens/Remains.cs`:
   Remains1 (lying skeleton, 386 tris) APPROVED 2026-11-13 and exported (Models/Buildings/Remains1.fbx).
 - Bodies and graves saved (SaveData bodies / GraveEntry).
 
-## Sandbox fires v2 -- DECIDED 2026-11-14 (the user), NOT BUILT
+## Sandbox fires v2 -- DECIDED and BUILT 2026-11-14 (the user), not seen, no tests
 Why: decay is OFF since 2026-10-25, and fire chance WAS decay -> no fire has started anywhere since.
 SANDBOX ONLY (other modes: no fires at all).
 - Chance: random, every burnable building, `fire_chance_per_day` (~0.5%/game day), x2 when no water
@@ -128,13 +128,32 @@ SANDBOX ONLY (other modes: no fires at all).
   run); lvl4 runners +25% speed; lvl5 prevention -50% fire chance on the island. No worker = mark +
   «Назначьте пожарного». Fire mark over a burning building, notice «Пожар! Постройте пожарную бригаду».
 
+### Built (2026-11-14): code map
+- `FireRules` -- Active (sandbox = Infirmary.Active), Burns(b) from buildings `fireproof_level`
+  (blank = burns, 1 = never, 3 = from level 3), Touching, WaterNear (60 s cache), NearestWater, OpenGroundNear.
+- `FireManager` -- daily roll, `Ignite(b, logKey, force)` (the one way a fire starts; returns null in the
+  grace / shield), spread, banner tracking (`RecordBurnt`, `EndByBanner`, shield), crews state machine
+  (ToWater/Filling/ToFire via CitizenAgent.MoveTo + ManualMoving, SpeedBonus at lvl4), bucket = scaled cylinder.
+- `BuildingFire` -- strength, damage, rain multiplier, FireMark billboard; `FireLook` -- particle flames/smoke
+  (Campaign Flame/Smoke mats).
+- `Thunderstorm` -- particles cloud + rain, LineRenderer bolt + point-light flash; `RainOver(at)`.
+- `ResidentVisits` -- idle figure hidden in a building; `Burned(b)` kills him, body on open ground.
+- `Combat/TorchErrand` -- OrcKind.Torchbearer (43, `orc_torchbearer` units row), steered like GiftThief;
+  spawned by `OrcRaidManager.SpawnTorchbearers` from hall level `torch_from_hall_level`. Model
+  `Models/Orcs/OrcTorchbearer.fbx` from `Tools/blender/orctorch.py`.
+- `UI/PauseBanner` (base) -> `PlagueBanner`, `FireBanner`; editor `BuildDisasterBanner<T>`; art
+  `Tools/ui/fire_banner_art.py` -> `UI/Fire/`. Quiet start: `MigrationManager.HazardGraceRemaining` (saved).
+- Traps: the old BurnSeconds tests were deleted (the old fire is gone); old sheet keys `fire_burn_seconds`
+  etc. are unused now. Simplifications to revisit after a look: primitive bucket, line bolt.
+
 ## Code
-`Buildings/FireManager.cs`, `Buildings/BuildingFire.cs`, `Citizens/SicknessManager.cs`, `Citizens/Plague.cs`,
+`Buildings/FireManager.cs`, `Buildings/BuildingFire.cs`, `Buildings/FireRules.cs`, `Buildings/FireLook.cs`,
+`Buildings/Thunderstorm.cs`, `Citizens/ResidentVisits.cs`, `Combat/TorchErrand.cs`, `UI/FireBanner.cs`, `UI/PauseBanner.cs`, `Citizens/SicknessManager.cs`, `Citizens/Plague.cs`,
 `Citizens/Remains.cs`, `UI/PlagueBanner.cs`,
 `Buildings/BuildingInstance.cs` (`TryDamage`).
 
 ## Data
-economy: `fire_*`, `sickness_*`, `heal_per_healer_per_day`; buildings `service_radius(_N)`.
+economy: `fire_*`, `visit_*`, `torch_*`, `storm_*`, `strike_*`, `hazard_grace_sec`, `sickness_*`, `heal_per_healer_per_day`; buildings `service_radius(_N)`, `fireproof_level`; sandbox FireBrigade max_workers 1/2/2/3/3, radius 0; units `orc_torchbearer`.
 
 ## Tests
 EditMode `SicknessAndFireTests`; PlayMode `HazardTests`.

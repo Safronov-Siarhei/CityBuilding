@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using CityBuilder.Resources;
 using UnityEngine;
@@ -210,6 +210,9 @@ namespace CityBuilder.Buildings
         /// <summary>How many of this an Invasion run may have, 0 for no limit -- the invasion tab's max_count (InvasionRules.LimitOf).</summary>
         public int maxCount;
 
+        /// <summary>Sandbox fires: 0 burns at every level, 1 never burns, N burns only below level N (Core.BuildingBalance.fireproofLevel).</summary>
+        public int fireproofLevel;
+
         [Header("Requirements")]
         // Null = no prerequisite. Otherwise at least one already-placed instance of this building
         // (by buildingName -- see BuildingInstance.HasAny) must exist before this one can be
@@ -269,6 +272,7 @@ namespace CityBuilder.Buildings
             citizensOnBuild = balance.citizensOnBuild;
             storageGroup = balance.storageGroup;
             maxCount = balance.maxCount;
+            fireproofLevel = balance.fireproofLevel;
             levels = CopyLevels(balance.levels);
             upgradeToLevel2Cost = CopyCost(balance.upgradeToLevel2Cost);
             upgradeToLevel3Cost = CopyCost(balance.upgradeToLevel3Cost);

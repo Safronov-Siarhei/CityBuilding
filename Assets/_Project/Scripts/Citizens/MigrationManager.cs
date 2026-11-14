@@ -68,6 +68,12 @@ namespace CityBuilder.Citizens
         /// <summary>Seconds of grace left after the Town Hall went up. Zero once the settlement is on its own.</summary>
         public float SettlingInRemaining { get; private set; }
 
+        /// <summary>
+        /// The sandbox's quiet start for fires and illness (the user, 2026-11-14: 10 minutes,
+        /// hazard_grace_sec), counted from the founding like the settling-in.
+        /// </summary>
+        public float HazardGraceRemaining { get; private set; }
+
         /// <summary>Raised whenever the state or the countdown changes enough for the HUD to care -- once a second, not once a frame.</summary>
         public event Action OnMigrationChanged;
 
@@ -105,6 +111,7 @@ namespace CityBuilder.Citizens
             // period on that decision would defeat the point of having one.
             _graceStarted = true;
             SettlingInRemaining = BalanceConfig.Instance.SettlingInSeconds;
+            HazardGraceRemaining = BalanceConfig.Instance.HazardGraceSeconds;
         }
 
         /// <summary>
@@ -135,6 +142,7 @@ namespace CityBuilder.Citizens
                 return;
             }
 
+            if (HazardGraceRemaining > 0f) HazardGraceRemaining = Mathf.Max(0f, HazardGraceRemaining - deltaTime);
             if (SettlingInRemaining > 0f)
             {
                 SettlingInRemaining = Mathf.Max(0f, SettlingInRemaining - deltaTime);
@@ -240,10 +248,11 @@ namespace CityBuilder.Citizens
         /// A save written before migration existed carries zeroes, which read correctly: an
         /// established town, no grace left, next arrival a full interval away.
         /// </summary>
-        public void RestoreFromSave(float timer, float settlingInRemaining)
+        public void RestoreFromSave(float timer, float settlingInRemaining, float hazardGraceRemaining = 0f)
         {
             _timer = Mathf.Max(0f, timer);
             SettlingInRemaining = Mathf.Max(0f, settlingInRemaining);
+            HazardGraceRemaining = Mathf.Max(0f, hazardGraceRemaining);
             _graceStarted = Founded;
         }
 

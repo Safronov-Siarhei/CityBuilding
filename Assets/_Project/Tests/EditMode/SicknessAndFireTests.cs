@@ -54,50 +54,11 @@ namespace CityBuilder.Tests.EditMode
             Assert.GreaterOrEqual(SicknessManager.ComputeRisk(false, -5f, 0f, 0f, 0f), 0f);
         }
 
-        private const float Unattended = 60f;
-        private const float SavedEach = 12f;
-        private const float Minimum = 5f;
-
-        private static float Burn(int firefighters) => BuildingFire.BurnSeconds(firefighters, Unattended, SavedEach, Minimum);
-
-        [Test]
-        public void AFireNobodyAttends_BurnsForTheFullTime()
-        {
-            Assert.AreEqual(Unattended, Burn(0), 0.0001f);
-        }
-
-        [Test]
-        public void EveryFirefighterShortensIt()
-        {
-            Assert.AreEqual(Unattended - SavedEach, Burn(1), 0.0001f);
-            Assert.Less(Burn(3), Burn(2));
-        }
-
-        /// <summary>A crowd of firefighters must not make a fire free: without the floor, enough of them would put one out before it did any damage at all, and the mechanic would stop existing above a certain town size.</summary>
-        [Test]
-        public void NoNumberOfFirefightersMakesAFireInstant()
-        {
-            Assert.AreEqual(Minimum, Burn(100), 0.0001f);
-            Assert.Greater(Burn(100), 0f);
-        }
-
-        [Test]
-        public void ANegativeCrewIsTreatedAsNoneAtAll()
-        {
-            Assert.AreEqual(Burn(0), BuildingFire.BurnSeconds(-4, Unattended, SavedEach, Minimum), 0.0001f);
-        }
-
         /// <summary>The sheet's own numbers, checked for the handful of ways they could be authored into nonsense.</summary>
         [Test]
         public void TheSheetsHazardNumbersAreSane()
         {
             var config = BalanceConfig.Instance;
-
-            Assert.Greater(config.FireBurnSeconds, 0f, "A fire that lasts no time does no damage, so nothing ever burns down.");
-            Assert.Greater(config.FireMinBurnSeconds, 0f, "A zero floor lets a big enough brigade put fires out before they start.");
-            Assert.LessOrEqual(config.FireMinBurnSeconds, config.FireBurnSeconds, "Firefighters make fires last longer.");
-            Assert.Greater(config.FireDamagePerSecond, 0, "A fire that does no damage is a decoration.");
-            Assert.Greater(config.FireSpreadRadiusMeters, 0f, "Fire never spreads, so the Пожарная бригада only ever has one building to worry about.");
 
             Assert.GreaterOrEqual(config.SicknessBaseChancePerDay, 0f);
             Assert.Greater(config.SicknessHungerChancePerDay, 0f, "Hunger does not cause illness, which is half the design.");

@@ -4,7 +4,8 @@ with a brown rim and the green skull, small enough inside the picture that the s
 
     python Tools/ui/sick_mark_icon.py  ->  Assets/_Project/UI/Icons/SickMark.png (+ HealRing.png, the
     green treatment ring round a patient's face on the Лечебница's bottom bar, filled radially; and
-    SkullMark.png, the bone skull over a body lying out, Citizens/Remains)
+    SkullMark.png, the bone skull over a body lying out, Citizens/Remains; FireMark.png, the flame over
+    a burning building, Buildings/BuildingFire -- sandbox fires v2, 2026-11-14)
 """
 import os
 from PIL import Image, ImageDraw
@@ -46,6 +47,29 @@ def main():
     ring = Image.new("RGBA", (n, n))
     ImageDraw.Draw(ring).ellipse([6, 6, n - 7, n - 7], outline=(110, 210, 90, 255), width=18)
     ring.save(os.path.join(os.path.dirname(OUT), "HealRing.png"))
+
+    # the flame over a burning building (Buildings/BuildingFire): a fire on a dark disc
+    fm = Image.new("RGBA", (n, n))
+    d = ImageDraw.Draw(fm)
+    d.ellipse([c - r, c - r, c + r, c + r], fill=(58, 30, 22, 235), outline=(255, 196, 90, 255), width=10)
+
+    def tongue(scale, col):
+        import math
+        L, R_ = [], []
+        h = n * 0.58 * scale
+        base = c + n * 0.27
+        for i in range(25):
+            t = i / 24
+            y = base - t * h
+            w = n * 0.2 * scale * (math.sin(math.pi * min(1.0, t * 1.5 + 0.05)) ** 0.8) * (1 - t) ** 0.9
+            x = c + n * 0.03 * t * t
+            L.append((x - w, y))
+            R_.append((x + w, y))
+        d.polygon(L + R_[::-1], fill=col)
+    tongue(1.0, (214, 52, 26, 255))
+    tongue(0.78, (248, 130, 32, 255))
+    tongue(0.5, (255, 220, 100, 255))
+    fm.save(os.path.join(os.path.dirname(OUT), "FireMark.png"))
 
 
 if __name__ == "__main__":

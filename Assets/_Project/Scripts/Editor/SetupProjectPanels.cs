@@ -772,7 +772,9 @@ namespace CityBuilder.EditorTools
 
             demolishConfirm.SetActive(false);
 
-            BuildPlagueBanner(panelRoot.transform.parent, panelSprite);
+            BuildDisasterBanner<PlagueBanner>(panelRoot.transform.parent, UiTextureImport.PlagueFolder, "plague_banner", "PlagueBanner");
+            // the fire's, the same build (sandbox fires v2, the user 2026-11-14; Tools/ui/fire_banner_art.py)
+            BuildDisasterBanner<FireBanner>(panelRoot.transform.parent, UiTextureImport.FireFolder, "fire_banner", "FireBanner");
 
             var controller = panelRoot.AddComponent<BuildingInfoPanelController>();
             var controllerSO = new SerializedObject(controller);
@@ -1242,13 +1244,12 @@ namespace CityBuilder.EditorTools
         /// </summary>
         private const float PlagueBannerSize = 0.6f;
 
-        private static void BuildPlagueBanner(Transform uiRoot, Sprite panelSprite)
+        private static void BuildDisasterBanner<T>(Transform uiRoot, string folder, string stem, string name) where T : PauseBanner
         {
-            var folder = UiTextureImport.PlagueFolder;
             var layoutPath = $"{folder}/layout.json";
             if (!File.Exists(layoutPath))
             {
-                Debug.LogWarning("BuildPlagueBanner: no UI/Plague/layout.json -- run Tools/ui/plague_banner_art.py.");
+                Debug.LogWarning($"BuildDisasterBanner: no {folder}/layout.json -- run its Tools/ui/*_banner_art.py.");
                 return;
             }
             var layout = JsonUtility.FromJson<RateUsLayout>(File.ReadAllText(layoutPath));
@@ -1262,7 +1263,7 @@ namespace CityBuilder.EditorTools
             var refW = layout.reference[0];
             var refH = layout.reference[1];
 
-            var holder = new GameObject("PlagueBanner", typeof(RectTransform));
+            var holder = new GameObject(name, typeof(RectTransform));
             holder.transform.SetParent(uiRoot, false);
             StretchFull(holder.GetComponent<RectTransform>());
             var root = new GameObject("Window", typeof(RectTransform));
@@ -1296,10 +1297,10 @@ namespace CityBuilder.EditorTools
                 images[piece.name] = image;
             }
 
-            var title = Words(window, "Title", "#plague_banner_title", 78, UiTheme.Heavy, new Color(1f, 0.94f, 0.78f));
+            var title = Words(window, "Title", "#" + stem + "_title", 78, UiTheme.Heavy, new Color(1f, 0.94f, 0.78f));
             Place(title.rectTransform, TextRect("Title"));
             Rim(title, new Color(0.35f, 0.05f, 0.06f), 4f);
-            var body = Words(window, "Text", "#plague_banner_text", 38, UiTheme.Regular, UiTheme.Rgb(0x3c3418));
+            var body = Words(window, "Text", "#" + stem + "_text", 38, UiTheme.Regular, UiTheme.Rgb(0x3c3418));
             Place(body.rectTransform, TextRect("Body"));
             body.verticalOverflow = VerticalWrapMode.Overflow;
 
@@ -1324,10 +1325,10 @@ namespace CityBuilder.EditorTools
             }
 
             var ad = MakeButton(images["AdButton"]);
-            var adLabel = Label(images["AdButton"], "AdLabel", "#plague_banner_ad", 40, UiTheme.Rgb(0x1c5412));
+            var adLabel = Label(images["AdButton"], "AdLabel", "#" + stem + "_ad", 40, UiTheme.Rgb(0x1c5412));
             // the crystals: the price (the code's number, no words) and the game's crystal icon
             var pay = MakeButton(images["CrystalsButton"]);
-            var payLabel = Label(images["CrystalsButton"], "CrystalsLabel", "#plague_banner_crystals", 62, UiTheme.Rgb(0x282260));
+            var payLabel = Label(images["CrystalsButton"], "CrystalsLabel", "#" + stem + "_crystals", 62, UiTheme.Rgb(0x282260));
             payLabel.alignment = TextAnchor.MiddleRight;
             Object.DestroyImmediate(payLabel.GetComponent<LocalizedText>());   // a number, not words
             payLabel.text = "30";
@@ -1344,7 +1345,7 @@ namespace CityBuilder.EditorTools
             var close = closeText.gameObject.AddComponent<Button>();
             close.targetGraphic = closeText;
 
-            var banner = holder.AddComponent<PlagueBanner>();
+            var banner = holder.AddComponent<T>();
             var so = new SerializedObject(banner);
             so.FindProperty("root").objectReferenceValue = root;
             so.FindProperty("bodyText").objectReferenceValue = body;

@@ -129,6 +129,9 @@ namespace CityBuilder.Combat
         BotSoldier = 41,
         /// <summary>Лучник королевства: an archer of the bot kingdom.</summary>
         BotArcher = 42,
+
+        /// <summary>The raid's fire-raiser (sandbox fires, the user 2026-11-14): runs from building to building setting them alight (TorchErrand).</summary>
+        Torchbearer = 43,
     }
 
     /// <summary>
@@ -160,6 +163,7 @@ namespace CityBuilder.Combat
                 case OrcKind.Brute: return "orc_brute";
                 case OrcKind.Boss: return "orc_chief_boss";
                 case OrcKind.Thief: return "orc_thief";
+                case OrcKind.Torchbearer: return "orc_torchbearer";
                 case OrcKind.IceShaman: return "orc_ice_shaman";
                 case OrcKind.Rat: return "rat";
                 case OrcKind.Bat: return "bat";

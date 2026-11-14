@@ -331,7 +331,7 @@ namespace CityBuilder.Saving
             // After the buildings, which is the whole point: MigrationManager decides whether a
             // settlement exists by asking whether a Town Hall is standing, and until the loop
             // above ran, none was.
-            Citizens.MigrationManager.Instance?.RestoreFromSave(data.migrationTimerSeconds, data.settlingInSecondsRemaining);
+            Citizens.MigrationManager.Instance?.RestoreFromSave(data.migrationTimerSeconds, data.settlingInSecondsRemaining, data.hazardGraceRemaining);
 
             RestoreRocks(data);
             RestoreFires(data);
@@ -390,6 +390,7 @@ namespace CityBuilder.Saving
         /// </summary>
         private static void RestoreFires(GameSaveData data)
         {
+            Buildings.FireManager.Instance?.RestoreShield(data.fireShield);
             if (data.fires == null || data.fires.Count == 0) return;
 
             foreach (var entry in data.fires)
@@ -398,9 +399,8 @@ namespace CityBuilder.Saving
                 var building = FindBuildingAt(cell);
                 if (building == null) continue;
 
-                Buildings.FireManager.Ignite(building);
-                var fire = building.GetComponent<Buildings.BuildingFire>();
-                if (fire != null) fire.RestoreElapsed(entry.elapsedSeconds);
+                var fire = Buildings.FireManager.Ignite(building, null, force: true);
+                if (fire != null) fire.Restore(entry.elapsedSeconds, entry.strength);
             }
         }
 
@@ -711,7 +711,9 @@ namespace CityBuilder.Saving
             {
                 data.migrationTimerSeconds = migration.Timer;
                 data.settlingInSecondsRemaining = migration.SettlingInRemaining;
+                data.hazardGraceRemaining = migration.HazardGraceRemaining;
             }
+            if (Buildings.FireManager.Instance != null) data.fireShield = Buildings.FireManager.Instance.ShieldLeft;
 
             var rocks = Maps.RockSpawner.Instance;
             if (rocks != null)
@@ -961,7 +963,8 @@ namespace CityBuilder.Saving
                     {
                         cellX = instance.OriginCell.x,
                         cellY = instance.OriginCell.y,
-                        elapsedSeconds = fire.ElapsedSeconds
+                        elapsedSeconds = fire.ElapsedSeconds,
+                        strength = fire.Strength
                     });
                 }
 

@@ -603,6 +603,29 @@ namespace CityBuilder.Citizens
             return null;
         }
 
+        /// <summary>The figures working at this building now (a Пожарная бригада's crew, FireManager).</summary>
+        public void WorkersAt(ProductionBuilding building, List<CitizenAgent> into)
+        {
+            into.Clear();
+            if (building != null && _workingAgents.TryGetValue(building, out var list))
+                foreach (var a in list) if (a != null) into.Add(a);
+        }
+
+        /// <summary>Whether this figure is one of the idle, wandering ones (ResidentVisits).</summary>
+        public bool IsIdle(CitizenAgent agent) => agent != null && _idleAgents.Contains(agent);
+
+        /// <summary>A random idle figure, or null.</summary>
+        public CitizenAgent RandomIdle() => _idleAgents.Count == 0 ? null : _idleAgents[UnityEngine.Random.Range(0, _idleAgents.Count)];
+
+        /// <summary>Burnt in a house (ResidentVisits): he dies, his body laid on open ground at `bodyAt`.</summary>
+        public void KillAgentAt(CitizenAgent agent, Vector3 bodyAt)
+        {
+            if (agent == null) return;
+            agent.gameObject.SetActive(true);
+            agent.Teleport(bodyAt);
+            KillAgent(agent);
+        }
+
         /// <summary>Cured: back at the Лечебница's door, an idle villager again.</summary>
         public void ReturnFromPatient(CitizenAgent agent, Vector3 at)
         {

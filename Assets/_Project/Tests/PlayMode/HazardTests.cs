@@ -229,57 +229,6 @@ namespace CityBuilder.Tests.PlayMode
             Assert.Less(citizens.SickPopulation, sickBefore, "The staffed Дом лекаря cured nobody.");
         }
 
-        /// <summary>A fire has to actually eat the building, and then stop -- a town with no brigade should lose a chunk of a building, not every building that ever catches.</summary>
-        [UnityTest]
-        public IEnumerator AFireEatsTheBuildingAndThenGoesOut()
-        {
-            var barn = Place("Warehouse");
-            yield return null;
-
-            var healthBefore = barn.CurrentHealth;
-            FireManager.Ignite(barn);
-            var fire = barn.GetComponent<BuildingFire>();
-            Assert.IsNotNull(fire, "Igniting a building did not set it alight.");
-
-            // Faster than real time, or the suite waits out a full minute of burning.
-            Time.timeScale = 20f;
-            yield return WaitUntil(() => barn == null || barn.GetComponent<BuildingFire>() == null, realSecondsTimeout: 25f);
-            Time.timeScale = 1f;
-
-            Assert.IsTrue(barn == null || barn.GetComponent<BuildingFire>() == null,
-                "The fire never went out, so an unattended one burns forever.");
-            if (barn != null)
-            {
-                Assert.Less(barn.CurrentHealth, healthBefore, "The building came through the fire without a scratch.");
-            }
-        }
-
-        /// <summary>What the Пожарная бригада is for, and the only decision a fire offers: staffing it shortens the burn, and an empty station does nothing at all.</summary>
-        [UnityTest]
-        public IEnumerator AStaffedBrigadeShortensTheFireAndAnEmptyOneDoesNot()
-        {
-            var barn = Place("Warehouse");
-            var station = Place("FireBrigade", barn.OriginCell + Vector2Int.right * 3);
-            var workplace = station.GetComponent<ProductionBuilding>();
-            Assert.IsNotNull(workplace, "The Пожарная бригада has no worker slots, so nobody can man it.");
-            yield return null;
-
-            FireManager.Ignite(barn);
-            var fire = barn.GetComponent<BuildingFire>();
-            Assert.IsNotNull(fire);
-
-            // The coverage is re-read on a timer, so give it the frames to notice each state.
-            yield return WaitFrames(60);
-            var unmanned = fire.TotalSeconds;
-
-            workplace.SetAssignedWorkers(workplace.MaxWorkers);
-            Assert.Greater(workplace.AssignedWorkers, 0, "Nobody could be put in the fire station.");
-            yield return WaitFrames(60);
-
-            Assert.Less(fire.TotalSeconds, unmanned,
-                "Manning the fire station beside a burning building did not shorten the fire, so the brigade is decoration.");
-        }
-
         private static IEnumerator WaitFrames(int frames)
         {
             for (var i = 0; i < frames; i++) yield return null;

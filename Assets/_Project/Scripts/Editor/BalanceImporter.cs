@@ -879,6 +879,7 @@ namespace CityBuilder.EditorTools
                     citizensOnBuild = (int)OptionalNumber(header, row, "citizens_on_build", 0f, path),
                     storageGroup = ParseEnum(header, row, "storage_group", ResourceStorageGroup.None, path),
                     maxCount = (int)OptionalNumber(header, row, "max_count", 0f, path),
+                    fireproofLevel = (int)OptionalNumber(header, row, "fireproof_level", 0f, path),
                     levels = ReadLevels(header, row, path),
                     requiredBuildingId = Text(header, row, "requires"),
                     upgradeToLevel2Cost = ReadCost(header, row, "up2_", path),

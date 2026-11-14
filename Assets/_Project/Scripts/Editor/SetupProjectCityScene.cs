@@ -898,6 +898,38 @@ namespace CityBuilder.EditorTools
             var plagueSO = new SerializedObject(plague);
             plagueSO.FindProperty("hazeMaterial").objectReferenceValue = plagueHaze;
             plagueSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // sandbox fires v2 (the user, 2026-11-14): the opening film's flames and smoke on the roof,
+            // a fire mark over it (UI/Icons/FireMark.png, Tools/ui/sick_mark_icon.py), the firefighters'
+            // buckets; residents stepping into buildings; the thunderstorm
+            const string fireMarkPath = "Assets/_Project/Materials/FireMark.mat";
+            var fireMark = AssetDatabase.LoadAssetAtPath<Material>(fireMarkPath);
+            if (fireMark == null && billboard != null)
+            {
+                fireMark = new Material(billboard) { name = "FireMark" };
+                AssetDatabase.CreateAsset(fireMark, fireMarkPath);
+            }
+            if (fireMark != null)
+            {
+                fireMark.SetTexture("_MainTex", AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/_Project/UI/Icons/FireMark.png"));
+                EditorUtility.SetDirty(fireMark);
+            }
+            var flameMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/_Project/Materials/CampaignFlame.mat");
+            var smokeMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/_Project/Materials/CampaignSmoke.mat");
+            var sparkMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/_Project/Materials/CampaignSpark.mat");
+            var fireSO = new SerializedObject(fireManager);
+            fireSO.FindProperty("flameMaterial").objectReferenceValue = flameMat;
+            fireSO.FindProperty("smokeMaterial").objectReferenceValue = smokeMat;
+            fireSO.FindProperty("markMaterial").objectReferenceValue = fireMark;
+            fireSO.FindProperty("bucketMaterial").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>("Assets/_Project/Materials/TreeTrunk.mat");
+            fireSO.ApplyModifiedPropertiesWithoutUndo();
+            managers.AddComponent<CityBuilder.Citizens.ResidentVisits>();
+            var storm = managers.AddComponent<Thunderstorm>();
+            var stormSO = new SerializedObject(storm);
+            stormSO.FindProperty("cloudMaterial").objectReferenceValue = smokeMat;
+            stormSO.FindProperty("rainMaterial").objectReferenceValue = sparkMat;
+            stormSO.FindProperty("boltMaterial").objectReferenceValue = sparkMat;
+            stormSO.ApplyModifiedPropertiesWithoutUndo();
             // the boosters' violet stream round the buildings they work on (Shaders/BoosterStream; the user, 2026-11-12)
             var auras = managers.AddComponent<Shop.BoosterAuras>();
             const string streamPath = "Assets/_Project/Materials/BoosterStream.mat";

@@ -1,143 +1,139 @@
 using CityBuilder.Core;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace CityBuilder.Buildings
 {
     /// <summary>
-    /// One building, on fire. Added by FireManager and removed by itself.
+    /// One building on fire (sandbox fires v2, the user 2026-11-14). Added by FireManager.Ignite,
+    /// removed by itself.
     ///
-    /// The fire eats the building's health while it burns and goes out on its own after
-    /// `fire_burn_seconds` -- so a town with no Пожарная бригада does not simply lose every
-    /// building that ever catches, it loses a chunk of one. What the brigade buys is the difference
-    /// between a scar and a ruin.
-    ///
-    /// The duration is recomputed from the CURRENT number of firefighters in reach every time it is
-    /// checked, exactly the way ResearchManager recomputes a research from the scientists standing
-    /// in the Laboratory right now. That is not an implementation detail: it means staffing the
-    /// brigade WHILE the fire burns shortens it, and pulling those people away lengthens it again,
-    /// which is the only interesting decision a fire offers.
+    /// - The fire has a STRENGTH 0..100: it starts at fire_start_strength and grows fire_grow_per_sec.
+    /// - It burns max health x fire_hp_share_per_sec a second, scaled by its strength (half at 0,
+    ///   whole at 100): about a minute untended, to nothing -- the building becomes a ruin
+    ///   (BuildingRuin), and FireManager counts it for the banner.
+    /// - Every fire_spread_every_sec it tries each burnable building TOUCHING it (no gap,
+    ///   FireRules.Touching): fire_spread_chance each.
+    /// - Firefighters' buckets (FireManager's crews) take strength off; at 0 it is out.
+    /// - Under the storm's rain (Thunderstorm) it grows and burns at fire_rain_mult.
     /// </summary>
     public class BuildingFire : MonoBehaviour
     {
-        /// <summary>How often the firefighter count is re-read. Fast enough that sending people to the station is felt, slow enough that a scan is nothing.</summary>
-        private const float CoverageRefreshSeconds = 0.5f;
-
-        private static readonly Color FlameColor = new Color(1f, 0.45f, 0.1f);
+        private const float MarkSize = 0.7f;
 
         private BuildingInstance _building;
-        private GameObject _marker;
-        private Material _markerMaterial;
-
-        private float _elapsedSeconds;
-        private float _coverageTimer;
-        private int _firefighters;
-
-        /// <summary>Damage owed but not yet dealt. BuildingInstance takes whole points, and a fire doing three a second at sixty frames would otherwise round every frame down to nothing.</summary>
+        private FireLook _look;
+        private GameObject _mark;
         private float _damageDebt;
+        private float _spreadIn;
+        private float _elapsed;
 
-        /// <summary>How long this fire will last in total, at the number of firefighters currently reaching it.</summary>
-        public float TotalSeconds => BurnSeconds(_firefighters);
+        public float Strength { get; private set; }
 
-        public float RemainingSeconds => Mathf.Max(0f, TotalSeconds - _elapsedSeconds);
+        /// <summary>Seconds it has burnt (the save's, with the strength).</summary>
+        public float ElapsedSeconds => _elapsed;
 
-        /// <summary>How far in it is, for a save that has to put it back exactly as hot as it was.</summary>
-        public float ElapsedSeconds => _elapsedSeconds;
+        public BuildingInstance Building => _building;
 
         private void Awake()
         {
             _building = GetComponent<BuildingInstance>();
-            BuildMarker();
+            var config = BalanceConfig.Instance;
+            Strength = config.FireStartStrength;
+            _spreadIn = config.FireSpreadEverySeconds;
+            var manager = FireManager.Instance;
+            _look = new FireLook(transform, manager != null ? manager.FlameMaterial : null, manager != null ? manager.SmokeMaterial : null);
+            _look.Strength(Strength);
+            BuildMark(manager != null ? manager.MarkMaterial : null);
         }
 
-        /// <summary>Puts a saved fire back where it had got to. Clamped, because a fire restored past its own end would never tick and would burn forever.</summary>
-        public void RestoreElapsed(float elapsedSeconds)
+        /// <summary>A saved fire put back as it was.</summary>
+        public void Restore(float elapsed, float strength)
         {
-            _elapsedSeconds = Mathf.Max(0f, elapsedSeconds);
+            _elapsed = Mathf.Max(0f, elapsed);
+            if (strength > 0f) Strength = Mathf.Clamp(strength, 1f, 100f);
+            _look?.Strength(Strength);
+        }
+
+        /// <summary>A bucket of water: so much strength off. True when that put it out.</summary>
+        public bool Douse(float amount)
+        {
+            Strength -= Mathf.Max(0f, amount);
+            _look?.Steam();
+            if (Strength > 0f)
+            {
+                _look?.Strength(Strength);
+                return false;
+            }
+            Out(true);
+            return true;
+        }
+
+        /// <summary>Put out (a crew, the banner): it goes, saying so when `tell`.</summary>
+        public void Out(bool tell)
+        {
+            if (tell && _building != null)
+                EventLogManager.Instance?.Post(GameEvent.About(_building, Localization.Format("#log_fire_out",
+                    _building.Data != null ? _building.Data.LocalizedName : string.Empty), EventSeverity.Good, EventGlyph.Check));
+            Destroy(this);
         }
 
         private void Update()
         {
             if (_building == null || _building.CurrentHealth <= 0)
             {
-                // The building lost. Nothing to announce -- BuildingInstance already logged its own
-                // destruction, and "the fire is out" over a pile of ash reads as a success.
                 Destroy(this);
                 return;
             }
+            var config = BalanceConfig.Instance;
+            var dt = Time.deltaTime;
+            var rain = Thunderstorm.RainOver(transform.position) ? config.FireRainMultiplier : 1f;
+            _elapsed += dt;
+            Strength = Mathf.Min(100f, Strength + config.FireGrowPerSecond * rain * dt);
+            _look?.Strength(Strength);
 
-            _coverageTimer -= Time.deltaTime;
-            if (_coverageTimer <= 0f)
-            {
-                _coverageTimer = CoverageRefreshSeconds;
-                _firefighters = FireManager.Instance != null ? FireManager.Instance.FirefightersCovering(transform.position) : 0;
-            }
-
-            _elapsedSeconds += Time.deltaTime;
-
-            _damageDebt += BalanceConfig.Instance.FireDamagePerSecond * Time.deltaTime;
+            _damageDebt += _building.MaxHealth * config.FireHpSharePerSecond * (0.5f + 0.5f * Strength / 100f) * rain * dt;
             var whole = Mathf.FloorToInt(_damageDebt);
             if (whole > 0)
             {
                 _damageDebt -= whole;
-                // The same door orcs come through, deliberately: a Town Hall lost to a fire the
-                // player let spread is as much a defeat as one lost to a raid, and this is the path
-                // GameOverManager listens on.
                 _building.TryDamage(whole);
+                if (_building == null || _building.CurrentHealth <= 0)
+                {
+                    FireManager.Instance?.RecordBurnt(_building);
+                    Destroy(this);
+                    return;
+                }
             }
 
-            if (_elapsedSeconds < TotalSeconds) return;
-
-            EventLogManager.Instance?.Post(GameEvent.About(_building, Localization.Format("#log_fire_out", _building.Data != null ? _building.Data.LocalizedName : string.Empty), EventSeverity.Good, EventGlyph.Check));
-            Destroy(this);
+            _spreadIn -= dt;
+            if (_spreadIn > 0f) return;
+            _spreadIn = config.FireSpreadEverySeconds;
+            FireManager.Instance?.SpreadFrom(_building);
         }
 
         private void OnDestroy()
         {
-            if (_marker != null) Destroy(_marker);
-            if (_markerMaterial != null) Destroy(_markerMaterial);
+            _look?.Destroy();
+            if (_mark != null) Destroy(_mark);
         }
 
-        /// <summary>
-        /// Pure: how long a fire lasts with this many firefighters on it. Subtracted rather than
-        /// scaled, and floored -- the same shape research uses for its scientists, so a player who
-        /// has learnt one has learnt the other.
-        /// </summary>
-        public static float BurnSeconds(int firefighters, float unattendedSeconds, float secondsSavedEach, float minimumSeconds)
+        /// <summary>A fire mark over the roof the player can find from the camera's height (IconBillboard).</summary>
+        private void BuildMark(Material material)
         {
-            var seconds = unattendedSeconds - Mathf.Max(0, firefighters) * secondsSavedEach;
-            return Mathf.Max(minimumSeconds, seconds);
-        }
-
-        private static float BurnSeconds(int firefighters)
-        {
-            var config = BalanceConfig.Instance;
-            return BurnSeconds(firefighters, config.FireBurnSeconds, config.FireSecondsSavedPerFirefighter, config.FireMinBurnSeconds);
-        }
-
-        /// <summary>
-        /// A flame the player can find from the camera's height. Unparented would be safer against
-        /// the FBX rotation trap that ate the chopping bar -- but a building's prefab root carries
-        /// no corrective rotation the way the tree models do, and a marker that has to follow a
-        /// building nothing ever moves is simpler as a child.
-        /// </summary>
-        private void BuildMarker()
-        {
-            var renderers = GetComponentsInChildren<Renderer>();
-            var height = 2f;
-            foreach (var renderer in renderers)
-            {
-                height = Mathf.Max(height, renderer.bounds.max.y - transform.position.y);
-            }
-
-            _marker = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            _marker.name = "FireMarker";
-            Destroy(_marker.GetComponent<BoxCollider>());
-            _marker.transform.SetParent(transform, false);
-            _marker.transform.localPosition = new Vector3(0f, height + 0.6f, 0f);
-            _marker.transform.localScale = new Vector3(0.7f, 0.9f, 0.7f);
-
-            _markerMaterial = new Material(RuntimeShaders.Lit) { color = FlameColor };
-            _marker.GetComponent<Renderer>().sharedMaterial = _markerMaterial;
+            if (material == null) return;
+            var bounds = FireLook.Bounds(transform);
+            _mark = new GameObject("FireMark", typeof(MeshFilter), typeof(MeshRenderer));
+            _mark.transform.SetParent(transform, true);
+            _mark.transform.position = new Vector3(bounds.center.x, bounds.max.y + 0.7f, bounds.center.z);
+            _mark.GetComponent<MeshFilter>().sharedMesh = FireManager.MarkQuad();
+            var renderer = _mark.GetComponent<MeshRenderer>();
+            renderer.sharedMaterial = material;
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            var block = new MaterialPropertyBlock();
+            block.SetFloat("_Size", MarkSize);
+            renderer.SetPropertyBlock(block);
         }
     }
 }

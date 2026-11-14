@@ -64,6 +64,7 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject throwerModel;
         // the New Year map's two (Tools/blender/newyear.py)
         [SerializeField] private GameObject thiefModel;
+        [SerializeField] private GameObject torchbearerModel;
         [SerializeField] private GameObject iceShamanModel;
         [SerializeField] private GameObject chiefModel;
         // The walled camps (see OrcCamp, OrcBaseLayout): their buildings by level, and the ruins.
@@ -481,7 +482,34 @@ namespace CityBuilder.Combat
                 var orc = SpawnOrc(origin, level, KindInGroup(i, level, withChief: true));
                 if (first == null) first = orc;
             }
+            SpawnTorchbearers(origin, level);
             return first;
+        }
+
+        /// <summary>
+        /// The sandbox's fire-raisers (the user, 2026-11-14): from the player's Town Hall level
+        /// torch_from_hall_level every raid brings torch_min..torch_max torchbearers, who run from
+        /// building to building setting them alight (TorchErrand).
+        /// </summary>
+        private void SpawnTorchbearers(Vector3 origin, int level)
+        {
+            if (!Buildings.FireRules.Active) return;
+            var config = BalanceConfig.Instance;
+            if (HallLevel() < config.TorchFromHallLevel) return;
+            var count = Random.Range(config.TorchMin, Mathf.Max(config.TorchMin, config.TorchMax) + 1);
+            for (var i = 0; i < count; i++)
+            {
+                var orc = SpawnOrc(origin, level, OrcKind.Torchbearer);
+                if (orc != null) orc.gameObject.AddComponent<TorchErrand>();
+            }
+        }
+
+        private static int HallLevel()
+        {
+            var level = 0;
+            foreach (var b in BuildingInstance.All)
+                if (b != null && !b.IsBot && b.Data != null && b.Data.buildingName == BuildingIds.TownHall) level = Mathf.Max(level, b.Level);
+            return level;
         }
 
         /// <summary>
@@ -587,6 +615,7 @@ namespace CityBuilder.Combat
             else if (kind == OrcKind.Chief && chiefModel != null) { model = chiefModel; figureName = "Chief"; }
             else if (kind == OrcKind.Boss && bossModel != null) { model = bossModel; figureName = "Boss"; }
             else if (kind == OrcKind.Thief && thiefModel != null) { model = thiefModel; figureName = "Thief"; }
+            else if (kind == OrcKind.Torchbearer && torchbearerModel != null) { model = torchbearerModel; figureName = "Torchbearer"; }
             else if (kind == OrcKind.IceShaman && iceShamanModel != null) { model = iceShamanModel; figureName = "IceShaman"; }
             else if (kind == OrcKind.Brute && Pick(bruteModels, level) != null) { model = Pick(bruteModels, level); figureName = "Brute"; }
             else if (brute) { model = Pick(bruteModels, 1); figureName = "Brute"; }

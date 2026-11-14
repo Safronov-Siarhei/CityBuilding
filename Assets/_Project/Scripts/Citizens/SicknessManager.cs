@@ -136,6 +136,8 @@ namespace CityBuilder.Citizens
             // one and buried him on day four, before the player had placed a second building.
             var migration = MigrationManager.Instance;
             if (migration != null && migration.SettlingInRemaining > 0f) return;
+            // the sandbox's own quiet start for fires and illness (hazard_grace_sec, the user 2026-11-14)
+            if (Infirmary.Active && migration != null && migration.HazardGraceRemaining > 0f) return;
 
             var fell = Infirmary.Active && HousePeople.Instance != null ? FallIllByIsland() : Mathf.RoundToInt(exposed * CurrentRisk());
             if (fell <= 0) return;

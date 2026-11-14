@@ -305,6 +305,9 @@ namespace CityBuilder.Core
         /// <summary>How many of this an Invasion run may have (the invasion tab's max_count), 0 for no limit.</summary>
         public int maxCount;
 
+        /// <summary>Sandbox fires (the sheet's fireproof_level): 0 burns at every level, 1 never burns, N burns only below level N (a fence turns stone at 3).</summary>
+        public int fireproofLevel;
+
         /// <summary>
         /// One entry per upgrade level, always BuildingInstance.MaxLevel of them. The sheet authors level 1 in the
         /// plain columns (max_health, defense, ...) and the higher levels in suffixed ones
@@ -734,6 +737,46 @@ namespace CityBuilder.Core
         [SerializeField] private float plagueBannerShare = 0.4f;
         [SerializeField] private float plagueCalmSeconds = 180f;
         [SerializeField] private float plagueShieldSeconds = 420f;
+        // sandbox fires v2 (the user, 2026-11-14; Buildings/FireManager)
+        [SerializeField] private float hazardGraceSeconds = 600f;
+        [SerializeField] private float fireChancePerDay = 0.005f;
+        [SerializeField] private float fireDryMultiplier = 2f;
+        [SerializeField] private int fireWaterCells = 8;
+        [SerializeField] private float fireSpreadEverySeconds = 10f;
+        [SerializeField] private float fireSpreadChance = 0.3f;
+        [SerializeField] private float fireHpSharePerSecond = 0.015f;
+        [SerializeField] private float fireStartStrength = 30f;
+        [SerializeField] private float fireGrowPerSecond = 2f;
+        [SerializeField] private float fireBucket = 25f;
+        [SerializeField] private float fireBucketBig = 40f;
+        [SerializeField] private int fireBucketBigLevel = 2;
+        [SerializeField] private int fireBarrelLevel = 3;
+        [SerializeField] private int fireFastLevel = 4;
+        [SerializeField] private float fireFastMultiplier = 1.25f;
+        [SerializeField] private int firePreventLevel = 5;
+        [SerializeField] private float firePreventMultiplier = 0.5f;
+        [SerializeField] private float fireFillSeconds = 1f;
+        [SerializeField] private float fireRainMultiplier = 0.5f;
+        [SerializeField] private float fireBannerShare = 0.15f;
+        [SerializeField] private float fireBannerWindowSeconds = 300f;
+        [SerializeField] private float fireShieldSeconds = 420f;
+        [SerializeField] private int fireEndCrystals = 30;
+        [SerializeField] private float visitEverySeconds = 8f;
+        [SerializeField] private float visitMinSeconds = 5f;
+        [SerializeField] private float visitMaxSeconds = 15f;
+        [SerializeField] private int visitReachCells = 4;
+        [SerializeField] private int visitMax = 3;
+        [SerializeField] private int torchFromHallLevel = 2;
+        [SerializeField] private int torchMin = 1;
+        [SerializeField] private int torchMax = 2;
+        [SerializeField] private float torchLightSeconds = 3f;
+        [SerializeField] private float stormEveryMinSeconds = 480f;
+        [SerializeField] private float stormEveryMaxSeconds = 720f;
+        [SerializeField] private float stormCrossSeconds = 90f;
+        [SerializeField] private float stormRadiusCells = 10f;
+        [SerializeField] private float strikeEveryMinSeconds = 15f;
+        [SerializeField] private float strikeEveryMaxSeconds = 30f;
+        [SerializeField] private float strikeChance = 0.25f;
         [SerializeField] private int plagueEndCrystals = 30;
 
         [Header("Migration (economy.csv)")]
@@ -1202,6 +1245,84 @@ namespace CityBuilder.Core
         public float PlagueCalmSeconds => plagueCalmSeconds;
         /// <summary>After the banner ended a plague: no plague breaks out anywhere for so long (the user, 2026-11-13: 7 minutes).</summary>
         public float PlagueShieldSeconds => plagueShieldSeconds;
+        /// <summary>Sandbox: no fires and no illness for so long after the Town Hall is founded (the user, 2026-11-14: 10 minutes).</summary>
+        public float HazardGraceSeconds => hazardGraceSeconds;
+        /// <summary>Sandbox: the chance a day that a burnable building catches fire.</summary>
+        public float FireChancePerDay => fireChancePerDay;
+        /// <summary>Sandbox: the fire chance times this with no water (well, sea, river) within fire_water_cells.</summary>
+        public float FireDryMultiplier => fireDryMultiplier;
+        /// <summary>Sandbox: how near (cells) water must be to keep the fire chance down.</summary>
+        public int FireWaterCells => fireWaterCells;
+        /// <summary>Sandbox: how often a fire tries to jump to the burnable buildings touching it.</summary>
+        public float FireSpreadEverySeconds => fireSpreadEverySeconds;
+        /// <summary>Sandbox: the chance of each try to set each touching neighbour alight.</summary>
+        public float FireSpreadChance => fireSpreadChance;
+        /// <summary>Sandbox: the share of max health a full-strength fire burns a second.</summary>
+        public float FireHpSharePerSecond => fireHpSharePerSecond;
+        /// <summary>Sandbox: a new fire strength (of 100).</summary>
+        public float FireStartStrength => fireStartStrength;
+        /// <summary>Sandbox: how much stronger a fire grows a second, to 100.</summary>
+        public float FireGrowPerSecond => fireGrowPerSecond;
+        /// <summary>Sandbox: the strength one bucket takes off a fire.</summary>
+        public float FireBucket => fireBucket;
+        /// <summary>Sandbox: the same with the big bucket (fire_bucket_big_level).</summary>
+        public float FireBucketBig => fireBucketBig;
+        /// <summary>Sandbox: the Fire Brigade level that brings the big bucket.</summary>
+        public int FireBucketBigLevel => fireBucketBigLevel;
+        /// <summary>Sandbox: the Fire Brigade level with a water barrel at the station (the first trip skips the water run).</summary>
+        public int FireBarrelLevel => fireBarrelLevel;
+        /// <summary>Sandbox: the Fire Brigade level whose firefighters run faster.</summary>
+        public int FireFastLevel => fireFastLevel;
+        /// <summary>Sandbox: how much faster.</summary>
+        public float FireFastMultiplier => fireFastMultiplier;
+        /// <summary>Sandbox: the Fire Brigade level that lowers the fire chance on its island.</summary>
+        public int FirePreventLevel => firePreventLevel;
+        /// <summary>Sandbox: the fire chance on that island times this.</summary>
+        public float FirePreventMultiplier => firePreventMultiplier;
+        /// <summary>Sandbox: seconds to fill a bucket.</summary>
+        public float FireFillSeconds => fireFillSeconds;
+        /// <summary>Sandbox: a fire under the storm rain grows and burns this much as fast.</summary>
+        public float FireRainMultiplier => fireRainMultiplier;
+        /// <summary>Sandbox: fire destroyed this share of the buildings within fire_banner_window_sec -- the banner.</summary>
+        public float FireBannerShare => fireBannerShare;
+        /// <summary>Sandbox: the window those losses count over.</summary>
+        public float FireBannerWindowSeconds => fireBannerWindowSeconds;
+        /// <summary>Sandbox: after the banner put the fires out, no fire starts for so long.</summary>
+        public float FireShieldSeconds => fireShieldSeconds;
+        /// <summary>Sandbox: crystals the banner asks to put every fire out.</summary>
+        public int FireEndCrystals => fireEndCrystals;
+        /// <summary>Sandbox: how often an idle resident may step into a building.</summary>
+        public float VisitEverySeconds => visitEverySeconds;
+        /// <summary>Sandbox: the shortest stay inside.</summary>
+        public float VisitMinSeconds => visitMinSeconds;
+        /// <summary>Sandbox: the longest stay inside.</summary>
+        public float VisitMaxSeconds => visitMaxSeconds;
+        /// <summary>Sandbox: how near a building must be for him to step in.</summary>
+        public int VisitReachCells => visitReachCells;
+        /// <summary>Sandbox: how many residents can be inside buildings at once.</summary>
+        public int VisitMax => visitMax;
+        /// <summary>Sandbox: from this Town Hall level orc raids bring torchbearers.</summary>
+        public int TorchFromHallLevel => torchFromHallLevel;
+        /// <summary>Sandbox: the fewest torchbearers in a raid.</summary>
+        public int TorchMin => torchMin;
+        /// <summary>Sandbox: the most torchbearers in a raid.</summary>
+        public int TorchMax => torchMax;
+        /// <summary>Sandbox: seconds a torchbearer needs to set a building alight.</summary>
+        public float TorchLightSeconds => torchLightSeconds;
+        /// <summary>Sandbox: the shortest time between thunderstorms.</summary>
+        public float StormEveryMinSeconds => stormEveryMinSeconds;
+        /// <summary>Sandbox: the longest time between thunderstorms.</summary>
+        public float StormEveryMaxSeconds => stormEveryMaxSeconds;
+        /// <summary>Sandbox: how long a storm takes to cross.</summary>
+        public float StormCrossSeconds => stormCrossSeconds;
+        /// <summary>Sandbox: the storm cloud radius (cells).</summary>
+        public float StormRadiusCells => stormRadiusCells;
+        /// <summary>Sandbox: the shortest time between lightning strikes.</summary>
+        public float StrikeEveryMinSeconds => strikeEveryMinSeconds;
+        /// <summary>Sandbox: the longest time between lightning strikes.</summary>
+        public float StrikeEveryMaxSeconds => strikeEveryMaxSeconds;
+        /// <summary>Sandbox: the chance a strike hits a building and sets it alight.</summary>
+        public float StrikeChance => strikeChance;
         public int PlagueEndCrystals => plagueEndCrystals;
         public int PortalMaxHealth => portalMaxHealth;
         public int OrcTowerHealth => orcTowerHealth;
@@ -2255,6 +2376,45 @@ namespace CityBuilder.Core
             plagueBannerShare = Read(economy, "plague_banner_share", plagueBannerShare);
             plagueCalmSeconds = Read(economy, "plague_calm_sec", plagueCalmSeconds);
             plagueShieldSeconds = Read(economy, "plague_shield_sec", plagueShieldSeconds);
+            hazardGraceSeconds = Read(economy, "hazard_grace_sec", hazardGraceSeconds);
+            fireChancePerDay = Read(economy, "fire_chance_per_day", fireChancePerDay);
+            fireDryMultiplier = Read(economy, "fire_dry_mult", fireDryMultiplier);
+            fireWaterCells = (int)Read(economy, "fire_water_cells", fireWaterCells);
+            fireSpreadEverySeconds = Read(economy, "fire_spread_every_sec", fireSpreadEverySeconds);
+            fireSpreadChance = Read(economy, "fire_spread_chance", fireSpreadChance);
+            fireHpSharePerSecond = Read(economy, "fire_hp_share_per_sec", fireHpSharePerSecond);
+            fireStartStrength = Read(economy, "fire_start_strength", fireStartStrength);
+            fireGrowPerSecond = Read(economy, "fire_grow_per_sec", fireGrowPerSecond);
+            fireBucket = Read(economy, "fire_bucket", fireBucket);
+            fireBucketBig = Read(economy, "fire_bucket_big", fireBucketBig);
+            fireBucketBigLevel = (int)Read(economy, "fire_bucket_big_level", fireBucketBigLevel);
+            fireBarrelLevel = (int)Read(economy, "fire_barrel_level", fireBarrelLevel);
+            fireFastLevel = (int)Read(economy, "fire_fast_level", fireFastLevel);
+            fireFastMultiplier = Read(economy, "fire_fast_mult", fireFastMultiplier);
+            firePreventLevel = (int)Read(economy, "fire_prevent_level", firePreventLevel);
+            firePreventMultiplier = Read(economy, "fire_prevent_mult", firePreventMultiplier);
+            fireFillSeconds = Read(economy, "fire_fill_sec", fireFillSeconds);
+            fireRainMultiplier = Read(economy, "fire_rain_mult", fireRainMultiplier);
+            fireBannerShare = Read(economy, "fire_banner_share", fireBannerShare);
+            fireBannerWindowSeconds = Read(economy, "fire_banner_window_sec", fireBannerWindowSeconds);
+            fireShieldSeconds = Read(economy, "fire_shield_sec", fireShieldSeconds);
+            fireEndCrystals = (int)Read(economy, "fire_end_crystals", fireEndCrystals);
+            visitEverySeconds = Read(economy, "visit_every_sec", visitEverySeconds);
+            visitMinSeconds = Read(economy, "visit_min_sec", visitMinSeconds);
+            visitMaxSeconds = Read(economy, "visit_max_sec", visitMaxSeconds);
+            visitReachCells = (int)Read(economy, "visit_reach_cells", visitReachCells);
+            visitMax = (int)Read(economy, "visit_max", visitMax);
+            torchFromHallLevel = (int)Read(economy, "torch_from_hall_level", torchFromHallLevel);
+            torchMin = (int)Read(economy, "torch_min", torchMin);
+            torchMax = (int)Read(economy, "torch_max", torchMax);
+            torchLightSeconds = Read(economy, "torch_light_sec", torchLightSeconds);
+            stormEveryMinSeconds = Read(economy, "storm_every_min_sec", stormEveryMinSeconds);
+            stormEveryMaxSeconds = Read(economy, "storm_every_max_sec", stormEveryMaxSeconds);
+            stormCrossSeconds = Read(economy, "storm_cross_sec", stormCrossSeconds);
+            stormRadiusCells = Read(economy, "storm_radius_cells", stormRadiusCells);
+            strikeEveryMinSeconds = Read(economy, "strike_every_min_sec", strikeEveryMinSeconds);
+            strikeEveryMaxSeconds = Read(economy, "strike_every_max_sec", strikeEveryMaxSeconds);
+            strikeChance = Read(economy, "strike_chance", strikeChance);
             plagueEndCrystals = (int)Read(economy, "plague_end_crystals", plagueEndCrystals);
             portalMaxHealth = (int)Read(economy, "portal_max_health", portalMaxHealth);
             orcTowerHealth = (int)Read(economy, "orc_tower_health", orcTowerHealth);

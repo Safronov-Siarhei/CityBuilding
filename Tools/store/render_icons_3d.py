@@ -370,6 +370,7 @@ def figure_scene(root, yaw, retouch=False):
     hi = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
     c = (lo + hi) / 2
     h = hi.z - lo.z
+    print(f"FIGURE_HEIGHT {root} {h:.4f}")
     cam = camera((c.x, c.y - 3.0, c.z + 0.8), (c.x, c.y, c.z), 50)
     cam.data.type = 'ORTHO'
     cam.data.ortho_scale = max(h * 1.06, (hi.x - lo.x) * 1.06 * sc.render.resolution_y / sc.render.resolution_x)
@@ -385,6 +386,10 @@ SCENES = {"orc": orc_scene, "king": king_scene,
           # the plague banner's sides (the user, 2026-11-13): the dungeon's skeleton, turned in from each side
           "figure_skeleton_l": lambda: figure_scene("MonsterSkeleton", 24),
           "figure_skeleton_r": lambda: figure_scene("MonsterSkeleton", -24)}
+# any model by name: figure:<Object>:<yaw> (concept renders, e.g. the torchbearer 2026-11-14)
+if which.startswith("figure:"):
+    _, _name, _yaw = which.split(":")
+    SCENES[which] = lambda: figure_scene(_name, float(_yaw))
 FIGURE = which.startswith("figure")
 if FIGURE:
     sc.render.resolution_x, sc.render.resolution_y = size * 3 // 4, size
