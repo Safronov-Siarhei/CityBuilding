@@ -717,6 +717,12 @@
     forehead side). `CineRider` (`cinematic/rider.py`, Ардан's rig): leather jerkin over a blue tunic, short blue
     cloak + hood, nasal helmet, tall boots, gloves, short sword on the left hip, the dispatch tube on a strap
     across the back. Render `Design/buildings/RiderHorse_review.png` APPROVED 2026-11-14 (exported with their animations later).
+  - GATE LEAVES need no new model: the mission's gates already shut with approved leaves + portcullis
+    (`CityDefenceMode.Gates.cs`, gate_close_drafts.py) and the tower doors are in (variant A). The scene uses them.
+  - **Scene 1 models DONE 2026-11-14** (captain, lookout, rider, horse; Ардан exists). Next by the order of work:
+    ANIMATIONS, group by group, each sent for approval -- proposed groups: (1) Ардан + captain (run in, pant,
+    talk, frown, turn to the wall, give the sword), (2) lookout (point + shout, horn), (3) rider + horse (run up,
+    nod, mount, horse idle / rear / gallop), (4) wall guards and fleeing townsfolk from existing clips.
     Note: on the cine rig the figure's RIGHT is -x (fg.limbs "R" = k -1); the captain's scabbard sits at -x.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right
