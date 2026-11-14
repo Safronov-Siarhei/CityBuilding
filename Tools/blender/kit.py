@@ -531,6 +531,30 @@ class FaceAt(Facade):
         self.origin = Vector((cx, cy, 0))
 
 
+def band_on_box(b, centre, half, radius, raw, width, thick, color):
+    """A strap lying ON a rounded box (a sash, a baldric): each of the `raw` points is pushed onto the
+    box's surface (centre, half sizes, bevel `radius`) and short flat pieces join them, so the strap
+    bends round the front, over the shoulder and down the back instead of standing off as one slab."""
+    c, h = Vector(centre), Vector(half)
+    inner = Vector((max(0.0, h.x - radius), max(0.0, h.y - radius), max(0.0, h.z - radius)))
+    pts = []
+    for p in raw:
+        d = Vector(p) - c
+        q = Vector((max(-inner.x, min(inner.x, d.x)), max(-inner.y, min(inner.y, d.y)), max(-inner.z, min(inner.z, d.z))))
+        n = (d - q).normalized()
+        pts.append((c + q + n * (radius + thick), n))
+    for (p0, n0), (p1, n1) in zip(pts, pts[1:]):
+        ax = p1 - p0
+        length = ax.length
+        if length < 1e-6:
+            continue
+        ax /= length
+        nz = (n0 + n1).normalized()
+        ay = nz.cross(ax).normalized()
+        az = ax.cross(ay)
+        b.obox((p0 + p1) * 0.5, ax, ay, az, length * 0.5 + width * 0.15, width * 0.5, thick, color)
+
+
 def polygon_faces(points):
     """For a convex outline given counter-clockwise, yields (cx, cy, angle_deg, width) for each
     edge: its midpoint, the direction it faces, and its length -- ready for FaceAt."""

@@ -16,6 +16,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import figure as fg  # noqa: E402
+import kit  # noqa: E402
 
 OBJ = "CineCaptain"
 SCALE = 1.08
@@ -70,6 +71,10 @@ def waist(b):
     b.ball(-0.079, -0.035, 0.312, 0.009, 0.015, GOLD, sides=6)                          # the pommel
 
 
+SASH = ([(x, -1.0, z) for x, z in [(-0.062, 0.27), (-0.04133333333333333, 0.29033333333333333), (-0.020666666666666667, 0.3106666666666667), (0.0, 0.331), (0.020666666666666667, 0.35133333333333333), (0.04133333333333333, 0.3716666666666667), (0.062, 0.392)]] + [(0.062, -1.0, 1.0), (0.062, 0.0, 1.0), (0.062, 1.0, 1.0)]
+        + [(x, 1.0, z) for x, z in [(0.062, 0.392), (0.04133333333333333, 0.3716666666666667), (0.020666666666666667, 0.35133333333333333), (0.0, 0.331), (-0.020666666666666667, 0.3106666666666667), (-0.04133333333333333, 0.29033333333333333), (-0.062, 0.27)]])
+
+
 def chest(b):
     """The breastplate with its gold rims and ridge, the wine sash and its knot, the half cloak, the
     pauldrons and the gorget."""
@@ -77,16 +82,17 @@ def chest(b):
     b.obox((0, -0.003, 0.272), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.086, 0.062, 0.006, GOLD, bevel=0.004)
     b.box(-0.004, 0.004, -0.066, -0.058, 0.276, 0.385, STEEL_DARK)
     b.box(-0.05, 0.05, -0.062, -0.054, 0.378, 0.386, GOLD)                              # the neck rim
-    b.obox((0.0, -0.066, 0.325), (0.6, 0, -0.8), (0, 1, 0), (0.8, 0, 0.6), 0.115, 0.005, 0.016, WINE, bevel=0.003)
-    b.ball(-0.062, -0.068, 0.255, 0.014, 0.02, GOLD, sides=6)
-    b.obox((-0.06, -0.07, 0.24), (1, 0, 0), (0, 1, 0), (0.2, 0, 1), 0.01, 0.004, 0.026, WINE)   # the knot's tail
-    # the half cloak from the shoulders down the back, to the knee, a gold edge at its foot
-    b.obox((0, 0.07, 0.24), (1, 0, 0), (0, 1, 0), (0, 0.12, 1), 0.09, 0.01, 0.15, WINE, bevel=0.008)
-    b.box(-0.092, 0.092, 0.078, 0.092, 0.096, 0.106, GOLD)
+    # the sash lies ON the breastplate, round the front, over the right shoulder and down the back
+    kit.band_on_box(b, (0, -0.003, 0.33), (0.084, 0.06, 0.064), 0.022, SASH, 0.03, 0.0025, WINE)
+    b.ball(-0.062, -0.09, 0.25, 0.013, 0.022, WINE, sides=6)                           # the knot over the belt
+    b.obox((-0.057, -0.09, 0.226), (1, 0, 0), (0, 1, 0), (0.25, 0, 1), 0.01, 0.0035, 0.024, WINE)   # its tail
+    # the half cloak from the shoulders down the back, to the knee, clear of the skirt; a gold edge at its foot
+    b.obox((0, 0.1, 0.24), (1, 0, 0), (0, 1, 0), (0, -0.12, 1), 0.098, 0.01, 0.148, WINE, bevel=0.008)
+    b.box(-0.1, 0.1, 0.104, 0.124, 0.092, 0.102, GOLD)
     for k in (-1, 1):
         b.ball(k * 0.098, 0.0, 0.358, 0.052, 0.056, STEEL, sides=8)                     # pauldrons
         b.box(k * 0.098 - 0.047, k * 0.098 + 0.047, -0.006, 0.006, 0.378, 0.385, GOLD)
-        b.ball(k * 0.07, 0.056, 0.372, 0.012, 0.016, GOLD, sides=6)                     # the cloak's studs
+        b.ball(k * 0.07, 0.086, 0.372, 0.012, 0.016, GOLD, sides=6)                     # the cloak's studs
     b.cylinder(0, 0, 0.39, 0.406, 0.056, STEEL_DARK, sides=8)
 
 
@@ -122,14 +128,14 @@ def head(b):
     b.box(-0.012, 0.012, -0.0485, -0.0455, z + 0.004, z + 0.009, 'roof_red_dark')       # the mouth
     b.obox((0.027, -0.0465, z + 0.036), (0.5, 0, 0.866), (0, 1, 0), (-0.866, 0, 0.5), 0.017, 0.0025, 0.003, WINE)  # scar
     b.box(-0.046, 0.046, 0.016, 0.047, z + 0.006, z + 0.086, GREY, bevel=0.01)             # grey hair at the back
-    # the burgonet: a dome, a rim, the peak over the eyes, cheek plates, a gold comb, the white plume
+    # the burgonet: a dome, a rim, the peak over the eyes, cheek plates, the plume's socket, the white plume
     b.dome(0, 0.004, z + 0.084, 0.055, 0.06, [STEEL, STEEL], sides=10)
     b.cylinder(0, 0.004, z + 0.078, z + 0.092, 0.058, STEEL_DARK, sides=10)
     b.obox((0, -0.066, z + 0.084), (1, 0, 0), (0, 1, -0.25), (0, 0.25, 1), 0.048, 0.02, 0.0035, STEEL, bevel=0.003)
     for k in (-1, 1):
         b.box(k * 0.054 - 0.006, k * 0.054 + 0.006, -0.026, 0.03, z + 0.02, z + 0.086, STEEL, bevel=0.004)
         b.box(k * 0.054 - 0.007, k * 0.054 + 0.007, -0.003, 0.003, z + 0.026, z + 0.08, GOLD)
-    b.box(-0.0045, 0.0045, -0.046, 0.058, z + 0.128, z + 0.152, GOLD)
+    b.cylinder(0, 0.016, z + 0.128, z + 0.148, 0.01, STEEL_DARK, sides=6)               # the plume's socket
     b.prism([(0.0, 0.0), (0.045, 0.018), (0.1, 0.075), (0.092, 0.12), (0.028, 0.075)], (-0.012, 0.012, z + 0.14),
             (0, 1, 0), (0, 0, 1), 0.024, PLUME, back_cap=True)
 

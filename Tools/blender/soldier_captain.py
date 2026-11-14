@@ -54,6 +54,12 @@ def leg(b, k):
     b.box(x - 0.03, x + 0.03, -0.03, 0.03, 0.122, 0.2, MAIL, bevel=0.01)
 
 
+# the sash's way round the breastplate: up the front from the left hip to the right shoulder, over it, down
+# the back to the left hip (far points: band_on_box lays each on the surface)
+SASH = ([(x, -1.0, z) for x, z in [(-0.07, 0.292), (-0.046666666666666676, 0.313), (-0.023333333333333338, 0.33399999999999996), (0.0, 0.355), (0.02333333333333333, 0.376), (0.046666666666666676, 0.39699999999999996), (0.07, 0.418)]] + [(0.07, -1.0, 1.0), (0.07, 0.0, 1.0), (0.07, 1.0, 1.0)]
+        + [(x, 1.0, z) for x, z in [(0.07, 0.418), (0.046666666666666676, 0.39699999999999996), (0.023333333333333338, 0.376), (0.0, 0.355), (-0.02333333333333333, 0.33399999999999996), (-0.046666666666666676, 0.313), (-0.07, 0.292)]])
+
+
 def body(b):
     # the blue skirt to the knee with a gold hem, mail showing at the slit
     b.frustum(0, 0, 0.13, 0.27, 0.104, 0.09, KINGDOM, sides=10)
@@ -71,17 +77,19 @@ def body(b):
     b.obox((0, -0.004, 0.355), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.094, 0.07, 0.07, STEEL, bevel=0.024)
     b.obox((0, -0.004, 0.292), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.096, 0.072, 0.006, GOLD, bevel=0.004)
     b.box(-0.004, 0.004, -0.078, -0.07, 0.3, 0.41, STEEL_DARK)                              # the ridge
-    # the wine sash from the right shoulder to the left hip, a gold knot
-    b.obox((0.0, -0.075, 0.35), (0.6, 0, -0.8), (0, 1, 0), (0.8, 0, 0.6), 0.13, 0.006, 0.018, WINE, bevel=0.003)
-    b.ball(-0.07, -0.078, 0.27, 0.016, 0.022, GOLD, sides=6)
-    # the half cloak down the back, to the knee
-    b.obox((0, 0.08, 0.27), (1, 0, 0), (0, 1, 0), (0, 0.12, 1), 0.098, 0.012, 0.15, WINE, bevel=0.008)
-    b.box(-0.1, 0.1, 0.07, 0.096, 0.118, 0.13, GOLD)
+    # the wine sash ON the breastplate: from the left hip up the front, over the right shoulder and down
+    # the back (kit.band_on_box), tucked under the belt at both ends; the knot hangs over the belt
+    kit.band_on_box(b, (0, -0.004, 0.355), (0.094, 0.07, 0.07), 0.024, SASH, 0.034, 0.003, WINE)
+    b.ball(-0.07, -0.1, 0.262, 0.015, 0.024, WINE, sides=6)
+    b.obox((-0.064, -0.1, 0.235), (1, 0, 0), (0, 1, 0), (0.25, 0, 1), 0.011, 0.004, 0.026, WINE)
+    # the half cloak from the shoulders down the back, to the knee, clear of the skirt
+    b.obox((0, 0.108, 0.265), (1, 0, 0), (0, 1, 0), (0, -0.12, 1), 0.106, 0.012, 0.148, WINE, bevel=0.008)
+    b.box(-0.108, 0.108, 0.112, 0.136, 0.116, 0.128, GOLD)
     # broad pauldrons with a gold edge, a steel gorget
     for k in (-1, 1):
         b.ball(k * 0.108, 0.0, 0.378, 0.06, 0.062, STEEL, sides=8)
         b.box(k * 0.108 - 0.054, k * 0.108 + 0.054, -0.007, 0.007, 0.402, 0.41, GOLD)
-        b.box(k * 0.108 - 0.008, k * 0.108 + 0.008, 0.06, 0.068, 0.34, 0.4, WINE)          # the cloak's clasp
+        b.ball(k * 0.075, 0.094, 0.4, 0.012, 0.018, GOLD, sides=6)                         # the cloak's studs
     b.cylinder(0, 0, 0.415, 0.432, 0.064, STEEL_DARK, sides=8)
 
 
@@ -107,7 +115,7 @@ def head(b):
     for k in (-1, 1):
         b.box(k * 0.058 - 0.006, k * 0.058 + 0.006, -0.03, 0.03, 0.47, 0.53, STEEL, bevel=0.004)   # cheek plates
         b.box(k * 0.058 - 0.007, k * 0.058 + 0.007, -0.004, 0.004, 0.476, 0.524, GOLD)
-    b.box(-0.005, 0.005, -0.05, 0.06, 0.575, 0.6, GOLD)                                     # the comb
+    b.cylinder(0, 0.015, 0.575, 0.598, 0.011, STEEL_DARK, sides=6)                          # the plume's socket
     b.prism([(0.0, 0.0), (0.05, 0.02), (0.11, 0.08), (0.1, 0.13), (0.03, 0.08)], (-0.013, 0.01, 0.588),
             (0, 1, 0), (0, 0, 1), 0.026, PLUME, back_cap=True)
 
