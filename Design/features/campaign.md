@@ -465,6 +465,13 @@
   8. Where are ram/tower hp: m2_ram_health_mult / m2_tower_health_mult (x a brute's health), tab «Кампания: оборона города».
   9. Only rams/towers left -> the next wave comes (TickWaves counts only orcs without `IgnoresSoldiers`).
   10. Ардан's XP: EVERY orc that falls on the map = 1 point (any killer); m2_arden_max_level 20 levels spread evenly over ALL orcs of all waves of both parts (m2waves tab; a tower counts 1 + m2_tower_crew); skills open at m2_cry_level 1 / m2_whirl_level 5 / m2_dash_level 10 / m2_breath_level 15; part 2 credits all of part 1's orcs (`CreditPart1`); health/damage per level 20 / 2. m2_arden_xp2-4 deleted (sheet + CSV + code).
+- **PLAYTEST 15 (the user, 2026-11-14) -- CODED 2026-11-14, NOT BUILT (the user's Unity had the project open):**
+  1. After a death Ардан slid about without his walk for a while -> DressArden resets `_ardenActs`/`_ardenSpeed`
+     (a clip he fell in held the new figure: the looping Idle never "finishes").
+  2. A gate's guard may go out once ITS gate is down: OnBuildingDown frees the men kept in that pen (`FreePen`:
+     Pen = Rect.zero for every soldier whose pen was PenOf(outer)/PenOf(inner)).
+  3. Asked: are there orcs in the siege towers? -> answered (crew spawned at docking, none ride inside); waiting for
+     the user's decision.
 - **PLAYTEST 14 (the user, 2026-11-14) -- BUILT 2026-11-14 (setup green; not seen):**
   1-2. A siege tower stuck in the field / in a street docked there (stuck-dock reached 5 cells) and threw its orcs
      over the wall from afar -> a stuck tower docks only with the wall-walk within 2 cells ahead (`WallJustAhead`);

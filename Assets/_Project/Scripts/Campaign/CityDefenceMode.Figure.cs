@@ -49,6 +49,10 @@ namespace CityBuilder.Campaign
             if (soldierTop - feet > 0.1f && figTop - feet > 0.05f)
                 go.transform.localScale *= (soldierTop - feet) / (figTop - feet);
             _ardenFig.Play("Idle", 0f);
+            // a clip he was in when he fell must not hold the new figure (the user's fifteenth playtest: after a death
+            // he slid about without his walk until his next blow) -- the looping Idle never "finishes"
+            _ardenActs = false;
+            _ardenSpeed = 0f;
             _ardenWas = Arden.transform.position;
             Arden.Struck += () => { Act(StrikeClips[_blow % StrikeClips.Length]); BlowFx(); };
             SkillUsed -= OnArdenSkill;

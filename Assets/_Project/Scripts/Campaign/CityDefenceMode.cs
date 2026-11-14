@@ -518,6 +518,13 @@ namespace CityBuilder.Campaign
             orc.BusyFor = 1e6f;
         }
 
+        /// <summary>The men kept inside `pen` are kept no more.</summary>
+        private void FreePen(Rect pen)
+        {
+            foreach (var s in SoldierUnit.All)
+                if (s != null && s != Arden && s.Pen == pen) s.Pen = Rect.zero;
+        }
+
         /// <summary>Every ram on the map stops: no gate stands any more.</summary>
         private void ParkRams()
         {
@@ -652,6 +659,9 @@ namespace CityBuilder.Campaign
                 LayTheDead();
                 if (InnerGates[0] != null) TowersToInnerWall();
             }
+            // the gate they kept is down: its men may go out through it after the orcs near (the user's fifteenth playtest)
+            if (outer) FreePen(PenOf(true));
+            if (inner) FreePen(PenOf(false));
             if (!AnyGateStands()) ParkRams();
             if (inner && CurrentGoal != Goal.Square)
             {
