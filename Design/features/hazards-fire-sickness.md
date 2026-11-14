@@ -150,8 +150,9 @@ SANDBOX ONLY (other modes: no fires at all).
   Laboratory); «Назначьте пожарного» -- the camera goes to the brigade and selects it.
 - Unlock: FireBrigade is `starts_unlocked 0`: a research in the Laboratory, 25 coins, 60 s.
 - Bucket: `ToolFireBucket` in `Tools/blender/tools.py` (red leather, iron hoops, gold crest, child
-  "Water" shown only while full) -- render `Design/buildings/FireBucket_review.png` SENT FOR APPROVAL
-  2026-11-14, NOT exported; the game still uses the primitive cylinder. Line bolt also still to revisit.
+  "Water" shown only while full) -- APPROVED 2026-11-14 (render `Design/buildings/FireBucket_review.png`),
+  exported to `Models/Citizens/ToolFireBucket.fbx`, FireManager.bucketModel; laid under `CitizenWaddle.Figure`
+  like the work tools. The line bolt is still to revisit.
 
 ## Code
 `Buildings/FireManager.cs`, `Buildings/BuildingFire.cs`, `Buildings/FireRules.cs`, `Buildings/FireLook.cs`,

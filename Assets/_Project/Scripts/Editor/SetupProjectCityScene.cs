@@ -921,7 +921,9 @@ namespace CityBuilder.EditorTools
             fireSO.FindProperty("flameMaterial").objectReferenceValue = flameMat;
             fireSO.FindProperty("smokeMaterial").objectReferenceValue = smokeMat;
             fireSO.FindProperty("markMaterial").objectReferenceValue = fireMark;
-            fireSO.FindProperty("bucketMaterial").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>("Assets/_Project/Materials/TreeTrunk.mat");
+            var fireBucket = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Citizens/ToolFireBucket.fbx");
+            if (fireBucket == null) Debug.LogWarning("[SetupProject] Models/Citizens/ToolFireBucket.fbx is missing -- run Tools/blender/export_fbx.py.");
+            fireSO.FindProperty("bucketModel").objectReferenceValue = fireBucket;
             fireSO.ApplyModifiedPropertiesWithoutUndo();
             managers.AddComponent<CityBuilder.Citizens.ResidentVisits>();
             var storm = managers.AddComponent<Thunderstorm>();

@@ -30,6 +30,9 @@ namespace CityBuilder.Citizens
         public static GameObject[] ToolModels;
 
         private Transform _figure;
+
+        /// <summary>The model he is drawn with: a tool in the villagers' own space goes under it (tools.py).</summary>
+        public Transform Figure => _figure;
         private Vector3 _rest;
         private Quaternion _restTurn;
         private Quaternion _facing = Quaternion.identity;

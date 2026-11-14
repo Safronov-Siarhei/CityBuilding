@@ -36,7 +36,7 @@ namespace CityBuilder.Buildings
         [SerializeField] private Material flameMaterial;
         [SerializeField] private Material smokeMaterial;
         [SerializeField] private Material markMaterial;
-        [SerializeField] private Material bucketMaterial;
+        [SerializeField] private GameObject bucketModel;    // ToolFireBucket (Tools/blender/tools.py), approved 2026-11-14
 
         public Material FlameMaterial => flameMaterial;
         public Material SmokeMaterial => smokeMaterial;
@@ -57,6 +57,7 @@ namespace CityBuilder.Buildings
             public Vector3 Goal;
             public bool Full;
             public GameObject Bucket;
+            public GameObject Water;   // the bucket's "Water" child: shown while it is full
         }
 
         private readonly List<Crew> _crews = new List<Crew>();
@@ -66,7 +67,6 @@ namespace CityBuilder.Buildings
         private readonly Dictionary<int, float> _told = new Dictionary<int, float>();
         private float _dispatchIn;
         private static Mesh _markQuad;
-        private static Mesh _bucketMesh;
 
         private void Awake()
         {
@@ -217,7 +217,7 @@ namespace CityBuilder.Buildings
                     if (fire == null) break;
                     var crew = new Crew { Agent = agent, Brigade = brigade, Fire = fire, Full = brigade.Level >= BalanceConfig.Instance.FireBarrelLevel };
                     agent.SpeedBonus = brigade.Level >= BalanceConfig.Instance.FireFastLevel ? BalanceConfig.Instance.FireFastMultiplier : 1f;
-                    crew.Bucket = Bucket(agent.transform);
+                    Bucket(crew);
                     _crews.Add(crew);
                     if (crew.Full) GoToFire(crew);
                     else GoToWater(crew);
@@ -248,6 +248,7 @@ namespace CityBuilder.Buildings
         private bool Step(Crew c)
         {
             if (c.Agent == null || c.Brigade == null) return false;
+            if (c.Water != null && c.Water.activeSelf != c.Full) c.Water.SetActive(c.Full);
             if (c.Fire == null)
             {
                 // this fire is out: another on the island, or home
@@ -376,34 +377,25 @@ namespace CityBuilder.Buildings
 
         // ---------------------------------------------------------------- looks
 
-        /// <summary>A small wooden bucket in the firefighter's hand while he is on the job.</summary>
-        private GameObject Bucket(Transform agent)
+        /// <summary>
+        /// The brigade's red bucket in the firefighter's hand while he is on the job (ToolFireBucket, laid
+        /// over the villager in his own space like the work tools; its water shows while it is full).
+        /// </summary>
+        private void Bucket(Crew crew)
         {
-            var go = new GameObject("Bucket", typeof(MeshFilter), typeof(MeshRenderer));
-            go.transform.SetParent(agent, false);
-            go.transform.localPosition = new Vector3(0.12f, 0.16f, 0.04f);
-            go.GetComponent<MeshFilter>().sharedMesh = BucketMesh();
-            var r = go.GetComponent<MeshRenderer>();
-            r.sharedMaterial = bucketMaterial;
-            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            return go;
-        }
-
-        private static Mesh BucketMesh()
-        {
-            if (_bucketMesh != null) return _bucketMesh;
-            var cube = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            _bucketMesh = Instantiate(cube.GetComponent<MeshFilter>().sharedMesh);
-            Destroy(cube);
-            var v = _bucketMesh.vertices;
-            for (var i = 0; i < v.Length; i++)
-            {
-                var widen = v[i].y > 0f ? 1.2f : 1f;   // wider at the rim
-                v[i] = new Vector3(v[i].x * 0.09f * widen, v[i].y * 0.05f, v[i].z * 0.09f * widen);
-            }
-            _bucketMesh.vertices = v;
-            _bucketMesh.RecalculateBounds();
-            return _bucketMesh;
+            if (bucketModel == null) return;
+            var waddle = crew.Agent.GetComponent<CitizenWaddle>();
+            var figure = waddle != null && waddle.Figure != null ? waddle.Figure : crew.Agent.transform;
+            var go = Instantiate(bucketModel, figure, false);
+            go.name = "FireBucket";
+            go.transform.localPosition = Vector3.zero;
+            go.transform.localRotation = Quaternion.identity;
+            go.transform.localScale = Vector3.one;
+            foreach (var r in go.GetComponentsInChildren<Renderer>()) r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            foreach (var t in go.GetComponentsInChildren<Transform>(true))
+                if (t.name.EndsWith("Water")) crew.Water = t.gameObject;
+            if (crew.Water != null) crew.Water.SetActive(crew.Full);
+            crew.Bucket = go;
         }
 
         public static Mesh MarkQuad()
