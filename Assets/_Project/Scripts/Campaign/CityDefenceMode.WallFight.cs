@@ -224,6 +224,13 @@ namespace CityBuilder.Campaign
         /// </summary>
         private void TickArdenWall(float dt)
         {
+            // a gate's towers fallen: their door circles go (the user's eleventh playtest)
+            foreach (var door in _doorCircles)
+            {
+                if (door.mark == null || WallWalk.IsStair(door.stair)) continue;
+                Destroy(door.mark);
+                door.mark = null;
+            }
             if (!ArdenAlive) return;
             var stick = new Vector3(Stick.x, 0f, Stick.y);
             // along the wall, every frame

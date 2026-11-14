@@ -465,6 +465,13 @@
   8. Where are ram/tower hp: m2_ram_health_mult / m2_tower_health_mult (x a brute's health), tab «Кампания: оборона города».
   9. Only rams/towers left -> the next wave comes (TickWaves counts only orcs without `IgnoresSoldiers`).
   10. Ардан's XP: EVERY orc that falls on the map = 1 point (any killer); m2_arden_max_level 20 levels spread evenly over ALL orcs of all waves of both parts (m2waves tab; a tower counts 1 + m2_tower_crew); skills open at m2_cry_level 1 / m2_whirl_level 5 / m2_dash_level 10 / m2_breath_level 15; part 2 credits all of part 1's orcs (`CreditPart1`); health/damage per level 20 / 2. m2_arden_xp2-4 deleted (sheet + CSV + code).
+- **PLAYTEST 11 (the user, 2026-11-14) -- BUILT 2026-11-14 (setup green; not seen):**
+  1. «Подкрепление» still without its time -> the sandbox plaque comes from SetupProjectHud with best fit ON at min 18,
+     so SettlementStatusController's one-time switch never ran; now set every refresh in mission 2 (min 6, max =
+     the label's own max).
+  2. A wall piece showed its health bar as a siege tower rolled up (it struck the wall at 0,01 damage on its lane)
+     -> `OrcUnit.NeverStrikes`, set on the towers: it never strikes a building, only rolls up and docks.
+  3. The yellow door circles stayed after a gate fell -> TickArdenWall destroys a circle whose stair is gone.
 - **PLAYTEST 10 (the user, 2026-11-13) -- BUILT 2026-11-13 (setup green; not seen):**
   1. A tree stood before a tower door -> `Tools/campaign/mission2_town.py` puts no yard decor within 4 cells of
      x 50 and 1-3 rows town-side of either gate (4 pieces gone: trees 46,37 / 51,37 / 51,52, well 46,52; the rng
