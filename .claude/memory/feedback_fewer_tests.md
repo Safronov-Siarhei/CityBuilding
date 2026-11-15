@@ -29,3 +29,6 @@ Proposed rule (proposed, waiting for their yes; follow it in the meantime):
 **2026-11-04, the user (FINAL, now in CLAUDE.md):** «на мелкие правки не вижу смысла проводить тесты ... после общего числа внушительных правок прогонять общий тест ... собирать проект тоже только после достаточного числа правок, иначе проверок будет больше чем правок». So: small edit = no build, no test; build after a batch of edits / at a task's end; ONE general test run after a substantial body of changes (feature or several tasks), in the background. The rule text lives in CLAUDE.md -- follow that.
 
 **2026-11-04 later:** «зачем тебе делать отдельную сборку при правках в таблице» -- a CSV change rides along with the next code build (one setup); the double setup is ONLY for Editor-code changes (the old "twice for CSV" was wrong).
+
+
+**2026-11-15, corrected again:** I started setup x2 after ONE small button edit (main-menu shop plaque) and the user stopped it: «зачем ждать сборку … тесты и сборки потом сделаем общими по результатам изменений для предложений». A whole multi-step series (the offers places) gets ONE build + test run at its end.

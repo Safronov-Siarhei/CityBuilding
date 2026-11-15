@@ -15,3 +15,6 @@ After every git commit in this project (D:\Fork\CityBuilding), immediately run `
 **How to apply:** This is a standing exception to the general "always confirm before pushing" rule — the user gave durable, scoped authorization for this specific project. Still only push to `origin master` (the existing remote/branch); don't add new remotes, force-push, or push to other branches without asking. If a push ever fails (e.g. diverged history, auth issue), surface it rather than force-pushing silently.
 
 **Trap (2026-11-12):** when `git stash pop` after the pull hits a conflict (a generated prefab the other device also changed), it leaves every cleanly merged churn file STAGED; the next `git add <file> && git commit` then swept 200 generated files in. After such a pop: `git checkout HEAD -- <conflicted>`, then `git reset -q` (unstage all), then `git stash drop`. Check `git show --stat HEAD` before pushing.
+
+
+**Trap (2026-11-15):** if nothing tracked is modified, `git stash -q` makes NO stash, and the later `git stash pop` pops an OLD unrelated stash (it conflicted on recipes.csv). Check `git status` first, or skip stash/pop when the tree is clean; to undo: `git checkout HEAD -- <file>; git reset` (the old stash stays kept).
