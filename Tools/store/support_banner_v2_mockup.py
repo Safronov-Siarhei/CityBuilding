@@ -107,9 +107,6 @@ def frame():
     win.paste(field, (IX0, IY0), mask)
     d = ImageDraw.Draw(win)
     d.rounded_rectangle((IX0, IY0, IX1, IY1), 36, outline=(60, 34, 12), width=5)
-    # gold studs on the frame's corners
-    for x, y in ((X0 + 30, Y0 + 30), (X1 - 30, Y0 + 30), (X0 + 30, Y1 - 30), (X1 - 30, Y1 - 30)):
-        d.ellipse((x - 14, y - 14, x + 14, y + 14), fill=(236, 186, 70), outline=(90, 54, 10), width=4)
     return win
 
 
