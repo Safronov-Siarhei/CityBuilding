@@ -736,7 +736,8 @@
     bands/capitals, entablature with gold frieze, a purple crown banner + torch on each), tall STAINED-GLASS windows
     (blue/red/gold panes) + rose windows, 3 gold candle chandeliers, gold-studded door under a white arch with a crown.
     Render populates it (render only, `populate()`): 14 guards lining the carpet + 2 at the dais + 2 at the door
-    (lookout copies with spears), the King, 10 courtiers in groups, 3 townsfolk petitioners; bright 3-sun light.
+    (lookout copies with spears), the King, 10 courtiers in groups, 3 townsfolk petitioners; 3-sun light toned down
+    (sun 3, fill 0.9, sky 0.55, more contrast) after the user: «не слишком яркое освещение?».
     SENT 2026-11-15 for approval.
   3. «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
      orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя

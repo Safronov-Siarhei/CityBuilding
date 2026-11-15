@@ -342,7 +342,8 @@ def render(out):
     sc.render.engine = 'BLENDER_EEVEE'
     sc.render.resolution_x, sc.render.resolution_y = 1600, 900
     sc.view_settings.view_transform = 'Standard'
-    for name, energy, rx, rz in (("SetSun", 4.6, 30, -35), ("SetFill", 2.0, 55, 150), ("SetBack", 1.2, 60, 60)):
+    sc.view_settings.look = 'Medium High Contrast' if 'Medium High Contrast' in [i.identifier for i in sc.view_settings.bl_rna.properties['look'].enum_items] else 'None'
+    for name, energy, rx, rz in (("SetSun", 3.0, 35, -35), ("SetFill", 0.9, 55, 150), ("SetBack", 0.5, 60, 60)):
         light = bpy.data.objects.new(name, bpy.data.lights.new(name, 'SUN'))
         light.data.energy = energy
         sc.collection.objects.link(light)
@@ -350,8 +351,8 @@ def render(out):
     w = sc.world or bpy.data.worlds.new("W")
     sc.world = w
     w.use_nodes = True
-    w.node_tree.nodes["Background"].inputs[0].default_value = (0.95, 0.95, 1.0, 1)
-    w.node_tree.nodes["Background"].inputs[1].default_value = 1.3
+    w.node_tree.nodes["Background"].inputs[0].default_value = (0.85, 0.88, 1.0, 1)
+    w.node_tree.nodes["Background"].inputs[1].default_value = 0.55
     cam = bpy.data.objects.new("SetCam", bpy.data.cameras.new("SetCam"))
     sc.collection.objects.link(cam)
     sc.camera = cam
