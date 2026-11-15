@@ -6,6 +6,7 @@ this draws the pieces it loads from Resources/Shop/MenuShop:
 
   Geode1..3   unmined crystals growing out of a rock, small / middle / big (the three crystal packs)
   Mine        the Crystal Mine's level-5 render, keyed off its background (Design/store/shop_art/CrystalMine5_render.png)
+  PackCardBg1-3  the «Подожди!» pack cards' grounds (blue / teal / amber), same layout
   MineCardBg  the mine card's violet ground: gradient, rays, glow, gold rim, ink edge (1320 x 330 like the window)
   SandboxMark the castle medallion off the Sandbox banner (UI/MenuArt/Banner_Sandbox.png)
   Sticker     a white disc in an ink ring (tinted red in the window: «−30%», «+20%»)
@@ -49,13 +50,17 @@ def mine():
     return m
 
 
-def mine_card_bg(w=1320, h=330):
+# the «Подожди!» pack cards' grounds (the user approved 2026-11-15, Design/store/ExitOffer_Pack1-3.png)
+PACK_COLOURS = [((40, 92, 150), (70, 130, 190)), ((36, 110, 120), (64, 150, 150)), ((120, 70, 30), (170, 110, 44))]
+
+
+def mine_card_bg(w=1320, h=330, c0=(70, 36, 118), c1=(120, 56, 158), ray=(210, 160, 255, 90)):
     card = Image.new('RGBA', (w, h))
     cd = ImageDraw.Draw(card)
     for y in range(h):
         k = y / h
-        cd.line([(0, y), (w, y)], fill=(int(70 + 50 * k), int(36 + 20 * k), int(118 + 40 * k), 255))
-    mk.rays(card, (300, h / 2), 520, 18, (210, 160, 255, 90))
+        cd.line([(0, y), (w, y)], fill=tuple(int(c0[j] + (c1[j] - c0[j]) * k) for j in range(3)) + (255,))
+    mk.rays(card, (300, h / 2), 520, 18, ray)
     mk.glow(card, (300, h / 2), 520, 0.8)
     mask = Image.new('L', (w, h))
     ImageDraw.Draw(mask).rounded_rectangle((4, 4, w - 5, h - 5), 26, fill=255)
@@ -121,6 +126,10 @@ def main():
         save(mk.geode(level, 2), 'Geode%d' % (level + 1))
     save(mine(), 'Mine')
     save(mine_card_bg(), 'MineCardBg')
+    for i, (c0, c1) in enumerate(PACK_COLOURS):
+        save(mine_card_bg(c0=c0, c1=c1, ray=(255, 236, 170, 80)), 'PackCardBg%d' % (i + 1))
+        # the shop list's lower pack cards (the user, 2026-11-15: 40 % lower, little text on them)
+        save(mine_card_bg(h=200, c0=c0, c1=c1, ray=(255, 236, 170, 80)), 'PackCardBgShort%d' % (i + 1))
     save(sandbox_mark(), 'SandboxMark')
     save(sticker(), 'Sticker')
     mid, tail = ribbon_pieces()

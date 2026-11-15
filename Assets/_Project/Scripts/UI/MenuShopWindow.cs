@@ -14,8 +14,11 @@ namespace CityBuilder.UI
     ///
     ///   ShowShop  the main menu's «Магазин»: the scene behind BLURRED, the menu hidden; the bundles in one list that
     ///             scrolls (the Crystal Mine while not owned, then the three crystal packs); «Назад» bottom centre --
-    ///             while the mine is not owned it puts up «Подожди!» (the same mine bundle at the sale price, the shop
-    ///             hidden, «Всё равно выйти» under it), at most every menu_shop_exit_offer_hours;
+    ///             it may put up «Подожди!»: ONE offer out of a pool -- the mine at its sale price while not owned, or a
+    ///             crystal pack at a discount -- the shop hidden, «Всё равно выйти» under it. Not on the first visit
+    ///             (menu_shop_exit_free_visits), at most every menu_shop_exit_offer_hours, the mine with
+    ///             menu_shop_exit_mine_chance, never the same offer twice running, never after a purchase that visit
+    ///             (the user, 2026-11-15; mockups Design/store/ExitOffer_*.png);
     ///   ShowMine  the sandbox's locked mine card (or a refunded mine's building): the same mine bundle alone, the game
     ///             PAUSED, its interface hidden, «Закрыть» bottom centre.
     ///
@@ -28,8 +31,13 @@ namespace CityBuilder.UI
         private const string Art = "Shop/MenuShop/";
         private const string Skin = "MenuSkins/Classic/";
         private const string ExitShownKey = "menushop.exit_shown_utc";
+        private const string VisitsKey = "menushop.visits";
+        private const string LastOfferKey = "menushop.exit_last";
         private const int Order = 950;            // over the HUD, the shop and every panel
-        private const float CardW = 1320f, CardH = 330f, PackH = 395f, PackGap = 50f;
+        // the shop list's pack cards are lower than the mine's and «Подожди!»'s (the user, 2026-11-15: little text on them)
+        private const float CardW = 1320f, CardH = 330f, PackH = 200f, CardGap = 60f, PackGap = 50f;
+        // every card's words start on one line (the user, 2026-11-15): 540 from the card's left edge
+        private const float TextX = -CardW / 2f + 540f;
 
         private static readonly Color Ink = new Color(0.29f, 0.17f, 0.086f);
         private static readonly Color Cream = new Color(0.98f, 0.925f, 0.784f);
@@ -53,6 +61,10 @@ namespace CityBuilder.UI
         private int _shownBalance, _targetBalance;
         private float _balanceRoll = 1f;
         private bool _boughtFromWait;
+        private bool _boughtThisVisit;
+        private int _visit;
+        private Text _waitText;
+        private RectTransform _waitCard;
         private readonly List<Canvas> _hidden = new List<Canvas>();
         private float _timeScaleBefore = 1f;
         private bool _gateBefore;
@@ -88,6 +100,12 @@ namespace CityBuilder.UI
                 Time.timeScale = 0f;
                 _gateBefore = ModalGate.IsBlocked;
                 ModalGate.SetBlocked(true);
+            }
+            if (_kind == Kind.Shop)
+            {
+                _visit = PlayerPrefs.GetInt(VisitsKey, 0) + 1;
+                PlayerPrefs.SetInt(VisitsKey, _visit);
+                PlayerPrefs.Save();
             }
             HideTheInterfaceBehind();
             Store.Changed += Redraw;
@@ -182,24 +200,25 @@ namespace CityBuilder.UI
         private void FillList()
         {
             for (var i = _list.childCount - 1; i >= 0; i--) Destroy(_list.GetChild(i).gameObject);
+            // every bundle a wide card, one under another (the packs as «Подожди!» draws them, the user, 2026-11-15)
             var y = -40f;
             if (!Wallet.CrystalMineOwned)
             {
                 var card = MineCard(_list, Store.Mine);
                 card.anchorMin = card.anchorMax = new Vector2(0.5f, 1f);
                 card.anchoredPosition = new Vector2(0f, y - CardH / 2f);
-                y -= CardH + 70f;
+                y -= CardH + CardGap;
             }
             var config = BalanceConfig.Instance;
             var packs = config != null ? config.MenuShopPackCount : 0;
-            var w = (CardW - PackGap * (packs - 1)) / Mathf.Max(1, packs);
             for (var p = 0; p < packs; p++)
             {
-                var card = PackCard(_list, p, w);
+                var card = PackOfferCard(_list, p, false);
                 card.anchorMin = card.anchorMax = new Vector2(0.5f, 1f);
-                card.anchoredPosition = new Vector2(-CardW / 2f + w / 2f + p * (w + PackGap), y - PackH / 2f);
+                card.anchoredPosition = new Vector2(0f, y - PackH / 2f);
+                y -= PackH + PackGap;
             }
-            y -= PackH + 40f;
+            y += PackGap - 40f;
             _list.sizeDelta = new Vector2(CardW + 40f, -y);
             _list.anchoredPosition = Vector2.zero;
         }
@@ -214,9 +233,8 @@ namespace CityBuilder.UI
             title.rectTransform.anchoredPosition = new Vector2(0f, 346f);
             var t = Label(title.transform, Localization.Get("#shop_wait_title"), 60, Cream, new Vector2(0f, 4f), new Vector2(600f, 100f), heavy: true);
             Stroke(t, 3f);
-            Label(view, Localization.Get("#shop_wait_text"), 38, Ink, new Vector2(0f, 250f), new Vector2(1300f, 60f));
-            var card = MineCard(view, Store.MineSale);
-            card.anchoredPosition = new Vector2(0f, 35f);
+            _waitText = Label(view, Localization.Get("#shop_wait_text"), 38, Ink, new Vector2(0f, 250f), new Vector2(1300f, 60f));
+            // the card itself is made when the offer is picked (ShowWait)
             var leave = Label(view, Localization.Get("#shop_wait_leave"), 38, Cream, new Vector2(0f, -320f), new Vector2(600f, 70f), heavy: true);
             Stroke(leave, 3f);
             leave.raycastTarget = true;
@@ -304,9 +322,9 @@ namespace CityBuilder.UI
             var mine = Icon(card, "Mine", new Vector2(-360f, 10f), 304f);
             mine.preserveAspect = true;
             mine.rectTransform.sizeDelta = new Vector2(420f, 304f);
-            Ribbon(card, new Vector2(-CardW / 2f + 170f, CardH / 2f - 18f), 220f, Localization.Get("#shop_forever"), Red);
+            Ribbon(card, new Vector2(-360f, CardH / 2f - 18f), 220f, Localization.Get("#shop_forever"), Red);   // centred over the mine (the user, 2026-11-15)
 
-            var x = -20f;
+            var x = TextX;
             var name = Label(card, Localization.GetOrDefault("#building_crystalmine", "Crystal Mine"), 58, Cream, new Vector2(x + 400f, CardH / 2f - 62f), new Vector2(800f, 80f), heavy: true);
             name.alignment = TextAnchor.MiddleLeft;
             Stroke(name, 3f);
@@ -330,52 +348,66 @@ namespace CityBuilder.UI
             if (gift > 0) Row(card, new Vector2(x, CardH / 2f - 256f), 40, Gold, "+" + gift, null, Localization.Get("#shop_mine_gift"));
 
             var buttonAt = new Vector2(CardW / 2f - 170f, -CardH / 2f + 64f);
-            if (sale)
-            {
-                var old = Label(card, Store.PriceText(Store.Mine), 40, Lilac, buttonAt + new Vector2(0f, 92f), new Vector2(260f, 56f), heavy: true);
-                Stroke(old, 2f);
-                var strike = Icon(card, "White", buttonAt + new Vector2(0f, 92f), 8f);
-                strike.rectTransform.sizeDelta = new Vector2(old.preferredWidth + 16f, 6f);
-                strike.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 6f);
-                strike.color = new Color(0.92f, 0.2f, 0.16f);
-                Sticker(card, new Vector2(CardW / 2f - 26f, CardH / 2f - 26f), 112f,
-                    Localization.Format("#shop_off", config != null ? config.MenuShopMineSaleOffPercent : 30), 34);
-            }
+            if (sale) SaleMarks(card, buttonAt, Store.Mine, config != null ? config.MenuShopMineSaleOffPercent : 30);
             PriceButton(card, buttonAt, new Vector2(270f, 106f), product, 48);
             return card;
         }
 
-        private RectTransform PackCard(Transform parent, int index, float w)
+        /// <summary>
+        /// A pack's bundle: the mine card's layout, the pack's colour, its rock of crystals. In the shop (sale false) the
+        /// full price and the bonus sticker; in «Подожди!» the full price struck out, the discount sticker, the sale price.
+        /// </summary>
+        private RectTransform PackOfferCard(Transform parent, int index, bool sale)
         {
             var config = BalanceConfig.Instance;
-            var product = Store.PackId(index);
-            var root = Child(parent, "Pack" + (index + 1));
-            root.sizeDelta = new Vector2(w, PackH);
-            var hot = index == 1;
-            if (hot)
-            {
-                var frame = Sliced(root, "Frame", Skin + "card", new Vector2(w + 16f, PackH + 16f));
-                frame.color = new Color(1f, 0.78f, 0.25f);
-            }
-            Sliced(root, "Card", Skin + "card", new Vector2(w, PackH));
-            var top = PackH / 2f;
-            var glow = Icon(root, "Glow", new Vector2(0f, top - 140f), new[] { 220f, 280f, 330f }[Mathf.Clamp(index, 0, 2)]);
-            glow.color = new Color(1f, 1f, 1f, 0.85f);
-            var geode = Icon(root, "Geode" + (index + 1), Vector2.zero, 10f);
+            var low = !sale;                      // the shop list's low card
+            var h = low ? PackH : CardH;
+            var size = Mathf.Clamp(index, 0, 2);
+            var bg = Icon(parent, (low ? "PackCardBgShort" : "PackCardBg") + (index + 1), Vector2.zero, CardW);
+            bg.rectTransform.sizeDelta = new Vector2(CardW, h);
+            bg.name = "PackOfferCard";
+            var card = bg.rectTransform;
+            const float gx = -CardW / 2f + 300f;   // the ground's glow centre
+            var geode = Icon(card, "Geode" + (index + 1), new Vector2(gx, low ? 0f : 12f), 10f);
             geode.preserveAspect = true;
-            geode.rectTransform.pivot = new Vector2(0.5f, 0f);
-            geode.rectTransform.sizeDelta = new Vector2(w - 40f, 160f);
-            geode.rectTransform.anchoredPosition = new Vector2(0f, top - 236f);
-
-            Label(root, Localization.Get("#shop_pack_" + (index + 1)), 33, Ink, new Vector2(0f, top - 52f), new Vector2(w - 30f, 50f), heavy: true);
-            var bonus = config != null ? config.MenuShopPackBonusPercent(index) : 0;
-            if (bonus > 0) Sticker(root, new Vector2(w / 2f - 12f, top - 100f), 84f, Localization.Format("#shop_bonus", bonus), 26);
-            var crystals = config != null ? config.MenuShopPackCrystals(index) : 0;
-            Amount(root, crystals.ToString("#,0", System.Globalization.CultureInfo.InvariantCulture).Replace(',', ' '), 48, Cream, new Vector2(0f, top - 252f));
-            PriceButton(root, new Vector2(0f, -top + 56f), new Vector2(w - 90f, 96f), product, 42);
+            geode.rectTransform.sizeDelta = new Vector2(CardW * 0.38f, h * (low ? 0.66f + 0.08f * size : 0.62f + 0.1f * size));
             var badge = index == 1 ? "#shop_badge_popular" : index == 2 ? "#shop_badge_best" : null;
-            if (badge != null) Ribbon(root, new Vector2(0f, top + 4f), w - 170f, Localization.Get(badge), index == 1 ? Blue : Red);
-            return root;
+            // the ribbon centred over the crystals (the user, 2026-11-15)
+            if (badge != null) Ribbon(card, new Vector2(gx, h / 2f - 18f), 260f, Localization.Get(badge), index == 1 ? Blue : Red);
+
+            var x = TextX;
+            var name = Label(card, Localization.Get("#shop_pack_" + (index + 1)), low ? 44 : 58, Cream,
+                new Vector2(x + 400f, h / 2f - (low ? 62f : 90f)), new Vector2(800f, 80f), heavy: true);
+            name.alignment = TextAnchor.MiddleLeft;
+            Stroke(name, 3f);
+            var crystals = config != null ? config.MenuShopPackCrystals(index) : 0;
+            Row(card, new Vector2(x, h / 2f - (low ? 140f : 210f)), low ? 64 : 84, Cream,
+                crystals.ToString("#,0", System.Globalization.CultureInfo.InvariantCulture).Replace(',', ' '), null, null);
+
+            var buttonAt = low ? new Vector2(CardW / 2f - 170f, -6f) : new Vector2(CardW / 2f - 170f, -CardH / 2f + 64f);
+            if (sale)
+            {
+                SaleMarks(card, buttonAt, Store.PackId(index), config != null ? config.MenuShopPackSaleOffPercent(index) : 0);
+                PriceButton(card, buttonAt, new Vector2(270f, 106f), Store.PackSaleId(index), 48);
+                return card;
+            }
+            var bonus = config != null ? config.MenuShopPackBonusPercent(index) : 0;
+            if (bonus > 0) Sticker(card, new Vector2(CardW / 2f - 26f, h / 2f - 26f), 112f, Localization.Format("#shop_bonus", bonus), 34);
+            PriceButton(card, buttonAt, new Vector2(270f, 100f), Store.PackId(index), 48);
+            return card;
+        }
+
+        /// <summary>The full price struck out over the button and the discount sticker in the corner.</summary>
+        private static void SaleMarks(RectTransform card, Vector2 buttonAt, string fullPriceProduct, int offPercent)
+        {
+            var old = Label(card, Store.PriceText(fullPriceProduct), 40, Lilac, buttonAt + new Vector2(0f, 92f), new Vector2(260f, 56f), heavy: true);
+            Stroke(old, 2f);
+            var strike = Icon(card, "White", buttonAt + new Vector2(0f, 92f), 8f);
+            strike.rectTransform.sizeDelta = new Vector2(old.preferredWidth + 16f, 6f);
+            strike.rectTransform.localRotation = Quaternion.Euler(0f, 0f, 6f);
+            strike.color = new Color(0.92f, 0.2f, 0.16f);
+            if (offPercent > 0)
+                Sticker(card, new Vector2(CardW / 2f - 26f, CardH / 2f - 26f), 112f, Localization.Format("#shop_off", offPercent), 34);
         }
 
         private void PriceButton(Transform parent, Vector2 at, Vector2 size, string product, int fontSize)
@@ -396,25 +428,38 @@ namespace CityBuilder.UI
         private void Buy(string product)
         {
             _boughtFromWait = _waitView != null && _waitView.gameObject.activeSelf;
-            if (Store.Buy(product)) ShowBought(product);
+            if (!Store.Buy(product)) return;
+            _boughtThisVisit = true;
+            ShowBought(product);
         }
 
         // ------------------------------------------------------------ leaving
 
-        /// <summary>Back (the button, Android's back key): «Подожди!» once in a while while the mine is not owned, else out.</summary>
+        /// <summary>Back (the button, Android's back key): «Подожди!» with one offer of the pool once in a while, else out.</summary>
         public void Back()
         {
             if (_boughtView != null) { AfterBought(); return; }
             if (_waitView != null && _waitView.gameObject.activeSelf) { Close(); return; }
-            if (_kind == Kind.Shop && _shopView != null && ExitOfferDue())
+            if (_kind == Kind.Shop && _shopView != null && ExitOfferDue(out var offer))
             {
-                PlayerPrefs.SetString(ExitShownKey, DateTime.UtcNow.Ticks.ToString());
-                PlayerPrefs.Save();
-                _shopView.gameObject.SetActive(false);
-                _waitView.gameObject.SetActive(true);
+                ShowWait(offer);
                 return;
             }
             Close();
+        }
+
+        private void ShowWait(string offer)
+        {
+            PlayerPrefs.SetString(ExitShownKey, DateTime.UtcNow.Ticks.ToString());
+            PlayerPrefs.SetString(LastOfferKey, offer);
+            PlayerPrefs.Save();
+            if (_waitCard != null) Destroy(_waitCard.gameObject);
+            var mine = Store.IsMine(offer);
+            _waitText.text = Localization.Get(mine ? "#shop_wait_text" : "#shop_wait_text_pack");
+            _waitCard = mine ? MineCard(_waitView, Store.MineSale) : PackOfferCard(_waitView, Store.PackIndexOf(offer), true);
+            _waitCard.anchoredPosition = new Vector2(0f, 35f);
+            _shopView.gameObject.SetActive(false);
+            _waitView.gameObject.SetActive(true);
         }
 
         /// <summary>Android's back key / Escape for whatever window is up.</summary>
@@ -423,13 +468,34 @@ namespace CityBuilder.UI
             if (_current != null) _current.Back();
         }
 
-        private bool ExitOfferDue()
+        /// <summary>Whether «Подожди!» comes up on this way out, and with which offer.</summary>
+        private bool ExitOfferDue(out string offer)
         {
-            if (Wallet.CrystalMineOwned || !Store.CanBuy(Store.MineSale) || _waitView == null) return false;
-            var hours = BalanceConfig.Instance != null ? BalanceConfig.Instance.MenuShopExitOfferHours : 0f;
-            if (hours <= 0f) return true;
-            if (!long.TryParse(PlayerPrefs.GetString(ExitShownKey, ""), out var ticks)) return true;
-            return (DateTime.UtcNow - new DateTime(ticks, DateTimeKind.Utc)).TotalHours >= hours;
+            offer = null;
+            var config = BalanceConfig.Instance;
+            if (_waitView == null || _boughtThisVisit || config == null) return false;
+            if (_visit <= config.MenuShopExitFreeVisits) return false;     // the first visit shows the plain prices
+            var hours = config.MenuShopExitOfferHours;
+            if (hours > 0f && long.TryParse(PlayerPrefs.GetString(ExitShownKey, ""), out var ticks)
+                && (DateTime.UtcNow - new DateTime(ticks, DateTimeKind.Utc)).TotalHours < hours) return false;
+            offer = PickExitOffer(config);
+            return offer != null;
+        }
+
+        /// <summary>The mine (while not owned) with its chance, else one of the discounted packs; never the last one again.</summary>
+        private static string PickExitOffer(BalanceConfig config)
+        {
+            var last = PlayerPrefs.GetString(LastOfferKey, "");
+            var packs = new List<string>();
+            for (var p = 0; p < config.MenuShopPackCount; p++)
+            {
+                var id = Store.PackSaleId(p);
+                if (config.MenuShopPackSaleOffPercent(p) > 0 && Store.CanBuy(id)) packs.Add(id);
+            }
+            if (packs.Count > 1) packs.Remove(last);
+            var mine = !Wallet.CrystalMineOwned && Store.CanBuy(Store.MineSale) && !(last == Store.MineSale && packs.Count > 0);
+            if (mine && (packs.Count == 0 || UnityEngine.Random.value < config.MenuShopExitMineChance)) return Store.MineSale;
+            return packs.Count > 0 ? packs[UnityEngine.Random.Range(0, packs.Count)] : null;
         }
 
         /// <summary>Closes whatever shop window is open (no exit offer).</summary>
@@ -502,8 +568,7 @@ namespace CityBuilder.UI
             if (_balanceRoll >= 1f) _shownBalance = _targetBalance;
         }
 
-        private static int PackIndex(string id) =>
-            id != null && id.StartsWith(Store.PackPrefix) && int.TryParse(id.Substring(Store.PackPrefix.Length), out var n) ? Mathf.Clamp(n, 1, 3) : 1;
+        private static int PackIndex(string id) => Mathf.Clamp(Store.PackIndexOf(id) + 1, 1, 3);
 
         // ------------------------------------------------------------ building blocks
 

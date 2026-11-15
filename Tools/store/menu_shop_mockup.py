@@ -269,7 +269,7 @@ def mine_card(img, d, box, price='$7.99', gift=True, title='Кристальна
     put(img, m, (x0 + mx, y0 + h / 2 + 10))
     for sx, sy, r in ((150, 70, 16), (470, 90, 12), (420, h - 60, 14), (110, h - 90, 10)):
         sparkle(d, x0 + sx, y0 + sy, r)
-    tx = x0 + 640
+    tx = x0 + 540   # every card's words on one line (the user, 2026-11-15)
     text(d, (tx, y0 + 62), title, 58, anchor='lm')
     # «only for the Sandbox»: a green chip under the name
     cy = y0 + 128
@@ -280,7 +280,7 @@ def mine_card(img, d, box, price='$7.99', gift=True, title='Кристальна
     line(img, d, tx, y0 + 198, ['до 180', 'C', 'в час'], 40)
     if gift:
         line(img, d, tx, y0 + 256, ['+300', 'C', 'сразу'], 38, fill=(255, 220, 120))
-    ribbon(img, d, (x0 + 170, y0 + 18), 220, 'НАВСЕГДА', (200, 60, 50), 28)
+    ribbon(img, d, (x0 + mx, y0 + 18), 220, 'НАВСЕГДА', (200, 60, 50), 28)
     bx, by = x1 - 170, y1 - 64
     if old:
         oy = by - 92

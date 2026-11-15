@@ -543,12 +543,18 @@ namespace CityBuilder.Core
         [SerializeField] private float crystalMineNoticeRepeatSeconds = 60f;
         // the main menu's «Магазин» (the user, 2026-11-15; menu_shop_* keys, UI/MenuShopWindow): the mine's price (USD,
         // a stand-in until Google Play gives the player's own price) and its gift, the «Подожди!» price and the discount
-        // it shows, hours between two «Подожди!» (0 = every time), the three crystal packs: crystals, USD, bonus %
+        // it shows, hours between two «Подожди!» (0 = every time), the three crystal packs: crystals, USD, bonus %;
+        // the «Подожди!» pool (the user, 2026-11-15): shop visits with no offer at all, the mine's chance while not
+        // owned, each pack's sale price (USD stand-in) and the discount its sticker shows (0 = not in the pool)
         [SerializeField] private float menuShopMineUsd = 7.99f;
         [SerializeField] private int menuShopMineGift = 300;
         [SerializeField] private float menuShopMineSaleUsd = 5.59f;
         [SerializeField] private int menuShopMineSaleOffPercent = 30;
-        [SerializeField] private float menuShopExitOfferHours = 0f;
+        [SerializeField] private float menuShopExitOfferHours = 24f;
+        [SerializeField] private int menuShopExitFreeVisits = 1;
+        [SerializeField] private float menuShopExitMineChance = 0.5f;
+        [SerializeField] private float[] menuShopPackSaleUsd = { 0.89f, 4.24f, 7.99f };
+        [SerializeField] private int[] menuShopPackSaleOffPercent = { 10, 15, 20 };
         [SerializeField] private int[] menuShopPackCrystals = { 200, 1200, 3000 };
         [SerializeField] private float[] menuShopPackUsd = { 0.99f, 4.99f, 9.99f };
         [SerializeField] private int[] menuShopPackBonusPercent = { 0, 20, 50 };
@@ -1734,6 +1740,10 @@ namespace CityBuilder.Core
         public float MenuShopMineSaleUsd => menuShopMineSaleUsd;
         public int MenuShopMineSaleOffPercent => menuShopMineSaleOffPercent;
         public float MenuShopExitOfferHours => menuShopExitOfferHours;
+        public int MenuShopExitFreeVisits => menuShopExitFreeVisits;
+        public float MenuShopExitMineChance => menuShopExitMineChance;
+        public float MenuShopPackSaleUsd(int i) => menuShopPackSaleUsd[Mathf.Clamp(i, 0, menuShopPackSaleUsd.Length - 1)];
+        public int MenuShopPackSaleOffPercent(int i) => menuShopPackSaleOffPercent[Mathf.Clamp(i, 0, menuShopPackSaleOffPercent.Length - 1)];
         public int MenuShopPackCount => menuShopPackCrystals == null ? 0 : menuShopPackCrystals.Length;
         public int MenuShopPackCrystals(int i) => menuShopPackCrystals[Mathf.Clamp(i, 0, menuShopPackCrystals.Length - 1)];
         public float MenuShopPackUsd(int i) => menuShopPackUsd[Mathf.Clamp(i, 0, menuShopPackUsd.Length - 1)];
@@ -2540,6 +2550,13 @@ namespace CityBuilder.Core
             menuShopMineSaleUsd = Read(economy, "menu_shop_mine_sale_usd", menuShopMineSaleUsd);
             menuShopMineSaleOffPercent = (int)Read(economy, "menu_shop_mine_sale_off_pct", menuShopMineSaleOffPercent);
             menuShopExitOfferHours = Read(economy, "menu_shop_exit_offer_hours", menuShopExitOfferHours);
+            menuShopExitFreeVisits = (int)Read(economy, "menu_shop_exit_free_visits", menuShopExitFreeVisits);
+            menuShopExitMineChance = Read(economy, "menu_shop_exit_mine_chance", menuShopExitMineChance);
+            for (var p = 0; p < menuShopPackSaleUsd.Length; p++)
+            {
+                menuShopPackSaleUsd[p] = Read(economy, $"menu_shop_pack_sale_usd_{p + 1}", menuShopPackSaleUsd[p]);
+                menuShopPackSaleOffPercent[p] = (int)Read(economy, $"menu_shop_pack_sale_off_pct_{p + 1}", menuShopPackSaleOffPercent[p]);
+            }
             for (var p = 0; p < menuShopPackCrystals.Length; p++)
             {
                 menuShopPackCrystals[p] = (int)Read(economy, $"menu_shop_pack_crystals_{p + 1}", menuShopPackCrystals[p]);

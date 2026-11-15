@@ -94,7 +94,20 @@ For prizes outside the game (a contest winner gets e.g. 1000 crystals) and, late
 - Open: where the code generator lives (a local script with the private key, outside the repo); code format
   (short enough to type: base32 of id-hash + reward + signature); which rewards a code may carry.
 
-## «Подожди!» exit offers: the pool (DECIDED 2026-11-15, the user; NOT BUILT -- the code still shows the mine on every exit)
+**Shop list redone (the user, 2026-11-15):** the three packs are WIDE cards like «Подожди!»'s (`PackOfferCard(.., sale:
+false)`: full price, bonus sticker +20 % / +50 %, ribbon over the crystals), one under another below the mine; the
+list scrolls to the Сокровищница. Mockup `Design/store/MenuShop_WideCards.png` (`exit_pack_offers_mockup.py`).
+Then (same day): the shop's pack cards 40 % LOWER (200 vs 330, grounds `PackCardBgShort1-3`) so the mine + almost
+two packs fit one screen; every card's words start on ONE line (`TextX`, 540 from the card's left edge, mine and
+packs, shop and «Подожди!»); «НАВСЕГДА» centred over the mine. Mockup `Design/store/MenuShop_Mockup.png`.
+
+## «Подожди!» exit offers: the pool (DECIDED 2026-11-15, mockups APPROVED; BUILT 2026-11-15, not seen, untested)
+**Built:** `MenuShopWindow.ExitOfferDue/PickExitOffer/ShowWait/PackOfferCard` (card ground `PackCardBg1-3` from
+`menu_shop_art.py`, the ribbon centred over the crystals as the user asked); `Store` products `sale_crystals_1..3`
+(prefix chosen so it never starts with `crystals_`), `Store.PackIndexOf`. PlayerPrefs: `menushop.visits`,
+`menushop.exit_shown_utc`, `menushop.exit_last`. Keys: `menu_shop_exit_offer_hours` 24, `menu_shop_exit_free_visits` 1,
+`menu_shop_exit_mine_chance` 0.5, `menu_shop_pack_sale_usd_1..3`, `menu_shop_pack_sale_off_pct_1..3` (0 = pack out of
+the pool); text `#shop_wait_text_pack`.
 Mockups for approval: `Design/store/ExitOffer_Pack1-3.png`, `ExitOffer_Packs_Sheet.png` (script
 `Tools/store/exit_pack_offers_mockup.py`): the same window as the mine's, one pack at a discount, card colour per pack.
 - NOT on the first shop visit (the player first sees the normal prices); from the SECOND visit on.
