@@ -673,7 +673,7 @@ namespace CityBuilder.EditorTools
             cityDefenceSO.FindProperty("orcTowerModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Orcs/OrcSiegeTower.fbx");
             // the gate's leaves, portcullis and passage (approved 2026-11-12, Tools/blender/gate_close_drafts.py)
             cityDefenceSO.FindProperty("gateLeafModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Buildings/FortifiedGate1-Leaf.fbx");
-            cityDefenceSO.FindProperty("music").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_attack.ogg");
+            cityDefenceSO.FindProperty("music").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_village.ogg");
             cityDefenceSO.FindProperty("roar").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/sfx_roar.ogg");
             cityDefenceSO.FindProperty("gateTowerDoorsModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Buildings/FortifiedGate1-TowerDoors.fbx");
             cityDefenceSO.FindProperty("gateGrilleModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Buildings/FortifiedGate1-Grille.fbx");

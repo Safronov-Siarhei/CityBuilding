@@ -801,7 +801,7 @@
     (a Pause in the frame of its Play does not hold) -> TickIntro pauses `_music` every tick while it plays, EndIntro
     UnPause/Play; (3) the yellow tower-door circles (`_doorCircles[].mark`) hidden for the scene, back at EndIntro
     (AbortIntro goes through it). The orc-wave sound is fine (the user). OPEN: the user dislikes mus_attack as the
-    level-2 music -> to be replaced (an existing track or a new CC0 one, download only on the user's yes).
+    level-2 music -> mus_village set for the siege (the user, 2026-11-15: «попробую её»; SetupProjectCityScene `music`), not heard yet.
     Note: on the cine rig the figure's RIGHT is -x (fg.limbs "R" = k -1); the captain's scabbard sits at -x.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right
