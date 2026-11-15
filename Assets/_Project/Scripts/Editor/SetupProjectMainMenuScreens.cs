@@ -52,7 +52,8 @@ namespace CityBuilder.EditorTools
             Anchor((RectTransform)play.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 330f), new Vector2(560f, 140f));
             var offers = MenuTextButton(main, "OffersButton", "plaque", "#menu_offers", HudInk.OnMenuPlaque, Vector2.zero, new Vector2(440f, 110f), 38);
             Anchor((RectTransform)offers.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 195f), new Vector2(440f, 110f));
-            shopBadges.Add(Badge(offers.transform));
+            ShopStall(offers.transform);
+            shopBadges.Add(Badge(offers.transform, left: true));
             var discord = BrandCorner(main, "DiscordButton", "Discord", new Vector2(0.5f, 0f), new Vector2(-340f, 120f), CornerButton, DiscordColour);
             discordBadges.Add(Badge(discord.transform));
             var youTube = BrandCorner(main, "YouTubeButton", "YouTube", new Vector2(0.5f, 0f), new Vector2(340f, 120f), CornerButton, YouTubeColour);
@@ -177,14 +178,32 @@ namespace CityBuilder.EditorTools
             return button;
         }
 
-        /// <summary>The orange «!» on a button's top-right, until its place is first opened (MainMenuController).</summary>
-        private static GameObject Badge(Transform target)
+        /// <summary>The shop's plaque: the word moved left, the stall icon of the in-game shop in the right end
+        /// (the user, 2026-11-15: «переименовать в Магазин, а в правой части кнопки пускай будет иконка ларька», variant 1).</summary>
+        private static void ShopStall(Transform plaque)
+        {
+            var size = ((RectTransform)plaque).sizeDelta;
+            var label = (RectTransform)plaque.Find("Label");
+            if (label != null)
+            {
+                label.anchoredPosition = new Vector2(-46f, 4f);
+                label.sizeDelta = new Vector2(size.x - 170f, size.y - 20f);
+            }
+            var stall = CreateImage(plaque, "Stall", Color.white);
+            stall.sprite = ShopSprite("Stall");
+            stall.preserveAspect = true;
+            stall.raycastTarget = false;
+            Anchor(stall.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(size.x * 0.5f - 80f, 6f), new Vector2(130f, 130f));
+        }
+
+        /// <summary>The orange «!» on a button's top-right (top-left if <paramref name="left"/>), until its place is first opened (MainMenuController).</summary>
+        private static GameObject Badge(Transform target, bool left = false)
         {
             var badge = CreateImage(target, "Badge", BadgeColour);
             badge.sprite = SkinSprite("circle_mask");
             badge.raycastTarget = false;
             var size = ((RectTransform)target).sizeDelta;
-            Anchor(badge.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(size.x * 0.5f - 14f, size.y * 0.5f - 14f), new Vector2(56f, 56f));
+            Anchor(badge.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2((size.x * 0.5f - 14f) * (left ? -1f : 1f), size.y * 0.5f - 14f), new Vector2(56f, 56f));
             var outline = badge.gameObject.AddComponent<Outline>();
             outline.effectColor = new Color(0.35f, 0.15f, 0.03f, 0.9f);
             outline.effectDistance = new Vector2(2f, -2f);

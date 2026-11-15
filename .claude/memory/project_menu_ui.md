@@ -75,3 +75,6 @@ BUILT 2026-10-20 (commits 6536c5c9 + 431f2594):
 
 2026-11-10: MODES SCREEN REDONE as «Зал знамён» (user picked of 3 concepts; asked it to match the HUD Classic style): 4 banners (tutorial/sandbox/invasion/campaign) by Tools/ui/make_mode_banners.py, live lines, tap pick / tap again or Играть to start, long press = info. Card hud-and-ui.md. Not seen by the user.
 2026-11-10: banners APPROVED by the user after round 2 + invasion emblem fixes (horned orc skull, axes with real blades turned OUTWARD, 6e2c3de79). Open from the concept: cloth sound on unroll, background camera moving per picked mode -- not built.
+
+
+**2026-11-15 shop button:** the main menu's «Предложения» renamed «Магазин» (key #menu_offers, sheet tab «Тексты: интерфейс и меню» row 23), same plaque, stall icon in its right end, «!» top-left. The user REJECTED the bigger looks (stall-as-button, chest, medallion): keep the original menu concept. Card hud-and-ui.md.
