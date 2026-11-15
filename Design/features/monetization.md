@@ -101,14 +101,14 @@ Then (same day): the shop's pack cards 40 % LOWER (200 vs 330, grounds `PackCard
 two packs fit one screen; every card's words start on ONE line (`TextX`, 540 from the card's left edge, mine and
 packs, shop and «Подожди!»); «НАВСЕГДА» centred over the mine. Mockup `Design/store/MenuShop_Mockup.png`.
 
-## Campaign: «Поддержи разработку» banner (the user's idea 2026-11-15; CONCEPT sent, not approved, NOT BUILT)
+## Campaign: «Поддержи разработку» banner (the user's idea 2026-11-15; v2 look APPROVED 2026-11-15, NOT BUILT; show frequency not decided)
 The campaign has no ads and no paywall (the user: no ads, never break the story; levels for crystals would put
 players off the story). Instead, after a WON level a banner with Ардан: «Поддержи разработку», a few in-game
 purchases at a discount (crystals only for now: Мешок −10 %, Ларец −15 %, Сокровищница −20 % -- the same sale
 products as «Подожди!», no new Google Play products), a big «Продолжить» under it (never a tiny cross).
 Mockup `Design/store/SupportBanner_Mockup.png` (`Tools/store/support_banner_mockup.py <Ardan png>`; Ардан rendered
 from CineArdan by `Tools/blender/cinematic/render_ardan_banner.py` -> `Design/store/shop_art/Ardan_render.png`).
-v1 (plain beige panel) REJECTED by the user: too simple next to the plague / fire banners. **v2** (sent for approval)
+v1 (plain beige panel) REJECTED by the user: too simple next to the plague / fire banners. **v2** (APPROVED 2026-11-15)
 is built on the plague banner's structure (`Tools/ui/plague_banner_art.py`): wood frame (no corner studs), a festive
 field (crystals in 3 depths on royal purple, golden rays, confetti), a purple ribbon «Поддержи разработку», Ардан
 left + the campaign mage right on warm glows, a parchment column with 2 lines, 3 compact pack rows (no «Популярное»/«Выгоднее всего» flags; struck old
