@@ -122,6 +122,15 @@ namespace CityBuilder.Campaign
         /// <summary>The clock on to the courier's arrival (the play-mode check, the cheats).</summary>
         public void ClockToTheTurn() => TimeLeft = Mathf.Min(TimeLeft, B.reinforceSeconds + 0.05f);
 
+        /// <summary>The cheats' «Перемотать к гонцу» (the user, 2026-11-16): the clock on to the courier's arrival,
+        /// and the scene again even if it has played this run.</summary>
+        public void CheatToCapital()
+        {
+            _capitalDone = false;
+            _noCapital = false;
+            ClockToTheTurn();
+        }
+
         /// <summary>The second scene run to its end at once, as «Пропустить» does (the play-mode check).</summary>
         public void SkipCapital()
         {

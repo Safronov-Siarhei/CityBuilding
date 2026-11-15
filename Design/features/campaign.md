@@ -831,6 +831,7 @@
     switched off (it reads world places: out there all would be dark), siege music paused, camera taken off the
     RTS rig and restored; «Пропустить» = FilmSkip on the film's own IFilm. SkipIntroOnce (tests) also skips it.
     Check: CityDefenceIntroTests runs it (ClockToTheTurn, SkipCapital).
+    Cheat (the user, 2026-11-16): «Читы» -> «Кампания: миссия 2» -> «Перемотать к гонцу (сцена у короля)» (`CheatToCapital`: the clock to the turn, the scene again even if played).
     Next groups: (2) street gallop + townsfolk dodging, (3) throne room (push + guard fall, kneel/speak, King,
     advisor, court).
     SENT 2026-11-15 for approval.
