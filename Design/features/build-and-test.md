@@ -37,6 +37,10 @@ methods in the file of their feature, or a new `SetupProject<Feature>.cs`.
    background -- but only as CLAUDE.md's rule allows: no build or test for a small edit; build after
    a batch of edits; ONE general test run after a substantial body of changes (the user, 2026-11-04). (The older
    `rebuild_twice_and_test.ps1`, `retest_fresh.ps1`, `playmode_only.ps1` still work but print no report.)
+   **PlayMode needs `-Graphics` since 2026-11-15:** without it Unity CRASHES (access violation in
+   UniversalRenderPipeline) when `CampaignPlayTests` loads CampaignOpening, and no results are written.
+   General run 2026-11-15 (with -Graphics): EditMode 456/461, PlayMode 341/386 -- 5 + 36 failures that predate
+   the shop (hiring/recruiting refused, healer beds, cemetery interval, orc main base, HUD fit), not fixed yet.
 4. **Read the script's REPORT, not the logs** (it STOPS after a step with compile errors): per step exit code + time, compile errors and exceptions
    (distinct, capped), test counts, and each failed test with 4 lines of message and its first
    `Assets/_Project/...cs:N`; a results file older than the step is called stale. Logs and XML live in
