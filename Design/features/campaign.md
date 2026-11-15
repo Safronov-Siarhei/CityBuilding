@@ -791,6 +791,10 @@
     уворачивался»): noble DODGES (sidestep, sway back, hand on hat), peasant LEAPS and FALLS on his back (whole body
     about the hips, on_back), sits up and shakes his fist, woman RUNS off the road and turns hands up, boy BOLTS
     looking back, girl DUCKS in place covering her head, merchant BACKPEDALS into his cart (which tips).
+    v3 (the user: the woman and the boy stopped short and jumped to the end; the man's fall was strange): a 'run'
+    now lasts distance/speed + the ramp (run_time) -- a Track run cut short teleports into the next move; the
+    peasant dives FORWARD onto his front keeping the leap's heading (the backward fall spun him round in the air),
+    then up on one knee, looks back, shakes his fist (on_front).
     Next groups: (2) street gallop + townsfolk dodging, (3) throne room (push + guard fall, kneel/speak, King,
     advisor, court).
     SENT 2026-11-15 for approval.

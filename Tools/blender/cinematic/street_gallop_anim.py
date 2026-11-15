@@ -188,28 +188,35 @@ def look_back(q, amount=1.0):
     return q
 
 
-def on_back(u):
-    """Thrown down: from the leap's landing crouch over backwards onto his back (the whole body about the hips),
-    a beat lying there, then up on his elbows to sit; u from the landing."""
-    q = ka.crouch(0.4, arms_out=0.6)
-    fall = ease(u / 0.35)
-    up = ease((u - 1.0) / 0.5)
-    q["hips"] = [-85 * fall * (1 - up) - 25 * up, 0, 0]
-    q["hips_loc"] = [0, -0.15 * fall, 0]
-    for s, k in (("L", 1), ("R", -1)):
-        q["thigh." + s] = [-15 * fall * (1 - up) - 62 * up, 0, k * 6]
-        q["shin." + s] = [20 * (1 - fall) + 10 * up, 0, 0]
-        q["foot." + s] = [-10, 0, 0]
-        # arms flung out as he goes, then propping him up behind
-        q["upper_arm." + s] = [-60 * fall * (1 - up) + 35 * up, -k * (70 * fall * (1 - up) + 20 * up), 0]
-        q["forearm." + s] = [-20 * (1 - up) - 10 * up, 0, 0]
-    q["chest"] = [10 * fall * (1 - up) - 5 * up, 0, 0]
-    q["head"] = [25 * fall * (1 - up) - 5 * up, 0, 0]
-    # sitting, he shakes his fist after the rider
-    fist = env(u, 1.6, 1.85)
+def on_front(u):
+    """Thrown down: the leap carries him on, he pitches forward onto his front (the whole body about the hips),
+    arms out to break it, lies a beat, then pushes up onto one knee, looks back over his shoulder and shakes his
+    fist after the rider; u from the landing. He keeps the leap's heading throughout (no turning in the air)."""
+    fall = ease(u / 0.3)
+    up = ease((u - 0.9) / 0.45)
+    lie = fall * (1 - up)
+    q = a2.blank()
+    q["hips"] = [85 * lie + 8 * up, 0, 0]
+    q["hips_loc"] = [0, -0.15 * lie - 0.085 * up, 0]
+    # flat: legs straight behind; kneeling: the left knee up in front, the right knee on the ground
+    q["thigh.L"] = [-10 * lie - 85 * up, 0, 0]
+    q["shin.L"] = [15 * lie + 85 * up, 0, 0]
+    q["foot.L"] = [-5 * up, 0, 0]
+    q["thigh.R"] = [5 * lie + 5 * up, 0, 0]
+    q["shin.R"] = [10 * lie + 100 * up, 0, 0]
+    q["foot.R"] = [20 * lie + 30 * up, 0, 0]
+    for s_, k in (("L", 1), ("R", -1)):
+        q["upper_arm." + s_] = [-140 * lie - 10 * up, -k * 25 * lie, 0]
+        q["forearm." + s_] = [-15 * lie - 20 * up, 0, 0]
+    q["chest"] = [-15 * lie + 5 * up, 0, 0]
+    q["head"] = [-35 * lie, 0, 0]
+    look = env(u, 1.3, 1.6)
+    q["head"][2] += 70 * look
+    q["chest"][2] += 25 * look
+    fist = env(u, 1.5, 1.75)
     if fist > 0:
-        q["upper_arm.R"] = [35 * (1 - fist) - 120 * fist, 20 * (1 - fist), 0]
-        q["forearm.R"] = [-10 - 70 * fist - 20 * fist * max(0.0, math.sin(TAU * u * 3)), 0, 0]
+        q["upper_arm.R"] = [-30 * (1 - fist) - 120 * fist, 30 * fist, 0]
+        q["forearm.R"] = [-20 - 60 * fist - 20 * fist * max(0.0, math.sin(TAU * u * 3)), 0, 0]
     return q
 
 
@@ -271,6 +278,10 @@ def folk_track(name, figures):
         tr.add('pose', see, p0, idle(chat), p0 + Vector((-0.4 if at[0] > 0 else 0.4, -1.0, 0)))
         return p0, see
 
+    def run_time(p0, p1):
+        """The Track's run: up to speed over 0.35 s, then steady -- long enough to get all the way there."""
+        return (p1 - p0).length / tr.speed + 0.35 / 2 + 0.05
+
     def finish(p, react, used):
         tr.add('pose', max(0.5, SECONDS - used), p, after(react), p + Vector((0, 1, 0)))
 
@@ -285,14 +296,17 @@ def folk_track(name, figures):
         tr.add('pose', 0.12, p0, startle, p0 + Vector((0, -1, 0)))
         p1 = P(1.2, -0.75)
         tr.add('jump', 0.42, p0, p1)
-        tr.add('fn', max(0.5, SECONDS - see - 0.54), lambda u: (p1, heading_to(Vector((-1, 0, 0))), on_back(u)))
+        head = heading_to(p1 - p0)
+        tr.add('fn', max(0.5, SECONDS - see - 0.54), lambda u: (p1 + (p1 - p0).normalized() * 0.12 * ease(u / 0.3),
+                                                                head, on_front(u)))
         return tr, None
     if name == "CinePeasantWoman":                                 # runs off the road, then turns, hands up
         p0, see = start((-0.3, 0.6), 1.0, warn=1.2)
         tr.add('pose', 0.15, p0, startle, p0 + Vector((0, -1, 0)))
         p1 = P(-1.35, 1.25)
-        tr.add('run', 1.0, p0, p1)
-        finish(p1, hands_up, see + 1.15)
+        run = run_time(p0, p1)
+        tr.add('run', run, p0, p1)
+        finish(p1, hands_up, see + 0.15 + run)
         return tr, None
     if name == "CineMerchant":                                     # stumbles back into his cart
         p0, see = start((0.42, 2.45), 0.5, warn=0.9)
@@ -304,8 +318,9 @@ def folk_track(name, figures):
         p0, see = start((-0.35, 3.8), 0.0, warn=1.1)
         tr.run_pose = lambda ph: look_back(a2.run(ph), 0.7)
         p1 = P(-1.9, 3.3)
-        tr.add('run', 1.0, p0, p1)
-        finish(p1, pull_back, see + 1.0)
+        run = run_time(p0, p1)
+        tr.add('run', run, p0, p1)
+        finish(p1, pull_back, see + run)
         return tr, None
     if name == "CineGirl":                                         # ducks where she stands
         p0, see = start((-0.55, 4.2), 0.0, warn=0.5)
