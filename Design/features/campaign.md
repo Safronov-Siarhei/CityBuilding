@@ -787,6 +787,10 @@
     (village.CineCart, length along the street): it tips over away from the street about its wheels' line
     (84°, a bounce), 9 apples (CineApple0-8, props) ride it, spill and roll out. Videos
     `Design/campaign_review/street_*.mp4` SENT.
+    v2 (the user: all leaping alike looked false -- «кто-то отбегал, кто-то прыгал и падал, кто-то просто
+    уворачивался»): noble DODGES (sidestep, sway back, hand on hat), peasant LEAPS and FALLS on his back (whole body
+    about the hips, on_back), sits up and shakes his fist, woman RUNS off the road and turns hands up, boy BOLTS
+    looking back, girl DUCKS in place covering her head, merchant BACKPEDALS into his cart (which tips).
     Next groups: (2) street gallop + townsfolk dodging, (3) throne room (push + guard fall, kneel/speak, King,
     advisor, court).
     SENT 2026-11-15 for approval.
