@@ -722,6 +722,13 @@
     pointed dark beard), CineLady (wine gown, gold girdle, square neckline, pearls, trumpet sleeves, tall hennin +
     white veil, auburn hair). Green advisor / sky-blue noble tried first (green read as Ардан). Renders
     `Design/campaign_review/court/` SENT 2026-11-15. Throne-room guards = M2Guard (reuse).
+    **Courtiers APPROVED (the user, 2026-11-15: «Утверждаю»).** Next: the throne room set.
+  - THRONE ROOM `CineThroneRoom` (`Tools/blender/cinematic/throne_room.py`, figure size, scale 1, 7369 tris): hall 3.6 x 7
+    x 2.4 (doors y -3.5, throne wall +3.5), open top with dark beams; chequered floor, red carpet + gold border to
+    a 3-step dais, throne (gold frame, purple back with a crown, 3 finials, red cushion), purple tapestry with a gold
+    crown, 2 candelabra, 5 columns a side with gold sconces + torches, arched windows (pale glass, lead lines) with
+    purple crown banners between, the great iron-strapped double door ajar. Renders
+    `Design/campaign_review/throne_room/` (King standing by the throne -- he sits in the animation) SENT 2026-11-15.
   3. «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
      orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя
      этот камень?») as the mission-3 hook.
