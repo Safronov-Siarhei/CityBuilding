@@ -729,6 +729,15 @@
     crown, 2 candelabra, 5 columns a side with gold sconces + torches, arched windows (pale glass, lead lines) with
     purple crown banners between, the great iron-strapped double door ajar. Renders
     `Design/campaign_review/throne_room/` (King standing by the throne -- he sits in the animation) SENT 2026-11-15.
+    **v1 REJECTED** (the user: «маленьким и не величественным + тусклым, нужно чтобы он был яркий и большой, внутри
+    были стража и люди»). **v2** (21727 tris): hall 6.4 x 15 x 4.6; white/gold tile floor, broad red carpet with gold
+    border + lozenges, 4-step white dais with gold nosings, bigger gilded throne under a purple CANOPY (gold posts,
+    fringe, crown crest), cream walls + white pilasters + gold cornice, gilded beams, 7 white columns a side (gold
+    bands/capitals, entablature with gold frieze, a purple crown banner + torch on each), tall STAINED-GLASS windows
+    (blue/red/gold panes) + rose windows, 3 gold candle chandeliers, gold-studded door under a white arch with a crown.
+    Render populates it (render only, `populate()`): 14 guards lining the carpet + 2 at the dais + 2 at the door
+    (lookout copies with spears), the King, 10 courtiers in groups, 3 townsfolk petitioners; bright 3-sun light.
+    SENT 2026-11-15 for approval.
   3. «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
      orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя
      этот камень?») as the mission-3 hook.
