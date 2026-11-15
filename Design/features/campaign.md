@@ -743,6 +743,15 @@
     column banners and the tapestry RED (banner_red), cushion dark red.
     **Throne room APPROVED (the user, 2026-11-15: «Утверждаю»).** Next: the capital set (open gates, moat + bridge,
     wall guards, streets with people, castle stairs and entrance).
+  - CAPITAL `CineCapital` (`Tools/blender/cinematic/capital.py`, draft 2026-11-15): laid out in CELLS from COPIES of the
+    game's level-5 models (nothing rebuilt), x SET_SCALE 1.6. Road from the west over a 2-cell MOAT ringing the
+    whole town (2 Bridge1-lvl5), Barbican FortifiedGate1-lvl5 open, Fence1-lvl5 walls on all four sides with
+    FortifiedTower1-lvl5 towers, a 3-cell street of Road1-lvl5 tiles east to the castle, level-5 houses both sides
+    + a back row, a market (well, stalls, cart), natural trees outside. The castle = Castle1-lvl5 x1.3 on a stone
+    terrace with a NEW broad stair (gold step edges, red runner, balustrades), Flag1-lvl5 either side. Only the
+    ground/moat/terrace+stairs are new geometry (CineCapital, 1258 tris). Render populates it: guards on the
+    wall walk (z 1.3 cells), at the gate, street and stairs; townsfolk + nobles on the street. Renders
+    `Design/campaign_review/capital/` SENT for approval.
     SENT 2026-11-15 for approval.
   3. «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
      orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя
