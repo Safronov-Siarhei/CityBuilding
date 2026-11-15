@@ -17,6 +17,7 @@ import captain  # noqa: E402
 import lookout  # noqa: E402
 import horse  # noqa: E402
 import rider  # noqa: E402
+import king  # noqa: E402
 import townsfolk  # noqa: E402
 import orcs_cast  # noqa: E402
 from mathutils import Vector  # noqa: E402
@@ -25,7 +26,8 @@ BUILDERS = {"CineArdan": lambda: ardan.make(Vector((0, 0, 0))), "CineElder": eld
             "CineCaptain": captain.make,
             "CineLookout": lookout.make,
             "CineHorse": horse.make,
-            "CineRider": rider.make}
+            "CineRider": rider.make,
+            "CineKing": king.make}
 BUILDERS.update({n: (lambda nn: (lambda: townsfolk.make(nn)))(n) for n in townsfolk.FIGURES})
 BUILDERS.update({n: (lambda nn: (lambda: orcs_cast.make(nn)))(n) for n in orcs_cast.FIGURES})
 
@@ -36,7 +38,7 @@ for n in set(solos) | {"CineArdan", "CineElder", "CinePriest"}:
     BUILDERS[n]()
 
 sc = bpy.context.scene
-lineup = ["CineArdan"] + [n for n in solos if n != "CineArdan"] + (["HeroKing"] if any("Orc" in n for n in solos) else ["CineElder", "CinePriest"])
+lineup = ["CineArdan"] + [n for n in solos if n != "CineArdan"] + (["HeroKing"] if any("Orc" in n or n == "CineKing" for n in solos) else ["CineElder", "CinePriest"])
 for i, n in enumerate(lineup):
     bpy.data.objects[n].location = (i * 0.5, 0, 0)
 sc.render.engine = 'BLENDER_EEVEE'
@@ -87,6 +89,6 @@ for n in solos:
     shot(short + "_front", a + Vector((0, 0, h * 0.5)), (0, -1.9, 0.25), 80)
     shot(short + "_three_quarter", a + Vector((0, 0, h * 0.5)), (1.25, -1.45, 0.4), 80)
     shot(short + "_back", a + Vector((0, 0, h * 0.5)), (-0.8, 1.7, 0.4), 80)
-    face_z = {"captain": 0.52, "lookout": 0.47, "rider": 0.47, "horse": 0.55}.get(short, h - 0.08)   # a tall plume: aim at the face, not the hat
+    face_z = {"captain": 0.52, "king": 0.55, "lookout": 0.47, "rider": 0.47, "horse": 0.55}.get(short, h - 0.08)   # a tall plume: aim at the face, not the hat
     face_y = {"horse": -0.42}.get(short, -0.02)          # the horse's head is well forward of its middle
     shot(short + "_face", a + Vector((0, face_y, face_z)), (0.25, -0.75, 0.08), 85)

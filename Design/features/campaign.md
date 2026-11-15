@@ -702,10 +702,15 @@
     Claude's); runs to the throne stairs, kneels: their town was attacked by unknown creatures; general SILENCE
     (faces, a dropped goblet -- Claude's); the King: gather the cavalry, he goes to help in person.
   - The user CUT: the captain's letter (no letter shown in scene 1), the advisor's objection.
-  - The King = the sandbox's King (same look), never named. The attacked town gets a NAME (Claude to propose).
+  - The King = the sandbox's King (same look), never named. The attacked town stays UNNAMED (the user: «давай без названия города»): «на наш город напали…».
   - Reuse: rider + horse (gallop), M2Guard, townsfolk, game buildings for the capital. New (renders first):
     cinematic King, 2-3 courtiers, throne room set, castle stairs + entrance; anims: dismount + stairs run, push,
     guard fall, kneel + speak, King bored / rises / orders, advisor reads, townsfolk dodge.
+  - CINEMATIC KING `CineKing` (`Tools/blender/cinematic/king.py`, Ардан's rig, SCALE 1.12): heroking.py's dress --
+    purple tunic (gold hem + front band), gold buckle with a red stone, chain of state + medallion (blue stone),
+    black-tipped ermine mantle, red cape to the heels, purple sleeves with gold cuffs, bare hands (signet ring),
+    full brown beard, five-point crown with red/blue stones; no sword/shield. Renders `Design/campaign_review/king/`
+    (lineup with HeroKing) SENT for approval 2026-11-15.
   3. «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
      orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя
      этот камень?») as the mission-3 hook.
