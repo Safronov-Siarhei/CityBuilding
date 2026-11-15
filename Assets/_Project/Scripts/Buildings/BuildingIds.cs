@@ -55,6 +55,7 @@
         /// <summary>The Рудник кристаллов (the user, 2026-11-14): the PAID building -- bought in the shop, it mines crystals
         /// into its own store while the player is on the map; a tap on the crystal over it collects them.</summary>
         public const string CrystalMine = "CrystalMine";
+        public const string Lighthouse = "Lighthouse";
 
         /// <summary>Buildings a town may have only one of (the user, 2026-11-02: one Tax House; 2026-11-03: one Diplomacy Hall;
         /// 2026-11-14: one Crystal Mine a map).</summary>

@@ -534,6 +534,17 @@ namespace CityBuilder.Core
         [SerializeField] private int[] crystalMineCap = { 10, 20, 30, 40, 50 };
         [SerializeField] private float crystalMineNoticeShare = 0.8f;
         [SerializeField] private float crystalMineNoticeRepeatSeconds = 60f;
+        // the main menu's «Магазин» (the user, 2026-11-15; menu_shop_* keys, UI/MenuShopWindow): the mine's price (USD,
+        // a stand-in until Google Play gives the player's own price) and its gift, the «Подожди!» price and the discount
+        // it shows, hours between two «Подожди!» (0 = every time), the three crystal packs: crystals, USD, bonus %
+        [SerializeField] private float menuShopMineUsd = 7.99f;
+        [SerializeField] private int menuShopMineGift = 300;
+        [SerializeField] private float menuShopMineSaleUsd = 5.59f;
+        [SerializeField] private int menuShopMineSaleOffPercent = 30;
+        [SerializeField] private float menuShopExitOfferHours = 0f;
+        [SerializeField] private int[] menuShopPackCrystals = { 200, 1200, 3000 };
+        [SerializeField] private float[] menuShopPackUsd = { 0.99f, 4.99f, 9.99f };
+        [SerializeField] private int[] menuShopPackBonusPercent = { 0, 20, 50 };
         // the walk along the walls (the user, 2026-11-02): from which level a Fence/Gate/Tower takes
         // part, the walk's height by level 3..5 (cells), the range a fighter up there gains (cells),
         // how far an idle ranged fighter looks for orcs and a free wall cell, the climb's seconds
@@ -1705,6 +1716,19 @@ namespace CityBuilder.Core
         public float CrystalMineNoticeShare => crystalMineNoticeShare;
         public float CrystalMineNoticeRepeatSeconds => crystalMineNoticeRepeatSeconds;
 
+        public float MenuShopMineUsd => menuShopMineUsd;
+        public int MenuShopMineGift => menuShopMineGift;
+        public float MenuShopMineSaleUsd => menuShopMineSaleUsd;
+        public int MenuShopMineSaleOffPercent => menuShopMineSaleOffPercent;
+        public float MenuShopExitOfferHours => menuShopExitOfferHours;
+        public int MenuShopPackCount => menuShopPackCrystals == null ? 0 : menuShopPackCrystals.Length;
+        public int MenuShopPackCrystals(int i) => menuShopPackCrystals[Mathf.Clamp(i, 0, menuShopPackCrystals.Length - 1)];
+        public float MenuShopPackUsd(int i) => menuShopPackUsd[Mathf.Clamp(i, 0, menuShopPackUsd.Length - 1)];
+        public int MenuShopPackBonusPercent(int i) => menuShopPackBonusPercent[Mathf.Clamp(i, 0, menuShopPackBonusPercent.Length - 1)];
+
+        /// <summary>The most crystals an hour the mine gives (its top level), for the shop's «до N в час».</summary>
+        public int CrystalMineBestPerHour => Mathf.RoundToInt(3600f / Mathf.Max(0.1f, CrystalMineSeconds(5)));
+
         /// <summary>The crystals the Tax House's research costs: its opening (level 0 or 1) and levels 2..5.</summary>
         public int TaxHouseResearchCrystals(int level)
         {
@@ -2492,6 +2516,17 @@ namespace CityBuilder.Core
             for (var l = 0; l < crystalMineCap.Length; l++) crystalMineCap[l] = (int)Read(economy, $"crystal_mine_cap_{l + 1}", crystalMineCap[l]);
             crystalMineNoticeShare = Read(economy, "crystal_mine_notice_share", crystalMineNoticeShare);
             crystalMineNoticeRepeatSeconds = Read(economy, "crystal_mine_notice_repeat_sec", crystalMineNoticeRepeatSeconds);
+            menuShopMineUsd = Read(economy, "menu_shop_mine_usd", menuShopMineUsd);
+            menuShopMineGift = (int)Read(economy, "menu_shop_mine_gift", menuShopMineGift);
+            menuShopMineSaleUsd = Read(economy, "menu_shop_mine_sale_usd", menuShopMineSaleUsd);
+            menuShopMineSaleOffPercent = (int)Read(economy, "menu_shop_mine_sale_off_pct", menuShopMineSaleOffPercent);
+            menuShopExitOfferHours = Read(economy, "menu_shop_exit_offer_hours", menuShopExitOfferHours);
+            for (var p = 0; p < menuShopPackCrystals.Length; p++)
+            {
+                menuShopPackCrystals[p] = (int)Read(economy, $"menu_shop_pack_crystals_{p + 1}", menuShopPackCrystals[p]);
+                menuShopPackUsd[p] = Read(economy, $"menu_shop_pack_usd_{p + 1}", menuShopPackUsd[p]);
+                menuShopPackBonusPercent[p] = (int)Read(economy, $"menu_shop_pack_bonus_pct_{p + 1}", menuShopPackBonusPercent[p]);
+            }
             islandStartRocks = (int)Read(economy, "island_start_rocks", islandStartRocks);
             loadingSecondsEnter = Read(economy, "loading_seconds_enter", loadingSecondsEnter);
             loadingSecondsExit = Read(economy, "loading_seconds_exit", loadingSecondsExit);

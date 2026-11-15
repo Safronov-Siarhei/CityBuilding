@@ -89,15 +89,7 @@ namespace CityBuilder.EditorTools
             UnityEventTools.AddPersistentListener(stay.onClick, controller.CloseExitDialog);
             UnityEventTools.AddPersistentListener(quit.onClick, controller.QuitGame);
 
-            var shopDialog = BuildMenuDialog(canvas, "ShopDialog", "#menu_offers", "#shop_soon", new Vector2(1000f, 640f), out var shopCard);
-            for (var s = 0; s < 4; s++)
-            {
-                var slot = MenuImage(shopCard, $"Slot{s}", "row", new Vector2(-330f + s * 220f, -40f), new Vector2(190f, 190f));
-                slot.raycastTarget = false;
-                MenuGlyph(slot.transform, "Lock", HudInk.OnPanel, 70f).color = new Color(1f, 1f, 1f, 0.5f);
-            }
-            var closeShop = MenuTextButton(shopCard, "CloseButton", "plaque", "#ui_close", HudInk.OnMenuPlaque, new Vector2(0f, -230f), new Vector2(320f, 110f));
-            UnityEventTools.AddPersistentListener(closeShop.onClick, controller.CloseShop);
+            // «Магазин» is built in code when opened (UI/MenuShopWindow, the user, 2026-11-15) -- no dialog here
 
             var infoDialog = BuildMenuDialog(canvas, "InfoDialog", "#mode_sandbox", null, new Vector2(1000f, 620f), out var infoCard);
             var infoTitle = infoCard.Find("TitlePlate/Title").GetComponent<Text>();
@@ -120,7 +112,6 @@ namespace CityBuilder.EditorTools
             so.FindProperty("sandboxScreen").objectReferenceValue = sandboxScreen;
             so.FindProperty("invasionScreen").objectReferenceValue = invasionScreen;
             so.FindProperty("exitDialog").objectReferenceValue = exitDialog;
-            so.FindProperty("shopDialog").objectReferenceValue = shopDialog;
             so.FindProperty("infoDialog").objectReferenceValue = infoDialog;
             so.FindProperty("infoTitle").objectReferenceValue = infoTitle;
             so.FindProperty("infoText").objectReferenceValue = infoText;

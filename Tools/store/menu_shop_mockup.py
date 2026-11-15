@@ -122,7 +122,7 @@ def ribbon(img, d, centre, w, s, col, size=30):
 C_DARK, C_MID, C_LIGHT, C_HI = (86, 34, 150), (132, 70, 200), (184, 120, 245), (240, 220, 255)
 
 
-def shard(d, b, ang, w, h):
+def shard(d, b, ang, w, h, lw=3):
     """One prism from its base centre b, leaning ang radians off vertical: a dark and a light face, a glint."""
     ux, uy = math.sin(ang), -math.cos(ang)
     vx, vy = math.cos(ang), math.sin(ang)
@@ -139,22 +139,22 @@ def shard(d, b, ang, w, h):
     d.polygon([sl, tip, midt], fill=C_DARK)
     d.line([(mid[0] + vx * w * .2 + ux * h * .1, mid[1] + vy * w * .2 + uy * h * .1),
             (mid[0] + vx * w * .2 + ux * h * .7, mid[1] + vy * w * .2 + uy * h * .7)], fill=C_HI, width=max(2, int(w * .1)))
-    d.line([bl, sl, tip, sr, br], fill=INK, width=3, joint='curve')
+    d.line([bl, sl, tip, sr, br], fill=INK, width=lw, joint='curve')
 
 
-def geode(level):
-    """0 small / 1 middle / 2 big: a rock with crystals growing out of it, as an RGBA picture."""
+def geode(level, s=1):
+    """0 small / 1 middle / 2 big: a rock with crystals growing out of it, as an RGBA picture (s: scale)."""
     import random
     rnd = random.Random(7 + level)
-    W0, H0 = 340, 190
+    W0, H0 = 340 * s, 230 * s
     im = Image.new('RGBA', (W0, H0))
     d = ImageDraw.Draw(im)
-    rw = (170, 240, 310)[level]
-    rh = (40, 56, 70)[level]
-    cx, base = W0 / 2, H0 - 12
+    rw = (170, 240, 310)[level] * s
+    rh = (40, 56, 70)[level] * s
+    cx, base = W0 / 2, H0 - 12 * s
     # crystals behind the rock's crest, tallest in the middle
     n = (5, 8, 13)[level]
-    top = (110, 140, 165)[level]
+    top = (110, 140, 165)[level] * s
     shards = []
     for i in range(n):
         k = (i + .5) / n * 2 - 1                      # -1 .. 1 across
@@ -164,7 +164,7 @@ def geode(level):
         ang = k * .75 + rnd.uniform(-.1, .1)
         shards.append((abs(k), (cx + k * rw * .36, base - rh * .62 + abs(k) * rh * .25), ang, wid, hgt))
     for _, b, a, w, h in sorted(shards, key=lambda s: -s[0]):
-        shard(d, b, a, w, h)
+        shard(d, b, a, w, h, 3 * s)
     # the rock: an uneven mound, lit from the top left
     pts = []
     for i in range(19):
@@ -173,12 +173,12 @@ def geode(level):
         pts.append((cx - math.cos(a) * rw / 2 * r, base - math.sin(a) * rh * r))
     d.polygon(pts, fill=(112, 96, 92), outline=INK)
     d.polygon(pts[:9] + [(cx, base - rh * .3), (cx - rw * .3, base)], fill=(140, 124, 116))
-    d.line(pts + [pts[0]], fill=INK, width=4)
+    d.line(pts + [pts[0]], fill=INK, width=4 * s)
     # a few small crystals in front, on the rock
     for i in range((1, 3, 5)[level]):
         k = (i + .5) / (1, 3, 5)[level] * 1.4 - .7 + rnd.uniform(-.05, .05)
-        h = rnd.uniform(26, 38) + level * 4
-        shard(d, (cx + k * rw * .4, base - rh * .2 + abs(k) * 8), k * .9, h * .4, h)
+        h = (rnd.uniform(26, 38) + level * 4) * s
+        shard(d, (cx + k * rw * .4, base - rh * .2 + abs(k) * 8 * s), k * .9, h * .4, h, 3 * s)
     return im
 
 

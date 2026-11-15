@@ -38,7 +38,20 @@
   at the mouth is a possible later touch). A portal thicker than ~0.14 hid the cave from the 50-degree camera.
 - Open: real IAP + the shop's offer (next task), final upgrade prices (the user), notice repeat interval.
 
-## Main-menu «Магазин» window + the mine's offer (AGREED 2026-11-15, the user; concept only, NOT BUILT)
+## Main-menu «Магазин» window + the mine's offer (AGREED 2026-11-15, the user; BUILT 2026-11-15, not seen, untested)
+**Built (2026-11-15):** `Core/Store.cs` (products crystal_mine / crystal_mine_sale / crystals_1..3; NO billing yet --
+`Buy` grants at once as a test purchase; `Grant` / `MarkPending` / `Revoke` are the billing's future entry points, the
+cheats drive pending + refund); `UI/MenuShopWindow.cs` (runtime-built overlay canvas 950: blurred screen capture,
+shop list, «Подожди!» exit offer, «Покупка успешна!», in-game mine window `ShowMine()` that pauses + blocks ModalGate);
+`MainMenuController.OpenShop` -> `ShowShop(StartNewGame)` (the old ShopDialog removed from SetupProjectMainMenuScreens);
+`CrystalMines` (no growth / no bubble when not owned, tap opens ShowMine, place hint after Ratusha+Lighthouse on every
+map, collect hint until a real tap: PlayerPrefs `hint.crystal_mine_collected`); `BuildingFocus.Select` + `BuildHints`
+open ShowMine for a locked mine; `Wallet.CrystalMineChanged`. Art: `Tools/store/menu_shop_art.py` ->
+`UI/Shop/Resources/Shop/MenuShop/`. Numbers: economy `menu_shop_*` (sheet «Наборы: настройки»), texts `#shop_*`,
+`#crystal_mine_place/_collect` («Тексты: лавка»); mine lvl 1 free (buildings cost_wood 0, sandbox cost emptied).
+Traps: inside CityBuilder.* write `UnityEngine.Resources.Load` (a CityBuilder.Resources namespace exists); exit offer
+timing `menu_shop_exit_offer_hours` (0 = every exit) remembered in PlayerPrefs `menushop.exit_shown_utc`.
+Open: real Google Play billing + prices from the store; cloud save; mine lvl 2-5 models export.
 Mockups: `Design/store/MenuShop_Mockup.png`, `MenuShop_ExitOffer.png` (script `Tools/store/menu_shop_mockup.py`, v3).
 - **Window:** the menu scene stays behind, BLURRED; title «Магазин» top centre, crystal balance top right; bundles in
   ONE list scrolling down (no tabs for now -- «дополнительные вкладки добавим потом»); «Назад» bottom centre.

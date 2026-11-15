@@ -73,6 +73,12 @@ namespace CityBuilder.UI
                 Clear();
                 return;
             }
+            // a mine whose purchase was taken back (a refund): its tap opens the purchase (the user, 2026-11-15)
+            if (building.Data.buildingName == BuildingIds.CrystalMine && !building.IsBot && !Wallet.CrystalMineOwned && BuildHints.Allowed)
+            {
+                MenuShopWindow.ShowMine();
+                return;
+            }
             if ((Current != null && Current != building) || Foreign != null) Release();
             Current = building;
             _ringColour = Gold;
