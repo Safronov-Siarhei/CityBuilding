@@ -782,8 +782,12 @@
     and the scene. (3) «небо чёрное»: DungeonDark got `_SkyOpen`, mission 2 sets 1 (clear sky over the dark
     land). (4) «солдат стоит в башне»: the lookout stood in the gate's right tower -> along 2.6 (shots moved);
     which soldier the user meant is asked. (5) The gate from the field must show the way INTO the town: the
-    gatehouse is solid with a painted dark arch -> needs a gatehouse variant with a real passage (model, renders
-    for approval first).
+    barbican (FortifiedGate1-lvl3 in the .blend) ALREADY has a vaulted way through (x -0.45..0.45, walls y +-0.26,
+    vault 0.68, a raised portcullis inside) -- only the dark FortifiedGate1-Passage overlay HangDoors laid on both
+    faces hid it: the overlay is gone (field + setup wiring removed); render `Tools/blender/gate_passage_drafts.py`.
+    Trap: an EXACT boolean on these box-soup models ADDS the cutter (no cut). (1) FOUND: the cause of the frozen
+    scene -- a lost window focus (the screenshot) opened the game menu (OnApplicationPause), which paused the game
+    under the scene's hidden HUD; not during the intro any more. CityDefenceIntroTests green.
     Note: on the cine rig the figure's RIGHT is -x (fg.limbs "R" = k -1); the captain's scabbard sits at -x.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right

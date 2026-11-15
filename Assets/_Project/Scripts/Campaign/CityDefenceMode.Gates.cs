@@ -9,14 +9,13 @@ namespace CityBuilder.Campaign
     /// <summary>
     /// The gates SHUT (the user's third playtest, 2026-11-12: «делай модель закрытых ворот и анимацию их закрытия»;
     /// models approved the same day, Tools/blender/gate_close_drafts.py). Each of the mission's two gates (the
-    /// level-3 Barbican, its doors only painted on) gets a dark passage over both faces, two oak leaves on the town
-    /// face and a portcullis on the field face. They stand OPEN, and the part's first wave shuts its gate: the
+    /// level-3 Barbican, a vaulted way through it) gets two oak leaves on the town face and a portcullis on the field
+    /// face; the town shows through the open way (the dark arch once laid over both faces went 2026-11-15). They stand OPEN, and the part's first wave shuts its gate: the
     /// leaves swing shut over m2_gate_close_sec and the portcullis drops behind them. A broken gate takes them with it.
     /// Model axes: Blender (x, y, z) lands on Unity (x, z, y) -- the gatehouse's passage runs along its local x.
     /// </summary>
     public partial class CityDefenceMode
     {
-        [SerializeField] private GameObject gatePassageModel;   // Models/Buildings/FortifiedGate1-Passage.fbx
         [SerializeField] private GameObject gateLeafModel;      // Models/Buildings/FortifiedGate1-Leaf.fbx
         [SerializeField] private GameObject gateGrilleModel;    // Models/Buildings/FortifiedGate1-Grille.fbx
         // the doors at the foot of the two flanking towers, the way up onto the wall (approved 2026-11-13, variant A)
@@ -54,7 +53,8 @@ namespace CityBuilder.Campaign
             pivot.localRotation = townward ? Quaternion.identity : Quaternion.Euler(0f, 180f, 0f);
             pivot.localPosition = Vector3.zero;
             pivot.localScale = Vector3.one * (cell / Mathf.Max(0.01f, gate.transform.lossyScale.x));
-            if (gatePassageModel != null) Instantiate(gatePassageModel, pivot, false).name = "Passage";
+            // no dark arch over the faces any more: the barbican has a real vaulted way through, and from the field the
+            // town must show through it (the user, 2026-11-15; Tools/blender/gate_passage_drafts.py)
             if (gateTowerDoorsModel != null) Instantiate(gateTowerDoorsModel, pivot, false).name = "TowerDoors";
             var d = new Doors { gate = gate };
             d.left = Hinge(pivot, "LeafL", new Vector3(GateFace + 0.004f, 0f, -GateHalfWidth), false);
