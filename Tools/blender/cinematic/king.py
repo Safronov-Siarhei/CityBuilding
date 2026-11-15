@@ -29,8 +29,9 @@ SKIN = 'plaster_pink'
 HAIR = 'wood_mid'
 BOOT, SOLE = 'wood_dark', 'door'
 JEWEL_RED, JEWEL_BLUE = 'roof_red', 'roof_blue'
+STONE, RUNE = 'stone_dark', 'water'        # Ардан's amulet stone (ardan.py): the same on the King (the user's story hook)
 EYE, PUPIL = 'white', 'window'
-fg.plain(ROYAL, ROYAL_DARK, CAPE, CAPE_DARK, GOLD, ERMINE, SKIN, HAIR, BOOT, SOLE, JEWEL_RED, JEWEL_BLUE, EYE, PUPIL)
+fg.plain(ROYAL, ROYAL_DARK, CAPE, CAPE_DARK, GOLD, ERMINE, SKIN, HAIR, BOOT, SOLE, JEWEL_RED, JEWEL_BLUE, STONE, RUNE, EYE, PUPIL)
 
 
 def foot(b, k):
@@ -66,22 +67,28 @@ def chest(b):
     """The tunic's chest, the chain of state and medallion, the ermine mantle and the red cape to the heels."""
     b.obox((0, -0.002, 0.33), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.084, 0.06, 0.064, ROYAL, bevel=0.022)
     b.box(-0.012, 0.012, -0.064, -0.056, 0.27, 0.37, GOLD)                              # the band up the front
-    # the chain of state: two runs over the chest to a medallion with a blue stone
+    # a gold chain to the SAME dark stone with a blue rune that Ардан wears (ardan.py) -- the user, 2026-11-15:
+    # «чтобы потом сделать сюжетную линию будто Ардан его сын»; set on its point, a gold claw at the top
     for k in (-1, 1):
-        b.rod((k * 0.055, -0.062, 0.38), (k * 0.012, -0.068, 0.322), 0.007, GOLD)
-    b.cylinder(0, -0.07, 0.296, 0.324, 0.016, GOLD, sides=8)
-    b.box(-0.007, 0.007, -0.075, -0.071, 0.304, 0.316, JEWEL_BLUE)
+        b.rod((k * 0.05, -0.06, 0.382), (k * 0.004, -0.068, 0.352), 0.005, GOLD)
+    b.box(-0.006, 0.006, -0.073, -0.066, 0.346, 0.354, GOLD, bevel=0.002)
+    r = 0.7071
+    b.obox((0, -0.07, 0.333), (r, 0, r), (0, 1, 0), (-r, 0, r), 0.012, 0.004, 0.012, STONE, bevel=0.002)
+    b.box(-0.0018, 0.0018, -0.0755, -0.073, 0.324, 0.342, RUNE)
+    for k in (-1, 1):                                                                     # the branching rune
+        b.obox((k * 0.0035, -0.0742, 0.3385), (1, 0, -1.2 * k), (0, 1, 0), (1.2 * k, 0, 1), 0.0045, 0.0012, 0.0013, RUNE)
     # the ermine mantle over the shoulders, black tips scattered over it
     b.obox((0, 0.004, 0.384), (1, 0, 0), (0, 1, 0), (0, 0, 1), 0.118, 0.078, 0.026, ERMINE, bevel=0.02)
     for x, y in ((-0.08, -0.068), (-0.02, -0.077), (0.04, -0.073), (0.088, -0.058),
                  (-0.1, 0.0), (0.1, 0.01), (-0.05, 0.075), (0.05, 0.08)):
         b.box(x - 0.007, x + 0.007, y - 0.005, y + 0.005, 0.406, 0.413, SPOT)
     # the cape from under the mantle down the back to the heels, leaning back to clear the skirt; dark lining edge
-    lean = (0, -0.12, 1)
+    # (well clear of the belt, r 0.086, and the skirt, r 0.098: they showed through the back, the user 2026-11-15)
+    lean = (0, -0.09, 1)
     b.prism([(-0.112, 0.39), (0.112, 0.39), (0.15, 0.015), (0.06, 0.0), (-0.06, 0.0), (-0.15, 0.015)],
-            (0, 0.11, 0), (1, 0, 0), lean, 0.014, CAPE, back_cap=True)
+            (0, 0.128, 0), (1, 0, 0), lean, 0.014, CAPE, back_cap=True)
     b.prism([(-0.152, 0.03), (0.152, 0.03), (0.148, 0.0), (-0.148, 0.0)],
-            (0, 0.112, 0), (1, 0, 0), lean, 0.018, CAPE_DARK, back_cap=True)
+            (0, 0.13, 0), (1, 0, 0), lean, 0.018, CAPE_DARK, back_cap=True)
     b.cylinder(0, 0, 0.39, 0.406, 0.05, ROYAL_DARK, sides=8)                            # the collar
 
 
@@ -112,10 +119,11 @@ def head(b):
         b.box(k * 0.019 - 0.009, k * 0.019 + 0.009, -0.0475, -0.0435, z + 0.05, z + 0.06, EYE)
         b.box(k * 0.017 - 0.0045, k * 0.017 + 0.0045, -0.0485, -0.046, z + 0.051, z + 0.059, PUPIL)
         b.box(k * 0.021 - 0.015, k * 0.021 + 0.015, -0.05, -0.043, z + 0.064, z + 0.072, HAIR, bevel=0.002)  # brows
-    # the full beard from ear to ear, pointed at the chin; the moustache over it
-    b.box(-0.047, 0.047, -0.054, 0.004, z - 0.012, z + 0.03, HAIR, bevel=0.012)
-    b.prism([(-0.032, z - 0.006), (0.032, z - 0.006), (0.0, z - 0.05)], (0, -0.056, 0), (1, 0, 0), (0, 0, 1), 0.036,
-            HAIR, back_cap=True)
+    # the full beard from ear to ear, rounded at the chin; the moustache over it
+    # (it ends above the ermine, z 0.41: its point lay on the mantle, the user 2026-11-15)
+    b.box(-0.047, 0.047, -0.054, 0.004, z - 0.006, z + 0.03, HAIR, bevel=0.012)
+    # its rounded chin, no point: a pointed wedge lay flat on the ermine (the user 2026-11-15)
+    b.box(-0.03, 0.03, -0.058, -0.02, z - 0.014, z + 0.004, HAIR, bevel=0.01)
     b.box(-0.028, 0.028, -0.057, -0.049, z + 0.022, z + 0.032, HAIR, bevel=0.003)
     b.box(-0.011, 0.011, -0.0565, -0.053, z + 0.012, z + 0.017, 'roof_red_dark')       # the mouth
     # hair under the crown and to the collar behind
@@ -124,12 +132,14 @@ def head(b):
     # the crown: a gold band, a purple cap inside it, five points each with a stone
     b.cylinder(0, -0.002, z + 0.088, z + 0.118, 0.052, GOLD, sides=10)
     b.dome(0, -0.002, z + 0.112, 0.046, 0.032, [ROYAL, ROYAL_DARK], sides=10)
+    # the points stand ON the band, inside its radius (they stuck out past it, the user 2026-11-15); a stone under
+    # each, flush on the band's face, turned to it
     for i in range(5):
         a = -math.pi / 2 + i * 2 * math.pi / 5
-        px, py = math.cos(a) * 0.048, -0.002 + math.sin(a) * 0.048
-        b.pyramid(px, py, z + 0.118, 0.011, 0.011, z + 0.154, GOLD)
+        ca, sa = math.cos(a), math.sin(a)
+        b.pyramid(ca * 0.038, -0.002 + sa * 0.038, z + 0.118, 0.01, 0.01, z + 0.152, GOLD)
         stone = JEWEL_RED if i % 2 == 0 else JEWEL_BLUE
-        b.box(px * 1.06 - 0.006, px * 1.06 + 0.006, py * 1.06 - 0.006, py * 1.06 + 0.006, z + 0.098, z + 0.11, stone)
+        b.obox((ca * 0.0505, -0.002 + sa * 0.0505, z + 0.103), (-sa, ca, 0), (ca, sa, 0), (0, 0, 1), 0.0065, 0.002, 0.0065, stone)
 
 
 PARTS = [("hips", waist), ("chest", chest), ("head", head)] + fg.limbs(

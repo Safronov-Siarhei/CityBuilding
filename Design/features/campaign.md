@@ -710,7 +710,11 @@
     purple tunic (gold hem + front band), gold buckle with a red stone, chain of state + medallion (blue stone),
     black-tipped ermine mantle, red cape to the heels, purple sleeves with gold cuffs, bare hands (signet ring),
     full brown beard, five-point crown with red/blue stones; no sword/shield. Renders `Design/campaign_review/king/`
-    (lineup with HeroKing) SENT for approval 2026-11-15.
+    (lineup with HeroKing) SENT for approval 2026-11-15. v1 notes fixed in v2 (sent): the beard's point lay on the
+    ermine -> a rounded beard above it; crown points stuck out past the band -> inside it, stones flush on its faces;
+    the medallion -> ARDAN'S STONE (dark, blue branching rune) on a gold chain; the belt/skirt showed through the
+    cape -> the cape set back. STORY HOOK (the user, 2026-11-15): the King wears the same stone as Ардан, «чтобы
+    потом сделать сюжетную линию будто Ардан его сын» -- idea for later, nothing decided.
   3. «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
      orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя
      этот камень?») as the mission-3 hook.
