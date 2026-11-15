@@ -691,6 +691,21 @@
      только надеяться, что помощь успеет вовремя» -> play.
   2. «Столица» ~15 s, paused, at «Подкрепление через 3:00»: rider into the capital gate; throne room, kneels;
      the King rises «Седлать коней!»; cavalry rides out. (Options asked: throne room / capital yard / no scene.)
+  **SCENE 2 «Гонец у короля» -- the user's vision + answers (2026-11-15), storyboard being agreed:**
+  - WHEN: after part 1 of mission 2 (the first 8 minutes). DAY (not evening: the relief must arrive in light).
+  - City part (~25 s): the capital's gates STAND OPEN from the start (the kingdom was at peace), a MOAT round it
+    and a BRIDGE over it, guards on the walls; the rider gallops over the bridge and through the open gate, through
+    lanes with people and guards (people jump aside; an apple cart tips, hens scatter -- Claude's, not rejected),
+    to the castle; jumps off at its stairs, runs up, the guards open the doors, he goes into the grand castle.
+  - Throne room (~45 s): the King on the throne, subjects presenting before him (an advisor reading a dull report
+    -- Claude's); the rider bursts in, PUSHES a guard who tries to stop him (the guard FALLS; helmet rolls --
+    Claude's); runs to the throne stairs, kneels: their town was attacked by unknown creatures; general SILENCE
+    (faces, a dropped goblet -- Claude's); the King: gather the cavalry, he goes to help in person.
+  - The user CUT: the captain's letter (no letter shown in scene 1), the advisor's objection.
+  - The King = the sandbox's King (same look), never named. The attacked town gets a NAME (Claude to propose).
+  - Reuse: rider + horse (gallop), M2Guard, townsfolk, game buildings for the capital. New (renders first):
+    cinematic King, 2-3 courtiers, throne room set, castle stairs + entrance; anims: dismount + stairs run, push,
+    guard fall, kneel + speak, King bored / rises / orders, advisor reads, townsfolk dodge.
   3. «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
      orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя
      этот камень?») as the mission-3 hook.
