@@ -521,7 +521,9 @@ namespace CityBuilder.Campaign
             var dt = Time.unscaledDeltaTime;
             // the game menu (and its settings) open: the mission's own HUD goes too (the user's thirteenth playtest)
             if (_menu == null) _menu = FindAnyObjectByType<GameMenuController>();
-            var menuOpen = _menu != null && _menu.IsOpen;
+            // ...and while a film plays (the user's third look at mission 2's opening scene: «почему я до сих пор вижу
+            // интерфейс?» -- this line switched the HUD back on every frame under the scene)
+            var menuOpen = (_menu != null && _menu.IsOpen) || FilmSkip.FilmShowing;
             if (_canvas != null && _canvas.enabled == menuOpen) _canvas.enabled = !menuOpen;
             if (menuOpen) return;
             if (_stick != null) _mode.Stick = _stick.Locked ? Vector2.zero : _stick.Value;
