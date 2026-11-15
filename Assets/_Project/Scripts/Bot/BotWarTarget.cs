@@ -14,6 +14,9 @@ namespace CityBuilder.Bot
     {
         private BuildingInstance _building;
 
+        /// <summary>The bot's building this target stands for (its blows sound by its stuff: Combat.CombatSound).</summary>
+        public BuildingInstance Building => _building;
+
         private void Awake() => _building = GetComponent<BuildingInstance>();
 
         public Transform Transform => this != null ? transform : null;

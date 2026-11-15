@@ -26,6 +26,9 @@
   raise to its level (build + upgrades) holds at least as much stone as wood (cached per level). Hooks: orc melee on a
   building, a soldier's melee on one (the bot's town), any projectile landing on one. wood_ = Kenney impactWood_heavy +
   impactPlank_medium, stone_ = Kenney impactMining.
+  `CombatSound.StructureHit(IDamageTarget)` takes every side's buildings: the player's and the bot's
+  (`BotWarTarget.Building`) by their stuff, an orc camp as wood (palisade), an orc portal as stone; anything else
+  clashes / thuds. Fire damage is silent on purpose (a burning house would knock every second).
 - Interface buttons: `UI/UiClickSound.cs`, one DontDestroyOnLoad object booted at the first scene: on a pointer
   release it raycasts the UI once and clicks if a live Selectable is under it (no per-button wiring; buttons are made
   in dozens of places). Clip `Audio/Resources/Ui/click_N` (Kenney UI Audio click1), volume `ui_click_volume` (sheet,

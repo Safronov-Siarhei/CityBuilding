@@ -653,8 +653,8 @@ namespace CityBuilder.Combat
 
             var struck = _target;
             var blow = StrikeDamageOn(struck);
-            if (struck is Buildings.BuildingInstance hitBuilding) CombatSound.BuildingHit(hitBuilding);
-            else CombatSound.Clash(transform.position);
+            // a building of any side sounds by its stuff (the bot's, an orc camp, a portal too), anything else clashes
+            if (!CombatSound.StructureHit(struck)) CombatSound.Clash(transform.position);
             if (struck is OrcUnit felled) felled.TakeDamage(blow, this);
             else struck.TakeDamage(blow);
             if (!struck.IsAlive)

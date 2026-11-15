@@ -46,6 +46,32 @@ namespace CityBuilder.Combat
         /// <summary>A hero's skill set off -- one sound for every skill in every mode (the user, 2026-11-15).</summary>
         public static void Skill(Vector3 at) => Play(Kind.Skill, at, 1f);
 
+        /// <summary>
+        /// A blow or a shot on whatever was struck, when it is a building of any side: the player's or the bot's by its
+        /// stuff, an orc camp as wood (a palisade), an orc portal as stone. False when it is no building (the caller's
+        /// own sound then: a clash, an arrow's thud).
+        /// </summary>
+        public static bool StructureHit(IDamageTarget target)
+        {
+            switch (target)
+            {
+                case Buildings.BuildingInstance building:
+                    BuildingHit(building);
+                    return true;
+                case Bot.BotWarTarget bot:
+                    if (bot.Building != null) BuildingHit(bot.Building);
+                    return true;
+                case OrcCampBuilding camp:
+                    Play(Kind.Wood, camp.transform.position, 0.8f);
+                    return true;
+                case OrcPortal portal:
+                    Play(Kind.Stone, portal.transform.position, 0.8f);
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         /// <summary>A blow or a shot on a building: wood on a wooden one, stone on a stone one (the user, 2026-11-15).</summary>
         public static void BuildingHit(Buildings.BuildingInstance building)
         {
