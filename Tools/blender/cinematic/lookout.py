@@ -9,6 +9,7 @@ right shoulder to the left hip (the horn away from the spear hand).
 
     blender --background <Buildings-Size1-Models.blend> --python lookout.py
 """
+import math
 import os
 import sys
 
@@ -31,6 +32,7 @@ COIF = 'plaster'
 HORN, HORN_TIP = 'plaster', 'wood_dark'
 SPEAR = 'wood_light'
 EYE, PUPIL = 'white', 'window'
+TAU = 2 * math.pi
 fg.plain(SKIN, BLUE, BLUE_DARK, GOLD, STEEL, STEEL_DARK, LEATHER, HOSE, BOOT, SOLE, HAIR, COIF, HORN, HORN_TIP, SPEAR,
          EYE, PUPIL)
 
@@ -76,15 +78,72 @@ HORN_PTS = [(0.098, -0.03, 0.262), (0.108, -0.01, 0.235), (0.11, 0.02, 0.215), (
 HORN_MOUTHPIECE = (0.1, 0.055, 0.204)
 
 
+def _horn_curve(n=12):
+    """The horn's axis as a smooth curve (Catmull-Rom through HORN_PTS, then on to the mouthpiece)."""
+    from mathutils import Vector
+    pts = [Vector(p) for p in HORN_PTS] + [Vector(HORN_MOUTHPIECE)]
+    ext = [pts[0] * 2 - pts[1]] + pts + [pts[-1] * 2 - pts[-2]]
+    out = []
+    for i in range(1, len(ext) - 2):
+        p0, p1, p2, p3 = ext[i - 1], ext[i], ext[i + 1], ext[i + 2]
+        steps = n if i < len(ext) - 3 else n // 2
+        for s in range(steps):
+            t = s / steps
+            out.append(0.5 * (2 * p1 + (p2 - p0) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t
+                              + (3 * p1 - p0 - 3 * p2 + p3) * t * t * t))
+    out.append(pts[-1])
+    return out
+
+
 def horn(b):
-    """A curved cow horn: the bell at the top, brass bands, a dark mouthpiece."""
-    pts = HORN_PTS
-    widths = [0.034, 0.028, 0.02, 0.012]
-    for (p0, p1), w in zip(zip(pts, pts[1:]), widths):
-        b.rod(p0, p1, w, HORN)
-    b.rod(pts[-1], HORN_MOUTHPIECE, 0.01, HORN_TIP)
-    for p, w in zip(pts[:2], (0.038, 0.031)):
-        b.rod((p[0], p[1] - 0.003, p[2]), (p[0], p[1] + 0.003, p[2] - 0.004), w, GOLD)
+    """A curved cow horn as one smooth tapering tube: the bell flared and OPEN (dark inside) at the top,
+    two brass bands round it, a dark mouthpiece at the narrow end (the user, 2026-11-15: the old one, four
+    square beams with bands set crosswise, looked wrong)."""
+    from mathutils import Vector
+    curve = _horn_curve()
+    n = len(curve)
+    sides = 8
+    radius = [0.019 * (1 - i / (n - 1)) ** 1.1 + 0.0045 for i in range(n)]
+    radius[0] = 0.023                                                                   # the bell's flare
+    radius[1] = max(radius[1], 0.0185)
+
+    def frame(i):
+        d = (curve[min(i + 1, n - 1)] - curve[max(i - 1, 0)]).normalized()
+        u = Vector((1, 0, 0)).cross(d)
+        if u.length < 1e-4:
+            u = Vector((0, 1, 0)).cross(d)
+        u.normalize()
+        return d, u, d.cross(u).normalized()
+
+    def ring(c, d, u, v, r):
+        return [b.bm.verts.new(c + (u * math.cos(TAU * k / sides) + v * math.sin(TAU * k / sides)) * r)
+                for k in range(sides)]
+
+    def tube(i0, i1, grow, color):
+        rings = []
+        for i in range(i0, i1 + 1):
+            d, u, v = frame(i)
+            rings.append(ring(curve[i], d, u, v, radius[i] + grow))
+        for r0, r1 in zip(rings, rings[1:]):
+            for k in range(sides):
+                j = (k + 1) % sides
+                b._face([r0[k], r0[j], r1[j], r1[k]], color)
+        return rings
+
+    tip = n - 4                                                                         # the mouthpiece from here
+    rings = tube(0, tip, 0.0, HORN)
+    b._face(list(reversed(rings[0])), HORN_TIP)                                         # the open bell: dark inside
+    end = tube(tip, n - 1, -0.0005, HORN_TIP)
+    b._face(end[-1], HORN_TIP)
+    # the brass bands: short wider collars round the axis, by the bell and a third of the way down
+    for i in (1, 6):
+        d, u, v = frame(i)
+        c0, c1 = curve[i] - d * 0.003, curve[i] + d * 0.003
+        r = radius[i] + 0.0035
+        r0, r1 = ring(c0, d, u, v, r), ring(c1, d, u, v, r)
+        for k in range(sides):
+            j = (k + 1) % sides
+            b._face([r0[k], r0[j], r1[j], r1[k]], GOLD)
 
 
 def make_horn():
