@@ -768,6 +768,7 @@
     two door guards (lookout + spear) follow him with their heads, step aside outwards and sweep the free hand
     to the door (the doors are the castle model's, opened in Unity). Stairs = capital.py's (8 x 0.1 rise x 0.32
     run, terrace 0.8, door 0.7 back) as a grey stand-in. Videos `Design/campaign_review/arrive_*.mp4` SENT.
+    v2 (the user: «указывают в сторону от замка»): stepping aside they now turn round to the doorway, the sweep goes to it.
     Next groups: (2) street gallop + townsfolk dodging, (3) throne room (push + guard fall, kneel/speak, King,
     advisor, court).
     SENT 2026-11-15 for approval.

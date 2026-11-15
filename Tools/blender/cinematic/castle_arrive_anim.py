@@ -230,7 +230,10 @@ def guard_root(k, t, arrive):
     side = -1 if x < 0 else 1
     w = ease((t - (arrive - 1.0)) / 0.6)
     p = Vector((x + side * 0.22 * w, y + 0.05 * w, TERRACE_Z))
-    h = 0.0 + side * math.radians(55) * w                         # turning in to face the door's way
+    # turning round to the doorway behind them (the user, 2026-11-15: they pointed away from the castle), so the
+    # free hand's sweep goes to the door
+    to = Vector((0.0, DOOR_Y + 0.3)) - Vector((p.x, p.y))
+    h = math.atan2(to.x, -to.y) * w
     return Matrix.Translation(p) @ Matrix.Rotation(h, 4, 'Z')
 
 
@@ -248,7 +251,7 @@ def guard_pose(k, t, arrive, spot):
     q["chest"][0] -= 4 * see
     sweep = env(t, arrive - 0.9, arrive - 0.4) * (1 - env(t, arrive + 0.6, arrive + 1.1))
     side = -1 if GUARD_AT[k][0] < 0 else 1
-    q["upper_arm.L"] = [2 - 70 * sweep, -4 - side * 25 * sweep, 0]
+    q["upper_arm.L"] = [2 - 70 * sweep, -4, 0]
     q["forearm.L"] = [-10 - 20 * sweep, 0, 0]
     return q
 
