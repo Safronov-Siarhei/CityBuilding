@@ -38,6 +38,32 @@
   at the mouth is a possible later touch). A portal thicker than ~0.14 hid the cave from the 50-degree camera.
 - Open: real IAP + the shop's offer (next task), final upgrade prices (the user), notice repeat interval.
 
+## Main-menu «Магазин» window + the mine's offer (AGREED 2026-11-15, the user; concept only, NOT BUILT)
+Mockups: `Design/store/MenuShop_Mockup.png`, `MenuShop_ExitOffer.png` (script `Tools/store/menu_shop_mockup.py`, v3).
+- **Window:** the menu scene stays behind, BLURRED; title «Магазин» top centre, crystal balance top right; bundles in
+  ONE list scrolling down (no tabs for now -- «дополнительные вкладки добавим потом»); «Назад» bottom centre.
+- **First four bundles:** the Crystal Mine (wide card on top: render, ribbon «НАВСЕГДА», a green chip «Только для
+  Песочницы» with the castle medallion off `UI/MenuArt/Banner_Sandbox.png`, «до 180 в час», «+300 сразу», **$7.99, NO
+  discount in the shop**); three crystal packs in a row: Мешок 200 $0.99, Ларец 1 200 $4.99 (+20 %, «ПОПУЛЯРНОЕ»),
+  Сокровищница 3 000 $9.99 (+50 %, «ВЫГОДНЕЕ ВСЕГО»). Pack art = UNMINED crystals growing out of a rock, bigger per
+  pack (the user rejected a pile of crystal icons); card bands name / art / amount / price never overlap; ribbons
+  stretch to their words. Prices/amounts are placeholders.
+- **«Назад» -> «Подожди!»** (light title): the shop's interface HIDDEN (only the blurred scene), the SAME mine bundle
+  full size with $7.99 struck out, **$5.59 (−30 %)** sticker; «Всё равно выйти» under the window. No timer. A
+  separate Google Play product (one price per product); owning EITHER product = owning the mine. Not shown once owned.
+- **After buying (either product):** «Покупка успешна» window (+300 crystals fly to the balance), the mine card
+  leaves the shop, the exit offer is never shown again. The mine is unlocked in EVERY sandbox save; its LEVEL 1 is
+  FREE to build. Pending payment (cash countries): the card says «Ожидает оплаты», no second purchase.
+- **Hints in the sandbox:** after a purchase, on opening ANY sandbox map: Town Hall -> Lighthouse -> then the game
+  offers to place the Crystal Mine (yellow arrow to its build card; it needs NO residents); after its first crystal,
+  a hint that it can be collected (arrow at the bubble).
+- **Locked mine card in the sandbox (the user's item 5):** a tap opens the shop's mine offer ON SCREEN in the game:
+  the game PAUSED, the HUD hidden, «Закрыть» bottom centre. Same bundle and price as the shop's.
+- **Refund (Google returns the money / the purchase is revoked):** the offer is back in the shop, the mine locked
+  again in the sandbox; in EVERY save a built mine STOPS mining, and a tap on the building opens the purchase window.
+- **Cloud save:** built when the Google Play page/game are set up, before the build goes for review. Until then
+  the +300 crystals are lost on reinstall (the mine itself Google restores).
+
 ## Boosters: how they are built (2026-11-12, IN THE CODE, user not seen, untested)
 - **Sheet:** «Песочница (Лавка): Бустеры» (gid 2000065) -> `Balance/boosters.csv`: a `booster` table
   (name_ru/en, desc_ru/en with `{0}`, effect, duration_sec, price_crystals, ad) and a `key` table
