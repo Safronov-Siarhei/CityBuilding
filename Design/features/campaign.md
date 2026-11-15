@@ -812,7 +812,9 @@
   - **Fifth look (2026-11-15):** the lookout's horn -- sfx_horn (war_horns CC0 5.4-8.6 s) at `hornAt` 15.3 (his blow,
     take 6.1-8.6 + group start 9.2), `hornVolume`; fight sounds now everywhere (card combat-sound.md); the yellow
     tower-door circles -> «Искры у порога» (gold dash ring + rising sparks) drafted in
-    `Tools/blender/tower_door_fx_drafts.py`, AWAITING the user's approval before it enters the game.
+    `Tools/blender/tower_door_fx_drafts.py`, APPROVED and IN THE GAME 2026-11-15 (WallFight.cs: `M2DoorSparks` ring mesh of 12
+    dashes on a fxGlow copy, turning + breathing, one shared `M2DoorSparkFx` system fed by Emit; consts in C# like the
+    other fx); not seen in the game yet.
     Note: on the cine rig the figure's RIGHT is -x (fg.limbs "R" = k -1); the captain's scabbard sits at -x.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right

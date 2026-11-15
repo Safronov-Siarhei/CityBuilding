@@ -304,13 +304,15 @@ namespace CityBuilder.Campaign
                 var centre = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
                 var at = OnMesh(centre + Vector3.back * (DoorOut * grid.CellSize));
                 at.y = grid.GroundHeight;
-                var mark = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-                mark.name = "M2DoorCircle";
-                Destroy(mark.GetComponent<Collider>());
-                mark.transform.position = at + Vector3.up * 0.02f;
-                mark.transform.localScale = new Vector3(DoorCircleRadius * 2f * grid.CellSize, 0.01f, DoorCircleRadius * 2f * grid.CellSize);
-                var r = mark.GetComponent<Renderer>();
-                r.sharedMaterial = DoorCircleMaterial();
+                // «Искры у порога» (the user approved the draft 2026-11-15, Tools/blender/tower_door_fx_drafts.py)
+                // instead of the flat yellow disc they called cheap: a ring of gold dashes, turning and breathing,
+                // and sparks rising from inside it (TickDoorSparks)
+                var mark = new GameObject("M2DoorSparks", typeof(MeshFilter), typeof(MeshRenderer));
+                mark.transform.position = at + Vector3.up * 0.03f;
+                mark.transform.localScale = Vector3.one * (DoorCircleRadius * grid.CellSize);
+                mark.GetComponent<MeshFilter>().sharedMesh = DoorRingMesh();
+                var r = mark.GetComponent<MeshRenderer>();
+                r.sharedMaterial = DoorRingMaterial();
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 r.receiveShadows = false;
                 _doorCircles.Add(new DoorCircle { stair = cell, at = at, mark = mark });
@@ -325,13 +327,132 @@ namespace CityBuilder.Campaign
             return null;
         }
 
-        private static Material _doorCircleMaterial;
+        // the door sparks' look (the approved draft): 12 dashes on the ring, 0.34 / 0.07 of its radius long / wide;
+        // the ring turns DoorRingSpin degrees a second and breathes between DoorRingLow and 1 of its gold
+        private const int DoorDashes = 12;
+        private const float DoorDashLength = 0.34f, DoorDashWidth = 0.07f, DoorRingSpin = 18f, DoorRingLow = 0.5f, DoorRingBreath = 1.6f;
+        // sparks per second at each door, how high (in ring radii) they climb over their life, their size (ring radii)
+        private const float DoorSparkRate = 5f, DoorSparkRise = 3f, DoorSparkLife = 1.3f, DoorSparkSize = 0.16f;
+        private static readonly Color DoorGold = new Color(1f, 0.68f, 0.08f, 1f);
+        private static readonly Color DoorSparkGold = new Color(1f, 0.8f, 0.3f, 1f);
 
-        private static Material DoorCircleMaterial()
+        private Mesh _doorRingMesh;
+        private Material _doorRingMaterial;
+        private ParticleSystem _doorSparks;
+        private float _doorSparkDue;
+
+        /// <summary>A unit ring of short dashes in the XZ plane, UVs on the soft dot's bright middle (fxGlow).</summary>
+        private Mesh DoorRingMesh()
         {
-            if (_doorCircleMaterial != null) return _doorCircleMaterial;
-            _doorCircleMaterial = new Material(Core.RuntimeShaders.Unlit) { color = new Color(1f, 0.85f, 0.15f, 1f), name = "M2DoorCircle" };
-            return _doorCircleMaterial;
+            if (_doorRingMesh != null) return _doorRingMesh;
+            var v = new Vector3[DoorDashes * 4];
+            var uv = new Vector2[v.Length];
+            var c = new Color[v.Length];
+            var tri = new int[DoorDashes * 12];
+            for (var i = 0; i < DoorDashes; i++)
+            {
+                var a = Mathf.PI * 2f * i / DoorDashes;
+                var along = new Vector3(-Mathf.Sin(a), 0f, Mathf.Cos(a)) * (DoorDashLength * 0.5f);
+                var outw = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                var w = outw * (DoorDashWidth * 0.5f);
+                v[i * 4] = outw - along - w;
+                v[i * 4 + 1] = outw - along + w;
+                v[i * 4 + 2] = outw + along + w;
+                v[i * 4 + 3] = outw + along - w;
+                for (var k = 0; k < 4; k++)
+                {
+                    uv[i * 4 + k] = new Vector2(0.5f, 0.5f);
+                    c[i * 4 + k] = Color.white;
+                }
+                // both windings: seen from above whichever way the quad turned
+                var t = i * 12;
+                tri[t] = i * 4; tri[t + 1] = i * 4 + 1; tri[t + 2] = i * 4 + 2;
+                tri[t + 3] = i * 4; tri[t + 4] = i * 4 + 2; tri[t + 5] = i * 4 + 3;
+                tri[t + 6] = i * 4; tri[t + 7] = i * 4 + 2; tri[t + 8] = i * 4 + 1;
+                tri[t + 9] = i * 4; tri[t + 10] = i * 4 + 3; tri[t + 11] = i * 4 + 2;
+            }
+            _doorRingMesh = new Mesh { name = "M2DoorRing", vertices = v, uv = uv, colors = c, triangles = tri };
+            _doorRingMesh.RecalculateBounds();
+            return _doorRingMesh;
+        }
+
+        private Material DoorRingMaterial()
+        {
+            if (_doorRingMaterial != null) return _doorRingMaterial;
+            _doorRingMaterial = fxGlow != null
+                ? new Material(fxGlow) { name = "M2DoorRing" }
+                : new Material(Core.RuntimeShaders.Unlit) { name = "M2DoorRing" };
+            _doorRingMaterial.color = DoorGold;
+            return _doorRingMaterial;
+        }
+
+        /// <summary>Every frame: the rings turn and breathe (one shared material), each live door sends sparks up.</summary>
+        private void TickDoorSparks(float dt)
+        {
+            if (_doorCircles.Count == 0) return;
+            if (_doorRingMaterial != null)
+            {
+                var g = DoorGold;
+                g.a = Mathf.Lerp(DoorRingLow, 1f, 0.5f + 0.5f * Mathf.Sin(Time.time * Mathf.PI * 2f / DoorRingBreath));
+                _doorRingMaterial.color = g;
+            }
+            if (_doorSparks == null && fxGlow != null) _doorSparks = MakeDoorSparks();
+            var radius = DoorCircleRadius * Cell;
+            var spin = DoorRingSpin * dt;
+            _doorSparkDue += dt * DoorSparkRate;
+            var emit = (int)_doorSparkDue;
+            _doorSparkDue -= emit;
+            var p = new ParticleSystem.EmitParams();
+            foreach (var door in _doorCircles)
+            {
+                if (door.mark == null || !door.mark.activeInHierarchy) continue;
+                door.mark.transform.Rotate(0f, spin, 0f, Space.Self);
+                if (_doorSparks == null) continue;
+                for (var i = 0; i < emit; i++)
+                {
+                    var off = Random.insideUnitCircle * (radius * 0.8f);
+                    p.position = door.at + new Vector3(off.x, 0.05f, off.y);
+                    p.velocity = new Vector3(Random.Range(-0.05f, 0.05f), DoorSparkRise * radius / DoorSparkLife * Random.Range(0.6f, 1.2f), Random.Range(-0.05f, 0.05f));
+                    p.startColor = DoorSparkGold;
+                    p.startSize = DoorSparkSize * radius * Random.Range(0.6f, 1.3f);
+                    p.startLifetime = DoorSparkLife * Random.Range(0.7f, 1.1f);
+                    _doorSparks.Emit(p, 1);
+                }
+            }
+        }
+
+        /// <summary>One world-space system for every door's sparks, fed by Emit: weightless, fading in and out.</summary>
+        private ParticleSystem MakeDoorSparks()
+        {
+            var go = new GameObject("M2DoorSparkFx", typeof(ParticleSystem));
+            go.transform.SetParent(transform, false);
+            var ps = go.GetComponent<ParticleSystem>();
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            var main = ps.main;
+            main.loop = true;
+            main.playOnAwake = false;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.maxParticles = 200;
+            main.gravityModifier = 0f;
+            var em = ps.emission;
+            em.rateOverTime = 0f;
+            var shape = ps.shape;
+            shape.enabled = false;
+            var sol = ps.sizeOverLifetime;
+            sol.enabled = true;
+            sol.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.EaseInOut(0f, 1f, 1f, 0.2f));
+            var col = ps.colorOverLifetime;
+            col.enabled = true;
+            var fade = new Gradient();
+            fade.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(new Color(1f, 0.6f, 0.2f), 1f) },
+                new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.15f), new GradientAlphaKey(0f, 1f) });
+            col.color = fade;
+            var pr = go.GetComponent<ParticleSystemRenderer>();
+            pr.sharedMaterial = fxGlow;
+            pr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            pr.receiveShadows = false;
+            ps.Play();
+            return ps;
         }
 
         private void ForgetWallFight()

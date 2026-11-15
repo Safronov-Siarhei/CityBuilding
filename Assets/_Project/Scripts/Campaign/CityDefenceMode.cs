@@ -451,6 +451,7 @@ namespace CityBuilder.Campaign
             }
             TickArden(dt);
             TickFx(dt);
+            TickDoorSparks(dt);
             TickHealers(dt);
             TickGarrison(dt);
             TickTownsfolk(dt);
