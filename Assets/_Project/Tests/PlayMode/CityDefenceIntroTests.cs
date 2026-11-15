@@ -13,7 +13,8 @@ namespace CityBuilder.Tests.PlayMode
     /// <summary>
     /// Mission 2's opening scene «У ворот» (CityDefenceMode.Intro.cs) PLAYS and hands over: the user's first look
     /// (2026-11-15) found it standing still on its first shot. Its clock must run, its figures stand, and at its end
-    /// the siege goes on with Ардан in the player's hands.
+    /// the siege goes on with Ардан in the player's hands. (Found: losing the window's focus opened the game menu, which
+    /// paused the game under the scene's hidden HUD.)
     /// </summary>
     public class CityDefenceIntroTests
     {
@@ -61,6 +62,7 @@ namespace CityBuilder.Tests.PlayMode
                 yield return null;
             }
             Time.timeScale = 1f;
+            yield return null;                     // Destroy lands at the frame's end
             Assert.Less(mode.IntroTime, 0f, "The scene never ended.");
             Assert.AreEqual(CityDefenceMode.Stage.Part1, mode.Current, "The siege is not on after the scene.");
             Assert.IsNotNull(mode.Arden, "No Ардан after the scene.");

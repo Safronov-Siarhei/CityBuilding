@@ -233,7 +233,9 @@ namespace CityBuilder.Campaign
         /// A phone that kills the app while it is away still loses the mission (no mission save).</summary>
         private void OnApplicationPause(bool paused)
         {
-            if (!paused || Current != Stage.Part1) return;
+            // not over the opening scene: it hides the HUD, so the menu would pause the game unseen (the user's first look,
+            // 2026-11-15: «сцена не проигрывается» -- the screenshot's lost focus opened it)
+            if (!paused || Current != Stage.Part1 || _intro != null) return;
             var menu = FindAnyObjectByType<UI.GameMenuController>();
             if (menu != null && !menu.IsOpen) menu.Open();
         }
