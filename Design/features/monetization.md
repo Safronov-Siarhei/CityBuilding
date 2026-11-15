@@ -78,6 +78,22 @@ Mockups: `Design/store/MenuShop_Mockup.png`, `MenuShop_ExitOffer.png` (script `T
 - **Cloud save:** built when the Google Play page/game are set up, before the build goes for review. Until then
   the +300 crystals are lost on reinstall (the mine itself Google restores).
 
+## Player ID + personal reward codes (DECIDED 2026-11-15, the user; NOT BUILT)
+For prizes outside the game (a contest winner gets e.g. 1000 crystals) and, later, compensations.
+- **The player's ID = their Google Play (Play Games) account**, not a local random id: the same on every device
+  and after a reinstall. Comes with the Google Play setup + cloud save, before the build goes for review.
+  The ID is shown in the settings with a copy button, so the player can send it to us.
+- **Rewards go by personal ACCOUNT CODES:** we generate a code bound to ONE account ID and ONE reward
+  (product + amount), signed with our private key (kept OUTSIDE the public repo); the player types it in a
+  «Ввести код» field; the game checks the signature and that the ID is theirs, gives the reward, remembers the
+  code as used (in the cloud save, so it cannot be redeemed twice after a reinstall). Someone else's code does
+  not work; a code cannot be forged. Only the PUBLIC key is in the game.
+- Not a «one code for everyone» promo code (Google Play restricts those): a personal gift to a named account.
+  Check the contest rules against Google Play policy before running a contest.
+- Later, optional: a server mailbox (gifts pushed to an ID, no typing) on the same ID -- not decided.
+- Open: where the code generator lives (a local script with the private key, outside the repo); code format
+  (short enough to type: base32 of id-hash + reward + signature); which rewards a code may carry.
+
 ## Boosters: how they are built (2026-11-12, IN THE CODE, user not seen, untested)
 - **Sheet:** «Песочница (Лавка): Бустеры» (gid 2000065) -> `Balance/boosters.csv`: a `booster` table
   (name_ru/en, desc_ru/en with `{0}`, effect, duration_sec, price_crystals, ad) and a `key` table
