@@ -48,8 +48,10 @@ Classic kit (`Tools/ui/make_menu_classic.py`, reusing make_hud_skins.py; the use
 carved menu wood "changed the style" -- ugly next to the game); make_menu_kit.py now draws Dock/Soft/
 Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment plaques). Screens (`UI/MainMenuController.cs`, built by
 `Editor/SetupProjectMainMenuScreens.cs`; helpers + dialogs in `SetupProjectMainMenu.cs`):
-- main: settings round top-centre, «Продолжить» (= the old Play: to the modes), «Предложения» (= the
-  shop), Discord + YouTube rounds under them. No resume-last-save plaque any more.
+- main: settings round top-centre, «Продолжить» (= the old Play: to the modes), «Магазин» (= the
+  shop; was «Предложения», renamed 2026-11-15: same parchment plaque, the word moved left, the in-game shop's
+  `UI/Shop/Stall.png` in its right end -- `ShopStall()`, the user's pick «1 — внутри» from
+  Design/store/ShopButton_Plaque.png; its «!» badge sits top-LEFT, `Badge(.., left: true)`), Discord + YouTube rounds under them. No resume-last-save plaque any more.
 - modes (REDONE 2026-11-10, the user: «дёшево и скучно» -> «Зал знамён»): four BANNERS hanging in a
   row -- Обучение (teal), Песочница (green), Нашествие (red, iron perch, torn tail, emblem = horned orc skull over crossed axes since 11-10 round 2), Кампания (grey,
   lock, «Скоро») -- art `UI/MenuArt/Banner_<Mode>.png` drawn by `Tools/ui/make_mode_banners.py` in

@@ -31,7 +31,7 @@
   bigger great crystal, the map trees' own fir/round tree (not d.tree: reads as a gem), shrubs+flowers, ivy,
   hoist with a basket). Lvl3 (finials, crystal lamps, garden wall + gold-ball piers, crystal monument),
   lvl4 (violet pediment roof with gold diamonds + crest, floating shard halo), lvl5 (gilded roof, gold bands)
-  SHOWN 2026-11-14, waiting for approval. Hill 1.05/1.35/1.5/1.6/1.7; side/back clumps stop growing at lvl3
+  SHOWN 2026-11-14, APPROVED 2026-11-15 («модели я уже смотрел, всё устраивает»); levels 2-5 still to export into the game. Hill 1.05/1.35/1.5/1.6/1.7; side/back clumps stop growing at lvl3
   and the great clump steps forward (plot edge). Tris 3134/4607/5251/5483/5707.
 - **Traps:** the cave glow in the renders is a point light added only for the review (scratchpad
   glow_preview.py); the game has no light there -- the violet reveals/floor/walls carry it (a CrystalHalo glow
