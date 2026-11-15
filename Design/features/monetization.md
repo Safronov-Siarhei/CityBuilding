@@ -55,8 +55,9 @@ Mockups: `Design/store/MenuShop_Mockup.png`, `MenuShop_ExitOffer.png` (script `T
   leaves the shop, the exit offer is never shown again. The mine is unlocked in EVERY sandbox save; its LEVEL 1 is
   FREE to build. Pending payment (cash countries): the card says «Ожидает оплаты», no second purchase.
 - **Hints in the sandbox:** after a purchase, on opening ANY sandbox map: Town Hall -> Lighthouse -> then the game
-  offers to place the Crystal Mine (yellow arrow to its build card; it needs NO residents); after its first crystal,
-  a hint that it can be collected (arrow at the bubble).
+  offers to place the Crystal Mine (yellow arrow to its build card; it needs NO residents) -- on EVERY map where no
+  mine stands yet; after its first crystal, a hint that it can be collected (arrow at the bubble) -- ONCE PER ACCOUNT,
+  but «done» only when the player really TAPPED the bubble and collected: until then it keeps showing (any map).
 - **Locked mine card in the sandbox (the user's item 5):** a tap opens the shop's mine offer ON SCREEN in the game:
   the game PAUSED, the HUD hidden, «Закрыть» bottom centre. Same bundle and price as the shop's.
 - **Refund (Google returns the money / the purchase is revoked):** the offer is back in the shop, the mine locked
