@@ -106,6 +106,11 @@ def throne(b):
         b.box(k * 0.25 * s - 0.04 * s, k * 0.25 * s + 0.04 * s, y - 0.18 * s, y + 0.17 * s, z + 0.25 * s, z + 0.42 * s, RED, bevel=0.008 * s)
         b.box(k * 0.25 * s - 0.05 * s, k * 0.25 * s + 0.05 * s, y - 0.2 * s, y + 0.18 * s, z + 0.42 * s, z + 0.46 * s, GOLD, bevel=0.006 * s)
         b.ball(k * 0.25 * s, y - 0.2 * s, z + 0.46 * s, 0.04 * s, 0.05 * s, GOLD, sides=6)
+    # a footstool before the seat: the King's feet rest on it when he sits (his short legs hung clear of the dais,
+    # throne_anim 2026-11-15)
+    f0, f1 = y - 0.19 * s - 0.15, y - 0.19 * s + 0.02
+    b.box(-0.1, 0.1, f0, f1, z, z + 0.07, GOLD, bevel=0.006)
+    b.box(-0.09, 0.09, f0 + 0.01, f1 - 0.01, z + 0.07, z + 0.085, RED_DARK, bevel=0.006)
     yb = y + 0.18 * s
     b.box(-0.28 * s, 0.28 * s, yb, yb + 0.07 * s, z + 0.25 * s, z + 1.2 * s, GOLD, bevel=0.01 * s)
     b.box(-0.23 * s, 0.23 * s, yb - 0.012 * s, yb, z + 0.3 * s, z + 1.13 * s, RED, bevel=0.005 * s)

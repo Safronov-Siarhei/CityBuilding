@@ -795,6 +795,20 @@
     now lasts distance/speed + the ramp (run_time) -- a Track run cut short teleports into the next move; the
     peasant dives FORWARD onto his front keeping the leap's heading (the backward fall spun him round in the air),
     then up on one knee, looks back, shakes his fist (on_front).
+    **Group 2 APPROVED (the user, 2026-11-15: «Утверждаю»).**
+  - **Scene 2 ANIMATIONS group 3 «Тронный зал» (2026-11-15):** `cinematic/throne_anim.py`, one take ~20.9 s in the
+    approved hall (throne_room.make) with the still court about (extras(): lining guards, dais guards, courtiers --
+    made BEFORE the actors: make() reuses an object by its name and would move theirs). Clips CineRider_Throne,
+    CineKing_Throne, CineLookout_Shoved, CineAdvisor_Throne (+ prop CineAdvisorScroll keyed on his chest),
+    CineLady_Throne, CineNoble_Throne. 0-2 s advisor reads the scroll, King slumped chin on fist; 2.0 doors burst
+    (Unity), rider sprints in (1.9x run) down the carpet; the lining guard at (0.95,-3.05) steps into his path palm
+    out; the rider SHOVES him with both hands mid-stride (4.3 s); the guard goes over BACKWARDS keeping his heading,
+    lies, sits up hand to head; rider swerves round him to the dais foot, drops to the right knee (10.2), head
+    bowed, looks up and TELLS (11.4-14.4, right arm flung back the way he came); heads of King/lady/noble follow
+    him; lady's hand to her mouth; noble steps back; advisor lowers the scroll, looks round, steps aside; SILENCE
+    1.5 s; the King RISES (15.9), steps to the dais edge, arm out to the doors (17.3), fist to his chest (19.1);
+    the rider bows his head. A FOOTSTOOL was added before the throne (gold, red cushion, 0.085 high): his short legs
+    hung clear when seated. Videos `Design/campaign_review/throne_*.mp4` SENT.
     Next groups: (2) street gallop + townsfolk dodging, (3) throne room (push + guard fall, kneel/speak, King,
     advisor, court).
     SENT 2026-11-15 for approval.
