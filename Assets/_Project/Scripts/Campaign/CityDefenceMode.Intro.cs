@@ -35,6 +35,7 @@ namespace CityBuilder.Campaign
         [SerializeField] private GameObject[] introProps = new GameObject[0];    // Models/Cinematic/M2Intro*.fbx
         [SerializeField] private AudioClip introAmbient;    // Audio/Campaign/amb_morning.ogg: under the scene, no music
         [SerializeField] private AudioClip introCrowd;      // Audio/Campaign/sfx_crowd.ogg: the townsfolk at the alarm
+        [SerializeField] private AudioClip introHorn;       // Audio/Campaign/sfx_horn.ogg: the lookout's blow (war_horns, CC0)
 
         /// <summary>Set by «Заново»: the mission again without its opening scene.</summary>
         private static bool _skipIntroOnce;
@@ -50,7 +51,7 @@ namespace CityBuilder.Campaign
             public Shot[] shots;
             public Line[] lines;
             public float shutAt, end, fade, subFadeIn, subFadeOut, musicFadeOut;
-            public float ambientVolume = 0.6f, crowdAt = -1f, crowdVolume = 0.7f;
+            public float ambientVolume = 0.6f, crowdAt = -1f, crowdVolume = 0.7f, hornAt = -1f, hornVolume = 0.9f;
             public int subSize;
         }
 
@@ -132,7 +133,7 @@ namespace CityBuilder.Campaign
             public Vector3 camLocalPos;
             public Quaternion camLocalRot;
             public AudioSource ambient, crowd;
-            public bool crowdPlayed;
+            public bool crowdPlayed, hornPlayed;
             public RTSCameraController rig;
             public readonly List<Canvas> hidden = new List<Canvas>();
             public Canvas canvas;
@@ -400,6 +401,12 @@ namespace CityBuilder.Campaign
                 PlaceAt(a.fig.transform, a, local, true);
                 var hide = a.timing.hideAfter && t > a.timing.start + a.seconds;
                 if (a.fig.gameObject.activeSelf == hide) a.fig.gameObject.SetActive(!hide);
+            }
+            // the lookout's horn while he blows (the user, 2026-11-15: «для дуновения в рог нужен звук»)
+            if (s.crowd != null && introHorn != null && !s.hornPlayed && sc.hornAt >= 0f && t >= sc.hornAt)
+            {
+                s.hornPlayed = true;
+                s.crowd.PlayOneShot(introHorn, sc.hornVolume);
             }
             if (s.crowd != null && !s.crowdPlayed && sc.crowdAt >= 0f && t >= sc.crowdAt)
             {

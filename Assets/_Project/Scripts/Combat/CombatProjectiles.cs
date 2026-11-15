@@ -283,6 +283,7 @@ namespace CityBuilder.Combat
 
         private void Launch(ProjectileKind kind, Vector3 from, ref Shot shot)
         {
+            CombatSound.Shot(kind, from, shot.Attacker);
             if (_shots.Count >= MaxLiveShots)
             {
                 // A pile-up beyond anything the game should produce: land this one at once rather than drawing it.
@@ -394,6 +395,7 @@ namespace CityBuilder.Combat
 
         private static void ApplyDamage(ref Shot shot)
         {
+            if (shot.TargetTransform != null) CombatSound.Landed(shot.Kind, shot.TargetTransform.position + shot.AimOffset);
             if (shot.Enemy != null)
             {
                 if (shot.Enemy.Transform == null || !shot.Enemy.IsAlive) return;

@@ -653,6 +653,7 @@ namespace CityBuilder.Combat
 
             var struck = _target;
             var blow = StrikeDamageOn(struck);
+            CombatSound.Clash(transform.position);
             if (struck is OrcUnit felled) felled.TakeDamage(blow, this);
             else struck.TakeDamage(blow);
             if (!struck.IsAlive)

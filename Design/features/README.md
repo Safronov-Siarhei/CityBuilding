@@ -45,6 +45,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | [army-control](army-control.md) | squads concept 2026-11-05: army icon, 5 player squads + Garrison, squad window (pause), behaviours, formations, ship capacity 8-16; ALL 5 STAGES BUILT 2026-11-05 (Garrison, squads, window, behaviours, formations, ship levels/places, crests), user not played | управление армией, отряды, гарнизон, построение |
 | [combat-core](combat-core.md) | damage targets, towers, projectiles, NavRoute, wall breaching | бой, башня, стрелы, урон |
 | [moat](moat.md) | the Moat: wadeable water that slows, orcs in it don't fight units, lab-opened for crystals | ров, вода, замедление |
+| [combat-sound](combat-sound.md) | shots (bow/crossbow/javelin/catapult), arrow clinks, blade clashes in every mode; voice pool, screen/range cull, sheet combat_sfx_* (2026-11-15) | звуки боя, выстрел, лук, арбалет, мечи |
 | [bot](bot.md) | the bot kingdom: castle scheme v2, garrison, Diplomacy Hall relations (peace/trade/war), WAR built 2026-11-04 (guards, botwaves sea raids, ransom) | бот, дипломатия, война, торговля |
 | [ruins](ruins.md) | ruins of the player's destroyed buildings: restore for a share of the price / demolish / later; sandbox only; burnt-shell shader; BUILT 2026-11-05, untested | руины, восстановить, снести, обломки |
 | [orc-raids-and-portals](orc-raids-and-portals.md) | raids, progression score, portals, orc kinds, win/lose | орки, набег, портал, победа, поражение |

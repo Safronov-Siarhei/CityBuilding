@@ -683,6 +683,7 @@ namespace CityBuilder.EditorTools
             // the opening scene at the north gate (approved 2026-11-15; Tools/blender/cinematic/export_m2intro.py)
             cityDefenceSO.FindProperty("introAmbient").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_gate.ogg");   // the scene's music: The Old Tower Inn (the user, 2026-11-15)
             cityDefenceSO.FindProperty("introCrowd").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/sfx_crowd.ogg");
+            cityDefenceSO.FindProperty("introHorn").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/sfx_horn.ogg");
             cityDefenceSO.FindProperty("introScript").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Mission2Intro.json");
             var introTakes = new System.Collections.Generic.List<Object>();
             if (System.IO.Directory.Exists("Assets/_Project/Campaign/M2Intro"))

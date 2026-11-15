@@ -511,6 +511,11 @@ namespace CityBuilder.Core
 
         [Header("Economy (economy.csv)")]
         [SerializeField] private float dayLengthSeconds = 120f;
+        // the fight's sounds, every mode (CombatSound; the user, 2026-11-15): volume, the range (world units from the
+        // screen's centre on the ground) past which a shot or a blow is not heard, the voices at once, the least gap
+        // between two sounds of one kind, and the share of arrows that clink where they land
+        [SerializeField] private float combatSfxVolume = 0.6f, combatSfxHearRange = 30f, combatSfxGapSeconds = 0.05f, combatSfxHitShare = 0.35f;
+        [SerializeField] private int combatSfxVoices = 8;
         // coins a citizen pays a day (the user, 2026-11-02: the tax slider is gone, every citizen
         // pays this), and what each level of the Tax House adds to it
         [SerializeField] private float coinsPerCitizenPerDay = 1f;
@@ -1392,6 +1397,11 @@ namespace CityBuilder.Core
         public float DefenceAttackRangeMeters => defenceAttackRangeMeters;
         public float CastleAttackRangeMultiplier => castleAttackRangeMultiplier;
         public float DayLengthSeconds => dayLengthSeconds;
+        public float CombatSfxVolume => combatSfxVolume;
+        public float CombatSfxHearRange => combatSfxHearRange;
+        public float CombatSfxGapSeconds => combatSfxGapSeconds;
+        public float CombatSfxHitShare => combatSfxHitShare;
+        public int CombatSfxVoices => combatSfxVoices;
         public float CoinsPerCitizenPerDay => coinsPerCitizenPerDay;
         public float TaxHouseBonusPerLevel => taxHouseBonusPerLevel;
         public float DecorCoinsCapPerResident => decorCoinsCapPerResident;
@@ -2501,6 +2511,11 @@ namespace CityBuilder.Core
             defenceAttackRangeMeters = Read(economy, "defence_attack_range_meters", defenceAttackRangeMeters);
             castleAttackRangeMultiplier = Read(economy, "castle_attack_range_mult", castleAttackRangeMultiplier);
             dayLengthSeconds = Read(economy, "day_length_seconds", dayLengthSeconds);
+            combatSfxVolume = Read(economy, "combat_sfx_volume", combatSfxVolume);
+            combatSfxHearRange = Read(economy, "combat_sfx_hear_range", combatSfxHearRange);
+            combatSfxGapSeconds = Read(economy, "combat_sfx_gap_sec", combatSfxGapSeconds);
+            combatSfxHitShare = Read(economy, "combat_sfx_hit_share", combatSfxHitShare);
+            combatSfxVoices = (int)Read(economy, "combat_sfx_voices", combatSfxVoices);
             coinsPerCitizenPerDay = Read(economy, "coins_per_citizen_per_day", coinsPerCitizenPerDay);
             taxHouseBonusPerLevel = Read(economy, "tax_house_bonus_per_level", taxHouseBonusPerLevel);
             decorCoinsCapPerResident = Read(economy, "decor_coins_cap_per_resident", decorCoinsCapPerResident);

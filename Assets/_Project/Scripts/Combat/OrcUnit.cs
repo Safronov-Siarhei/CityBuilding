@@ -1220,7 +1220,11 @@ namespace CityBuilder.Combat
         {
             StrikeAt(soldier.transform.position);
             if (IsRanged) CombatProjectiles.Fire(Shot, CombatProjectiles.MuzzleOfUnit(transform), soldier, _attackDamage);
-            else soldier.TakeDamage(_attackDamage);
+            else
+            {
+                CombatSound.Clash(transform.position);
+                soldier.TakeDamage(_attackDamage);
+            }
             HitSoldier?.Invoke(soldier);
         }
 
