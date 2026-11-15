@@ -85,11 +85,22 @@ namespace CityBuilder.Cheats
             if (Button("=", 60f)) Wallet.UpgradeCrystals = Typed;
             GUILayout.EndHorizontal();
 
-            // the paid Crystal Mine (until the shop sells it, only here)
+            // the paid Crystal Mine; with no Google Play billing yet, the pending payment and the refund are played from here
             GUILayout.BeginHorizontal();
             var owned = Switch("Рудник кристаллов куплен", Wallet.CrystalMineOwned);
             if (owned != Wallet.CrystalMineOwned) Wallet.CrystalMineOwned = owned;
             if (Button("Наполнить рудник")) CrystalMines.Instance?.FillCheat();
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            var pending = Switch("Покупка рудника ждёт оплаты", Store.IsPending(Store.Mine));
+            if (pending != Store.IsPending(Store.Mine)) Store.MarkPending(Store.Mine, pending);
+            if (Button("Возврат денег за рудник")) Store.Revoke(Store.Mine);
+            if (Button("Окно рудника")) MenuShopWindow.ShowMine();
+            if (Button("Сбросить подсказку сбора"))
+            {
+                PlayerPrefs.DeleteKey("hint.crystal_mine_collected");
+                PlayerPrefs.Save();
+            }
             GUILayout.EndHorizontal();
         }
 

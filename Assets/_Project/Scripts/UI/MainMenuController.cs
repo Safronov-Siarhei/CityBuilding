@@ -18,7 +18,7 @@ namespace CityBuilder.UI
     /// <summary>
     /// The main menu after the user's sketches (2026-10-25), screen by screen:
     ///
-    ///   main     a live scene behind; «Продолжить» (to the modes), «Предложения» (the shop), the
+    ///   main     a live scene behind; «Продолжить» (to the modes), «Магазин» (MenuShopWindow), the
     ///            settings at the top, Discord and YouTube below;
     ///   modes    «Песочница» and «Нашествие», each with a «!» that says what the mode is; back and
     ///            settings in the top corners, Discord and YouTube in the bottom ones;
@@ -43,7 +43,6 @@ namespace CityBuilder.UI
 
         [Header("Dialogs")]
         [SerializeField] private GameObject exitDialog;
-        [SerializeField] private GameObject shopDialog;
         [SerializeField] private GameObject infoDialog;
         [SerializeField] private Text infoTitle;
         [SerializeField] private Text infoText;
@@ -115,7 +114,8 @@ namespace CityBuilder.UI
         /// <summary>One step back: a dialog, then the settings, then the screens; on the main screen, the question whether to quit.</summary>
         public void Back()
         {
-            foreach (var dialog in new[] { savesDialog, infoDialog, shopDialog, exitDialog })
+            if (MenuShopWindow.IsOpen) { MenuShopWindow.BackCurrent(); return; }
+            foreach (var dialog in new[] { savesDialog, infoDialog, exitDialog })
             {
                 if (dialog != null && dialog.activeSelf) { dialog.SetActive(false); return; }
             }
@@ -157,13 +157,12 @@ namespace CityBuilder.UI
             LoadingScreen.IntoGame(gameplaySceneName);
         }
 
+        /// <summary>«Магазин»: the shop for real money over the blurred scene (the user, 2026-11-15).</summary>
         public void OpenShop()
         {
             MarkSeen(Shop);
-            if (shopDialog != null) shopDialog.SetActive(true);
+            MenuShopWindow.ShowShop(StartNewGame);
         }
-
-        public void CloseShop() { if (shopDialog != null) shopDialog.SetActive(false); }
         public void CloseExitDialog() { if (exitDialog != null) exitDialog.SetActive(false); }
 
         /// <summary>The studio's Discord server (the user, 2026-10-25); the link is the sheet's #link_discord.</summary>
@@ -245,7 +244,7 @@ namespace CityBuilder.UI
         /// it away (the user, 2026-10-28: the menu showed round the offers, and two «Песочница»
         /// plates stood one over the other under a mode's info); it comes back when the window closes.
         /// </summary>
-        private bool Covered => (shopDialog != null && shopDialog.activeSelf) || (infoDialog != null && infoDialog.activeSelf)
+        private bool Covered => (infoDialog != null && infoDialog.activeSelf)
                                 || (savesDialog != null && savesDialog.activeSelf);
 
         private void Animate(float k)

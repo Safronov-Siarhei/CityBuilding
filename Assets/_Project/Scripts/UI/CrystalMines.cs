@@ -19,6 +19,12 @@ namespace CityBuilder.UI
     ///
     /// The clock runs in real seconds while the game runs (paused = stopped; the speed buttons do not hurry it).
     /// One overlay bubble, placed over the mine each frame, as DecorGifts does. The store is saved with the map.
+    ///
+    /// Bought or not (the user, 2026-11-15): a purchase taken back (a refund) stops every mine -- nothing grows,
+    /// a tap opens the purchase (MenuShopWindow.ShowMine). The hints: once the Town Hall and the Lighthouse stand on
+    /// a map with no mine, the build menu opens on the mine's card with the arrow (and a notice that leads there
+    /// again) -- on every map; the first crystals get the arrow on the bubble until the player really taps it
+    /// (once per account: PlayerPrefs hint.crystal_mine_collected).
     /// </summary>
     public class CrystalMines : MonoBehaviour
     {
@@ -43,6 +49,10 @@ namespace CityBuilder.UI
         private Image _icon;
         private Image _glint;
         private Text _label;
+        private bool _placeHinted;          // this map, this session
+        private bool _collectNoticed;
+        private float _collectHintWait;
+        private const string CollectedKey = "hint.crystal_mine_collected";
 
         /// <summary>The mine standing on this map (the player's, built), or null.</summary>
         public BuildingInstance Mine => _mine;
@@ -70,11 +80,20 @@ namespace CityBuilder.UI
             _canvasRect = (RectTransform)go.transform;
             MakeBubble();
             _bubble.gameObject.SetActive(false);
+            Wallet.CrystalMineChanged += OnOwnedChanged;
         }
 
         private void OnDestroy()
         {
+            Wallet.CrystalMineChanged -= OnOwnedChanged;
             if (Instance == this) Instance = null;
+        }
+
+        /// <summary>Bought (the place hint may come again at once) or taken back (the bubble goes).</summary>
+        private void OnOwnedChanged()
+        {
+            _placeHinted = false;
+            ShowBubble();
         }
 
         private void Update()
@@ -86,6 +105,8 @@ namespace CityBuilder.UI
             {
                 _find = FindEverySeconds;
                 FindMine();
+                HintPlace();
+                HintCollect();
             }
             _tick -= dt;
             if (_tick > 0f) return;
@@ -98,7 +119,7 @@ namespace CityBuilder.UI
         public void Grow(float dt)
         {
             var config = BalanceConfig.Instance;
-            if (_mine == null || config == null || dt <= 0f) return;
+            if (_mine == null || config == null || dt <= 0f || !Wallet.CrystalMineOwned) return;
             var cap = Cap;
             _stored = Mathf.Min(cap, _stored + dt / Mathf.Max(0.1f, config.CrystalMineSeconds(_mine.Level)));
             ShowBubble();
@@ -118,6 +139,11 @@ namespace CityBuilder.UI
         /// <summary>Takes the whole crystals out of the store into the wallet (the tap on the bubble).</summary>
         public int Collect()
         {
+            if (!Wallet.CrystalMineOwned)
+            {
+                MenuShopWindow.ShowMine();
+                return 0;
+            }
             var n = Mathf.FloorToInt(_stored);
             if (n <= 0) return 0;
             _stored -= n;
@@ -170,6 +196,60 @@ namespace CityBuilder.UI
             ShowBubble();
         }
 
+        /// <summary>
+        /// The mine bought, no mine on this map, the Town Hall and the Lighthouse standing: the build menu on the mine's
+        /// card with the arrow, and a notice that leads there again. Once a map a session; again after a purchase.
+        /// </summary>
+        private void HintPlace()
+        {
+            if (_placeHinted || !Wallet.CrystalMineOwned || !BuildHints.Allowed || ModalGate.IsBlocked || MenuShopWindow.IsOpen) return;
+            var hall = false;
+            var lighthouse = false;
+            var all = BuildingInstance.All;
+            for (var i = 0; i < all.Count; i++)
+            {
+                var b = all[i];
+                if (b == null || b.IsBot || b.Data == null) continue;
+                var id = b.Data.buildingName;
+                if (id == BuildingIds.CrystalMine) return;           // one stands (or is being built): nothing to say
+                if (!b.IsOperational) continue;
+                if (id == BuildingIds.TownHall) hall = true;
+                else if (id == BuildingIds.Lighthouse) lighthouse = true;
+            }
+            if (!hall || !lighthouse) return;
+            var placer = FindAnyObjectByType<BuildingPlacer>();
+            if (placer != null && placer.IsSelecting) return;
+            _placeHinted = true;
+            var notice = GameEvent.Nowhere(Localization.Get("#crystal_mine_place"), EventSeverity.Good, EventGlyph.Star, BuildingIds.CrystalMine);
+            notice.Tapped = () => BuildHints.LeadToBuild(BuildingIds.CrystalMine);
+            EventLogManager.Instance?.Post(notice);
+            BuildHints.LeadToBuild(BuildingIds.CrystalMine);
+        }
+
+        /// <summary>Crystals to take and the player never took any: the arrow on the bubble, again and again until they do.</summary>
+        private void HintCollect()
+        {
+            if (PlayerPrefs.GetInt(CollectedKey, 0) == 1 || _mine == null || _bubble == null || !_bubble.gameObject.activeSelf) return;
+            if (!BuildHints.Allowed || ModalGate.IsBlocked || GuideHint.Active || !OnScreen()) return;
+            _collectHintWait -= FindEverySeconds;
+            if (_collectHintWait > 0f) return;
+            _collectHintWait = Mathf.Max(1f, BalanceConfig.Instance.HintSeconds) + 6f;
+            if (!_collectNoticed)
+            {
+                _collectNoticed = true;
+                EventLogManager.Instance?.Post(GameEvent.About(_mine, Localization.Get("#crystal_mine_collect"), EventSeverity.Good, EventGlyph.Star));
+            }
+            GuideHint.Point(_bubble);
+        }
+
+        private bool OnScreen()
+        {
+            var camera = Camera.main;
+            if (camera == null || _mine == null) return false;
+            var v = camera.WorldToViewportPoint(_mine.transform.position + Vector3.up * _height);
+            return v.z > 0f && v.x > 0.05f && v.x < 0.95f && v.y > 0.08f && v.y < 0.92f;
+        }
+
         private void PostNotice()
         {
             var text = Localization.Get("#crystal_mine_almost_full");
@@ -182,7 +262,7 @@ namespace CityBuilder.UI
         {
             if (_bubble == null) return;
             var whole = Mathf.FloorToInt(_stored);
-            var show = _mine != null && whole >= 1;
+            var show = _mine != null && whole >= 1 && Wallet.CrystalMineOwned;
             if (_bubble.gameObject.activeSelf != show) _bubble.gameObject.SetActive(show);
             if (show) _label.text = whole + "/" + Cap;
         }
@@ -198,7 +278,15 @@ namespace CityBuilder.UI
             disc.color = new Color(0.36f, 0.2f, 0.62f, 0.92f);
             var button = go.GetComponent<Button>();
             button.targetGraphic = disc;
-            button.onClick.AddListener(() => Collect());
+            button.onClick.AddListener(() =>
+            {
+                // the collect hint is done only by a real tap that took crystals
+                if (Collect() > 0 && PlayerPrefs.GetInt(CollectedKey, 0) != 1)
+                {
+                    PlayerPrefs.SetInt(CollectedKey, 1);
+                    PlayerPrefs.Save();
+                }
+            });
 
             var icon = new GameObject("Icon", typeof(RectTransform), typeof(Image));
             icon.transform.SetParent(_bubble, false);

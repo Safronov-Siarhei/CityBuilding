@@ -48,7 +48,8 @@ Classic kit (`Tools/ui/make_menu_classic.py`, reusing make_hud_skins.py; the use
 carved menu wood "changed the style" -- ugly next to the game); make_menu_kit.py now draws Dock/Soft/
 Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment plaques). Screens (`UI/MainMenuController.cs`, built by
 `Editor/SetupProjectMainMenuScreens.cs`; helpers + dialogs in `SetupProjectMainMenu.cs`):
-- main: settings round top-centre, «Продолжить» (= the old Play: to the modes), «Магазин» (= the
+- main: settings round top-centre, «Продолжить» (= the old Play: to the modes), «Магазин» (opens the code-built
+  `UI/MenuShopWindow` since 2026-11-15, card monetization.md; the old ShopDialog is gone) (= the
   shop; was «Предложения», renamed 2026-11-15: same parchment plaque, the word moved left, the in-game shop's
   `UI/Shop/Stall.png` in its right end -- `ShopStall()`, the user's pick «1 — внутри» from
   Design/store/ShopButton_Plaque.png; its «!» badge sits top-LEFT, `Badge(.., left: true)`), Discord + YouTube rounds under them. No resume-last-save plaque any more.

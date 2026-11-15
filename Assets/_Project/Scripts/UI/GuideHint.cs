@@ -38,6 +38,9 @@ namespace CityBuilder.UI
             _instance.Begin(target);
         }
 
+        /// <summary>An arrow is up now.</summary>
+        public static bool Active => _instance != null && _instance.enabled && _instance._target != null;
+
         public static void Stop()
         {
             if (_instance != null) _instance.End();

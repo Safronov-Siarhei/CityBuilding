@@ -52,9 +52,8 @@ namespace CityBuilder.UI
             if (data == null || step > MaxSteps || !Allowed) return;
             if (data.buildingName == BuildingIds.CrystalMine && !Wallet.CrystalMineOwned)
             {
-                // not bought: a word for now; the shop's offer comes with the shop's next task
-                EventLogManager.Instance?.Post(GameEvent.Nowhere(Localization.Get("#crystal_mine_in_shop"),
-                    EventSeverity.Warning, EventGlyph.Alert, data.buildingName));
+                // not bought: the shop's mine bundle on screen, the game paused (the user, 2026-11-15)
+                MenuShopWindow.ShowMine();
                 return;
             }
             if (!ResearchManager.BuildingUnlocked(data.buildingName))

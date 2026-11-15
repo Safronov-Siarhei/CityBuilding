@@ -96,13 +96,15 @@ namespace CityBuilder.Tests.PlayMode
             var main = Group("MainScreen");
             menu.ShowMain();
             yield return Settle();
+            // the shop (MenuShopWindow, 2026-11-15) hides the menu's canvas behind its blurred picture
+            var menuCanvas = GameObject.Find("Canvas").GetComponent<Canvas>();
             menu.OpenShop();
             yield return Settle();
-            Assert.Less(main.alpha, 0.05f, "The main screen shows round the offers.");
-            Assert.IsFalse(main.blocksRaycasts, "The main screen behind the offers still takes taps.");
-            menu.CloseShop();
+            Assert.IsTrue(CityBuilder.UI.MenuShopWindow.IsOpen, "«Магазин» did not open.");
+            Assert.IsFalse(menuCanvas.enabled, "The menu shows round the shop.");
+            CityBuilder.UI.MenuShopWindow.CloseCurrent();
             yield return Settle();
-            Assert.Greater(main.alpha, 0.95f, "The main screen did not come back when the offers closed.");
+            Assert.IsTrue(menuCanvas.enabled, "The menu did not come back when the shop closed.");
 
             menu.OpenModes();
             yield return Settle();

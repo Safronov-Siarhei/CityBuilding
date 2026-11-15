@@ -35,3 +35,5 @@ Related discussion the same day: the user feels the sandbox lacks goals. A campa
   - whether an extra spin is paid for with an ad;
   - streak rewards;
   - where it lives in the menu.
+
+2026-11-15: the main-menu shop BUILT: UI/MenuShopWindow.cs + Core/Store.cs (Buy grants at once -- no Google Play billing yet), in-game mine window, place/collect hints, mine lvl 1 free. Not seen by the user. Details: Design/features/monetization.md.
