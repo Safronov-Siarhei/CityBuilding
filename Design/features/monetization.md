@@ -101,6 +101,19 @@ Then (same day): the shop's pack cards 40 % LOWER (200 vs 330, grounds `PackCard
 two packs fit one screen; every card's words start on ONE line (`TextX`, 540 from the card's left edge, mine and
 packs, shop and «Подожди!»); «НАВСЕГДА» centred over the mine. Mockup `Design/store/MenuShop_Mockup.png`.
 
+## Campaign: «Поддержи разработку» banner (the user's idea 2026-11-15; CONCEPT sent, not approved, NOT BUILT)
+The campaign has no ads and no paywall (the user: no ads, never break the story; levels for crystals would put
+players off the story). Instead, after a WON level a banner with Ардан: «Поддержи разработку», a few in-game
+purchases at a discount (crystals only for now: Мешок −10 %, Ларец −15 %, Сокровищница −20 % -- the same sale
+products as «Подожди!», no new Google Play products), a big «Продолжить» under it (never a tiny cross).
+Mockup `Design/store/SupportBanner_Mockup.png` (`Tools/store/support_banner_mockup.py <Ardan png>`; Ардан rendered
+from CineArdan by `Tools/blender/cinematic/render_ardan_banner.py` -> `Design/store/shop_art/Ardan_render.png`).
+- Proposed, not yet decided: only on the FIRST win of a level (not on replays); after a purchase a short
+  «Спасибо за поддержку!» instead for a few wins; wins between shows in the sheet. Later maybe an exclusive
+  «Набор покровителя» (Ардан's look for the sandbox + crystals; a new model -> renders for approval first).
+- Build plan: a standalone `SupportOfferWindow.Show(onDone)` built here like MenuShopWindow; the campaign
+  (worked on from the other device) calls it after the victory screen -- one line there, no file clash.
+
 ## «Подожди!» exit offers: the pool (DECIDED 2026-11-15, mockups APPROVED; BUILT 2026-11-15, not seen, untested)
 **Built:** `MenuShopWindow.ExitOfferDue/PickExitOffer/ShowWait/PackOfferCard` (card ground `PackCardBg1-3` from
 `menu_shop_art.py`, the ribbon centred over the crystals as the user asked); `Store` products `sale_crystals_1..3`
