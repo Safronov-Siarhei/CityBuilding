@@ -94,3 +94,4 @@
 - [Language picker (2026-11-14)](project_language_picker.md) — main-menu flag+name dropdown BUILT (not seen), base English; language priority list; translations last; CJK waits for a font.
 - [Sandbox fires v2 (2026-11-14)](project_sandbox_fires.md) — BUILT 2026-11-14 (setup green, not seen, no tests): random fires, touch-only spread, torch orcs, thunderstorm, bucket firefighters, island-wide brigade, fire banner + shield.
 - [Model workshop mode idea (2026-11-15)](project_model_editor_idea.md) — PARKED: players make their own building models; first free, then each variant for a special shop currency; base models restorable.
+- [Online lobby mode idea (2026-11-15)](project_online_lobby_idea.md) — PARKED: network mode up to 4 players, own lobby, join by lobby code.
