@@ -788,6 +788,13 @@
     Trap: an EXACT boolean on these box-soup models ADDS the cutter (no cut). (1) FOUND: the cause of the frozen
     scene -- a lost window focus (the screenshot) opened the game menu (OnApplicationPause), which paused the game
     under the scene's hidden HUD; not during the intro any more. CityDefenceIntroTests green.
+  - **Second look (2026-11-15):** (1) the scene ran under the loading screen -> its clock holds at 0 while
+    `LoadingScreen.Busy` (RULE, WORKING_RULES + memory: every cutscene starts after the loading screen, no UI but
+    «Пропустить»); (2) HUD/joystick hint/skill buttons showed -> root canvases swept EVERY frame (incl. world-space
+    bars), the cheats IMGUI button hides on `FilmSkip.FilmShowing`; (3) «сломан вид» after it: the camera was moved
+    off its RTS rig place -> its parent + local place saved and restored; (4) «музыка не нравится» -- it was
+    mus_attack (the opening film's attack track): under the scene now NO music, amb_morning (ambientVolume) and
+    sfx_crowd at the alarm (crowdAt 17); the siege's music unpauses at the handover.
     Note: on the cine rig the figure's RIGHT is -x (fg.limbs "R" = k -1); the captain's scabbard sits at -x.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right

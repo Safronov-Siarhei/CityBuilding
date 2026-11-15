@@ -20,6 +20,8 @@ see the map at the bottom.
 - **New models and animations go to the user as renders for approval BEFORE they enter the game**, even
   when the user says «потом посмотрим вместе». Pilot a few, get approval, then the rest.
 - **Cutscenes are discussed (beats, shots) before they are built.**
+- **A cutscene starts only after the loading screen is gone, and shows no interface but «Пропустить»** (the user,
+  2026-11-15); after it, the camera, HUD and music come back exactly as they were.
 - Ideas the user only "noted" (PvP, lane mode, whirlpool, water tower, roulette…) are NOT to be built
   until the user says so — see `Design/features/ideas.md`.
 - Do not copy existing games (Kingdoms & Castles etc.): take simplicity + juicy saturated colour; the

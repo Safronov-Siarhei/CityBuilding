@@ -82,6 +82,7 @@ namespace CityBuilder.Cheats
 
         private void OnGUI()
         {
+            if (Campaign.FilmSkip.FilmShowing) return;   // a film shows nothing but its «Пропустить»
             EnsureStyles();
             var s = _scale;
             var toggle = new Rect(Screen.width - 150f * s - 12f * s, 150f * s, 150f * s, H);

@@ -33,6 +33,8 @@ namespace CityBuilder.Campaign
         [SerializeField] private GameObject[] introFigures = new GameObject[0];  // Models/Cinematic/Cast/M2*.fbx
         [SerializeField] private CineClips[] introClips = new CineClips[0];      // their clips, in the same order
         [SerializeField] private GameObject[] introProps = new GameObject[0];    // Models/Cinematic/M2Intro*.fbx
+        [SerializeField] private AudioClip introAmbient;    // Audio/Campaign/amb_morning.ogg: under the scene, no music
+        [SerializeField] private AudioClip introCrowd;      // Audio/Campaign/sfx_crowd.ogg: the townsfolk at the alarm
 
         /// <summary>Set by «Заново»: the mission again without its opening scene.</summary>
         private static bool _skipIntroOnce;
@@ -48,6 +50,7 @@ namespace CityBuilder.Campaign
             public Shot[] shots;
             public Line[] lines;
             public float shutAt, end, fade, subFadeIn, subFadeOut;
+            public float ambientVolume = 0.6f, crowdAt = -1f, crowdVolume = 0.7f;
             public int subSize;
         }
 
@@ -125,6 +128,11 @@ namespace CityBuilder.Campaign
             public bool shut;
             public Camera cam;
             public float camFov;
+            public Transform camParent;
+            public Vector3 camLocalPos;
+            public Quaternion camLocalRot;
+            public AudioSource ambient, crowd;
+            public bool crowdPlayed;
             public RTSCameraController rig;
             public readonly List<Canvas> hidden = new List<Canvas>();
             public Canvas canvas;
@@ -246,15 +254,36 @@ namespace CityBuilder.Campaign
             s.cam = Camera.main;
             s.rig = RTSCameraController.Instance;
             if (s.rig != null) s.rig.enabled = false;
-            if (s.cam != null) s.camFov = s.cam.fieldOfView;
-            foreach (var c in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+            if (s.cam != null)
             {
-                if (c == null || !c.isRootCanvas || !c.enabled || c.renderMode == RenderMode.WorldSpace) continue;
-                if (c.GetComponentInParent<LoadingScreen>() != null) continue;
-                c.enabled = false;
-                s.hidden.Add(c);
+                // the camera hangs on the RTS rig: its own place on the rig comes back after the scene (the user's
+                // second look: «у окна после проигрывания сцены сломан вид»)
+                s.camFov = s.cam.fieldOfView;
+                s.camParent = s.cam.transform.parent;
+                s.camLocalPos = s.cam.transform.localPosition;
+                s.camLocalRot = s.cam.transform.localRotation;
+            }
+            // no battle music under the scene (the user: «мне не нравится музыка») -- the morning's air, the crowd at
+            // the alarm; the siege's music starts with the player's say
+            if (_music != null) _music.Pause();
+            if (introAmbient != null)
+            {
+                s.ambient = s.root.gameObject.AddComponent<AudioSource>();
+                s.ambient.clip = introAmbient;
+                s.ambient.loop = true;
+                s.ambient.spatialBlend = 0f;
+                s.ambient.volume = script.ambientVolume;
+                s.ambient.Play();
+            }
+            if (introCrowd != null)
+            {
+                s.crowd = s.root.gameObject.AddComponent<AudioSource>();
+                s.crowd.clip = introCrowd;
+                s.crowd.spatialBlend = 0f;
+                s.crowd.volume = script.crowdVolume;
             }
             BuildIntroUi(s);
+            HideInterface(s);
             var figs = 0;
             foreach (var a in s.actors) if (!a.prop) figs++;
             IntroReport = $"k={k:F3} cell={s.cell} deck={s.deck:F2} gate={s.gate} out={s.outward} figures={figs} props={s.actors.Count - figs} prelude={(s.prelude != null)}";
@@ -263,6 +292,19 @@ namespace CityBuilder.Campaign
             FilmSkip.Attach(this);
             TickIntro(0f);
             return true;
+        }
+
+        /// <summary>Nothing of the interface but «Пропустить» while the scene plays (the user's second look: the HUD, the
+        /// joystick's hint, the skill buttons showed) -- swept every frame: the HUD builds parts of itself late.</summary>
+        private static void HideInterface(IntroState s)
+        {
+            foreach (var c in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+            {
+                if (c == null || !c.isRootCanvas || !c.enabled || c == s.canvas) continue;
+                if (c.GetComponentInParent<LoadingScreen>() != null || c.GetComponent<FilmSkip>() != null) continue;
+                c.enabled = false;
+                s.hidden.Add(c);
+            }
         }
 
         private void BuildIntroUi(IntroState s)
@@ -316,6 +358,9 @@ namespace CityBuilder.Campaign
         {
             var s = _intro;
             if (s == null) return;
+            HideInterface(s);
+            // the scene begins once the loading screen is gone (the user's rule, 2026-11-15)
+            if (LoadingScreen.Busy) dt = 0f;
             s.time += dt;
             var t = s.time;
             var sc = s.script;
@@ -348,6 +393,11 @@ namespace CityBuilder.Campaign
                 PlaceAt(a.fig.transform, a, local, true);
                 var hide = a.timing.hideAfter && t > a.timing.start + a.seconds;
                 if (a.fig.gameObject.activeSelf == hide) a.fig.gameObject.SetActive(!hide);
+            }
+            if (s.crowd != null && !s.crowdPlayed && sc.crowdAt >= 0f && t >= sc.crowdAt)
+            {
+                s.crowdPlayed = true;
+                s.crowd.Play();
             }
             if (!s.shut && t >= sc.shutAt)
             {
@@ -467,7 +517,14 @@ namespace CityBuilder.Campaign
             }
             if (_ardenFig != null) _ardenFig.gameObject.SetActive(true);
             foreach (var c in s.hidden) if (c != null) c.enabled = true;
-            if (s.cam != null) s.cam.fieldOfView = s.camFov;
+            if (s.cam != null)
+            {
+                s.cam.fieldOfView = s.camFov;
+                s.cam.transform.SetParent(s.camParent, false);
+                s.cam.transform.localPosition = s.camLocalPos;
+                s.cam.transform.localRotation = s.camLocalRot;
+            }
+            if (_music != null) _music.UnPause();
             if (s.rig != null) s.rig.enabled = true;
             JumpToArden();
             if (s.root != null) Destroy(s.root.gameObject);

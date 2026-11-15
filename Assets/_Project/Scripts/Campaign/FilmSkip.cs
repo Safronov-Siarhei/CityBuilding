@@ -26,6 +26,9 @@ namespace CityBuilder.Campaign
         private const float FadeSeconds = 0.35f;
 
         private IFilm _director;
+
+        /// <summary>A film is on screen: nothing else of the interface may show (the user, 2026-11-15).</summary>
+        public static bool FilmShowing { get; private set; }
         private CanvasGroup _button;
         private Image _black;
         private bool _skipping;
@@ -85,6 +88,7 @@ namespace CityBuilder.Campaign
 
         private void Update()
         {
+            FilmShowing = _director != null && _director.Playing;
             if (_skipping) return;
             if (_director == null || (!_director.Playing && _director.Time > 0f))
             {
@@ -95,6 +99,8 @@ namespace CityBuilder.Campaign
             _button.alpha = Mathf.MoveTowards(_button.alpha, show ? 1f : 0f, Time.unscaledDeltaTime * 4f);
             _button.blocksRaycasts = show;
         }
+
+        private void OnDestroy() => FilmShowing = false;
 
         private void Skip()
         {
