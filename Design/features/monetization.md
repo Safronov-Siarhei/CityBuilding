@@ -78,6 +78,39 @@ Mockups: `Design/store/MenuShop_Mockup.png`, `MenuShop_ExitOffer.png` (script `T
 - **Cloud save:** built when the Google Play page/game are set up, before the build goes for review. Until then
   the +300 crystals are lost on reinstall (the mine itself Google restores).
 
+## Player ID + personal reward codes (DECIDED 2026-11-15, the user; NOT BUILT)
+For prizes outside the game (a contest winner gets e.g. 1000 crystals) and, later, compensations.
+- **The player's ID = their Google Play (Play Games) account**, not a local random id: the same on every device
+  and after a reinstall. Comes with the Google Play setup + cloud save, before the build goes for review.
+  The ID is shown in the settings with a copy button, so the player can send it to us.
+- **Rewards go by personal ACCOUNT CODES:** we generate a code bound to ONE account ID and ONE reward
+  (product + amount), signed with our private key (kept OUTSIDE the public repo); the player types it in a
+  «Ввести код» field; the game checks the signature and that the ID is theirs, gives the reward, remembers the
+  code as used (in the cloud save, so it cannot be redeemed twice after a reinstall). Someone else's code does
+  not work; a code cannot be forged. Only the PUBLIC key is in the game.
+- Not a «one code for everyone» promo code (Google Play restricts those): a personal gift to a named account.
+  Check the contest rules against Google Play policy before running a contest.
+- Later, optional: a server mailbox (gifts pushed to an ID, no typing) on the same ID -- not decided.
+- Open: where the code generator lives (a local script with the private key, outside the repo); code format
+  (short enough to type: base32 of id-hash + reward + signature); which rewards a code may carry.
+
+## «Подожди!» exit offers: the pool (DECIDED 2026-11-15, the user; NOT BUILT -- the code still shows the mine on every exit)
+Mockups for approval: `Design/store/ExitOffer_Pack1-3.png`, `ExitOffer_Packs_Sheet.png` (script
+`Tools/store/exit_pack_offers_mockup.py`): the same window as the mine's, one pack at a discount, card colour per pack.
+- NOT on the first shop visit (the player first sees the normal prices); from the SECOND visit on.
+- At most ONE «Подожди!» a DAY for all offers together.
+- The pool: the mine −30 % ($5.59) while not owned; Мешок 200 −10 % ($0.89), Ларец 1 200 −15 % ($4.24),
+  Сокровищница 3 000 −20 % ($7.99). While the mine is not owned it comes up in ~half of the shows, the packs share
+  the rest; once owned only the packs. The same offer never twice in a row.
+- No «Подожди!» when the player bought something during that shop visit.
+- Pack discounts stay smaller than the mine's (10-20 %) so the mine stays the best deal.
+- Every number in the sheet (discounts, prices, the mine's weight, hours between shows, first-visit rule).
+- Each discounted pack = a Google Play product of its own (3 more, 8 in all). PRICES: the real price is set ONLY
+  in Google Play Console (per product, per country); once billing is in, the game shows the price string Google
+  returns and the sheet's USD numbers become stand-ins for the editor/tests only. The sticker % is computed from
+  the two Google prices (base vs discounted) or kept in the sheet -- to settle with the billing.
+- Later (with billing): pick the offer for the player (bought a Мешок -> the Ларец comes up more).
+
 ## Boosters: how they are built (2026-11-12, IN THE CODE, user not seen, untested)
 - **Sheet:** «Песочница (Лавка): Бустеры» (gid 2000065) -> `Balance/boosters.csv`: a `booster` table
   (name_ru/en, desc_ru/en with `{0}`, effect, duration_sec, price_crystals, ad) and a `key` table

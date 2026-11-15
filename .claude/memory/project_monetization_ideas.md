@@ -37,3 +37,7 @@ Related discussion the same day: the user feels the sandbox lacks goals. A campa
   - where it lives in the menu.
 
 2026-11-15: the main-menu shop BUILT: UI/MenuShopWindow.cs + Core/Store.cs (Buy grants at once -- no Google Play billing yet), in-game mine window, place/collect hints, mine lvl 1 free. Not seen by the user. Details: Design/features/monetization.md.
+
+2026-11-15 DECIDED (not built): player ID = the Google Play account; prizes (e.g. a contest winner's 1000 crystals) go by personal signed ACCOUNT CODES bound to one ID + one reward, entered in the game, private key outside the public repo. Details: Design/features/monetization.md «Player ID + personal reward codes».
+
+2026-11-15 DECIDED (not built): «Подожди!» = a POOL (mine −30 % + packs −10/−15/−20 %), not on the first shop visit, max one a day, mine ~half while not owned, never the same twice, none after a purchase; real prices live only in Google Play Console. Pack mockups sent for approval (Design/store/ExitOffer_Pack1-3.png). Card monetization.md.
