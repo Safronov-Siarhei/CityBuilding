@@ -124,8 +124,8 @@ price, % sticker, green price) and the word «Продолжить». `Design/st
   words/prices/buttons in code; packs = `Store.PackSaleId(p)` with % from `menu_shop_pack_sale_off_pct_*` (0 hides
   a row). A purchase: lines 1-2 become `#support_thanks` / `#support_got`, rows stay. Texts `#support_*`
   («Тексты: лавка» rows 57-62). Cheat «Баннер поддержки» (Экономика tab). `BackCurrent()` for a back key.
-- TO DO on the campaign side (other device): call `SupportOfferWindow.ShowAfterWin(n, next)` after each level's
-  victory screen. Later maybe an exclusive «Набор покровителя» (Ардан's look; new model -> renders first).
+- HOOKED 2026-11-15: mission 2 (`CityDefenceHud`: «К карте» after a win -> the banner -> the map;
+  `CityDefenceMode.LevelNumber` = 2). Every NEW level must do the same: the rule is in campaign.md and WORKING_RULES. Later maybe an exclusive «Набор покровителя» (Ардан's look; new model -> renders first).
 
 ## «Подожди!» exit offers: the pool (DECIDED 2026-11-15, mockups APPROVED; BUILT 2026-11-15, not seen, untested)
 **Built:** `MenuShopWindow.ExitOfferDue/PickExitOffer/ShowWait/PackOfferCard` (card ground `PackCardBg1-3` from

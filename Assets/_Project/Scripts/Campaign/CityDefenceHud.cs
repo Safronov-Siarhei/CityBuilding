@@ -99,6 +99,8 @@ namespace CityBuilder.Campaign
             }
         }
 
+        private bool _won;
+
         private void Build()
         {
             var art = _mode.HudArt;
@@ -438,8 +440,9 @@ namespace CityBuilder.Campaign
             _restartButton = TextButton(card.transform, art, art.restartGlyph, "#m2_restart", new Vector2(-130f, 62f), CityDefenceMode.Restart).gameObject;
             TextButton(card.transform, art, art.homeGlyph, "#m2_to_map", new Vector2(130f, 62f), () =>
             {
-                Time.timeScale = 1f;
-                LoadingScreen.ToCampaignMap("CampaignMap");
+                // won: the «Поддержи разработку» banner first (UI/SupportOfferWindow, from the 2nd level on), then the map
+                if (_won) SupportOfferWindow.ShowAfterWin(CityDefenceMode.LevelNumber, ToMap);
+                else ToMap();
             });
             _endPanel.SetActive(false);
         }
@@ -500,8 +503,15 @@ namespace CityBuilder.Campaign
             _bannerFor = 2.5f;
         }
 
+        private static void ToMap()
+        {
+            Time.timeScale = 1f;
+            LoadingScreen.ToCampaignMap("CampaignMap");
+        }
+
         private void OnEnded(bool won)
         {
+            _won = won;
             _stick.Locked = true;
             _endTitle.text = Localization.Get(won ? "#m2_won" : "#m2_lost");
             _endTitle.color = won ? UiTheme.Good : UiTheme.Danger;
