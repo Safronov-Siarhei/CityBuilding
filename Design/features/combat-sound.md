@@ -14,10 +14,14 @@
 - Numbers: sheet tab «Армия и отряды» (combat_sfx_*), economy.csv.
 
 ## Files
-- `Audio/Resources/Combat/<kind>_N.ogg` (bow 4, crossbow 3, javelin 2, catapult 1, arrowhit 3, clash 11) -- the
+- `Audio/Resources/Combat/<kind>_N.ogg` (bow 4, crossbow 3, javelin 2, arrowhit 4, clash 11; catapult NONE) -- the
   name prefix picks the kind; a new variant is just a new file. Sources in `Audio/Campaign/CREDITS.md` (all CC0).
 - Cut by `Tools/audio/cut.py` (Blender's ffmpeg) from the downloads; under `Audio/` so ModelImportDefaults makes
   them mono, Vorbis, decompress-on-load.
+
+## The user's verdicts (2026-11-15)
+- catapult_1 (our sfx_whoosh) «похож на пылесос» -> removed: catapults and ship cannons are SILENT (no free real one).
+- arrowhit clinks «как будто чашки бьются» -> AntumDeluge «Thwack Sounds» (dull thuds 02/03/05/06).
 
 ## Traps
 - `CityBuilder.Resources` namespace exists: write `UnityEngine.Resources.LoadAll` in full.

@@ -33,8 +33,8 @@ namespace CityBuilder.Campaign
         [SerializeField] private GameObject[] introFigures = new GameObject[0];  // Models/Cinematic/Cast/M2*.fbx
         [SerializeField] private CineClips[] introClips = new CineClips[0];      // their clips, in the same order
         [SerializeField] private GameObject[] introProps = new GameObject[0];    // Models/Cinematic/M2Intro*.fbx
-        [SerializeField] private AudioClip introAmbient;    // Audio/Campaign/amb_morning.ogg: under the scene, no music
-        [SerializeField] private AudioClip introCrowd;      // Audio/Campaign/sfx_crowd.ogg: the townsfolk at the alarm
+        [SerializeField] private AudioClip introAmbient;    // Audio/Campaign/mus_gate.ogg: the scene's music (The Old Tower Inn)
+        [SerializeField] private AudioClip introCrowd;      // none since 2026-11-15 (the user dropped the crowd); its source plays the horn
         [SerializeField] private AudioClip introHorn;       // Audio/Campaign/sfx_horn.ogg: the lookout's blow (war_horns, CC0)
 
         /// <summary>Set by «Заново»: the mission again without its opening scene.</summary>
@@ -278,7 +278,7 @@ namespace CityBuilder.Campaign
                 s.ambient.volume = script.ambientVolume;
                 s.ambient.playOnAwake = false;   // started by TickIntro once the loading screen is gone
             }
-            if (introCrowd != null)
+            // the crowd's source plays the lookout's horn too: made even with no crowd clip (the user dropped the crowd)
             {
                 s.crowd = s.root.gameObject.AddComponent<AudioSource>();
                 s.crowd.clip = introCrowd;
@@ -408,7 +408,7 @@ namespace CityBuilder.Campaign
                 s.hornPlayed = true;
                 s.crowd.PlayOneShot(introHorn, sc.hornVolume);
             }
-            if (s.crowd != null && !s.crowdPlayed && sc.crowdAt >= 0f && t >= sc.crowdAt)
+            if (s.crowd != null && s.crowd.clip != null && !s.crowdPlayed && sc.crowdAt >= 0f && t >= sc.crowdAt)
             {
                 s.crowdPlayed = true;
                 s.crowd.Play();

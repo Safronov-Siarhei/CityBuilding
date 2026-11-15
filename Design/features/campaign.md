@@ -815,6 +815,9 @@
     `Tools/blender/tower_door_fx_drafts.py`, APPROVED and IN THE GAME 2026-11-15 (WallFight.cs: `M2DoorSparks` ring mesh of 12
     dashes on a fxGlow copy, turning + breathing, one shared `M2DoorSparkFx` system fed by Emit; consts in C# like the
     other fx); not seen in the game yet.
+  - **Sounds the user dropped (2026-11-15):** sfx_crowd («раздражает»; no CC0 panic crowd anywhere, BigSoundBank has
+    calm ones only) -> gone from the film (5.2 s, 44.4 s) and the scene (crowdAt -1; its source kept for the horn);
+    amb_morning («слышу как едет поезд») -> amb_birds (isaiah658 «Ambient Bird Sounds», CC0) in the film.
     Note: on the cine rig the figure's RIGHT is -x (fg.limbs "R" = k -1); the captain's scabbard sits at -x.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right
