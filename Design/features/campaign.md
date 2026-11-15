@@ -757,7 +757,9 @@
     opening film (CinePeasant / PeasantWoman / Girl / Boy / Merchant, clips `<name>_Flee`): a startled look at the
     wall, then they scatter towards the camera (peasant looking back, woman hands up, merchant hands on head).
     The wall is a grey stand-in in the renders; Unity uses the mission's wall. Videos
-    `Design/campaign_review/alarm_*.mp4` sent for approval. After it: the scene in Unity.
+    `Design/campaign_review/alarm_*.mp4` v2 APPROVED by the user 2026-11-15. **ALL FOUR scene-1 animation groups
+    APPROVED.** NEXT: the scene in Unity (export the cine cast + clips + props: horn, sword, guard spears; the
+    mission town's gate and wall; the shot list above).
     Note: on the cine rig the figure's RIGHT is -x (fg.limbs "R" = k -1); the captain's scabbard sits at -x.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right
