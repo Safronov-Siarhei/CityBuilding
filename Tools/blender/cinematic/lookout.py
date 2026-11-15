@@ -68,14 +68,44 @@ def waist(b):
     b.box(-0.01, 0.01, -0.09, -0.08, 0.15, 0.25, GOLD)
     b.cylinder(0, 0, 0.25, 0.27, 0.082, LEATHER, sides=10)
     b.box(-0.015, 0.015, -0.088, -0.08, 0.249, 0.272, STEEL, bevel=0.003)
-    # the horn at the left hip (+x), hung from the baldric's foot: a curved cone, brass bands, a dark tip
-    pts = [(0.098, -0.03, 0.262), (0.108, -0.01, 0.235), (0.11, 0.02, 0.215), (0.104, 0.045, 0.205)]
+
+
+# the horn (before scale): a prop of its own (lookout_anim.py: he takes it from his hip and blows it), at rest
+# hanging at his left hip (+x) from the baldric's foot -- the look the user approved
+HORN_PTS = [(0.098, -0.03, 0.262), (0.108, -0.01, 0.235), (0.11, 0.02, 0.215), (0.104, 0.045, 0.205)]
+HORN_MOUTHPIECE = (0.1, 0.055, 0.204)
+
+
+def horn(b):
+    """A curved cow horn: the bell at the top, brass bands, a dark mouthpiece."""
+    pts = HORN_PTS
     widths = [0.034, 0.028, 0.02, 0.012]
     for (p0, p1), w in zip(zip(pts, pts[1:]), widths):
         b.rod(p0, p1, w, HORN)
-    b.rod(pts[-1], (0.1, 0.055, 0.204), 0.01, HORN_TIP)
-    for p in pts[:2]:
-        b.rod((p[0], p[1] - 0.003, p[2]), (p[0], p[1] + 0.003, p[2] - 0.004), 0.038 if p is pts[0] else 0.031, GOLD)
+    b.rod(pts[-1], HORN_MOUTHPIECE, 0.01, HORN_TIP)
+    for p, w in zip(pts[:2], (0.038, 0.031)):
+        b.rod((p[0], p[1] - 0.003, p[2]), (p[0], p[1] + 0.003, p[2] - 0.004), w, GOLD)
+
+
+def make_horn():
+    """The horn as its own object, in the figure's rest space at his hip."""
+    import bpy
+    from kit import Builder
+    import detail
+    b = Builder()
+    horn(b)
+    for v in b.bm.verts:
+        v.co *= SCALE
+    me = b.to_mesh("CineLookoutHorn")
+    me.materials.append(fg.material())
+    detail.add_layers(me, kit.NAMES, kit.COLS, kit.ROWS)
+    obj = bpy.data.objects.get("CineLookoutHorn")
+    if obj is None:
+        obj = bpy.data.objects.new("CineLookoutHorn", me)
+        fg.ensure_collection().objects.link(obj)
+    else:
+        obj.data = me
+    return obj
 
 
 def chest(b):

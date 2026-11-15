@@ -732,6 +732,12 @@
     captain's hips -> drawn and turned -> held -> Ардан's fist). For it the captain's scabbard got LONGER and
     raked back and lost its hilt (`SCABBARD_MOUTH/DIR/LEN` in captain.py; the look otherwise unchanged).
     Clips `CineArdan_Gate`, `CineCaptain_Gate`. Videos sent for approval.
+    Group 1 videos (`Design/campaign_review/gate_talk_*.mp4`) sent; the user moved on («продолжаем сцену») -- taken as accepted.
+  - **ANIMATIONS group 2 (lookout), 2026-11-15:** `cinematic/lookout_anim.py`, one take `CineLookout_Alarm` 9.4 s:
+    watches (head sweeping), sees (leans in), flings the left arm at the forest (ea.AIM) and shouts with a stamp,
+    takes the horn from his left hip, blows (chest swells, head back), lowers it. The HORN became a prop
+    (`lookout.make_horn`, `HORN_PTS`, the approved look unchanged) baked as world keys (`key_horn`: hips -> at his
+    lips, bell out to his left). Videos `Design/campaign_review/lookout_*.mp4` sent for approval.
     Note: on the cine rig the figure's RIGHT is -x (fg.limbs "R" = k -1); the captain's scabbard sits at -x.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right
