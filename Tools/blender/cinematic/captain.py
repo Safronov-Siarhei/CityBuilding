@@ -17,6 +17,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import figure as fg  # noqa: E402
 import kit  # noqa: E402
+from mathutils import Vector  # noqa: E402
 
 OBJ = "CineCaptain"
 SCALE = 1.08
@@ -60,16 +61,23 @@ def waist(b):
     b.box(-0.012, 0.012, -0.096, -0.086, 0.11, 0.2, MAIL)
     b.cylinder(0, 0, 0.245, 0.266, 0.086, BOOT, sides=10)
     b.box(-0.017, 0.017, -0.092, -0.084, 0.244, 0.268, GOLD, bevel=0.003)
-    # the scabbard down the left hip, the hilt forward and up
-    b.rod((-0.088, -0.018, 0.25), (-0.114, 0.026, 0.1), 0.019, BOOT)
-    b.rod((-0.114, 0.026, 0.1), (-0.117, 0.031, 0.082), 0.021, GOLD)
-    for t in (0.35, 0.7):
-        p = (-0.088 + (-0.026) * t, -0.018 + 0.044 * t, 0.25 - 0.15 * t)
-        b.box(p[0] - 0.012, p[0] + 0.012, p[1] - 0.012, p[1] + 0.012, p[2] - 0.004, p[2] + 0.004, GOLD)
-    b.rod((-0.088, -0.018, 0.25), (-0.08, -0.034, 0.31), 0.011, BOOT)                  # the grip
-    b.rod((-0.108, -0.01, 0.255), (-0.068, -0.027, 0.25), 0.011, GOLD)                 # the cross
-    b.ball(-0.079, -0.035, 0.312, 0.009, 0.015, GOLD, sides=6)                          # the pommel
+    # the scabbard on his right hip (-x), raked back so a full arming blade fits; EMPTY of a hilt: the sword is a
+    # prop (gate_talk_anim.py) -- he draws it and gives it to Ардан (the user, 2026-11-15)
+    h, u = SCABBARD_MOUTH, SCABBARD_DIR
+    tip = h + u * SCABBARD_LEN
+    b.rod(tuple(h), tuple(tip), 0.019, BOOT)
+    b.rod(tuple(tip - u * 0.012), tuple(tip + u * 0.006), 0.021, GOLD)                   # the chape
+    b.rod(tuple(h - u * 0.004), tuple(h + u * 0.014), 0.023, GOLD)                       # the locket at the mouth
+    for t in (0.4, 0.75):
+        p = h + u * (SCABBARD_LEN * t)
+        b.box(p.x - 0.012, p.x + 0.012, p.y - 0.012, p.y + 0.012, p.z - 0.004, p.z + 0.004, GOLD)
+    b.rod((-0.07, -0.02, 0.262), tuple(h + u * 0.01), 0.008, BOOT)                       # the hanger from the belt
 
+
+# the scabbard (before scale): its mouth at the right hip, raked back, long enough for Ардан's sword
+SCABBARD_MOUTH = Vector((-0.09, -0.01, 0.255))
+SCABBARD_DIR = Vector((-0.08, 0.55, -0.83)).normalized()
+SCABBARD_LEN = 0.25
 
 SASH = ([(x, -1.0, z) for x, z in [(-0.062, 0.27), (-0.04133333333333333, 0.29033333333333333), (-0.020666666666666667, 0.3106666666666667), (0.0, 0.331), (0.020666666666666667, 0.35133333333333333), (0.04133333333333333, 0.3716666666666667), (0.062, 0.392)]] + [(0.062, -1.0, 1.0), (0.062, 0.0, 1.0), (0.062, 1.0, 1.0)]
         + [(x, 1.0, z) for x, z in [(0.062, 0.392), (0.04133333333333333, 0.3716666666666667), (0.020666666666666667, 0.35133333333333333), (0.0, 0.331), (-0.020666666666666667, 0.3106666666666667), (-0.04133333333333333, 0.29033333333333333), (-0.062, 0.27)]])

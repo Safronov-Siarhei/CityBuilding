@@ -723,6 +723,15 @@
     ANIMATIONS, group by group, each sent for approval -- proposed groups: (1) Ардан + captain (run in, pant,
     talk, frown, turn to the wall, give the sword), (2) lookout (point + shout, horn), (3) rider + horse (run up,
     nod, mount, horse idle / rear / gallop), (4) wall guards and fleeing townsfolk from existing clips.
+  - **ANIMATIONS group 1 (Ардан + captain), 2026-11-15:** `cinematic/gate_talk_anim.py` -- one take, both on one
+    clock (14.2 s): Ардан runs in from the gate and pulls up (eased run), bends hands-on-knees panting, tells
+    (points back, arms flung wide), turns 150° to look up at the wall at the shout, turns back, takes the sword
+    and raises it upright before his face (a salute), nods; the captain: hand on belt, calming palm, hand at his
+    chin, looks up at the shout, nods, draws from his right hip and holds the sword out hilt first by the blade.
+    The SWORD = Ардан's approved one (`ardan_sword.sword`) as a world-keyed prop (`key_sword`: scabbard on the
+    captain's hips -> drawn and turned -> held -> Ардан's fist). For it the captain's scabbard got LONGER and
+    raked back and lost its hilt (`SCABBARD_MOUTH/DIR/LEN` in captain.py; the look otherwise unchanged).
+    Clips `CineArdan_Gate`, `CineCaptain_Gate`. Videos sent for approval.
     Note: on the cine rig the figure's RIGHT is -x (fg.limbs "R" = k -1); the captain's scabbard sits at -x.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right
