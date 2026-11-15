@@ -692,7 +692,10 @@ namespace CityBuilder.EditorTools
             WriteArray(cityDefenceSO.FindProperty("introTakes"), introTakes.ToArray());
             var introFigures = new System.Collections.Generic.List<Object>();
             var introClips = new System.Collections.Generic.List<Object>();
-            foreach (var file in System.IO.Directory.GetFiles(cine + "Cast", "M2*.fbx"))
+            // the M2 cast, and the film's spear orc for the horde out of the forest (the user, 2026-11-15)
+            var castFiles = new System.Collections.Generic.List<string>(System.IO.Directory.GetFiles(cine + "Cast", "M2*.fbx"));
+            castFiles.Add(cine + "Cast/CineOrcSpear.fbx");
+            foreach (var file in castFiles)
             {
                 var name = System.IO.Path.GetFileNameWithoutExtension(file);
                 var clips = AssetDatabase.LoadAssetAtPath<CityBuilder.Campaign.CineClips>($"Assets/_Project/Campaign/Cast/{name}Clips.asset");

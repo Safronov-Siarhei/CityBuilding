@@ -3,6 +3,7 @@ using CityBuilder.Core;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace CityBuilder.UI
@@ -22,6 +23,9 @@ namespace CityBuilder.UI
         private EventSystem _pointerFor;
         private AudioSource _source;
         private AudioClip[] _clips;
+        // the main menu's scene has no AudioListener (nothing sounded there, the user, 2026-11-15): this object
+        // carries one, switched on only in a scene that has none of its own -- never two listeners
+        private AudioListener _ear;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Boot()
@@ -39,12 +43,29 @@ namespace CityBuilder.UI
             _source.spatialBlend = 0f;
             _source.ignoreListenerPause = true;   // the menus open over a paused game
             _clips = UnityEngine.Resources.LoadAll<AudioClip>("Ui");
+            _ear = gameObject.AddComponent<AudioListener>();
+            _ear.enabled = false;
+            SceneManager.sceneLoaded += (scene, mode) => Hear();
+            Hear();
+        }
+
+        /// <summary>Our listener on only when the scene brought none (a camera's listener may come up a frame late:
+        /// checked again on the next press too).</summary>
+        private void Hear()
+        {
+            if (_ear == null) return;
+            _ear.enabled = false;
+            foreach (var other in FindObjectsByType<AudioListener>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                if (other != _ear && other.enabled) return;
+            _ear.enabled = true;
         }
 
         private void Update()
         {
             var pointer = Pointer.current;
-            if (pointer == null || !pointer.press.wasReleasedThisFrame) return;
+            if (pointer == null) return;
+            if (pointer.press.wasPressedThisFrame) Hear();
+            if (!pointer.press.wasReleasedThisFrame) return;
             var events = EventSystem.current;
             if (events == null || _clips == null || _clips.Length == 0) return;
             if (_pointer == null || _pointerFor != events)

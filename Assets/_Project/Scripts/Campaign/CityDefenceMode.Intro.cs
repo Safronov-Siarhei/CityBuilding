@@ -50,6 +50,7 @@ namespace CityBuilder.Campaign
             public Prelude prelude;
             public Shot[] shots;
             public Line[] lines;
+            public Horde horde;
             public float shutAt, end, fade, subFadeIn, subFadeOut, musicFadeOut;
             public float ambientVolume = 0.6f, crowdAt = -1f, crowdVolume = 0.7f, hornAt = -1f, hornVolume = 0.9f;
             public int subSize;
@@ -64,6 +65,26 @@ namespace CityBuilder.Campaign
             public float along, outward;
             public bool deck, flip;
             public float[] origin;
+        }
+
+        /// <summary>The orcs walking out of the forest when the lookout cries (the user, 2026-11-15: «нам показывают
+        /// лес, но врагов не видно»): `count` of the film's approved `figure`, walking from `outward` cells (inside the
+        /// forest band, `depth` deep) towards the gate over `along` [min, max] cells, each from `at` + up to
+        /// `stagger` seconds, at `pace` x their walk.</summary>
+        [Serializable] private class Horde
+        {
+            public string figure;
+            public int count;
+            public float at, stagger, outward, depth, pace = 1f;
+            public float[] along;
+            public int seed = 7;
+        }
+
+        private class Marcher
+        {
+            public CineFigure fig;
+            public Vector3 from;
+            public float start, speed;
         }
 
         [Serializable] private class Timing
@@ -133,6 +154,7 @@ namespace CityBuilder.Campaign
             public Vector3 camLocalPos;
             public Quaternion camLocalRot;
             public AudioSource ambient, crowd;
+            public readonly List<Marcher> horde = new List<Marcher>();
             public bool crowdPlayed, hornPlayed;
             public RTSCameraController rig;
             public readonly List<Canvas> hidden = new List<Canvas>();
@@ -244,6 +266,7 @@ namespace CityBuilder.Campaign
                     s.actors.Add(new Actor { tr = go.transform, take = p.piece, prop = true, track = p.m, timing = timing, fps = take.fps, frames = take.frames, seconds = take.seconds });
                 }
             }
+            SpawnHorde(s, k);
             if (s.prelude != null && script.prelude.from != null && script.prelude.from.Length == 3)
             {
                 var f = script.prelude.from;
@@ -372,6 +395,7 @@ namespace CityBuilder.Campaign
             s.time += dt;
             var t = s.time;
             var sc = s.script;
+            TickHorde(s, t, dt);
             for (var i = 0; i < s.actors.Count; i++)
             {
                 var a = s.actors[i];
@@ -431,6 +455,47 @@ namespace CityBuilder.Campaign
             if (s.ambient != null && sc.musicFadeOut > 0f)
                 s.ambient.volume = sc.ambientVolume * Mathf.Clamp01((sc.end - t) / sc.musicFadeOut);
             if (t >= sc.end) EndIntro();
+        }
+
+        private void SpawnHorde(IntroState s, float k)
+        {
+            var h = s.script.horde;
+            if (h == null || h.count <= 0 || string.IsNullOrEmpty(h.figure)) return;
+            var i = Array.FindIndex(introFigures, m => m != null && m.name == h.figure);
+            if (i < 0 || i >= introClips.Length || introClips[i] == null) return;
+            var rnd = new System.Random(h.seed);
+            float R() => (float)rnd.NextDouble();
+            var lo = h.along != null && h.along.Length == 2 ? h.along[0] : -5f;
+            var hi = h.along != null && h.along.Length == 2 ? h.along[1] : 5f;
+            var face = Quaternion.LookRotation(-s.outward, Vector3.up);
+            for (var n = 0; n < h.count; n++)
+            {
+                var go = Instantiate(introFigures[i], s.root, false);
+                go.name = h.figure + " march " + n;
+                go.transform.localScale = introFigures[i].transform.localScale * k * (0.95f + 0.1f * R());
+                var fig = go.AddComponent<CineFigure>();
+                fig.Init(introClips[i]);
+                var pace = h.pace * (0.9f + 0.2f * R());
+                fig.Play("Walk", 0f, pace, R() * 1.2f);
+                var from = s.gate + s.along * (Mathf.Lerp(lo, hi, R()) * s.cell) + s.outward * ((h.outward + R() * h.depth) * s.cell);
+                go.transform.SetPositionAndRotation(OnMesh(from), face);
+                go.SetActive(false);
+                s.horde.Add(new Marcher { fig = fig, from = from, start = h.at + R() * h.stagger, speed = fig.Clips.walkSpeed * k * pace });
+            }
+        }
+
+        /// <summary>The horde on the scene's clock: hidden until its start, then walking straight at the gate.</summary>
+        private void TickHorde(IntroState s, float t, float dt)
+        {
+            foreach (var m in s.horde)
+            {
+                if (m.fig == null) continue;
+                var on = t >= m.start;
+                if (m.fig.gameObject.activeSelf != on) m.fig.gameObject.SetActive(on);
+                if (!on) continue;
+                m.fig.transform.position = OnMesh(m.from - s.outward * ((t - m.start) * m.speed));
+                m.fig.Tick(dt);
+            }
         }
 
         /// <summary>A group's take time at the scene's time: from its start, held at `holdAt` until `resume`.</summary>

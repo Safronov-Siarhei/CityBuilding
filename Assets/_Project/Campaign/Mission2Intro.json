@@ -1,36 +1,342 @@
 {
- "_about": "Mission 2's opening scene «У ворот» (CityDefenceMode.Intro.cs). Placements: a group's Blender frame at the north gate -- along the wall (cells, + right looking out), outward (cells, + to the field), deck = on the wall walk, flip = the frame faces the town (the alarm take faces +y out), origin = the frame's point (Blender units) put there; the first match by figure/prop name prefix wins. Groups: their start on the scene's clock (s); the gate talk holds at its take's 9.7 s until 30.6 while the alarm and the rider play. Shots: camera from/at in [along cells, up units, outward cells] (deck adds the wall walk), from2/at2 = where it drifts to; fov in degrees. Lines: localization keys.",
+ "_about": "Mission 2's opening scene «У ворот» (CityDefenceMode.Intro.cs). Placements: a group's Blender frame at the north gate -- along the wall (cells, + right looking out), outward (cells, + to the field), deck = on the wall walk, flip = the frame faces the town (the alarm take faces +y out), origin = the frame's point (Blender units) put there; the first match by figure/prop name prefix wins. Groups: their start on the scene's clock (s); the gate talk holds at its take's 9.7 s until 30.6 while the alarm and the rider play. Shots: camera from/at in [along cells, up units, outward cells] (deck adds the wall walk), from2/at2 = where it drifts to; fov in degrees. Lines: localization keys. Horde: the orcs out of the forest (the film's CineOrcSpear) -- count, start `at` + up to `stagger` s, from `outward`..+`depth` cells over `along` [min, max], `pace` x their walk.",
  "placements": [
-  {"group": "gate", "match": "", "along": 0.0, "outward": -1.35, "deck": false, "flip": false, "origin": [0, 0, 0]},
-  {"group": "lookout", "match": "", "along": 2.6, "outward": 0.0, "deck": true, "flip": false, "origin": [0, 0, 0]},
-  {"group": "rider", "match": "", "along": 0.5, "outward": -7.0, "deck": false, "flip": false, "origin": [0, 0, 0]},
-  {"group": "alarm", "match": "M2Guard", "along": -4.0, "outward": 0.0, "deck": true, "flip": true, "origin": [0, 1.25, 0.45]},
-  {"group": "alarm", "match": "M2IntroGuardSpear", "along": -4.0, "outward": 0.0, "deck": true, "flip": true, "origin": [0, 1.25, 0.45]},
-  {"group": "alarm", "match": "", "along": -4.0, "outward": 0.0, "deck": false, "flip": true, "origin": [0, 1.25, 0]}
+  {
+   "group": "gate",
+   "match": "",
+   "along": 0.0,
+   "outward": -1.35,
+   "deck": false,
+   "flip": false,
+   "origin": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "group": "lookout",
+   "match": "",
+   "along": 2.6,
+   "outward": 0.0,
+   "deck": true,
+   "flip": false,
+   "origin": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "group": "rider",
+   "match": "",
+   "along": 0.5,
+   "outward": -7.0,
+   "deck": false,
+   "flip": false,
+   "origin": [
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "group": "alarm",
+   "match": "M2Guard",
+   "along": -4.0,
+   "outward": 0.0,
+   "deck": true,
+   "flip": true,
+   "origin": [
+    0,
+    1.25,
+    0.45
+   ]
+  },
+  {
+   "group": "alarm",
+   "match": "M2IntroGuardSpear",
+   "along": -4.0,
+   "outward": 0.0,
+   "deck": true,
+   "flip": true,
+   "origin": [
+    0,
+    1.25,
+    0.45
+   ]
+  },
+  {
+   "group": "alarm",
+   "match": "",
+   "along": -4.0,
+   "outward": 0.0,
+   "deck": false,
+   "flip": true,
+   "origin": [
+    0,
+    1.25,
+    0
+   ]
+  }
  ],
  "groups": [
-  {"group": "gate", "start": 4.0, "holdAt": 9.7, "resume": 30.6, "hideAfter": false},
-  {"group": "lookout", "start": 9.2, "holdAt": -1, "resume": 0, "hideAfter": false},
-  {"group": "alarm", "start": 17.0, "holdAt": -1, "resume": 0, "hideAfter": false},
-  {"group": "rider", "start": 21.6, "holdAt": -1, "resume": 0, "hideAfter": true}
+  {
+   "group": "gate",
+   "start": 4.0,
+   "holdAt": 9.7,
+   "resume": 30.6,
+   "hideAfter": false
+  },
+  {
+   "group": "lookout",
+   "start": 9.2,
+   "holdAt": -1,
+   "resume": 0,
+   "hideAfter": false
+  },
+  {
+   "group": "alarm",
+   "start": 17.0,
+   "holdAt": -1,
+   "resume": 0,
+   "hideAfter": false
+  },
+  {
+   "group": "rider",
+   "start": 21.6,
+   "holdAt": -1,
+   "resume": 0,
+   "hideAfter": true
+  }
  ],
- "prelude": {"figure": "M2Ardan", "take": "Run", "from": [0, -7.5, 0], "seconds": 4.0},
+ "prelude": {
+  "figure": "M2Ardan",
+  "take": "Run",
+  "from": [
+   0,
+   -7.5,
+   0
+  ],
+  "seconds": 4.0
+ },
  "shots": [
-  {"t0": 0.0, "t1": 4.0, "fov": 40, "deck": false, "from": [2.0, 3.2, 13.0], "at": [0, 1.2, 0], "from2": [1.5, 2.4, 8.5], "at2": [0, 1.0, 0]},
-  {"t0": 4.0, "t1": 6.6, "fov": 45, "deck": false, "from": [1.4, 1.0, -3.6], "at": [0, 0.7, 0.6]},
-  {"t0": 6.6, "t1": 12.1, "fov": 36, "deck": false, "from": [-2.6, 0.95, -1.7], "at": [0, 0.65, -1.75]},
-  {"t0": 12.1, "t1": 15.3, "fov": 40, "deck": true, "from": [3.0, 0.55, 2.0], "at": [2.6, 0.6, 0]},
-  {"t0": 15.3, "t1": 17.0, "fov": 34, "deck": true, "from": [4.1, 0.75, -0.7], "at": [2.6, 0.65, 0]},
-  {"t0": 17.0, "t1": 19.8, "fov": 48, "deck": false, "from": [-4.4, 1.9, -8.5], "at": [-4.0, 0.7, -1.5]},
-  {"t0": 19.8, "t1": 21.6, "fov": 45, "deck": false, "from": [-1.0, 1.0, 5.5], "at": [0, 1.0, 0]},
-  {"t0": 21.6, "t1": 30.6, "fov": 42, "deck": false, "from": [1.6, 1.2, -3.6], "at": [0.5, 0.5, -7.6], "from2": [1.2, 1.6, -4.0], "at2": [0.5, 0.5, -10.0]},
-  {"t0": 30.6, "t1": 35.6, "fov": 38, "deck": false, "from": [1.7, 0.85, -0.9], "at": [0, 0.65, -1.75]}
+  {
+   "t0": 0.0,
+   "t1": 4.0,
+   "fov": 40,
+   "deck": false,
+   "from": [
+    2.0,
+    3.2,
+    13.0
+   ],
+   "at": [
+    0,
+    1.2,
+    0
+   ],
+   "from2": [
+    1.5,
+    2.4,
+    8.5
+   ],
+   "at2": [
+    0,
+    1.0,
+    0
+   ]
+  },
+  {
+   "t0": 4.0,
+   "t1": 6.6,
+   "fov": 45,
+   "deck": false,
+   "from": [
+    1.4,
+    1.0,
+    -3.6
+   ],
+   "at": [
+    0,
+    0.7,
+    0.6
+   ]
+  },
+  {
+   "t0": 6.6,
+   "t1": 12.1,
+   "fov": 36,
+   "deck": false,
+   "from": [
+    -2.6,
+    0.95,
+    -1.7
+   ],
+   "at": [
+    0,
+    0.65,
+    -1.75
+   ]
+  },
+  {
+   "t0": 12.1,
+   "t1": 13.4,
+   "fov": 40,
+   "deck": true,
+   "from": [
+    3.0,
+    0.55,
+    2.0
+   ],
+   "at": [
+    2.6,
+    0.6,
+    0
+   ]
+  },
+  {
+   "t0": 13.4,
+   "t1": 15.3,
+   "fov": 38,
+   "deck": false,
+   "from": [
+    3.4,
+    2.4,
+    0.4
+   ],
+   "at": [
+    0.6,
+    0.7,
+    15.0
+   ],
+   "from2": [
+    3.2,
+    2.3,
+    0.5
+   ],
+   "at2": [
+    0.6,
+    0.6,
+    13.5
+   ]
+  },
+  {
+   "t0": 15.3,
+   "t1": 17.0,
+   "fov": 34,
+   "deck": true,
+   "from": [
+    4.1,
+    0.75,
+    -0.7
+   ],
+   "at": [
+    2.6,
+    0.65,
+    0
+   ]
+  },
+  {
+   "t0": 17.0,
+   "t1": 19.8,
+   "fov": 48,
+   "deck": false,
+   "from": [
+    -4.4,
+    1.9,
+    -8.5
+   ],
+   "at": [
+    -4.0,
+    0.7,
+    -1.5
+   ]
+  },
+  {
+   "t0": 19.8,
+   "t1": 21.6,
+   "fov": 45,
+   "deck": false,
+   "from": [
+    -1.0,
+    1.0,
+    5.5
+   ],
+   "at": [
+    0,
+    1.0,
+    0
+   ]
+  },
+  {
+   "t0": 21.6,
+   "t1": 30.6,
+   "fov": 42,
+   "deck": false,
+   "from": [
+    1.6,
+    1.2,
+    -3.6
+   ],
+   "at": [
+    0.5,
+    0.5,
+    -7.6
+   ],
+   "from2": [
+    1.2,
+    1.6,
+    -4.0
+   ],
+   "at2": [
+    0.5,
+    0.5,
+    -10.0
+   ]
+  },
+  {
+   "t0": 30.6,
+   "t1": 35.6,
+   "fov": 38,
+   "deck": false,
+   "from": [
+    1.7,
+    0.85,
+    -0.9
+   ],
+   "at": [
+    0,
+    0.65,
+    -1.75
+   ]
+  }
  ],
  "lines": [
-  {"t": 8.2, "seconds": 3.6, "who": "#cine_name_ardan", "key": "#cine_m2_tell"},
-  {"t": 12.2, "seconds": 2.4, "who": "#cine_name_lookout", "key": "#cine_m2_shout"},
-  {"t": 21.8, "seconds": 3.0, "who": "#cine_name_captain", "key": "#cine_m2_send"},
-  {"t": 31.2, "seconds": 4.2, "who": "#cine_name_captain", "key": "#cine_m2_sword"}
+  {
+   "t": 8.2,
+   "seconds": 3.6,
+   "who": "#cine_name_ardan",
+   "key": "#cine_m2_tell"
+  },
+  {
+   "t": 12.2,
+   "seconds": 2.4,
+   "who": "#cine_name_lookout",
+   "key": "#cine_m2_shout"
+  },
+  {
+   "t": 21.8,
+   "seconds": 3.0,
+   "who": "#cine_name_captain",
+   "key": "#cine_m2_send"
+  },
+  {
+   "t": 31.2,
+   "seconds": 4.2,
+   "who": "#cine_name_captain",
+   "key": "#cine_m2_sword"
+  }
  ],
  "ambientVolume": 0.5,
  "musicFadeOut": 2.5,
@@ -43,5 +349,19 @@
  "fade": 0.4,
  "subFadeIn": 0.25,
  "subFadeOut": 0.4,
- "subSize": 30
+ "subSize": 30,
+ "horde": {
+  "figure": "CineOrcSpear",
+  "count": 14,
+  "at": 12.4,
+  "stagger": 2.6,
+  "outward": 16.0,
+  "depth": 2.5,
+  "along": [
+   -7,
+   7
+  ],
+  "pace": 1.0,
+  "seed": 7
+ }
 }
