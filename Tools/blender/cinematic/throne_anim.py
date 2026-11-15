@@ -465,7 +465,7 @@ def extras():
                 continue                                                 # the one who steps in is acting
             put(g, (k * 0.95, y, 0), 90 * -k, f"Extra guard {i} {k}")
     for k in (-1, 1):
-        put(g, (k * 1.1, tr.DAIS_Y + 0.05, tr.STEP_H), 180, f"Extra guard dais {k}")
+        put(g, (k * 1.1, tr.DAIS_Y + 0.05, tr.STEP_H), 0, f"Extra guard dais {k}")   # facing down the hall (0: they stood back to front)
     for i, (n, at, turn) in enumerate((("CineLady", (-1.5, 4.1, 0), 150), ("CineNoble", (1.55, 4.2, 0), 200),
                                        ("CineLady", (1.3, 2.3, 0), 260), ("CineNoble", (-1.2, 2.4, 0), 70),
                                        ("CineAdvisor", (1.5, 1.2, 0), 210), ("CineNoble", (-1.4, -0.2, 0), 100))):

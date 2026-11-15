@@ -302,7 +302,7 @@ def populate():
         for k in (-1, 1):
             figs.append(_copy(guard, (k * 0.95, y, 0), 90 * -k + 0, f"Guard {i} {k}"))
     for k in (-1, 1):
-        figs.append(_copy(guard, (k * 1.1, DAIS_Y + 0.05, STEP_H), 180, f"Guard throne {k}"))
+        figs.append(_copy(guard, (k * 1.1, DAIS_Y + 0.05, STEP_H), 0, f"Guard throne {k}"))   # facing down the hall
         figs.append(_copy(guard, (k * 1.2, Y0 + 0.6, 0), 180, f"Guard door {k}"))
     court = {n: courtiers.make(n, (60 + i, 0, 0)) for i, n in enumerate(courtiers.FIGURES)}
     groups = [("CineAdvisor", (0.0, DAIS_Y - 0.6, 0), 180),

@@ -809,6 +809,7 @@
     1.5 s; the King RISES (15.9), steps to the dais edge, arm out to the doors (17.3), fist to his chest (19.1);
     the rider bows his head. A FOOTSTOOL was added before the throne (gold, red cushion, 0.085 high): his short legs
     hung clear when seated. Videos `Design/campaign_review/throne_*.mp4` SENT.
+    Fix (the user: the guards by the King stood back to front): the two dais guards turned 0° (facing down the hall) here and in throne_room.populate.
     Next groups: (2) street gallop + townsfolk dodging, (3) throne room (push + guard fall, kneel/speak, King,
     advisor, court).
     SENT 2026-11-15 for approval.
