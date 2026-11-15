@@ -746,7 +746,16 @@
     one per horse.py part); `gait()` = a transverse gallop on the distance covered (STRIDE 0.62). In the saddle
     the rider's root is keyed as the horse's body bone @ `SEAT` (world matrices, like the props). The captain's
     «Скачи в столицу!» is his line in this shot (voice/caption) -- he is not animated in this take.
-    Videos `Design/campaign_review/rider_*.mp4` APPROVED by the user 2026-11-15. NEXT: group 4, the wall guards and the fleeing townsfolk; then the scene in Unity.
+    Videos `Design/campaign_review/rider_*.mp4` APPROVED by the user 2026-11-15. 
+  - **ANIMATIONS group 4 (the alarm), 2026-11-15, existing models only (the user: «на готовых»):**
+    `cinematic/alarm_anim.py`, one take 7 s. Three wall guards = CineLookout copies (no horn; clips
+    `CineLookout_Guard0-2`) run along the wall walk one after another (WALL_Z 0.45), stop at the parapet, turn
+    out and level their spears OVERHAND (the spear lies along the forearm, point to the elbow -- so the elbow goes
+    forward and the fist back by the shoulder; a hip-level levelling would point it backwards). Townsfolk from the
+    opening film (CinePeasant / PeasantWoman / Girl / Boy / Merchant, clips `<name>_Flee`): a startled look at the
+    wall, then they scatter towards the camera (peasant looking back, woman hands up, merchant hands on head).
+    The wall is a grey stand-in in the renders; Unity uses the mission's wall. Videos
+    `Design/campaign_review/alarm_*.mp4` sent for approval. After it: the scene in Unity.
     Note: on the cine rig the figure's RIGHT is -x (fg.limbs "R" = k -1); the captain's scabbard sits at -x.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right
