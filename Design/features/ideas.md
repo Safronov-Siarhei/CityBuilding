@@ -14,6 +14,7 @@
 | Monetization ideas | Rotating rewarded-ad offer icon; paid HUD looks (IAP); promo codes (5-star version FORBIDDEN by store rules, alternatives given); daily bonus roulette | `.claude/memory/project_monetization_ideas.md`, card [monetization](monetization.md) |
 | Seasonal maps by the real calendar | BUILT as a palette swap chosen in settings; how it reaches the player (by calendar?) undecided | `.claude/memory/project_seasonal_maps.md` |
 | Archipelago map extensions | parked bits (see the note) | `.claude/memory/project_archipelago_map.md` |
+| Model workshop mode (2026-11-15) | The player makes their OWN building models to taste; the first is FREE, every further model variant costs a SPECIAL currency bought in the main-menu shop; our base models can always be put back. Idea only, open questions in the note | `.claude/memory/project_model_editor_idea.md` |
 | Mobile quality tiers | the six test phones, the proposed three-layer tier scheme (a tier may change how the world is drawn, never what it is); open: device check + camera cut-out vs the edge-anchored HUD | `.claude/memory/project_mobile_device_fleet.md`, card [performance-mobile](performance-mobile.md) |
 
 Competitor research the ideas lean on: `.claude/memory/kc_reference_analysis.md` and
