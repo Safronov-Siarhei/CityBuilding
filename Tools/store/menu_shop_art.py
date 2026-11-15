@@ -128,6 +128,8 @@ def main():
     save(mine_card_bg(), 'MineCardBg')
     for i, (c0, c1) in enumerate(PACK_COLOURS):
         save(mine_card_bg(c0=c0, c1=c1, ray=(255, 236, 170, 80)), 'PackCardBg%d' % (i + 1))
+        # the shop list's lower pack cards (the user, 2026-11-15: 40 % lower, little text on them)
+        save(mine_card_bg(h=200, c0=c0, c1=c1, ray=(255, 236, 170, 80)), 'PackCardBgShort%d' % (i + 1))
     save(sandbox_mark(), 'SandboxMark')
     save(sticker(), 'Sticker')
     mid, tail = ribbon_pieces()
