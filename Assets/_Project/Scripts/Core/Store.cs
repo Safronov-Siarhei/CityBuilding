@@ -10,7 +10,8 @@ namespace CityBuilder.Core
     ///   crystal_mine        the Crystal Mine, bought once (+menu_shop_mine_gift crystals at once);
     ///   crystal_mine_sale   the same mine, the «Подожди!» price (a product of its own: Google Play has one price a
     ///                       product). Owning EITHER is owning the mine; neither is offered again;
-    ///   crystals_1..3       the crystal packs (menu_shop_pack_crystals_N).
+    ///   crystals_1..3       the crystal packs (menu_shop_pack_crystals_N);
+    ///   sale_crystals_1..3  the same packs at the «Подожди!» price (menu_shop_pack_sale_usd_N), products of their own.
     ///
     /// There is NO Google Play billing yet: Buy is a stand-in that gives the product at once (a test purchase). The
     /// billing, when it comes, calls Grant on a bought product, MarkPending on a payment still on its way (cash
@@ -22,6 +23,7 @@ namespace CityBuilder.Core
         public const string Mine = "crystal_mine";
         public const string MineSale = "crystal_mine_sale";
         public const string PackPrefix = "crystals_";
+        public const string PackSalePrefix = "sale_crystals_";
 
         private const string PendingKey = "store.pending.";
 
@@ -36,6 +38,22 @@ namespace CityBuilder.Core
 
         public static string PackId(int index) => PackPrefix + (index + 1);
 
+        public static string PackSaleId(int index) => PackSalePrefix + (index + 1);
+
+        /// <summary>A pack's index (0-based, the sale product too), or -1 for anything else.</summary>
+        public static int PackIndexOf(string id) => PackIndexOf(id, out _);
+
+        public static int PackIndexOf(string id, out bool sale)
+        {
+            sale = false;
+            if (id == null) return -1;
+            string number;
+            if (id.StartsWith(PackSalePrefix)) { sale = true; number = id.Substring(PackSalePrefix.Length); }
+            else if (id.StartsWith(PackPrefix)) number = id.Substring(PackPrefix.Length);
+            else return -1;
+            return int.TryParse(number, out var n) && n >= 1 ? n - 1 : -1;
+        }
+
         public static bool IsMine(string id) => id == Mine || id == MineSale;
 
         /// <summary>Crystals a product puts in the wallet: the mine's gift, a pack's crystals.</summary>
@@ -44,9 +62,8 @@ namespace CityBuilder.Core
             var config = BalanceConfig.Instance;
             if (config == null) return 0;
             if (IsMine(id)) return config.MenuShopMineGift;
-            if (id != null && id.StartsWith(PackPrefix) && int.TryParse(id.Substring(PackPrefix.Length), out var n))
-                return config.MenuShopPackCrystals(n - 1);
-            return 0;
+            var pack = PackIndexOf(id);
+            return pack >= 0 ? config.MenuShopPackCrystals(pack) : 0;
         }
 
         /// <summary>The stand-in price in USD (the real one will be the string Google Play returns, in the player's money).</summary>
@@ -56,9 +73,9 @@ namespace CityBuilder.Core
             if (config == null) return 0f;
             if (id == Mine) return config.MenuShopMineUsd;
             if (id == MineSale) return config.MenuShopMineSaleUsd;
-            if (id != null && id.StartsWith(PackPrefix) && int.TryParse(id.Substring(PackPrefix.Length), out var n))
-                return config.MenuShopPackUsd(n - 1);
-            return 0f;
+            var pack = PackIndexOf(id, out var sale);
+            if (pack < 0) return 0f;
+            return sale ? config.MenuShopPackSaleUsd(pack) : config.MenuShopPackUsd(pack);
         }
 
         /// <summary>«$7.99» -- the price as the shop shows it.</summary>
