@@ -96,6 +96,7 @@ namespace CityBuilder.Cheats
             if (pending != Store.IsPending(Store.Mine)) Store.MarkPending(Store.Mine, pending);
             if (Button("Возврат денег за рудник")) Store.Revoke(Store.Mine);
             if (Button("Окно рудника")) MenuShopWindow.ShowMine();
+            if (Button("Баннер поддержки")) SupportOfferWindow.ShowAfterWin(int.MaxValue, null);
             if (Button("Сбросить подсказку сбора"))
             {
                 PlayerPrefs.DeleteKey("hint.crystal_mine_collected");

@@ -101,7 +101,7 @@ Then (same day): the shop's pack cards 40 % LOWER (200 vs 330, grounds `PackCard
 two packs fit one screen; every card's words start on ONE line (`TextX`, 540 from the card's left edge, mine and
 packs, shop and «Подожди!»); «НАВСЕГДА» centred over the mine. Mockup `Design/store/MenuShop_Mockup.png`.
 
-## Campaign: «Поддержи разработку» banner (the user's idea 2026-11-15; v2 look APPROVED 2026-11-15, NOT BUILT; show frequency not decided)
+## Campaign: «Поддержи разработку» banner (the user's idea 2026-11-15; v2 look APPROVED; BUILT 2026-11-15 as UI/SupportOfferWindow, NOT YET CALLED by the campaign, not seen)
 The campaign has no ads and no paywall (the user: no ads, never break the story; levels for crystals would put
 players off the story). Instead, after a WON level a banner with Ардан: «Поддержи разработку», a few in-game
 purchases at a discount (crystals only for now: Мешок −10 %, Ларец −15 %, Сокровищница −20 % -- the same sale
@@ -115,11 +115,17 @@ left + the campaign mage right on warm glows, a parchment column with 2 lines, 3
 price, % sticker, green price) and the word «Продолжить». `Design/store/SupportBanner_v2_Mockup.png` by
 `Tools/store/support_banner_v2_mockup.py <Ardan png> <mage png>`; the mage render `Design/store/shop_art/Mage_render.png`
 (render_ardan_banner.py with mage.make()/CineMage, camera x -0.9).
-- Proposed, not yet decided: only on the FIRST win of a level (not on replays); after a purchase a short
-  «Спасибо за поддержку!» instead for a few wins; wins between shows in the sheet. Later maybe an exclusive
-  «Набор покровителя» (Ардан's look for the sandbox + crystals; a new model -> renders for approval first).
-- Build plan: a standalone `SupportOfferWindow.Show(onDone)` built here like MenuShopWindow; the campaign
-  (worked on from the other device) calls it after the victory screen -- one line there, no file clash.
+- RULE (the user, 2026-11-15): shown after EVERY won level from the 2nd on (never after the 1st), replays too;
+  `support_banner_from_level` = 2 in economy («Наборы: настройки» row 91).
+- BUILT: `Assets/_Project/Scripts/UI/SupportOfferWindow.cs` -- `SupportOfferWindow.ShowAfterWin(levelNumber, onDone)`
+  (1-based level; not due -> onDone at once). Runtime overlay canvas (order 960), pauses time + ModalGate; pieces
+  Window + Row1-3 and layout.json in `Assets/_Project/UI/Shop/Resources/Shop/Support/` written by
+  `Tools/store/support_banner_v2_mockup.py` (Window keeps 2048 on Android: UiTextureImport skips `/Support/`);
+  words/prices/buttons in code; packs = `Store.PackSaleId(p)` with % from `menu_shop_pack_sale_off_pct_*` (0 hides
+  a row). A purchase: lines 1-2 become `#support_thanks` / `#support_got`, rows stay. Texts `#support_*`
+  («Тексты: лавка» rows 57-62). Cheat «Баннер поддержки» (Экономика tab). `BackCurrent()` for a back key.
+- TO DO on the campaign side (other device): call `SupportOfferWindow.ShowAfterWin(n, next)` after each level's
+  victory screen. Later maybe an exclusive «Набор покровителя» (Ардан's look; new model -> renders first).
 
 ## «Подожди!» exit offers: the pool (DECIDED 2026-11-15, mockups APPROVED; BUILT 2026-11-15, not seen, untested)
 **Built:** `MenuShopWindow.ExitOfferDue/PickExitOffer/ShowWait/PackOfferCard` (card ground `PackCardBg1-3` from
