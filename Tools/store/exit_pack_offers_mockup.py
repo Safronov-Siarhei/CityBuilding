@@ -48,7 +48,7 @@ def pack_offer_card(img, d, box, i):
     text(d, (tx, y0 + 90), title, 58, anchor='lm')
     amount(img, d, (tx + 170, y0 + 210), n, 84)
     if badge:
-        ribbon(img, d, (x0 + 200, y0 + 18), 260, badge[0], badge[1], 28)
+        ribbon(img, d, (x0 + gx, y0 + 18), 260, badge[0], badge[1], 28)
     bx, by = x1 - 170, y1 - 64
     oy = by - 92
     text(d, (bx, oy), old, 40, fill=(225, 230, 240), stroke=4)
