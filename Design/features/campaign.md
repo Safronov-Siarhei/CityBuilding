@@ -1,6 +1,14 @@
 # Campaign («Кампания»)
 
 **Status (2026-11-10):** the opening cutscene is moving into Unity. Parts 1-4 BUILT (village + sky, the cast, the living background, the DIRECTOR): the whole 60 s film plays in Unity; v2 fixed the user's notes 1-3; **v3 (2026-11-10, dadba0246) = the EFFECTS the user chose**, mp4 sent, awaiting notes. **v4 (2026-11-11) = SOUND**; film ACCEPTED by the user 2026-11-11 after v10 + hand-placed props; **v5 (3b06d52d4) = the user's notes on v4** (see below), mp4 1080p sent. v6 = torch flame live (`CineFigure.LightTorch`, particles at the left forearm part's farthest vertex; modelled flame removed in orcs_cast.py) + SPEECH BUBBLES (user's choice): sub cues carry `"speaker"` (NOT `actor` -- a cue with actor is dispatched as an actor cue and the line never shows), bubble sprites drawn by setup (BubbleBody 9-sliced, BubbleTail), follows the head, clamped in frame, tail points at the speaker; numbers in subtitle.bubble*. Film MSAA 4x: 8x at 1080p crashed the GPU driver (and the Claude app with it). Still to do from the user's choice: embers/ash, washing lines, birds/animals and villagers at work (new models -> renders for approval first). Next after that: the handover into mission 1 (not built).
+
+> **RULE for every campaign level (the user, 2026-11-15):** after a level is WON, the «Поддержи разработку»
+> banner must come up -- every won level from the 2nd on (never after the 1st), replays too. When setting up a
+> NEW level: give its mode a `LevelNumber` const (1-based place in the campaign) and on the win screen's way out
+> call `SupportOfferWindow.ShowAfterWin(LevelNumber, <what comes next, e.g. to the map>)` instead of leaving
+> directly -- the window itself decides whether it is due (`support_banner_from_level` in the sheet) and calls
+> the continuation either way. Done: mission 2 (`CityDefenceHud`, «К карте» after a win). Mission 1 = level 1,
+> never shown. Details: `Design/features/monetization.md` «Campaign: «Поддержи разработку» banner».
 - **Effects (v3):** `Scripts/Campaign/OpeningFx.cs` on the village object, stepped by the director on the
   film clock (`Step(time, dt, camFrom, camAt, lens, dof)`); every number in the `fx` block of
   `Campaign/OpeningScript.json`. Portal: `Shaders/CineVortex.shader` quad in the arch (door given as

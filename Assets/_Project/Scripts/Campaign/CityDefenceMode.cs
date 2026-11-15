@@ -33,6 +33,8 @@ namespace CityBuilder.Campaign
     {
         public const string MapId = "Mission2";
         public const string LevelId = "m2";
+        /// <summary>Its place in the campaign (1-based): the support banner comes after won levels from the 2nd on.</summary>
+        public const int LevelNumber = 2;
         public const string GameplayScene = "CityBuilder";
         /// <summary>PlayerPrefs of the old two-part mission (a restart began at part 2): cleared on every start since the
         /// mission is one part (the user, 2026-11-13).</summary>
