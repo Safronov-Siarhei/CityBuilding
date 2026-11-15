@@ -750,8 +750,10 @@
   - **ANIMATIONS group 4 (the alarm), 2026-11-15, existing models only (the user: «на готовых»):**
     `cinematic/alarm_anim.py`, one take 7 s. Three wall guards = CineLookout copies (no horn; clips
     `CineLookout_Guard0-2`) run along the wall walk one after another (WALL_Z 0.45), stop at the parapet, turn
-    out and level their spears OVERHAND (the spear lies along the forearm, point to the elbow -- so the elbow goes
-    forward and the fist back by the shoulder; a hip-level levelling would point it backwards). Townsfolk from the
+    out and level their spears. v2 (the user 2026-11-15: the arms with the spear were twisted the wrong way in v1, an
+    overhand fold through the elbow): the guards are built WITHOUT the spear (`lookout.WITH_SPEAR = False`) and it is a
+    prop (`lookout.make_spear`, keyed on forearm.R by `key_spears`): upright while running, then the fist turns it
+    point-first (178° about the grip) with the forearm forward at the hip. Townsfolk from the
     opening film (CinePeasant / PeasantWoman / Girl / Boy / Merchant, clips `<name>_Flee`): a startled look at the
     wall, then they scatter towards the camera (peasant looking back, woman hands up, merchant hands on head).
     The wall is a grey stand-in in the renders; Unity uses the mission's wall. Videos

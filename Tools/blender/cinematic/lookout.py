@@ -193,12 +193,43 @@ def forearm(b, k):
     b.rod(el, wr, 0.04, BLUE)
     b.rod(wr - d * 0.03, wr + d * 0.002, 0.046, LEATHER)
     b.ball(wr.x, wr.y, wr.z - 0.032, 0.019, 0.032, SKIN, sides=6)
-    if k == -1:
-        x, y = wr.x - 0.004, wr.y - 0.014
-        b.rod((x, y, 0.0), (x, y, 0.62), 0.014, SPEAR)
-        b.box(x - 0.01, x + 0.01, y - 0.01, y + 0.01, 0.6, 0.62, STEEL_DARK)
-        b.prism([(x - 0.02, 0.62), (x + 0.02, 0.62), (x, 0.71)], (0, y + 0.004, 0), (1, 0, 0), (0, 0, 1), 0.008, STEEL,
-                back_cap=True)
+    if k == -1 and WITH_SPEAR:
+        spear(b)
+
+
+# the spear in his right fist, upright; alarm_anim.py builds the wall guards WITHOUT it (WITH_SPEAR False) and
+# keys it as a prop, so a guard can turn it in his fist and level it point-first (the user, 2026-11-15)
+WITH_SPEAR = True
+
+
+def spear_grip():
+    _, _, wr = fg.joints(-1)
+    return wr.x - 0.004, wr.y - 0.014, wr.z - 0.032
+
+
+def spear(b):
+    x, y, _ = spear_grip()
+    b.rod((x, y, 0.0), (x, y, 0.62), 0.014, SPEAR)
+    b.box(x - 0.01, x + 0.01, y - 0.01, y + 0.01, 0.6, 0.62, STEEL_DARK)
+    b.prism([(x - 0.02, 0.62), (x + 0.02, 0.62), (x, 0.71)], (0, y + 0.004, 0), (1, 0, 0), (0, 0, 1), 0.008, STEEL,
+            back_cap=True)
+
+
+def make_spear(name="CineLookoutSpear"):
+    """The spear as its own object, in the figure's rest space in his right fist."""
+    import bpy
+    from kit import Builder
+    import detail
+    b = Builder()
+    spear(b)
+    for v in b.bm.verts:
+        v.co *= SCALE
+    me = b.to_mesh(name)
+    me.materials.append(fg.material())
+    detail.add_layers(me, kit.NAMES, kit.COLS, kit.ROWS)
+    obj = bpy.data.objects.new(name, me)
+    fg.ensure_collection().objects.link(obj)
+    return obj
 
 
 def head(b):

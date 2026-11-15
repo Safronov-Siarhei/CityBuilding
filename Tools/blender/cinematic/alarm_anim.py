@@ -1,7 +1,7 @@
 """Mission 2's opening cutscene, group 4 (the user, 2026-11-15: «на готовых» -- existing models only): the alarm.
 One take, 7 s, everyone on one clock:
 
-  * WALL GUARDS -- three town guards (the lookout's model, CineLookout, without his horn) run along the wall
+  * WALL GUARDS -- three town guards (the lookout's model, CineLookout, without his horn; the spear a prop) run along the wall
     walk one after another, stop at the parapet, turn out to the field and level their spears;
   * TOWNSFOLK -- the opening film's people (townsfolk.py) scatter from the gate into the town: the peasant
     looking back over his shoulder, the woman with her hands up, the girl and the boy, the merchant with his
@@ -27,7 +27,8 @@ import elder_anim as ea  # noqa: E402
 import kids_anim as ka  # noqa: E402
 import lookout  # noqa: E402
 import townsfolk as tf  # noqa: E402
-from mathutils import Vector  # noqa: E402
+import gate_talk_anim as gt  # noqa: E402
+from mathutils import Matrix, Vector  # noqa: E402
 
 FPS = aa.FPS
 TAU = 2 * math.pi
@@ -53,12 +54,12 @@ def guard_ready(t):
     """At the parapet: the spear levelled out over it, the free hand forward on the shaft, feet braced."""
     q = a2.blank()
     br = math.sin(TAU * t / 1.6)
-    # the spear lies along his forearm, its point towards the elbow: levelled overhand -- the elbow out in front,
-    # the fist drawn back by the shoulder, the point forward and a little down over the parapet
-    q["upper_arm.R"] = [-82, 0, 0]
-    q["forearm.R"] = [-162, 0, 0]
-    q["upper_arm.L"] = [-72, 16, 0]
-    q["forearm.L"] = [-22, 0, 0]
+    # the spear (a prop, see key_spears) turned point-first in his fist: the forearm forward at the hip, the point
+    # out over the parapet a little down, the free hand forward on the shaft
+    q["upper_arm.R"] = [-22, 6, 0]
+    q["forearm.R"] = [-58, 0, 0]
+    q["upper_arm.L"] = [-55, 18, 0]
+    q["forearm.L"] = [-40, 0, 0]
     q["chest"] = [9 + 1.5 * br, 0, 0]
     q["head"] = [-6, 0, 0]
     q["thigh.L"] = [-18, 0, 0]
@@ -87,6 +88,27 @@ def guard_track(delay, stop_x):
     tr.add('run', run, p0, p1)
     tr.add('pose', max(0.5, SECONDS - delay - run), p1, guard_ready, p1 + Vector((0, 1, 0)))
     return tr
+
+
+def ready_at(delay, stop_x):
+    return delay + (Vector((stop_x, 0, 0)) - Vector((GUARD_FROM_X, 0, 0))).length / GUARD_SPEED + 0.25
+
+
+def key_spears(spears, arms):
+    """Each guard's spear in his right fist: upright while he runs (as the approved lookout carries it); at the
+    parapet his fist turns it over, point-first along his forearm."""
+    sc = bpy.context.scene
+    grip = Vector(lookout.spear_grip()) * lookout.SCALE
+    for f in range(int(SECONDS * FPS) + 1):
+        t = f / FPS
+        sc.frame_set(f + 1)
+        for sp, arm, (delay, stop_x) in zip(spears, arms, GUARDS):
+            turn = a2.ease((t - ready_at(delay, stop_x) + 0.05) / 0.45)
+            local = (Matrix.Translation(grip) @ Matrix.Rotation(math.radians(178 * turn), 4, 'X')
+                     @ Matrix.Translation(-grip))
+            sp.matrix_world = gt.bone_world(arm, "forearm.R") @ local
+            sp.keyframe_insert("location", frame=f + 1)
+            sp.keyframe_insert("rotation_euler", frame=f + 1)
 
 
 # ---------------------------------------------------------------- the townsfolk
@@ -182,7 +204,10 @@ def main():
     what = argv[2] if len(argv) > 2 else "all"
     os.makedirs(out, exist_ok=True)
     keep = set()
+    lookout.WITH_SPEAR = False
     base = lookout.make((0, 0, 0))
+    spears = [lookout.make_spear("CineGuardSpear%d" % i) for i in range(len(GUARDS))]
+    keep |= {s.name for s in spears}
     rigs = []
     meshes = [base]
     for i in range(1, len(GUARDS)):                                # copied before any is rigged
@@ -207,6 +232,7 @@ def main():
     wall()
     for arm, tr, clip in rigs:
         tr.bake(arm, clip)
+    key_spears(spears, [r[0] for r in rigs[:len(GUARDS)]])
     shots = (("wide", (-0.2, 0.2, 0.3), (0.4, -3.6, 0.55), 30),
              ("guards", (-0.2, WALL_Y, WALL_Z + 0.25), (1.9, -1.25, 0.35), 33))
     for key, at, off, lens in shots:
