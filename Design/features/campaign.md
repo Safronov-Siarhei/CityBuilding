@@ -777,6 +777,16 @@
     to the door (the doors are the castle model's, opened in Unity). Stairs = capital.py's (8 x 0.1 rise x 0.32
     run, terrace 0.8, door 0.7 back) as a grey stand-in. Videos `Design/campaign_review/arrive_*.mp4` SENT.
     v2 (the user: «указывают в сторону от замка»): stepping aside they now turn round to the doorway, the sweep goes to it.
+    **Group 1 APPROVED (the user, 2026-11-15: «Утверждаю»).**
+  - **Scene 2 ANIMATIONS group 2 «Улица» (2026-11-15):** `cinematic/street_gallop_anim.py`, one take 5.5 s: the
+    horse gallops straight up the street (+y, V 2.0, rider seated low -- rider_anim's gait/seat; clips
+    `CineHorse_Street`, `CineRider_Street`); six people (CineNoble from courtiers.py + the film's Peasant,
+    PeasantWoman, Merchant, Boy, Girl; clips `<name>_Dodge`) stand chatting, see it WARN 0.75 s before it reaches
+    them, start, LEAP aside (kids_anim jump) and turn to stare after it: peasant shakes his fist, woman hands up,
+    noble hand on his hat, boy pulls back, girl clutches her head; the MERCHANT leaps back into his CART
+    (village.CineCart, length along the street): it tips over away from the street about its wheels' line
+    (84°, a bounce), 9 apples (CineApple0-8, props) ride it, spill and roll out. Videos
+    `Design/campaign_review/street_*.mp4` SENT.
     Next groups: (2) street gallop + townsfolk dodging, (3) throne room (push + guard fall, kneel/speak, King,
     advisor, court).
     SENT 2026-11-15 for approval.
