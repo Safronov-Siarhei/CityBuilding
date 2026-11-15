@@ -746,7 +746,7 @@
     one per horse.py part); `gait()` = a transverse gallop on the distance covered (STRIDE 0.62). In the saddle
     the rider's root is keyed as the horse's body bone @ `SEAT` (world matrices, like the props). The captain's
     «Скачи в столицу!» is his line in this shot (voice/caption) -- he is not animated in this take.
-    Videos `Design/campaign_review/rider_*.mp4` sent for approval.
+    Videos `Design/campaign_review/rider_*.mp4` APPROVED by the user 2026-11-15. NEXT: group 4, the wall guards and the fleeing townsfolk; then the scene in Unity.
     Note: on the cine rig the figure's RIGHT is -x (fg.limbs "R" = k -1); the captain's scabbard sits at -x.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right
