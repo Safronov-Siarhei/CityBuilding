@@ -88,6 +88,7 @@ namespace CityBuilder.Combat
             var slot = _slots[index];
             if (!Apply(slot.Balance)) return false;
             slot.Cooldown = NoCooldownCheat ? 0f : slot.Balance.cooldownSeconds;
+            if (_hero != null) CombatSound.Skill(_hero.transform.position);
             Used?.Invoke(index);
             return true;
         }

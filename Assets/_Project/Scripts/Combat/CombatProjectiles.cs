@@ -395,7 +395,9 @@ namespace CityBuilder.Combat
 
         private static void ApplyDamage(ref Shot shot)
         {
-            if (shot.TargetTransform != null) CombatSound.Landed(shot.Kind, shot.TargetTransform.position + shot.AimOffset);
+            if (shot.Building != null) CombatSound.BuildingHit(shot.Building);
+            else if (shot.Enemy is BuildingInstance enemyBuilding) CombatSound.BuildingHit(enemyBuilding);
+            else if (shot.TargetTransform != null) CombatSound.Landed(shot.Kind, shot.TargetTransform.position + shot.AimOffset);
             if (shot.Enemy != null)
             {
                 if (shot.Enemy.Transform == null || !shot.Enemy.IsAlive) return;

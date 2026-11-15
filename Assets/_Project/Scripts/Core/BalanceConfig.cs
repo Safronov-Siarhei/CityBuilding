@@ -516,6 +516,8 @@ namespace CityBuilder.Core
         // between two sounds of one kind, and the share of arrows that clink where they land
         [SerializeField] private float combatSfxVolume = 0.6f, combatSfxHearRange = 30f, combatSfxGapSeconds = 0.05f, combatSfxHitShare = 0.35f;
         [SerializeField] private int combatSfxVoices = 8;
+        // the interface buttons' click (UI.UiClickSound; the user, 2026-11-15)
+        [SerializeField] private float uiClickVolume = 0.5f;
         // coins a citizen pays a day (the user, 2026-11-02: the tax slider is gone, every citizen
         // pays this), and what each level of the Tax House adds to it
         [SerializeField] private float coinsPerCitizenPerDay = 1f;
@@ -1402,6 +1404,7 @@ namespace CityBuilder.Core
         public float CombatSfxGapSeconds => combatSfxGapSeconds;
         public float CombatSfxHitShare => combatSfxHitShare;
         public int CombatSfxVoices => combatSfxVoices;
+        public float UiClickVolume => uiClickVolume;
         public float CoinsPerCitizenPerDay => coinsPerCitizenPerDay;
         public float TaxHouseBonusPerLevel => taxHouseBonusPerLevel;
         public float DecorCoinsCapPerResident => decorCoinsCapPerResident;
@@ -2516,6 +2519,7 @@ namespace CityBuilder.Core
             combatSfxGapSeconds = Read(economy, "combat_sfx_gap_sec", combatSfxGapSeconds);
             combatSfxHitShare = Read(economy, "combat_sfx_hit_share", combatSfxHitShare);
             combatSfxVoices = (int)Read(economy, "combat_sfx_voices", combatSfxVoices);
+            uiClickVolume = Read(economy, "ui_click_volume", uiClickVolume);
             coinsPerCitizenPerDay = Read(economy, "coins_per_citizen_per_day", coinsPerCitizenPerDay);
             taxHouseBonusPerLevel = Read(economy, "tax_house_bonus_per_level", taxHouseBonusPerLevel);
             decorCoinsCapPerResident = Read(economy, "decor_coins_cap_per_resident", decorCoinsCapPerResident);

@@ -14,10 +14,22 @@
 - Numbers: sheet tab «Армия и отряды» (combat_sfx_*), economy.csv.
 
 ## Files
-- `Audio/Resources/Combat/<kind>_N.ogg` (bow 4, crossbow 3, javelin 2, arrowhit 4, clash 11; catapult NONE) -- the
+- `Audio/Resources/Combat/<kind>_N.ogg` (bow 4, crossbow 3, javelin 2, arrowhit 4, clash 11, skill 1, wood 6, stone 5; catapult NONE) -- the
   name prefix picks the kind; a new variant is just a new file. Sources in `Audio/Campaign/CREDITS.md` (all CC0).
 - Cut by `Tools/audio/cut.py` (Blender's ffmpeg) from the downloads; under `Audio/` so ModelImportDefaults makes
   them mono, Vorbis, decompress-on-load.
+
+## Skills, buildings, buttons (the user, 2026-11-15, round 2)
+- Hero skills: ONE sound for every skill everywhere (skill_1 = Kenney RPG Audio drawKnife1): `HeroSkills.Use`
+  (sandbox, dungeons, invasion) and `CityDefenceMode.UseSkill` (Ардан, mission 2).
+- Blows on buildings: wood on a wooden one, stone on a stone one -- `BuildingInstance.IsStoneBuilt` = what it cost to
+  raise to its level (build + upgrades) holds at least as much stone as wood (cached per level). Hooks: orc melee on a
+  building, a soldier's melee on one (the bot's town), any projectile landing on one. wood_ = Kenney impactWood_heavy +
+  impactPlank_medium, stone_ = Kenney impactMining.
+- Interface buttons: `UI/UiClickSound.cs`, one DontDestroyOnLoad object booted at the first scene: on a pointer
+  release it raycasts the UI once and clicks if a live Selectable is under it (no per-button wiring; buttons are made
+  in dozens of places). Clip `Audio/Resources/Ui/click_N` (Kenney UI Audio click1), volume `ui_click_volume` (sheet,
+  «Армия и отряды»), ignores the listener pause (menus over a paused game).
 
 ## The user's verdicts (2026-11-15)
 - catapult_1 (our sfx_whoosh) «похож на пылесос» -> removed: catapults and ship cannons are SILENT (no free real one).

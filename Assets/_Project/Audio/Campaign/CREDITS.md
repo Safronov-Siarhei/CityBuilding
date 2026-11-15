@@ -26,3 +26,6 @@ here as a courtesy. Cut, faded and re-encoded to OGG by `Tools/audio/cut.py`.
 | sfx_horde | https://opengameart.org/content/big-scary-troll-sounds (troll-roars) | -- |
 | sfx_fire | https://opengameart.org/content/fire-crackling | -- |
 | sfx_bell | our own: `Tools/audio/bell.py` (no CC0 church bell was found) | -- |
+| Resources/Combat skill_1 | https://kenney.nl/assets/rpg-audio (drawKnife1) | Kenney |
+| Resources/Combat wood_, stone_ | https://kenney.nl/assets/impact-sounds (impactWood_heavy, impactPlank_medium, impactMining) | Kenney |
+| Resources/Ui click_1 | https://kenney.nl/assets/ui-audio (click1) | Kenney |

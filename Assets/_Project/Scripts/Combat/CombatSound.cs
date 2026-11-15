@@ -15,11 +15,11 @@ namespace CityBuilder.Combat
     /// </summary>
     public static class CombatSound
     {
-        public enum Kind { Bow = 0, Crossbow = 1, Javelin = 2, Catapult = 3, ArrowHit = 4, Clash = 5 }
+        public enum Kind { Bow = 0, Crossbow = 1, Javelin = 2, Catapult = 3, ArrowHit = 4, Clash = 5, Skill = 6, Wood = 7, Stone = 8 }
 
-        private static readonly string[] Names = { "bow", "crossbow", "javelin", "catapult", "arrowhit", "clash" };
+        private static readonly string[] Names = { "bow", "crossbow", "javelin", "catapult", "arrowhit", "clash", "skill", "wood", "stone" };
         private static AudioClip[][] _clips;
-        private static readonly float[] Last = new float[6];
+        private static readonly float[] Last = new float[9];
         private static AudioSource[] _voices;
         private static int _next;
         private static GameObject _host;
@@ -42,6 +42,16 @@ namespace CityBuilder.Combat
         }
 
         public static void Clash(Vector3 at) => Play(Kind.Clash, at, 1f);
+
+        /// <summary>A hero's skill set off -- one sound for every skill in every mode (the user, 2026-11-15).</summary>
+        public static void Skill(Vector3 at) => Play(Kind.Skill, at, 1f);
+
+        /// <summary>A blow or a shot on a building: wood on a wooden one, stone on a stone one (the user, 2026-11-15).</summary>
+        public static void BuildingHit(Buildings.BuildingInstance building)
+        {
+            if (building == null) return;
+            Play(building.IsStoneBuilt ? Kind.Stone : Kind.Wood, building.transform.position, 0.8f);
+        }
 
         private static void Play(Kind kind, Vector3 at, float scale)
         {

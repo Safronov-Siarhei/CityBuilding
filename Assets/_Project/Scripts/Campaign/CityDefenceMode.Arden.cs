@@ -285,6 +285,7 @@ namespace CityBuilder.Campaign
                     break;
             }
             _cooldown[skill] = CooldownOf(skill);
+            Combat.CombatSound.Skill(Arden.transform.position);
             SkillUsed?.Invoke(skill);
             return true;
         }

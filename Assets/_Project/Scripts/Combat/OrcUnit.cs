@@ -1240,7 +1240,11 @@ namespace CityBuilder.Combat
             if (NeverStrikes) return;
             StrikeAt(building.transform.position);
             if (IsRanged) CombatProjectiles.Fire(Shot, CombatProjectiles.MuzzleOfUnit(transform), building, _attackDamage);
-            else building.TryDamage(_attackDamage);
+            else
+            {
+                CombatSound.BuildingHit(building);
+                building.TryDamage(_attackDamage);
+            }
         }
 
         private void TickAttack()

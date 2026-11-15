@@ -391,6 +391,40 @@ namespace CityBuilder.Buildings
 
         public void Shield(float seconds) => _shieldedUntil = Mathf.Max(_shieldedUntil, Time.time + Mathf.Max(0f, seconds));
 
+        private int _stoneLevel = -1;
+        private bool _stone;
+
+        /// <summary>Built of stone, not wood (its blows sound so: Combat.CombatSound): what it cost to raise to its
+        /// level, build and upgrades, holds at least as much stone as wood. Worked out once per level.</summary>
+        public bool IsStoneBuilt
+        {
+            get
+            {
+                if (_stoneLevel == Level) return _stone;
+                _stoneLevel = Level;
+                var stone = 0;
+                var wood = 0;
+                if (Data != null)
+                {
+                    Count(Data.cost, ref stone, ref wood);
+                    for (var l = 2; l <= Level; l++) Count(Data.UpgradeCostTo(l), ref stone, ref wood);
+                }
+                _stone = stone > 0 && stone >= wood;
+                return _stone;
+            }
+        }
+
+        private static void Count(List<Resources.ResourceAmount> cost, ref int stone, ref int wood)
+        {
+            if (cost == null) return;
+            foreach (var c in cost)
+            {
+                if (c == null) continue;
+                if (c.type == Resources.ResourceType.Stone) stone += c.amount;
+                else if (c.type == Resources.ResourceType.Wood) wood += c.amount;
+            }
+        }
+
         public void TryDamage(int amount)
         {
             if (amount <= 0 || CurrentHealth <= 0) return;
