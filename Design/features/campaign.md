@@ -810,6 +810,8 @@
     the rider bows his head. A FOOTSTOOL was added before the throne (gold, red cushion, 0.085 high): his short legs
     hung clear when seated. Videos `Design/campaign_review/throne_*.mp4` SENT.
     Fix (the user: the guards by the King stood back to front): the two dais guards turned 0° (facing down the hall) here and in throne_room.populate.
+    **Group 3 APPROVED (the user, 2026-11-15: «Утверждаю»). ALL THREE scene-2 animation groups APPROVED.** Next: scene 2 in
+    Unity (export the sets + takes like export_m2intro.py, play it after part 1's 8 minutes), the filling round the capital to discuss.
     Next groups: (2) street gallop + townsfolk dodging, (3) throne room (push + guard fall, kneel/speak, King,
     advisor, court).
     SENT 2026-11-15 for approval.
