@@ -673,7 +673,7 @@ namespace CityBuilder.EditorTools
             cityDefenceSO.FindProperty("orcTowerModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Orcs/OrcSiegeTower.fbx");
             // the gate's leaves, portcullis and passage (approved 2026-11-12, Tools/blender/gate_close_drafts.py)
             cityDefenceSO.FindProperty("gateLeafModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Buildings/FortifiedGate1-Leaf.fbx");
-            cityDefenceSO.FindProperty("music").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_village.ogg");
+            cityDefenceSO.FindProperty("music").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_mission1.ogg");
             cityDefenceSO.FindProperty("roar").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/sfx_roar.ogg");
             cityDefenceSO.FindProperty("gateTowerDoorsModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Buildings/FortifiedGate1-TowerDoors.fbx");
             cityDefenceSO.FindProperty("gateGrilleModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Buildings/FortifiedGate1-Grille.fbx");
@@ -681,7 +681,7 @@ namespace CityBuilder.EditorTools
             cityDefenceSO.FindProperty("ardenModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(cine + "Cast/CineArdanSword.fbx");
             cityDefenceSO.FindProperty("ardenClips").objectReferenceValue = AssetDatabase.LoadAssetAtPath<CityBuilder.Campaign.CineClips>("Assets/_Project/Campaign/Cast/CineArdanSwordClips.asset");
             // the opening scene at the north gate (approved 2026-11-15; Tools/blender/cinematic/export_m2intro.py)
-            cityDefenceSO.FindProperty("introAmbient").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/amb_morning.ogg");
+            cityDefenceSO.FindProperty("introAmbient").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_gate.ogg");   // the scene's music: The Old Tower Inn (the user, 2026-11-15)
             cityDefenceSO.FindProperty("introCrowd").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/sfx_crowd.ogg");
             cityDefenceSO.FindProperty("introScript").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Mission2Intro.json");
             var introTakes = new System.Collections.Generic.List<Object>();

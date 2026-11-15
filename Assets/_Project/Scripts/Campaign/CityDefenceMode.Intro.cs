@@ -49,7 +49,7 @@ namespace CityBuilder.Campaign
             public Prelude prelude;
             public Shot[] shots;
             public Line[] lines;
-            public float shutAt, end, fade, subFadeIn, subFadeOut;
+            public float shutAt, end, fade, subFadeIn, subFadeOut, musicFadeOut;
             public float ambientVolume = 0.6f, crowdAt = -1f, crowdVolume = 0.7f;
             public int subSize;
         }
@@ -265,7 +265,7 @@ namespace CityBuilder.Campaign
             }
             // no battle music under the scene (the user: «мне не нравится музыка») -- the morning's air, the crowd at
             // the alarm; the siege's music starts with the player's say
-            if (_music != null) _music.Pause();
+            if (_music != null) _music.Pause();   // TickMusic holds it while _intro is set
             // the wall's yellow door circles are the game's, not the scene's (the user's third look)
             foreach (var door in _doorCircles) if (door.mark != null) door.mark.SetActive(false);
             if (introAmbient != null)
@@ -275,7 +275,7 @@ namespace CityBuilder.Campaign
                 s.ambient.loop = true;
                 s.ambient.spatialBlend = 0f;
                 s.ambient.volume = script.ambientVolume;
-                s.ambient.Play();
+                s.ambient.playOnAwake = false;   // started by TickIntro once the loading screen is gone
             }
             if (introCrowd != null)
             {
@@ -364,8 +364,10 @@ namespace CityBuilder.Campaign
             // the siege's music may not sound under the scene, not even under the loading screen (a Pause in the frame
             // of its Play does not hold: the user heard it)
             if (_music != null && _music.isPlaying) _music.Pause();
-            // the scene begins once the loading screen is gone (the user's rule, 2026-11-15)
+            // the scene begins once the loading screen is gone (the user's rule, 2026-11-15) -- its sound too: the
+            // ambient was started in StartIntro and played under the loading screen (the user's fourth look)
             if (LoadingScreen.Busy) dt = 0f;
+            else if (s.ambient != null && !s.ambient.isPlaying && s.time <= 0f) s.ambient.Play();
             s.time += dt;
             var t = s.time;
             var sc = s.script;
@@ -418,6 +420,9 @@ namespace CityBuilder.Campaign
                 var dark = Mathf.Clamp01((t - (sc.end - fade)) / fade);
                 s.black.color = new Color(0f, 0f, 0f, dark);
             }
+            // the scene's music (mus_gate) goes quiet over its last seconds, not cut by the handover
+            if (s.ambient != null && sc.musicFadeOut > 0f)
+                s.ambient.volume = sc.ambientVolume * Mathf.Clamp01((sc.end - t) / sc.musicFadeOut);
             if (t >= sc.end) EndIntro();
         }
 
@@ -529,11 +534,7 @@ namespace CityBuilder.Campaign
                 s.cam.transform.localPosition = s.camLocalPos;
                 s.cam.transform.localRotation = s.camLocalRot;
             }
-            if (_music != null)
-            {
-                _music.UnPause();
-                if (!_music.isPlaying) _music.Play();
-            }
+            // the siege's music: TickMusic starts it now that _intro is null
             foreach (var door in _doorCircles) if (door.mark != null) door.mark.SetActive(true);
             if (s.rig != null) s.rig.enabled = true;
             JumpToArden();

@@ -802,6 +802,13 @@
     UnPause/Play; (3) the yellow tower-door circles (`_doorCircles[].mark`) hidden for the scene, back at EndIntro
     (AbortIntro goes through it). The orc-wave sound is fine (the user). OPEN: the user dislikes mus_attack as the
     level-2 music -> mus_village set for the siege (the user, 2026-11-15: «попробую её»; SetupProjectCityScene `music`), not heard yet.
+  - **Fourth look (2026-11-15):** «музыка всё ещё начинается во время загрузочного экрана» -- it was the SCENE's
+    ambient (amb_morning, started in StartIntro under the loading screen; the noise the user heard), not the siege
+    music. Now NOTHING sounds while `LoadingScreen.Busy`: the scene's sound starts on its first tick after it, and the
+    siege music is never Played in Setup -- `TickMusic` (every Update) plays it only when wanted, no loading screen and
+    no `_intro`. Scene music = mus_gate (RandomMind «The Old Tower Inn» loop, CC0, CREDITS), fades out over
+    `musicFadeOut` 2.5 s; siege music = mus_mission1 looped (the user); orc-wave roar unchanged (the user). amb_morning
+    no longer used.
     Note: on the cine rig the figure's RIGHT is -x (fg.limbs "R" = k -1); the captain's scabbard sits at -x.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right

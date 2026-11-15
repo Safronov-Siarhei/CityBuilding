@@ -435,6 +435,7 @@ namespace CityBuilder.Campaign
 
         private void Update()
         {
+            TickMusic();
             if (!_active || Current == Stage.Setup || Current == Stage.Won || Current == Stage.Lost) return;
             var dt = Time.deltaTime;
             if (_intro != null)

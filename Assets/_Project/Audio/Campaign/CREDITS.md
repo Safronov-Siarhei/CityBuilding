@@ -8,6 +8,7 @@ here as a courtesy. Cut, faded and re-encoded to OGG by `Tools/audio/cut.py`.
 | mus_village | https://opengameart.org/content/medieval-the-old-tower-inn (loop, 0-23 s) | RandomMind |
 | mus_portal | https://opengameart.org/content/evil-approach (14-33 s) | nene |
 | mus_attack | https://opengameart.org/content/war-theme (36-62 s) | Spring Spring |
+| mus_gate | https://opengameart.org/content/medieval-the-old-tower-inn (Loop_The_Old_Tower_Inn.wav, whole) | RandomMind |
 | amb_morning | https://opengameart.org/content/amb-morning-sounds-perfect-loop | -- |
 | sfx_crowd | https://opengameart.org/content/crowd-shoutingspeaking-ambience | -- |
 | sfx_scream | https://opengameart.org/content/female-scream-1 | -- |
