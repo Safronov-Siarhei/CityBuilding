@@ -41,7 +41,11 @@ namespace CityBuilder.Campaign
         private static bool _skipIntroOnce;
 
         /// <summary>The next start goes straight to the siege (the play-mode tests).</summary>
-        public static void SkipIntroOnce() => _skipIntroOnce = true;
+        public static void SkipIntroOnce()
+        {
+            _skipIntroOnce = true;
+            _skipCapitalOnce = true;     // and no second scene at the turn of the clock
+        }
 
         [Serializable] private class IntroScript
         {

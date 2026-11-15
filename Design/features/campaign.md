@@ -812,6 +812,25 @@
     Fix (the user: the guards by the King stood back to front): the two dais guards turned 0° (facing down the hall) here and in throne_room.populate.
     **Group 3 APPROVED (the user, 2026-11-15: «Утверждаю»). ALL THREE scene-2 animation groups APPROVED.** Next: scene 2 in
     Unity (export the sets + takes like export_m2intro.py, play it after part 1's 8 minutes), the filling round the capital to discuss.
+  - **SCENE 2 IN UNITY (2026-11-15, the user: «Да, в Unity»), not seen:** `Scripts/Campaign/CityDefenceMode.Capital.cs`.
+    Export ONE run: `Tools/blender/cinematic/export_m2capital.py -- <project>` -> `Models/Cinematic/M2CapitalSet.fbx`
+    (capital + its still people: wall/gate/stair guards, market folk, stalls -- ONE mesh, ~165k tris) and
+    `M2ThroneSet.fbx` (hall + still court, ~50k tris), figures `Models/Cinematic/Cast/Cap*.fbx` (Cap* not M2*: a
+    figure's FBX carries ALL its takes and scene 1's M2Horse/M2Rider/M2Guard keep theirs; the rider has Arrive,
+    Street, Throne), props `CapPropCart/Apple/AdvisorScroll.fbx`, roots per frame `Campaign/M2Capital/<group>.json`,
+    entries in OpeningCast.json. (export_m2intro.py's main() now runs only as a script: its helpers are imported.)
+    Trap in the export: every group's build() makes figures by NAME (fg.make reuses an object by its name): after
+    sampling, a group's objects are renamed ('park') before the next group builds.
+    `Campaign/Mission2Capital.json`: places (capital at the root, hall at x 400; the root at Unity (6000, 0, 6000),
+    far from the town), uses (street group used TWICE: horse+rider only over the bridge 0-4.6 s with `rise` onto
+    the deck, then the full street 4.6-10; arrive at the stairs' foot capital x 29.22 10-18.9; throne in the hall
+    18.9-39), 10 shots, 3 lines (#cine_name_rider/king, #cine_m2c_tell/order/self -- sheet «Тексты: обучение и
+    сюжет» rows 37-41), music mus_village (0.5), end 39, fade in 0.6 / out 0.8.
+    Flow: when HelpComing first turns true (m2_reinforce_sec before the end = minute 8) `WatchForCapital` starts it;
+    the WHOLE game stands (Time.timeScale 0, it steps on unscaled time), HUD canvases swept, the M2 darkness quad
+    switched off (it reads world places: out there all would be dark), siege music paused, camera taken off the
+    RTS rig and restored; «Пропустить» = FilmSkip on the film's own IFilm. SkipIntroOnce (tests) also skips it.
+    Check: CityDefenceIntroTests runs it (ClockToTheTurn, SkipCapital).
     Next groups: (2) street gallop + townsfolk dodging, (3) throne room (push + guard fall, kneel/speak, King,
     advisor, court).
     SENT 2026-11-15 for approval.

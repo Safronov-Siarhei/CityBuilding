@@ -213,4 +213,5 @@ def main():
     print("EXPORT M2INTRO DONE", group, len(actors), "figures", len(props), "props", frames, "frames")
 
 
-main()
+if __name__ == "__main__":       # export_m2capital.py imports its helpers
+    main()

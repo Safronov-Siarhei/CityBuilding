@@ -710,6 +710,37 @@ namespace CityBuilder.EditorTools
             foreach (var file in System.IO.Directory.GetFiles(cine, "M2Intro*.fbx"))
                 introProps.Add(AssetDatabase.LoadAssetAtPath<GameObject>(file.Replace('\\', '/')));
             WriteArray(cityDefenceSO.FindProperty("introProps"), introProps.ToArray());
+            // the second scene, at the capital when the courier gets there (approved 2026-11-15;
+            // Tools/blender/cinematic/export_m2capital.py, CityDefenceMode.Capital.cs)
+            cityDefenceSO.FindProperty("capitalScript").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Mission2Capital.json");
+            cityDefenceSO.FindProperty("capitalMusic").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_village.ogg");
+            var capitalTakes = new System.Collections.Generic.List<Object>();
+            if (System.IO.Directory.Exists("Assets/_Project/Campaign/M2Capital"))
+                foreach (var file in System.IO.Directory.GetFiles("Assets/_Project/Campaign/M2Capital", "*.json"))
+                    capitalTakes.Add(AssetDatabase.LoadAssetAtPath<TextAsset>(file.Replace('\\', '/')));
+            WriteArray(cityDefenceSO.FindProperty("capitalTakes"), capitalTakes.ToArray());
+            var capitalFigures = new System.Collections.Generic.List<Object>();
+            var capitalClips = new System.Collections.Generic.List<Object>();
+            foreach (var file in System.IO.Directory.GetFiles(cine + "Cast", "Cap*.fbx"))
+            {
+                var name = System.IO.Path.GetFileNameWithoutExtension(file);
+                var clips = AssetDatabase.LoadAssetAtPath<CityBuilder.Campaign.CineClips>($"Assets/_Project/Campaign/Cast/{name}Clips.asset");
+                var model = AssetDatabase.LoadAssetAtPath<GameObject>(file.Replace('\\', '/'));
+                if (model == null || clips == null) { Debug.LogWarning($"[CityDefence] capital figure {name}: model or clips missing (setup twice?)"); continue; }
+                capitalFigures.Add(model);
+                capitalClips.Add(clips);
+            }
+            WriteArray(cityDefenceSO.FindProperty("capitalFigures"), capitalFigures.ToArray());
+            WriteArray(cityDefenceSO.FindProperty("capitalClips"), capitalClips.ToArray());
+            var capitalProps = new System.Collections.Generic.List<Object>();
+            foreach (var file in System.IO.Directory.GetFiles(cine, "CapProp*.fbx"))
+                capitalProps.Add(AssetDatabase.LoadAssetAtPath<GameObject>(file.Replace('\\', '/')));
+            WriteArray(cityDefenceSO.FindProperty("capitalProps"), capitalProps.ToArray());
+            WriteArray(cityDefenceSO.FindProperty("capitalSets"), new Object[]
+            {
+                AssetDatabase.LoadAssetAtPath<GameObject>(cine + "M2CapitalSet.fbx"),
+                AssetDatabase.LoadAssetAtPath<GameObject>(cine + "M2ThroneSet.fbx"),
+            });
             cityDefenceSO.ApplyModifiedPropertiesWithoutUndo();
 
             // The dungeon (Dungeon/DungeonMode): idle in a town; when DungeonTravel sent the heroes

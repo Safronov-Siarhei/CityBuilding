@@ -56,7 +56,7 @@ namespace CityBuilder.Campaign
         private void TickMusic()
         {
             if (_music == null) return;
-            var may = _musicWanted && _intro == null && !LoadingScreen.Busy;
+            var may = _musicWanted && _intro == null && _capital == null && !LoadingScreen.Busy;
             if (may && !_music.isPlaying) _music.Play();
             else if (!may && _music.isPlaying) _music.Pause();
         }

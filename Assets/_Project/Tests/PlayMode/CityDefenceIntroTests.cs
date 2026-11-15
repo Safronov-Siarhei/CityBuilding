@@ -67,6 +67,25 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(CityDefenceMode.Stage.Part1, mode.Current, "The siege is not on after the scene.");
             Assert.IsNotNull(mode.Arden, "No Ардан after the scene.");
             Assert.IsNull(GameObject.Find("M2Intro"), "The scene's figures were left behind.");
+
+            // scene 2 «Гонец у короля» (CityDefenceMode.Capital.cs): at the courier's arrival the game stands under it,
+            // and its end gives the siege back where it was
+            mode.ClockToTheTurn();
+            for (var frame = 0; frame < 10 && mode.CapitalTime < 0f; frame++) yield return null;
+            Assert.GreaterOrEqual(mode.CapitalTime, 0f, "The capital scene did not start at the turn of the clock.");
+            var c0 = mode.CapitalTime;
+            var left2 = mode.TimeLeft;
+            for (var frame = 0; frame < 20; frame++) yield return null;
+            Assert.Greater(mode.CapitalTime, c0, "The capital scene's clock stands still.");
+            Assert.AreEqual(left2, mode.TimeLeft, "The siege's clock ran during the capital scene.");
+            Assert.AreEqual(0f, Time.timeScale, "The game did not stand under the capital scene.");
+            Assert.IsNotNull(GameObject.Find("M2CapitalSet"), "The capital's set is not there.");
+            mode.SkipCapital();
+            yield return null;
+            Assert.Less(mode.CapitalTime, 0f, "The capital scene never ended.");
+            Assert.AreEqual(1f, Time.timeScale, "The game's time was not given back.");
+            Assert.AreEqual(CityDefenceMode.Stage.Part1, mode.Current, "The siege is not on after the capital scene.");
+            Assert.IsNull(GameObject.Find("M2Capital"), "The capital scene was left behind.");
         }
     }
 }

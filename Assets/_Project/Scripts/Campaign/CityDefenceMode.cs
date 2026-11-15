@@ -237,7 +237,7 @@ namespace CityBuilder.Campaign
         {
             // not over the opening scene: it hides the HUD, so the menu would pause the game unseen (the user's first look,
             // 2026-11-15: «сцена не проигрывается» -- the screenshot's lost focus opened it)
-            if (!paused || Current != Stage.Part1 || _intro != null) return;
+            if (!paused || Current != Stage.Part1 || _intro != null || _capital != null) return;
             var menu = FindAnyObjectByType<UI.GameMenuController>();
             if (menu != null && !menu.IsOpen) menu.Open();
         }
@@ -309,6 +309,9 @@ namespace CityBuilder.Campaign
 
             PlayerPrefs.DeleteKey(Part2Key);
             BeginPart1();
+            // the scene at the capital when the courier gets there (CityDefenceMode.Capital.cs), not in the tests
+            _noCapital = _skipCapitalOnce;
+            _skipCapitalOnce = false;
             // the opening scene at the north gate first (CityDefenceMode.Intro.cs): the siege's clock waits for it
             try { StartIntro(); }
             catch (System.Exception e)
@@ -439,6 +442,17 @@ namespace CityBuilder.Campaign
         {
             TickMusic();
             if (!_active || Current == Stage.Setup || Current == Stage.Won || Current == Stage.Lost) return;
+            // the second scene (CityDefenceMode.Capital.cs): the game stands under it, it steps on unscaled time
+            if (_capital != null)
+            {
+                try { TickCapital(Time.unscaledDeltaTime); }
+                catch (System.Exception e)
+                {
+                    Debug.LogException(e);
+                    AbortCapital();
+                }
+                return;
+            }
             var dt = Time.deltaTime;
             if (_intro != null)
             {
@@ -472,6 +486,7 @@ namespace CityBuilder.Campaign
             TickWaves(dt);
             WatchTheSquare(dt);
             if (Current == Stage.Lost) return;
+            WatchForCapital();
             if (TimeLeft <= 0f) Win();
         }
 
