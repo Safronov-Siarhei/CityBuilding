@@ -738,6 +738,9 @@
     Render populates it (render only, `populate()`): 14 guards lining the carpet + 2 at the dais + 2 at the door
     (lookout copies with spears), the King, 10 courtiers in groups, 3 townsfolk petitioners; 3-sun light toned down
     (sun 3, fill 0.9, sky 0.55, more contrast) after the user: «не слишком яркое освещение?».
+    Then (the user: «трон слишком большой и позади фиолетовая палатка, убери её, сделай трон и флаги красными»):
+    canopy REMOVED, throne shrunk to the King (s 0.62: seat at his knee, back a head over him), throne back/arms,
+    column banners and the tapestry RED (banner_red), cushion dark red.
     SENT 2026-11-15 for approval.
   3. «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
      orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя

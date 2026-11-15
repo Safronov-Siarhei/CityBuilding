@@ -8,11 +8,11 @@ day pours in. Bright and warm:
   * a floor of white and gold tiles in a red-bordered field; a broad red carpet with a gold border to the dais;
   * cream walls with white pilasters, a stone plinth, a gold-and-white cornice;
   * two colonnades of seven tall white columns with gold bands and capitals, a white entablature on them with a
-    gold frieze; purple banners with a gold crown hanging from it between the columns;
+    gold frieze; RED banners with a gold crown hanging from it between the columns;
   * tall STAINED-GLASS windows in the side walls (blue, red, gold panes in lead lines), round rose windows above;
   * three gold chandeliers on chains, ringed with candles, down the hall;
-  * the dais: four broad steps, the throne on top under a purple CANOPY with gold fringes and a crown on its
-    crest; the throne itself tall and gilded (purple back with a crown, three finials, red cushion); a purple
+  * the dais: four broad steps, the throne on top, sized to the King (gilded, red back with a crown, three finials, dark red cushion; no
+    canopy -- the user 2026-11-15); a red
     tapestry with the great gold crown behind; gold candelabra either side;
   * the great double door at the far end, gilded studs, ajar for the rider.
 
@@ -90,42 +90,30 @@ def dais(b):
 
 
 def throne(b):
+    """The throne, sized to the King (he stands ~0.8: the seat at his knee, the back a head over him -- it was
+    twice his height under a purple canopy, the user 2026-11-15: «трон слишком большой и позади фиолетовая
+    палатка»). Gilded frame, RED back and arms (the user: red, not purple), a dark red cushion, three finials."""
     z = STEP_H * STEPS
     y = Y1 - WALL_T - 0.75
-    s = 1.3
+    s = 0.62
     for kx in (-1, 1):
         for ky in (-1, 1):
-            b.box(kx * 0.2 * s - 0.035, kx * 0.2 * s + 0.035, y + ky * 0.14 * s - 0.035, y + ky * 0.14 * s + 0.035,
-                  z, z + 0.2 * s, GOLD, bevel=0.008)
-    b.box(-0.25 * s, 0.25 * s, y - 0.19 * s, y + 0.19 * s, z + 0.18 * s, z + 0.25 * s, GOLD, bevel=0.012)
-    b.box(-0.21 * s, 0.21 * s, y - 0.17 * s, y + 0.16 * s, z + 0.25 * s, z + 0.3 * s, RED, bevel=0.015)
+            b.box(kx * 0.2 * s - 0.03 * s, kx * 0.2 * s + 0.03 * s, y + ky * 0.14 * s - 0.03 * s, y + ky * 0.14 * s + 0.03 * s,
+                  z, z + 0.2 * s, GOLD, bevel=0.006 * s)
+    b.box(-0.25 * s, 0.25 * s, y - 0.19 * s, y + 0.19 * s, z + 0.18 * s, z + 0.25 * s, GOLD, bevel=0.01 * s)
+    b.box(-0.21 * s, 0.21 * s, y - 0.17 * s, y + 0.16 * s, z + 0.25 * s, z + 0.3 * s, RED_DARK, bevel=0.012 * s)
     for k in (-1, 1):
-        b.box(k * 0.25 * s - 0.04, k * 0.25 * s + 0.04, y - 0.18 * s, y + 0.17 * s, z + 0.25 * s, z + 0.42 * s, PURPLE, bevel=0.01)
-        b.box(k * 0.25 * s - 0.05, k * 0.25 * s + 0.05, y - 0.2 * s, y + 0.18 * s, z + 0.42 * s, z + 0.46 * s, GOLD, bevel=0.008)
-        b.ball(k * 0.25 * s, y - 0.2 * s, z + 0.46 * s, 0.04, 0.05, GOLD, sides=6)
+        b.box(k * 0.25 * s - 0.04 * s, k * 0.25 * s + 0.04 * s, y - 0.18 * s, y + 0.17 * s, z + 0.25 * s, z + 0.42 * s, RED, bevel=0.008 * s)
+        b.box(k * 0.25 * s - 0.05 * s, k * 0.25 * s + 0.05 * s, y - 0.2 * s, y + 0.18 * s, z + 0.42 * s, z + 0.46 * s, GOLD, bevel=0.006 * s)
+        b.ball(k * 0.25 * s, y - 0.2 * s, z + 0.46 * s, 0.04 * s, 0.05 * s, GOLD, sides=6)
     yb = y + 0.18 * s
-    b.box(-0.28 * s, 0.28 * s, yb, yb + 0.07, z + 0.25 * s, z + 1.2 * s, GOLD, bevel=0.012)
-    b.box(-0.23 * s, 0.23 * s, yb - 0.012, yb, z + 0.3 * s, z + 1.13 * s, PURPLE, bevel=0.006)
+    b.box(-0.28 * s, 0.28 * s, yb, yb + 0.07 * s, z + 0.25 * s, z + 1.2 * s, GOLD, bevel=0.01 * s)
+    b.box(-0.23 * s, 0.23 * s, yb - 0.012 * s, yb, z + 0.3 * s, z + 1.13 * s, RED, bevel=0.005 * s)
     for k in (-1, 0, 1):
-        b.cylinder(k * 0.24 * s, yb + 0.035, z + 1.2 * s, z + 1.25 * s, 0.035, GOLD, sides=8)
-        b.pyramid(k * 0.24 * s, yb + 0.035, z + 1.25 * s, 0.028, 0.028, z + (1.42 if k == 0 else 1.34) * s, GOLD)
-    f = Facade(b, '-y', yb - 0.012)
-    crown(f, 0.0, z + 0.92 * s, 0.2 * s, 0.014)
-    # the canopy over it: a purple tester on gold posts, gold fringe, a crown on its crest
-    cy = y + 0.05
-    top = z + 2.3
-    for kx in (-1, 1):
-        b.cylinder(kx * 0.7, cy - 0.55, z, top, 0.045, GOLD, sides=8)
-    b.box(-0.82, 0.82, cy - 0.68, Y1 - WALL_T, top, top + 0.14, PURPLE, bevel=0.01)
-    b.box(-0.84, 0.84, cy - 0.7, Y1 - WALL_T, top - 0.04, top, GOLD)
-    for i in range(18):
-        x = -0.8 + i * 0.094
-        b.box(x - 0.022, x + 0.022, cy - 0.705, cy - 0.69, top - 0.12, top - 0.04, GOLD)
-    for k in (-1, 1):                                                                   # the drapes at its sides
-        b.prism([(cy - 0.6, top), (Y1 - WALL_T - 0.02, top), (Y1 - WALL_T - 0.02, z + 0.4), (cy - 0.2, z + 0.4)],
-                (k * 0.82, 0, 0), (0, 1, 0), (0, 0, 1), 0.02, PURPLE_DARK, back_cap=True)
-    f = Facade(b, '-y', cy - 0.7)
-    crown(f, 0.0, top + 0.14, 0.4, 0.04)
+        b.cylinder(k * 0.24 * s, yb + 0.035 * s, z + 1.2 * s, z + 1.25 * s, 0.035 * s, GOLD, sides=8)
+        b.pyramid(k * 0.24 * s, yb + 0.035 * s, z + 1.25 * s, 0.028 * s, 0.028 * s, z + (1.42 if k == 0 else 1.34) * s, GOLD)
+    f = Facade(b, '-y', yb - 0.012 * s)
+    crown(f, 0.0, z + 0.92 * s, 0.2 * s, 0.01)
 
 
 def walls(b):
@@ -201,7 +189,7 @@ def windows_and_banners(b):
             f.disc(s, 3.85, 0.1, 0.05, 'plaster_yellow', sides=8)
     # the great tapestry behind the throne (the banners hang on the columns: see columns())
     f = Facade(b, '-y', Y1 - WALL_T)
-    f.rect(-1.3, 1.3, 0.6, 3.9, 0.014, PURPLE)
+    f.rect(-1.3, 1.3, 0.6, 3.9, 0.014, RED)
     f.rect(-1.36, 1.36, 3.9, 3.98, 0.03, GOLD)
     for i in range(24):
         s = -1.26 + i * 0.11
@@ -229,9 +217,9 @@ def columns(b):
             b.ball(tx - k * 0.045, y, 1.99, 0.045, 0.11, FIRE, sides=6)
             # the banner on the column's carpet face, under the capital
             f = Facade(b, '+x' if k < 0 else '-x', x - k * 0.17)
-            f.rect(y - 0.22, y + 0.22, 2.25, COL_H - 0.4, 0.014, PURPLE)
+            f.rect(y - 0.22, y + 0.22, 2.25, COL_H - 0.4, 0.014, RED)
             f.rect(y - 0.25, y + 0.25, COL_H - 0.4, COL_H - 0.34, 0.03, GOLD)
-            f.poly([(y - 0.22, 2.25), (y + 0.22, 2.25), (y, 2.08)], 0.014, PURPLE)
+            f.poly([(y - 0.22, 2.25), (y + 0.22, 2.25), (y, 2.08)], 0.014, RED)
             crown(f, y, 2.6, 0.26, 0.022)
         # the entablature along the colonnade: white, a gold frieze
         b.box(x - 0.28, x + 0.28, COLS_Y[0] - 0.28, COLS_Y[-1] + 0.28, COL_H, COL_H + 0.3, WHITE, bevel=0.01)
