@@ -119,10 +119,32 @@ def stairs(b):
         b.box(x0, x0 + 0.12, y0, y1, TERRACE_H, TERRACE_H + 0.18, 'stone_light')
 
 
+BRIDGE_DECK, BRIDGE_HALF = 0.22, 0.44   # crossings.DECK and the stone bridge's half width (cells)
+
+
+def bridge_steps(b):
+    """Steps up onto the bridges' deck at both ends (the user, 2026-11-15: «мосту нужны ступени, которые позволят
+    на него подняться»): four stone steps each way with stone cheeks continuing the parapets."""
+    n, d = 4, 0.13
+    rise = BRIDGE_DECK / n
+    for edge, out in ((MOAT_OUT[0], -1), (MOAT_IN[0], 1)):
+        for i in range(n):
+            top = BRIDGE_DECK - i * rise
+            xa, xb = sorted((edge + out * i * d, edge + out * (i + 1) * d))
+            b.box(xa, xb, -BRIDGE_HALF + 0.08, BRIDGE_HALF - 0.08, 0.0, top, 'stone_light', bevel=0.004)
+        foot = edge + out * n * d
+        for sy in (-1, 1):
+            y = sy * (BRIDGE_HALF - 0.04)
+            xa, xb = sorted((edge, foot))
+            b.prism([(edge, 0.0), (foot, 0.0), (foot, 0.1), (edge, BRIDGE_DECK + 0.16)], (0, y - 0.04, 0), (1, 0, 0),
+                    (0, 0, 1), 0.08, 'stone_mid', back_cap=True)
+
+
 def build():
     b = Builder()
     ground(b)
     stairs(b)
+    bridge_steps(b)
     return b
 
 
@@ -264,6 +286,7 @@ def render(out):
     for name, at, frm, lens in (("capital_approach", (0, 0, 3.0), (-13 * S, -2.5 * S, 1.6), 24),
                                 ("capital_overview", (10 * S, 0, 0), (-16 * S, -24 * S, 30), 26),
                                 ("capital_street", (CASTLE_X * S, 0, 5.0), (1.2 * S, -0.9 * S, 1.3), 24),
+                                ("capital_bridge", (-2.5 * S, 0, 0.3), (-6.5 * S, -3.6 * S, 2.8), 35),
                                 ("capital_stairs", ((CASTLE_X - 3) * S, 0, 3.0), ((CASTLE_X - 11) * S, -3.2 * S, 1.4), 26)):
         at, frm = Vector(at), Vector(frm)
         cam.location = frm
