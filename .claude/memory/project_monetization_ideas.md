@@ -43,3 +43,5 @@ Related discussion the same day: the user feels the sandbox lacks goals. A campa
 2026-11-15 DECIDED (not built): «Подожди!» = a POOL (mine −30 % + packs −10/−15/−20 %), not on the first shop visit, max one a day, mine ~half while not owned, never the same twice, none after a purchase; real prices live only in Google Play Console. Pack mockups sent for approval (Design/store/ExitOffer_Pack1-3.png). Card monetization.md.
 
 2026-11-15: the «Подожди!» pool BUILT (pack mockups approved): MenuShopWindow PickExitOffer, Store sale_crystals_1..3, menu_shop_exit_* keys; not seen, untested.
+
+2026-11-15: CAMPAIGN monetization = «Поддержи разработку» banner with Ардан after a won level (crystal packs at a discount, big «Продолжить»), no ads, no paywall; concept mockup sent (Design/store/SupportBanner_Mockup.png), not approved, not built. Card monetization.md.
