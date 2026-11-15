@@ -774,6 +774,16 @@
     director); the end puts Ардан where his take ends, restores HUD/camera. «Заново» skips it (`_skipIntroOnce`).
     Traps: actor root rotation = track quat * Euler(0,180,0) (the rig faces -Z), props use the quat as is;
     the in-game captain still stands at the inner wall.
+  - **First look at scene 1 (the user, 2026-11-15):** (1) «сцена не проигрывается» -- seen standing on shot 1 with
+    Ардан running in; cause NOT found yet (batchmode blocked while the user's Editor is open); added
+    `CityDefenceIntroTests` (the scene's clock runs, the siege's stands, it ends and hands over) + `[M2Intro]` log
+    line, to run once Unity is closed. (2) Roads: the side roads now run along the wall and CROSS the middle road
+    square at plan (50.5, 32.5) (Mission2Town.json lanes + mission2_town.py), no slanted joins -- for the level
+    and the scene. (3) «небо чёрное»: DungeonDark got `_SkyOpen`, mission 2 sets 1 (clear sky over the dark
+    land). (4) «солдат стоит в башне»: the lookout stood in the gate's right tower -> along 2.6 (shots moved);
+    which soldier the user meant is asked. (5) The gate from the field must show the way INTO the town: the
+    gatehouse is solid with a painted dark arch -> needs a gatehouse variant with a real passage (model, renders
+    for approval first).
     Note: on the cine rig the figure's RIGHT is -x (fg.limbs "R" = k -1); the captain's scabbard sits at -x.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right

@@ -16,6 +16,7 @@ Shader "CityBuilder/DungeonDark"
         _Wobble ("Edge wobble", Float) = 0.35
         // the camp lies ~7 cells from the south edge: the band (with its wobble) must stop short of it
         _MapEdge ("Darkness eating into the map's edge (cells)", Float) = 1
+        _SkyOpen ("Sky left clear (0 dark, 1 clear)", Float) = 0
     }
 
     SubShader
@@ -47,6 +48,7 @@ Shader "CityBuilder/DungeonDark"
                 float _Soft;
                 float _Wobble;
                 float _MapEdge;
+                float _SkyOpen;
             CBUFFER_END
 
             struct Attributes
@@ -98,7 +100,9 @@ Shader "CityBuilder/DungeonDark"
                 #else
                     bool sky = depth >= 1.0;
                 #endif
-                float open = 0.0;
+                // the sky: dark in a dungeon; mission 2 leaves it clear (its opening scene looks up at it,
+                // the user 2026-11-15: «небо чёрное»)
+                float open = sky ? _SkyOpen : 0.0;
                 if (!sky)
                 {
                     float3 world = ComputeWorldSpacePosition(screen, depth, UNITY_MATRIX_I_VP);

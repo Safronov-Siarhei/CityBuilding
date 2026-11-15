@@ -182,12 +182,13 @@ def spots():
     x, y = INNER_GATES["N"]
     s.append({"kind": "inner_gate", "x": x + 0.5, "y": y + 0.5})
     # the ways from each ford to the one gate (the lane's corners), plan cells: the side roads skirt the
-    # fields and meet the middle road before the gate
-    gate_front = (50.5, OUTER_GATES["N"][1] - 2.4)
+    # fields along the wall and CROSS the middle road square before the gate (the user, 2026-11-15: «одну дорогу с
+    # перекрёстком» -- the side roads used to slant into it and the three ribbons overlapped)
+    cross = (50.5, 32.5)
     ways = [
-        [FORDS[0], (16, 22), (24, 32.5), (44, 32.5), gate_front],
-        [FORDS[1], (50.5, 20), gate_front],
-        [FORDS[2], (84, 22), (76, 32.5), (57, 32.5), gate_front],
+        [FORDS[0], (16, 22), (24, 32.5), cross],
+        [FORDS[1], (50.5, 20), cross],
+        [FORDS[2], (84, 22), (76, 32.5), cross],
     ]
     s.append({"kind": "square", "x": SQUARE[0] + 0.5, "y": SQUARE[1] + 0.5})
     s.append({"kind": "castle", "x": 50.5, "y": 63.5})

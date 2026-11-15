@@ -78,6 +78,7 @@ namespace CityBuilder.Campaign
             material.SetTexture("_DarkMask", _darkMask);
             material.SetVector("_DarkRect", new Vector4(min.x, min.y, 1f / (w * texel), 1f / (h * texel)));
             material.SetFloat("_Strength", 1f);
+            material.SetFloat("_SkyOpen", 1f);      // a clear sky over the dark land (the opening scene looks up)
             var quad = new GameObject("M2Darkness", typeof(MeshFilter), typeof(MeshRenderer));
             quad.transform.SetParent(cam.transform, false);
             quad.transform.localPosition = Vector3.forward * (cam.nearClipPlane + 0.5f);

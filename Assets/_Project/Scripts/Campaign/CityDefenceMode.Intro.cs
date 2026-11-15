@@ -138,6 +138,12 @@ namespace CityBuilder.Campaign
 
         bool IFilm.Playing => _intro != null;
 
+        /// <summary>The opening scene's clock (s), -1 when none plays (the play-mode check).</summary>
+        public float IntroTime => _intro != null ? _intro.time : -1f;
+
+        /// <summary>A short account of the scene as built, for the play-mode check's log.</summary>
+        public string IntroReport { get; private set; } = "";
+
         float IFilm.Time => _intro != null ? _intro.time : _introPlayed;
 
         private float _introPlayed;
@@ -249,6 +255,10 @@ namespace CityBuilder.Campaign
                 s.hidden.Add(c);
             }
             BuildIntroUi(s);
+            var figs = 0;
+            foreach (var a in s.actors) if (!a.prop) figs++;
+            IntroReport = $"k={k:F3} cell={s.cell} deck={s.deck:F2} gate={s.gate} out={s.outward} figures={figs} props={s.actors.Count - figs} prelude={(s.prelude != null)}";
+            Debug.Log("[M2Intro] " + IntroReport);
             if (_ardenFig != null) _ardenFig.gameObject.SetActive(false);
             FilmSkip.Attach(this);
             TickIntro(0f);
