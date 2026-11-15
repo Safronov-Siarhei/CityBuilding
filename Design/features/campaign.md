@@ -757,6 +757,8 @@
     попасть в кадр, а та что попадает должна будет измениться при выставлении сцены, потом обсудим наполнение» --
     OPEN: the empty grass round the town stays out of shot; what shows gets filled when the scene is set up in
     Unity -- the filling (fields, villages, forest?) to be DISCUSSED with the user then.
+    **Capital APPROVED (the user, 2026-11-15: «Утверждаю»).** Next: scene 2's animations (rider dismount + stairs
+    run + push + kneel/speak, guard fall, King bored/rises/orders, advisor reads with a scroll, townsfolk dodge).
     SENT 2026-11-15 for approval.
   3. «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
      orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя
