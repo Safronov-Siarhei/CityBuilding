@@ -715,6 +715,13 @@
     the medallion -> ARDAN'S STONE (dark, blue branching rune) on a gold chain; the belt/skirt showed through the
     cape -> the cape set back. STORY HOOK (the user, 2026-11-15): the King wears the same stone as Ардан, «чтобы
     потом сделать сюжетную линию будто Ардан его сын» -- idea for later, nothing decided.
+    **CineKing v2 APPROVED (the user, 2026-11-15: «Утверждаю»).** Next: courtiers (advisor with a scroll, a noble).
+  - COURTIERS (`Tools/blender/cinematic/courtiers.py`, townsfolk helpers): CineAdvisor (old, long dark slate robe,
+    gold hem/band, chain of office with a key, slate cap, long white beard; the SCROLL will be a prop of his take),
+    CineNoble (dark blue doublet, slashed puffed sleeves, wine cloak on the left shoulder, black hat + white feather,
+    pointed dark beard), CineLady (wine gown, gold girdle, square neckline, pearls, trumpet sleeves, tall hennin +
+    white veil, auburn hair). Green advisor / sky-blue noble tried first (green read as Ардан). Renders
+    `Design/campaign_review/court/` SENT 2026-11-15. Throne-room guards = M2Guard (reuse).
   3. «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
      orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя
      этот камень?») as the mission-3 hook.

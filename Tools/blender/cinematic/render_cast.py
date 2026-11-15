@@ -18,6 +18,7 @@ import lookout  # noqa: E402
 import horse  # noqa: E402
 import rider  # noqa: E402
 import king  # noqa: E402
+import courtiers  # noqa: E402
 import townsfolk  # noqa: E402
 import orcs_cast  # noqa: E402
 from mathutils import Vector  # noqa: E402
@@ -30,15 +31,19 @@ BUILDERS = {"CineArdan": lambda: ardan.make(Vector((0, 0, 0))), "CineElder": eld
             "CineKing": king.make}
 BUILDERS.update({n: (lambda nn: (lambda: townsfolk.make(nn)))(n) for n in townsfolk.FIGURES})
 BUILDERS.update({n: (lambda nn: (lambda: orcs_cast.make(nn)))(n) for n in orcs_cast.FIGURES})
+BUILDERS.update({n: (lambda nn: (lambda: courtiers.make(nn)))(n) for n in courtiers.FIGURES})
 
 argv = sys.argv[sys.argv.index("--") + 1:]
 out, solos = argv[0], argv[1:]
 os.makedirs(out, exist_ok=True)
-for n in set(solos) | {"CineArdan", "CineElder", "CinePriest"}:
+court = any(n in courtiers.FIGURES for n in solos)
+for n in set(solos) | {"CineArdan", "CineElder", "CinePriest"} | ({"CineKing"} if court else set()):
     BUILDERS[n]()
 
 sc = bpy.context.scene
 lineup = ["CineArdan"] + [n for n in solos if n != "CineArdan"] + (["HeroKing"] if any("Orc" in n or n == "CineKing" for n in solos) else ["CineElder", "CinePriest"])
+if court:
+    lineup = ["CineKing"] + [n for n in solos if n != "CineKing"] + ["CineArdan"]   # the court round its King
 for i, n in enumerate(lineup):
     bpy.data.objects[n].location = (i * 0.5, 0, 0)
 sc.render.engine = 'BLENDER_EEVEE'
