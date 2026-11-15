@@ -108,6 +108,13 @@ purchases at a discount (crystals only for now: Мешок −10 %, Ларец �
 products as «Подожди!», no new Google Play products), a big «Продолжить» under it (never a tiny cross).
 Mockup `Design/store/SupportBanner_Mockup.png` (`Tools/store/support_banner_mockup.py <Ardan png>`; Ардан rendered
 from CineArdan by `Tools/blender/cinematic/render_ardan_banner.py` -> `Design/store/shop_art/Ardan_render.png`).
+v1 (plain beige panel) REJECTED by the user: too simple next to the plague / fire banners. **v2** (sent for approval)
+is built on the plague banner's structure (`Tools/ui/plague_banner_art.py`): wood frame with gold studs, a festive
+field (crystals in 3 depths on royal purple, golden rays, confetti), a purple ribbon «Поддержи разработку», Ардан
+left + the campaign mage right on warm glows, a parchment column with 2 lines, 3 compact pack rows (struck old
+price, % sticker, green price) and the word «Продолжить». `Design/store/SupportBanner_v2_Mockup.png` by
+`Tools/store/support_banner_v2_mockup.py <Ardan png> <mage png>`; the mage render `Design/store/shop_art/Mage_render.png`
+(render_ardan_banner.py with mage.make()/CineMage, camera x -0.9).
 - Proposed, not yet decided: only on the FIRST win of a level (not on replays); after a purchase a short
   «Спасибо за поддержку!» instead for a few wins; wins between shows in the sheet. Later maybe an exclusive
   «Набор покровителя» (Ардан's look for the sandbox + crystals; a new model -> renders for approval first).
