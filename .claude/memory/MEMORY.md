@@ -96,3 +96,4 @@
 - [Model workshop mode idea (2026-11-15)](project_model_editor_idea.md) — PARKED: players make their own building models; first free, then each variant for a special shop currency; base models restorable.
 - [Online lobby mode idea (2026-11-15)](project_online_lobby_idea.md) — PARKED: network mode up to 4 players, own lobby, join by lobby code.
 - [Campaign support banner rule](feedback_campaign_support_banner.md) — every new campaign level calls SupportOfferWindow.ShowAfterWin on its win (from level 2).
+- [Piggy bank (2026-11-15)](project_piggy_bank.md) — «Копилка» rules decided, placement concept sent, not built; card piggy-bank.md.
