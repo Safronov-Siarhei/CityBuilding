@@ -681,6 +681,30 @@ namespace CityBuilder.EditorTools
             // Ардан with the sword in place of the Латник's look (approved 2026-11-12)
             cityDefenceSO.FindProperty("ardenModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(cine + "Cast/CineArdanSword.fbx");
             cityDefenceSO.FindProperty("ardenClips").objectReferenceValue = AssetDatabase.LoadAssetAtPath<CityBuilder.Campaign.CineClips>("Assets/_Project/Campaign/Cast/CineArdanSwordClips.asset");
+            // the opening scene at the north gate (approved 2026-11-15; Tools/blender/cinematic/export_m2intro.py)
+            cityDefenceSO.FindProperty("introScript").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Mission2Intro.json");
+            var introTakes = new System.Collections.Generic.List<Object>();
+            if (System.IO.Directory.Exists("Assets/_Project/Campaign/M2Intro"))
+                foreach (var file in System.IO.Directory.GetFiles("Assets/_Project/Campaign/M2Intro", "*.json"))
+                    introTakes.Add(AssetDatabase.LoadAssetAtPath<TextAsset>(file.Replace('\\', '/')));
+            WriteArray(cityDefenceSO.FindProperty("introTakes"), introTakes.ToArray());
+            var introFigures = new System.Collections.Generic.List<Object>();
+            var introClips = new System.Collections.Generic.List<Object>();
+            foreach (var file in System.IO.Directory.GetFiles(cine + "Cast", "M2*.fbx"))
+            {
+                var name = System.IO.Path.GetFileNameWithoutExtension(file);
+                var clips = AssetDatabase.LoadAssetAtPath<CityBuilder.Campaign.CineClips>($"Assets/_Project/Campaign/Cast/{name}Clips.asset");
+                var model = AssetDatabase.LoadAssetAtPath<GameObject>(file.Replace('\\', '/'));
+                if (model == null || clips == null) { Debug.LogWarning($"[CityDefence] intro figure {name}: model or clips missing (setup twice?)"); continue; }
+                introFigures.Add(model);
+                introClips.Add(clips);
+            }
+            WriteArray(cityDefenceSO.FindProperty("introFigures"), introFigures.ToArray());
+            WriteArray(cityDefenceSO.FindProperty("introClips"), introClips.ToArray());
+            var introProps = new System.Collections.Generic.List<Object>();
+            foreach (var file in System.IO.Directory.GetFiles(cine, "M2Intro*.fbx"))
+                introProps.Add(AssetDatabase.LoadAssetAtPath<GameObject>(file.Replace('\\', '/')));
+            WriteArray(cityDefenceSO.FindProperty("introProps"), introProps.ToArray());
             cityDefenceSO.ApplyModifiedPropertiesWithoutUndo();
 
             // The dungeon (Dungeon/DungeonMode): idle in a town; when DungeonTravel sent the heroes

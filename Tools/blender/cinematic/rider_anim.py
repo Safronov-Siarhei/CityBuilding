@@ -297,21 +297,27 @@ def bake(h_arm, r_arm):
             arm.keyframe_insert("rotation_euler", frame=f + 1)
 
 
+def build():
+    """The take baked: [(export name, take, rig, extra meshes)], [props], seconds (export_m2intro.py)."""
+    hm = horse.make((0, 0, 0))
+    h_arm = ka.rig_figure(hm, horse.SCALE, bones=HORSE_BONES)
+    rm = rider.make((0, 0, 0))
+    r_arm = ka.rig_figure(rm, rider.SCALE)
+    bake(h_arm, r_arm)
+    return [("M2Horse", "Send", h_arm, []), ("M2Rider", "Send", r_arm, [])], [], SECONDS
+
+
 def main():
     argv = sys.argv[sys.argv.index("--") + 1:]
     out = argv[1]
     what = argv[2] if len(argv) > 2 else "all"
     os.makedirs(out, exist_ok=True)
-    hm = horse.make((0, 0, 0))
-    h_arm = ka.rig_figure(hm, horse.SCALE, bones=HORSE_BONES)
-    rm = rider.make((0, 0, 0))
-    r_arm = ka.rig_figure(rm, rider.SCALE)
-    aa.stage({hm.name, h_arm.name, rm.name, r_arm.name})
+    actors, props, _ = build()
+    aa.stage(gt.keep_of(actors, props))
     for o in bpy.context.scene.objects:
         if o.name in ("ArdanGround", "ArdanPath"):
             o.location.y += 6.0                                    # the road runs on past the gate
             o.hide_render = False
-    bake(h_arm, r_arm)
     shots = (("wide", (0.0, 0.6, 0.28), (0.9, -3.1, 0.42), 32),
              ("close", (0.0, -0.1, 0.32), (-1.25, -1.35, 0.3), 35))
     for key, at, off, lens in shots:

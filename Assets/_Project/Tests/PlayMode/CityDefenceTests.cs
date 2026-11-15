@@ -28,6 +28,7 @@ namespace CityBuilder.Tests.PlayMode
             GameSessionIntent.NewGameSeason = MapSeason.Summer;
             GameSessionIntent.NewGameIsInvasion = false;
             CityDefenceMode.Pending = true;
+            CityDefenceMode.SkipIntroOnce();       // the opening scene would hold the siege's clock
             SceneManager.LoadScene(CityDefenceMode.GameplayScene, LoadSceneMode.Single);
             yield return PlayModeScene.WaitUntilMapIsPhysicsReady(CityDefenceMode.MapId);
             for (var frame = 0; frame < 600 && (CityDefenceMode.Instance == null || CityDefenceMode.Instance.Current == CityDefenceMode.Stage.Setup); frame++)

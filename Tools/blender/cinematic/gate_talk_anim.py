@@ -299,23 +299,37 @@ def bake(arm, name, scale, place, pose):
     return act
 
 
-def main():
-    argv = sys.argv[sys.argv.index("--") + 1:]
-    out = argv[1]
-    what = argv[2] if len(argv) > 2 else "all"
-    os.makedirs(out, exist_ok=True)
+def keep_of(actors, props):
+    """What a review render shows: the rigs, their meshes, the props."""
+    keep = {p.name for p in props}
+    for _, _, arm, extra in actors:
+        keep |= {arm.name} | {c.name for c in arm.children} | {m.name for m in extra}
+    return keep
+
+
+def build():
+    """The take baked: [(export name, take, rig, extra meshes)], [props], seconds (export_m2intro.py)."""
     mesh = ardan.make(Vector((0, 0, 0)))
     arm_a = aa.rig(mesh)
     sword = asw.sword(arm_a, mesh.data.materials[0])
     cap = captain.make((0, 0, 0))
     arm_c = ka.rig_figure(cap, SC)
-    aa.stage({mesh.name, arm_a.name, sword.name, cap.name, arm_c.name})
-    for o in bpy.context.scene.objects:
-        if o.name.startswith("ArdanTuft"):
-            o.hide_render = True
     bake(arm_a, "CineArdan_Gate", S, a_place, a_pose)
     bake(arm_c, "CineCaptain_Gate", SC, lambda t: (CAPTAIN_AT, 0.0), c_pose)
     key_sword(sword, arm_a, arm_c)
+    return [("M2Ardan", "Gate", arm_a, []), ("M2Captain", "Gate", arm_c, [])], [sword], SECONDS
+
+
+def main():
+    argv = sys.argv[sys.argv.index("--") + 1:]
+    out = argv[1]
+    what = argv[2] if len(argv) > 2 else "all"
+    os.makedirs(out, exist_ok=True)
+    actors, props, _ = build()
+    aa.stage(keep_of(actors, props))
+    for o in bpy.context.scene.objects:
+        if o.name.startswith("ArdanTuft"):
+            o.hide_render = True
     shots = (("side", (0.0, -0.35, 0.28), (-2.3, -0.2, 0.45), 32),
              ("front", (0.0, 0.2, 0.3), (1.35, -0.25, 0.22), 36))
     for key, at, off, lens in shots:

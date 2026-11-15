@@ -198,17 +198,13 @@ def wall():
 
 # ---------------------------------------------------------------- main
 
-def main():
-    argv = sys.argv[sys.argv.index("--") + 1:]
-    out = argv[1]
-    what = argv[2] if len(argv) > 2 else "all"
-    os.makedirs(out, exist_ok=True)
-    keep = set()
+def build():
+    """The take baked: [(export name, take, rig, extra meshes)], [props], seconds (export_m2intro.py). The three
+    guards share one export (M2Guard, takes Guard0-2): their rigs and model are one."""
     lookout.WITH_SPEAR = False
     base = lookout.make((0, 0, 0))
     spears = [lookout.make_spear("CineGuardSpear%d" % i) for i in range(len(GUARDS))]
-    keep |= {s.name for s in spears}
-    rigs = []
+    actors = []
     meshes = [base]
     for i in range(1, len(GUARDS)):                                # copied before any is rigged
         m = base.copy()
@@ -216,23 +212,28 @@ def main():
         base.users_collection[0].objects.link(m)
         meshes.append(m)
     for i, (delay, stop_x) in enumerate(GUARDS):
-        mesh = meshes[i]
-        arm = ka.rig_figure(mesh, lookout.SCALE)
-        rigs.append((arm, guard_track(delay, stop_x), "CineLookout_Guard%d" % i))
-        keep |= {mesh.name, arm.name}
+        arm = ka.rig_figure(meshes[i], lookout.SCALE)
+        guard_track(delay, stop_x).bake(arm, "CineLookout_Guard%d" % i)
+        actors.append(("M2Guard", "Guard%d" % i, arm, []))
     for name, frm, to, startle, speed, dress in FOLK:
-        mesh = tf.make(name, (0, 0, 0))
-        arm = ka.rig_figure(mesh, tf.FIGURES[name][1])
-        rigs.append((arm, folk_track(name, frm, to, startle, speed, dress), name + "_Flee"))
-        keep |= {mesh.name, arm.name}
-    aa.stage(keep)
+        arm = ka.rig_figure(tf.make(name, (0, 0, 0)), tf.FIGURES[name][1])
+        folk_track(name, frm, to, startle, speed, dress).bake(arm, name + "_Flee")
+        actors.append(("M2" + name[4:], "Flee", arm, []))
+    key_spears(spears, [a[2] for a in actors[:len(GUARDS)]])
+    return actors, spears, SECONDS
+
+
+def main():
+    argv = sys.argv[sys.argv.index("--") + 1:]
+    out = argv[1]
+    what = argv[2] if len(argv) > 2 else "all"
+    os.makedirs(out, exist_ok=True)
+    actors, props, _ = build()
+    aa.stage(gt.keep_of(actors, props))
     for o in bpy.context.scene.objects:
         if o.name.startswith("ArdanTuft") and abs(o.location.y - WALL_Y) < 0.4:
             o.hide_render = True
     wall()
-    for arm, tr, clip in rigs:
-        tr.bake(arm, clip)
-    key_spears(spears, [r[0] for r in rigs[:len(GUARDS)]])
     shots = (("wide", (-0.2, 0.2, 0.3), (0.4, -3.6, 0.55), 30),
              ("guards", (-0.2, WALL_Y, WALL_Z + 0.25), (1.9, -1.25, 0.35), 33))
     for key, at, off, lens in shots:

@@ -758,8 +758,22 @@
     wall, then they scatter towards the camera (peasant looking back, woman hands up, merchant hands on head).
     The wall is a grey stand-in in the renders; Unity uses the mission's wall. Videos
     `Design/campaign_review/alarm_*.mp4` v2 APPROVED by the user 2026-11-15. **ALL FOUR scene-1 animation groups
-    APPROVED.** NEXT: the scene in Unity (export the cine cast + clips + props: horn, sword, guard spears; the
-    mission town's gate and wall; the shot list above).
+    APPROVED.**
+  - **SCENE 1 IN UNITY (2026-11-15, the user: «Да, в Unity»), not seen:** `Scripts/Campaign/CityDefenceMode.Intro.cs`.
+    Export: `Tools/blender/cinematic/export_m2intro.py -- <project> gate|lookout|rider|alarm` (one Blender run per
+    group; each anim script has `build()`) -> `Models/Cinematic/Cast/M2*.fbx` (in-place takes; M2Ardan + Run loop;
+    M2Guard = 3 takes; townsfolk M2Peasant/PeasantWoman/Girl/Boy/Merchant), props `Models/Cinematic/M2Intro*.fbx`
+    (ArdanSword, LookoutHorn, GuardSpear shared), roots + props per frame `Campaign/M2Intro/<group>.json` (unity_m,
+    group's own Blender frame), entries in OpeningCast.json. `Campaign/Mission2Intro.json`: placements at the
+    north gate (cells along / outward, deck = wall walk WallWalk.HeightFor, flip, Blender origin), group clocks
+    (gate holds at 9.7 s until 30.6 while lookout 9.2 / alarm 17.0 / rider 21.6 play), Ардан's run-up prelude, 9
+    shots, 4 lines (`#cine_name_ardan/captain/lookout`, `#cine_m2_tell/shout/send/sword`, sheet «Тексты: обучение и
+    сюжет» rows 30-36), shutAt 19.6, end 35.6. Flow: Setup -> BeginPart1 -> StartIntro; while it plays Update only
+    ticks townsfolk + the intro (siege clock frozen), root canvases hidden, RTS camera off, Ардан's game figure
+    hidden; figures sized by Ардан's figure scale; «Пропустить» = FilmSkip (now on `IFilm`, also the opening's
+    director); the end puts Ардан where his take ends, restores HUD/camera. «Заново» skips it (`_skipIntroOnce`).
+    Traps: actor root rotation = track quat * Euler(0,180,0) (the rig faces -Z), props use the quat as is;
+    the in-game captain still stands at the inner wall.
     Note: on the cine rig the figure's RIGHT is -x (fg.limbs "R" = k -1); the captain's scabbard sits at -x.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right

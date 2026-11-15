@@ -251,6 +251,10 @@ namespace CityBuilder.Campaign
             }
         }
 
+        /// <summary>Puts the playing clip at `seconds` (a cutscene drives its figures by its own clock: Play at
+        /// rate 0, then this every frame).</summary>
+        public void SetTime(float seconds) => _time = seconds;
+
         /// <summary>True once a clip that does not loop has played to its end.</summary>
         public bool Finished => _clip != null && !_clip.loop && _time >= _clip.seconds;
 

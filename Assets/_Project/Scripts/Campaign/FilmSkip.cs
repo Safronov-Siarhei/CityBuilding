@@ -12,17 +12,25 @@ namespace CityBuilder.Campaign
     /// the sounds and hands over to the mission), and fades back in on the mission. Shown once the
     /// loading screen is gone; gone with the film.
     /// </summary>
+    /// <summary>A film «Пропустить» can run to its end: the opening's director, mission 2's opening scene.</summary>
+    public interface IFilm
+    {
+        bool Playing { get; }
+        float Time { get; }
+        void Step(float dt);
+    }
+
     public class FilmSkip : MonoBehaviour
     {
         private const float Step = 1f / 15f;
         private const float FadeSeconds = 0.35f;
 
-        private OpeningDirector _director;
+        private IFilm _director;
         private CanvasGroup _button;
         private Image _black;
         private bool _skipping;
 
-        public static FilmSkip Attach(OpeningDirector director)
+        public static FilmSkip Attach(IFilm director)
         {
             var go = new GameObject("FilmSkip", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             var canvas = go.GetComponent<Canvas>();

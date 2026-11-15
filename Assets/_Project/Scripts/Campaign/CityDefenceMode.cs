@@ -199,6 +199,7 @@ namespace CityBuilder.Campaign
         /// <summary>The campaign map's «Играть» on level 2: the gameplay scene on this mission's map.</summary>
         public static void Begin()
         {
+            _skipIntroOnce = false;
             GameSessionIntent.SaveNameToLoad = null;
             GameSessionIntent.NewGameMapId = MapId;
             GameSessionIntent.NewGameSeason = MapSeason.Summer;
@@ -304,6 +305,14 @@ namespace CityBuilder.Campaign
 
             PlayerPrefs.DeleteKey(Part2Key);
             BeginPart1();
+            // the opening scene at the north gate first (CityDefenceMode.Intro.cs): the siege's clock waits for it
+            try { StartIntro(); }
+            catch (System.Exception e)
+            {
+                // never let the scene cost the mission: straight to the siege
+                Debug.LogException(e);
+                AbortIntro();
+            }
         }
 
         /// <summary>A plan point (x right, y down = south, in plan cells) in the world.</summary>
@@ -426,6 +435,17 @@ namespace CityBuilder.Campaign
         {
             if (!_active || Current == Stage.Setup || Current == Stage.Won || Current == Stage.Lost) return;
             var dt = Time.deltaTime;
+            if (_intro != null)
+            {
+                TickTownsfolk(dt);
+                try { TickIntro(dt); }
+                catch (System.Exception e)
+                {
+                    Debug.LogException(e);
+                    AbortIntro();
+                }
+                return;
+            }
             TickArden(dt);
             TickFx(dt);
             TickHealers(dt);
@@ -736,6 +756,7 @@ namespace CityBuilder.Campaign
         {
             Time.timeScale = 1f;
             Begin();
+            _skipIntroOnce = true;       // «Заново» goes straight to the siege
         }
 
         private static float Flat(Vector3 v) => new Vector2(v.x, v.z).magnitude;

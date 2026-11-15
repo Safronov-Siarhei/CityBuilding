@@ -135,24 +135,30 @@ def key_horn(horn, arm):
         horn.keyframe_insert("scale", frame=f + 1)
 
 
-def main():
-    argv = sys.argv[sys.argv.index("--") + 1:]
-    out = argv[1]
-    what = argv[2] if len(argv) > 2 else "all"
-    os.makedirs(out, exist_ok=True)
+def build():
+    """The take baked: [(export name, take, rig, extra meshes)], [props], seconds (export_m2intro.py)."""
     fig = lookout.make((0, 0, 0))
     arm = ka.rig_figure(fig, SL)
     horn = lookout.make_horn()
-    aa.stage({fig.name, arm.name, horn.name})
-    for o in bpy.context.scene.objects:
-        if o.name.startswith("ArdanTuft") or o.name.startswith("ArdanPath"):
-            o.hide_render = True
     track = ka.Track(SL, 0.5)
     track.apply = ea.apply
     track.moves = []
     track.add('pose', SECONDS, Vector((0, 0, 0)), pose, (0, -1, 0))
     track.bake(arm, "CineLookout_Alarm")
     key_horn(horn, arm)
+    return [("M2Lookout", "Alarm", arm, [])], [horn], SECONDS
+
+
+def main():
+    argv = sys.argv[sys.argv.index("--") + 1:]
+    out = argv[1]
+    what = argv[2] if len(argv) > 2 else "all"
+    os.makedirs(out, exist_ok=True)
+    actors, props, _ = build()
+    aa.stage(gt.keep_of(actors, props))
+    for o in bpy.context.scene.objects:
+        if o.name.startswith("ArdanTuft") or o.name.startswith("ArdanPath"):
+            o.hide_render = True
     shots = (("front", (0.0, 0.0, 0.32), (0.75, -1.3, 0.12), 36),
              ("side", (0.0, 0.0, 0.32), (1.5, 0.25, 0.2), 38))
     for key, at, off, lens in shots:

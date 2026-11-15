@@ -19,7 +19,7 @@ namespace CityBuilder.Campaign
     /// localization sheet; the living background (OpeningLife) panics and lets the orcs loose.
     /// Step(dt) runs it, so the editor can render it frame by frame.
     /// </summary>
-    public class OpeningDirector : MonoBehaviour
+    public class OpeningDirector : MonoBehaviour, IFilm
     {
         // ------------------------------------------------------------ the files
 
