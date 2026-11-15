@@ -181,7 +181,7 @@ def offer_row(img, d, box, i):
     k = min(150 / g.width, h * (0.62 + 0.08 * i) / g.height)
     g = g.resize((int(g.width * k), int(g.height * k)), Image.LANCZOS)
     put(img, g, (x0 + gx, y0 + h / 2 + 6))
-    tx = x0 + 228
+    tx = x0 + 200     # no «Популярное» / «Выгоднее всего» flags here (the user, 2026-11-15)
     text(d, (tx, y0 + 34), title, 28, anchor='lm')
     line(img, d, tx, y0 + 80, ['{:,}'.format(n).replace(',', ' '), 'C'], 44)
     bx, by = x1 - 112, y0 + h / 2 + 14
@@ -192,8 +192,6 @@ def offer_row(img, d, box, i):
     sx, sy = x1 - 262, y0 + 80     # beside the count, clear of the title
     d.ellipse((sx - 40, sy - 40, sx + 40, sy + 40), fill=(230, 60, 50), outline=INK, width=4)
     text(d, (sx, sy - 2), off, 26, stroke=3)
-    if badge:
-        ribbon(img, d, (x0 + gx, y0 - 4), 120, badge[0], badge[1], 15)
 
 
 def main():

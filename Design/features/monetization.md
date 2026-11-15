@@ -111,7 +111,7 @@ from CineArdan by `Tools/blender/cinematic/render_ardan_banner.py` -> `Design/st
 v1 (plain beige panel) REJECTED by the user: too simple next to the plague / fire banners. **v2** (sent for approval)
 is built on the plague banner's structure (`Tools/ui/plague_banner_art.py`): wood frame with gold studs, a festive
 field (crystals in 3 depths on royal purple, golden rays, confetti), a purple ribbon «Поддержи разработку», Ардан
-left + the campaign mage right on warm glows, a parchment column with 2 lines, 3 compact pack rows (struck old
+left + the campaign mage right on warm glows, a parchment column with 2 lines, 3 compact pack rows (no «Популярное»/«Выгоднее всего» flags; struck old
 price, % sticker, green price) and the word «Продолжить». `Design/store/SupportBanner_v2_Mockup.png` by
 `Tools/store/support_banner_v2_mockup.py <Ardan png> <mage png>`; the mage render `Design/store/shop_art/Mage_render.png`
 (render_ardan_banner.py with mage.make()/CineMage, camera x -0.9).
