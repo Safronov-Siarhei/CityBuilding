@@ -759,6 +759,17 @@
     Unity -- the filling (fields, villages, forest?) to be DISCUSSED with the user then.
     **Capital APPROVED (the user, 2026-11-15: «Утверждаю»).** Next: scene 2's animations (rider dismount + stairs
     run + push + kneel/speak, guard fall, King bored/rises/orders, advisor reads with a scroll, townsfolk dodge).
+  - **Scene 2 ANIMATIONS group 1 «У замка» (2026-11-15):** `cinematic/castle_arrive_anim.py`, one take (~8.6 s),
+    clips `CineHorse_Arrive`, `CineRider_Arrive`, `CineLookout_Door0/1` (exports M2Horse/M2Rider/M2Guard
+    «Arrive»/«Door0-1»): the horse gallops up (rider_anim's gait/seat) and pulls up hard at the stairs (sits back
+    on its hocks, forelegs braced, head up), then stands blowing with a stamp; the rider sits back, swings the
+    right leg over the croup and drops on the near (left) side, knees giving, turns and runs up the 8 steps
+    (leaning in, knees high; root on a smooth line half a tread ahead) across the terrace and through the door;
+    two door guards (lookout + spear) follow him with their heads, step aside outwards and sweep the free hand
+    to the door (the doors are the castle model's, opened in Unity). Stairs = capital.py's (8 x 0.1 rise x 0.32
+    run, terrace 0.8, door 0.7 back) as a grey stand-in. Videos `Design/campaign_review/arrive_*.mp4` SENT.
+    Next groups: (2) street gallop + townsfolk dodging, (3) throne room (push + guard fall, kneel/speak, King,
+    advisor, court).
     SENT 2026-11-15 for approval.
   3. «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
      orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя
