@@ -737,7 +737,16 @@
     watches (head sweeping), sees (leans in), flings the left arm at the forest (ea.AIM) and shouts with a stamp,
     takes the horn from his left hip, blows (chest swells, head back), lowers it. The HORN became a prop
     (`lookout.make_horn`, `HORN_PTS`, the approved look unchanged) baked as world keys (`key_horn`: hips -> at his
-    lips, bell out to his left). 2026-11-15 the user felt the horn was off: it was four square beams with gaps at the bends, its brass bands set CROSSWISE (poking out) and a closed bell -- rebuilt as one smooth tapering 8-sided tube (Catmull-Rom through HORN_PTS), an open dark bell, bands as collars round the axis. Videos `Design/campaign_review/lookout_*.mp4` (with the new horn) APPROVED by the user 2026-11-15. NEXT: group 3, the rider and the horse (needs a horse rig: idle, rear, gallop; the rider runs up, nods, mounts).
+    lips, bell out to his left). 2026-11-15 the user felt the horn was off: it was four square beams with gaps at the bends, its brass bands set CROSSWISE (poking out) and a closed bell -- rebuilt as one smooth tapering 8-sided tube (Catmull-Rom through HORN_PTS), an open dark bell, bands as collars round the axis. Videos `Design/campaign_review/lookout_*.mp4` (with the new horn) APPROVED by the user 2026-11-15. 
+  - **ANIMATIONS group 3 (rider + horse), 2026-11-15:** `cinematic/rider_anim.py`, one take 10.5 s, clips
+    `CineHorse_Send` + `CineRider_Send`: the rider runs in to the horse's LEFT flank, looks to the captain, fist to
+    chest, nods; mounts from the left (foot in the stirrup, up and over, right leg across the croup); the horse
+    rears in profile (forelegs pawing, the rider's fist up), lands, wheels right onto the road and gallops off.
+    The HORSE RIG: `HORSE_BONES` (body turning about the hips, neck, head, tail, fore/hind upper+lower .L/.R --
+    one per horse.py part); `gait()` = a transverse gallop on the distance covered (STRIDE 0.62). In the saddle
+    the rider's root is keyed as the horse's body bone @ `SEAT` (world matrices, like the props). The captain's
+    «Скачи в столицу!» is his line in this shot (voice/caption) -- he is not animated in this take.
+    Videos `Design/campaign_review/rider_*.mp4` sent for approval.
     Note: on the cine rig the figure's RIGHT is -x (fg.limbs "R" = k -1); the captain's scabbard sits at -x.
 - **Level-skip cheats (the user, 2026-11-12; not in a -release build):** the campaign map shows «Чит: пройти
   уровень» (marks the picked level done, the map reloads, the next opens) and «Чит: пройти все» top right
