@@ -552,6 +552,8 @@ namespace CityBuilder.Core
         [SerializeField] private int menuShopMineSaleOffPercent = 30;
         [SerializeField] private float menuShopExitOfferHours = 24f;
         [SerializeField] private int menuShopExitFreeVisits = 1;
+        // the campaign's «Поддержи разработку» banner after a won level, from this level on (the user, 2026-11-15: from the 2nd)
+        [SerializeField] private int supportBannerFromLevel = 2;
         [SerializeField] private float menuShopExitMineChance = 0.5f;
         [SerializeField] private float[] menuShopPackSaleUsd = { 0.89f, 4.24f, 7.99f };
         [SerializeField] private int[] menuShopPackSaleOffPercent = { 10, 15, 20 };
@@ -1741,6 +1743,7 @@ namespace CityBuilder.Core
         public int MenuShopMineSaleOffPercent => menuShopMineSaleOffPercent;
         public float MenuShopExitOfferHours => menuShopExitOfferHours;
         public int MenuShopExitFreeVisits => menuShopExitFreeVisits;
+        public int SupportBannerFromLevel => supportBannerFromLevel;
         public float MenuShopExitMineChance => menuShopExitMineChance;
         public float MenuShopPackSaleUsd(int i) => menuShopPackSaleUsd[Mathf.Clamp(i, 0, menuShopPackSaleUsd.Length - 1)];
         public int MenuShopPackSaleOffPercent(int i) => menuShopPackSaleOffPercent[Mathf.Clamp(i, 0, menuShopPackSaleOffPercent.Length - 1)];
@@ -2551,6 +2554,7 @@ namespace CityBuilder.Core
             menuShopMineSaleOffPercent = (int)Read(economy, "menu_shop_mine_sale_off_pct", menuShopMineSaleOffPercent);
             menuShopExitOfferHours = Read(economy, "menu_shop_exit_offer_hours", menuShopExitOfferHours);
             menuShopExitFreeVisits = (int)Read(economy, "menu_shop_exit_free_visits", menuShopExitFreeVisits);
+            supportBannerFromLevel = (int)Read(economy, "support_banner_from_level", supportBannerFromLevel);
             menuShopExitMineChance = Read(economy, "menu_shop_exit_mine_chance", menuShopExitMineChance);
             for (var p = 0; p < menuShopPackSaleUsd.Length; p++)
             {

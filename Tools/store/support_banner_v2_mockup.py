@@ -7,8 +7,10 @@ The field is festive: crystals of every size in three depths on royal purple, go
 
     python Tools/store/support_banner_v2_mockup.py <ardan render png> <mage render png>
 
-Writes Design/store/SupportBanner_v2_Mockup.png. Renders: Tools/blender/cinematic/render_ardan_banner.py.
+Writes Design/store/SupportBanner_v2_Mockup.png and the game's pieces + layout.json in
+Assets/_Project/UI/Shop/Resources/Shop/Support (UI/SupportOfferWindow places them; its words are written in code). Renders: Tools/blender/cinematic/render_ardan_banner.py.
 """
+import json
 import math
 import os
 import random
@@ -23,6 +25,7 @@ from exit_pack_offers_mockup import PACKS
 X0, Y0, X1, Y1 = 60, 230, 1860, 1050
 IX0, IY0, IX1, IY1 = X0 + 34, Y0 + 34, X1 - 34, Y1 - 34
 FLOOR = IY1 - 16
+ART = R + 'Assets/_Project/UI/Shop/Resources/Shop/Support/'
 GEM = R + 'Assets/_Project/UI/Icons/Res_UpgradeCrystal.png'
 
 
@@ -155,8 +158,11 @@ def band(win, rx0, rx1, ry0, ry1):
     return Image.alpha_composite(win, lay), RIB_O
 
 
-def offer_row(img, d, box, i):
+def row_bg(box, i):
+    """A pack row's card with its rock of crystals, as a full-screen layer (a piece for the game)."""
     title, n, old, new, off, (c0, c1), badge = PACKS[i]
+    img = layer()
+    d = ImageDraw.Draw(img)
     x0, y0, x1, y1 = box
     w, h = x1 - x0, y1 - y0
     card = Image.new('RGBA', (w, h))
@@ -178,6 +184,14 @@ def offer_row(img, d, box, i):
     k = min(150 / g.width, h * (0.62 + 0.08 * i) / g.height)
     g = g.resize((int(g.width * k), int(g.height * k)), Image.LANCZOS)
     put(img, g, (x0 + gx, y0 + h / 2 + 6))
+    return img
+
+
+def row_words(img, d, box, i):
+    """The words the game writes over a row (the mock-up only)."""
+    title, n, old, new, off, (c0, c1), badge = PACKS[i]
+    x0, y0, x1, y1 = box
+    h = y1 - y0
     tx = x0 + 200     # no «Популярное» / «Выгоднее всего» flags here (the user, 2026-11-15)
     text(d, (tx, y0 + 34), title, 28, anchor='lm')
     line(img, d, tx, y0 + 80, ['{:,}'.format(n).replace(',', ' '), 'C'], 44)
@@ -202,16 +216,31 @@ def main():
     win = figure(win, mage, 600, 1610)
     rx0, rx1, ry0, ry1 = 430, 1490, Y0 - 82, IY0 + 66
     win, rib_o = band(win, rx0, rx1, ry0, ry1)
-    img = Image.alpha_composite(img, win)
-    d = ImageDraw.Draw(img)
     cx = (pw0 + pw1) / 2
+    rows = [(pw0 + 34, 478 + 138 * i, pw1 - 34, 478 + 138 * i + 118) for i in range(3)]
+    pieces = [('Window', win)] + [('Row%d' % (i + 1), row_bg(rows[i], i)) for i in range(3)]
+    # the game's pieces and their places (1920 x 1080 reference, y down), read by UI/SupportOfferWindow
+    os.makedirs(ART, exist_ok=True)
+    layout = {'reference': [W, H], 'pieces': [], 'texts': []}
+    for name, lay in pieces:
+        bb = lay.getbbox()
+        lay.crop(bb).save(ART + name + '.png', optimize=True)
+        layout['pieces'].append({'name': name, 'rect': list(bb)})
+    texts = {'Title': (rx0 + 40, ry0 + 24, rx1 - 40, ry1 - 10), 'Line1': (pw0 + 40, 376, pw1 - 40, 416),
+             'Line2': (pw0 + 40, 418, pw1 - 40, 458), 'Continue': (cx - 220, 892, cx + 220, 952)}
+    for name, rect in texts.items():
+        layout['texts'].append({'name': name, 'rect': [round(v) for v in rect]})
+    with open(ART + 'layout.json', 'w', encoding='utf-8') as f:
+        json.dump(layout, f, indent=1)
+    for _, lay in pieces:
+        img = Image.alpha_composite(img, lay)
+    d = ImageDraw.Draw(img)
     text(d, (cx, (ry0 + ry1) / 2 + 2), 'Поддержи разработку', 70, fill=(255, 240, 200), stroke=5, stroke_fill=rib_o)
     text(d, (cx, 396), 'Каждая покупка помогает выпустить новые главы', 30, fill=(70, 50, 24), stroke=0, heavy=False)
     text(d, (cx, 438), 'В благодарность за победу — скидка', 32, fill=(150, 40, 30), stroke=0)
-    y = 478
     for i in range(3):
-        offer_row(img, d, (pw0 + 34, y, pw1 - 34, y + 118), i)
-        y += 138
+        row_words(img, d, rows[i], i)
+    y = rows[2][3] + 20
     # «Продолжить»: a plain word button on the parchment, as the plague banner's «Закрыть»
     text(d, (cx, y + 30), 'Продолжить', 44, fill=(120, 86, 40), stroke=0)
     img.convert('RGB').save(R + 'Design/store/SupportBanner_v2_Mockup.png', optimize=True)

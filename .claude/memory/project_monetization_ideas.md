@@ -44,4 +44,4 @@ Related discussion the same day: the user feels the sandbox lacks goals. A campa
 
 2026-11-15: the «Подожди!» pool BUILT (pack mockups approved): MenuShopWindow PickExitOffer, Store sale_crystals_1..3, menu_shop_exit_* keys; not seen, untested.
 
-2026-11-15: CAMPAIGN monetization = «Поддержи разработку» banner with Ардан after a won level (crystal packs at a discount, big «Продолжить»), no ads, no paywall; v1 beige rejected; v2 on the plague-banner base (crystal field, Ардан + mage, no flags, no corner studs) APPROVED 2026-11-15 (Design/store/SupportBanner_v2_Mockup.png); not built, show frequency open. Card monetization.md.
+2026-11-15: CAMPAIGN monetization = «Поддержи разработку» banner with Ардан after a won level (crystal packs at a discount, big «Продолжить»), no ads, no paywall; v1 beige rejected; v2 on the plague-banner base (crystal field, Ардан + mage, no flags, no corner studs) APPROVED 2026-11-15 (Design/store/SupportBanner_v2_Mockup.png); BUILT same day: SupportOfferWindow.ShowAfterWin(level, onDone), after every won level from the 2nd (support_banner_from_level); the campaign does not call it yet; not seen. Card monetization.md.
