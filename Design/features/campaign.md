@@ -861,7 +861,22 @@
     Next groups: (2) street gallop + townsfolk dodging, (3) throne room (push + guard fall, kneel/speak, King,
     advisor, court).
     SENT 2026-11-15 for approval.
-  3. «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
+  **SCENE 3 «Подкрепление» -- the user's vision (2026-11-16), storyboard being agreed:** orcs wreck buildings all
+     over the town; on the central SQUARE the captain, Ардан and a couple of men-at-arms fight on their last
+     strength; cut to the King galloping over the BRIDGE (the causeway) with a HUGE cavalry; they sweep through the
+     town killing every orc; then the last orcs are shown running out of the town. Claude's draft shot list (~35 s):
+     town burning/houses falling -> the square's ring of orcs -> horn, heads turn -> the bridge: King on a white horse
+     + the cavalry -> riders through the streets cutting orcs down, onto the square -> the rest flee to the forest.
+     The user 2026-11-16: NO TALK at the end (the amulet hook dropped from this scene). Plays at the win (11:00), in
+     the mission's own town. Cavalry 30-40 riders: one gallop pair repeated with time/place offsets (far ones copies).
+     New: mounted King, cavalryman with lance (renders first); anims: orcs smashing houses, falling to a rider, fleeing,
+     the square's last stand.
+     MODELS PROPOSED 2026-11-16 (renders sent, not approved): `cavalry.py` CineCavalry (bascinet visor up + blue
+     plume, breastplate under a blue surcoat with the gold cross, lance along the arm with a pennon, kite shield,
+     sword) + horses via `cavalry.make_horse` (horse.py recoloured + caparison: CineWarhorse bay, CineWarhorseGrey,
+     CineKingHorse white/red); `king_ride.py` CineKingRide = CineKing cut for the saddle (split tunic, short cape,
+     drawn sword). Render: `cavalry.py -- render <out>`.
+  3. (older draft) «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
      orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя
      этот камень?») as the mission-3 hook.
   New models it needs: captain, lookout, rider + HORSE (gallop), cinematic King, cavalry (rider repeats), maybe
