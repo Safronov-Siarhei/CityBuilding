@@ -54,15 +54,15 @@ namespace CityBuilder.Tests.PlayMode
             for (var frame = 0; frame < 30; frame++) yield return null;
             Assert.Greater(mode.IntroTime, t0, $"The scene's clock stands still ({t0}). {mode.IntroReport}");
             Assert.AreEqual(left, mode.TimeLeft, "The siege's clock ran during the scene.");
-            Time.timeScale = 8f;
-            var waited = 0f;
-            while (mode.IntroTime >= 0f && waited < 15f)
-            {
-                waited += Time.unscaledDeltaTime;
-                yield return null;
-            }
-            Time.timeScale = 1f;
+            // «Пропустить» mid-film: Ардан stands where the scene ends, not where the skip caught him (the user,
+            // 2026-11-16), and stays there
+            mode.SkipIntro();
             yield return null;                     // Destroy lands at the frame's end
+            for (var frame = 0; frame < 60; frame++) yield return null;
+            Assert.IsNotNull(mode.Arden, "No Ардан after the skip.");
+            var off = mode.Arden.transform.position - mode.IntroEnd;
+            off.y = 0f;
+            Assert.Less(off.magnitude, 0.6f, $"Ардан is {off.magnitude:F2} from the scene's end after the skip.");
             Assert.Less(mode.IntroTime, 0f, "The scene never ended.");
             Assert.AreEqual(CityDefenceMode.Stage.Part1, mode.Current, "The siege is not on after the scene.");
             Assert.IsNotNull(mode.Arden, "No Ардан after the scene.");

@@ -20,7 +20,8 @@ namespace CityBuilder.Campaign
         /// there) it turned the whole minimap black (the user's second playtest, 2026-11-12).</summary>
         private void OnCameraRendering(UnityEngine.Rendering.ScriptableRenderContext context, Camera cam)
         {
-            if (_darkRenderer != null) _darkRenderer.enabled = cam == _darkCamera;
+            // not while scene 2 plays far from the land: its world places would read as all dark (black screen, 2026-11-16)
+            if (_darkRenderer != null) _darkRenderer.enabled = cam == _darkCamera && _capital == null;
         }
 
         private void ForgetDarkness()

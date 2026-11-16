@@ -586,21 +586,46 @@ namespace CityBuilder.Campaign
         }
 
         /// <summary>The scene over: Ардан where his take ended, the say back to the player.</summary>
+        /// <summary>Where the opening scene left Ардан (tests).</summary>
+        public Vector3 IntroEnd { get; private set; }
+
+        /// <summary>The scene to its end at once, as «Пропустить» plays it (tests).</summary>
+        public void SkipIntro()
+        {
+            for (var i = 0; i < 10000 && _intro != null; i++) TickIntro(1f / 15f);
+        }
+
+        /// <summary>Ардан set down here for good: his body's controller told (it keeps its own place and pulls him
+        /// back), his squad's hold moved here (he walked back to where he was raised), no stick on him.</summary>
+        private void PutArden(Vector3 at, Quaternion face)
+        {
+            at.y = Arden.transform.position.y;
+            var cc = Arden.GetComponent<CharacterController>();
+            var on = cc != null && cc.enabled;
+            if (on) cc.enabled = false;
+            Arden.transform.SetPositionAndRotation(at, face);
+            if (on) cc.enabled = true;
+            Physics.SyncTransforms();
+            Arden.Steer = Vector3.zero;
+            if (_ardenGroup != null) { Arden.Regroup(_ardenGroup); _ardenGroup.OrderMoveTo(at); }   // no old route either
+            _ardenWas = at;
+        }
+
         private void EndIntro()
         {
             var s = _intro;
             if (s == null) return;
             _intro = null;
             _introPlayed = Mathf.Max(0.01f, s.time);
-            var end = s.prelude != null ? s.prelude.fig.transform.position : _start;
-            var face = s.prelude != null ? s.prelude.fig.transform.rotation : Quaternion.identity;
-            if (Arden != null)
-            {
-                end.y = Arden.transform.position.y;
-                Arden.transform.SetPositionAndRotation(end, Quaternion.Euler(0f, face.eulerAngles.y, 0f));
-                Arden.Steer = Vector3.zero;
-                _ardenWas = end;
-            }
+            // the mission begins with him at its start, inside the inner gate facing the north road -- skipped or
+            // played to the end (the film's take leaves him at the outer gate; the user 2026-11-16: «Ардан стоит
+            // перед внешними воротами»). The film ends under a fade: the move is not seen.
+            var end = _start;
+            var ahead = OuterGates[0] != null ? OuterGates[0].transform.position - end : Vector3.forward;
+            ahead.y = 0f;
+            var face = ahead.sqrMagnitude > 1e-4f ? Quaternion.LookRotation(ahead.normalized, Vector3.up) : Quaternion.identity;
+            IntroEnd = end;
+            if (Arden != null) PutArden(end, face);
             if (_ardenFig != null) _ardenFig.gameObject.SetActive(true);
             foreach (var c in s.hidden) if (c != null) c.enabled = true;
             if (s.cam != null)

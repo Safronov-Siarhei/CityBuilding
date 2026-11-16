@@ -832,6 +832,17 @@
     RTS rig and restored; «Пропустить» = FilmSkip on the film's own IFilm. SkipIntroOnce (tests) also skips it.
     Check: CityDefenceIntroTests runs it (ClockToTheTurn, SkipCapital).
     Cheat (the user, 2026-11-16): «Читы» -> «Кампания: миссия 2» -> «Перемотать к гонцу (сцена у короля)» (`CheatToCapital`: the clock to the turn, the scene again even if played).
+    FIXED 2026-11-16 (the user): (1) the cheat showed a BLACK screen -- World.OnCameraRendering re-enabled the darkness
+    quad every render, undoing StartCapital's disable; out at CapitalFar every place read as dark. Now the darkness
+    draws only while `_capital == null`. (2) «Пропустить» on scene 1 left Ардан where the skip caught him; then (user's
+    second look) at the OUTER gate, where the film's take ends -- wrong too: after scene 1 (skipped or not) Ардан stands
+    at the mission's START `_start` (inside the inner gate) facing the north gate; the film ends under its fade.
+    PutArden() sets him down for good (CharacterController off/on + Physics.SyncTransforms, Regroup clears the old
+    route, squad hold moved there, no steer). (3) Scene 2's capital MISSING most of itself (walls, gate, towers, roads,
+    trees, houses, a slab floating in the sky): export_m2capital.join_set copied the pieces' matrix_world before the
+    depsgraph ran -- stale, they landed on the models' library spots. Now view_layer.update() first, and each piece's
+    EVALUATED mesh (the still people keep their poses). TRAP for any set joined in a script: update the view layer first.
+    Test CityDefenceIntro skips mid-film (`SkipIntro()`) and checks Ардан within 0.6 of `IntroEnd` 60 frames later.
     Next groups: (2) street gallop + townsfolk dodging, (3) throne room (push + guard fall, kneel/speak, King,
     advisor, court).
     SENT 2026-11-15 for approval.

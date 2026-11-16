@@ -68,12 +68,16 @@ def park(objs, tag):
 def join_set(name, objs):
     """The set as ONE static mesh: every piece's copy made real, joined, one palette material."""
     sc = bpy.context.scene
+    # the copies' matrix_world is stale until the depsgraph runs: joined as they were, the walls, roads, gate,
+    # trees and most houses landed on their models' library spots (the user, 2026-11-16: «не хватает зданий»)
+    bpy.context.view_layer.update()
     real = []
     for o in objs:
         if o.type != 'MESH':
             continue
         c = o.copy()
-        c.data = o.data.copy()
+        # the mesh as seen: the still people keep their poses (their armature applied), not the rest pose
+        c.data = bpy.data.meshes.new_from_object(o.evaluated_get(bpy.context.evaluated_depsgraph_get()))
         c.parent = None
         c.matrix_world = o.matrix_world.copy()
         c.modifiers.clear()
