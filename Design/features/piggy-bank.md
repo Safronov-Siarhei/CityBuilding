@@ -3,7 +3,7 @@
 **Status (2026-11-15):** DISCUSSED with the user, rules below DECIDED; placement concept v2 + 3D-render icon sent for
 approval (`Design/store/Piggy_Placement_Concept.png`, `Design/store/Piggy_Icon_Concept.png`, by
 `Tools/store/piggy_placement_concept.py <photos>`). NOT BUILT. Daily tasks' list: to discuss later (the user).
-Prices: proposed, not explicitly confirmed yet.
+Prices APPROVED 2026-11-16 (see Rules).
 
 ## Rules (the user, 2026-11-15)
 - A PIGGY (pink pig: the shape everyone knows). Corner icon with a shine, the crystals saved on a plaque under it.
@@ -17,7 +17,10 @@ Prices: proposed, not explicitly confirmed yet.
 - 5 levels, each PURCHASE levels it up (and it costs more); level 5 stays forever.
   Capacity 300 / 500 / 1000 / 1500 / 3000.
 - A FULL piggy is +50 % crystals per dollar over the nearest regular pack (so it pays to fill it first).
-  Proposed prices $0.99 / $1.49 / $2.99 / $3.99 / $6.99 (+40..57 %; exact +50 % would be $0.99/1.49/2.79/4.19/6.69).
+  PRICES APPROVED (the user 2026-11-16): $0.99 / $1.69 / $2.79 / $4.19 / $6.49 = +50 / +46 / +49 / +49 / +54 %
+  against the regular pack of the nearest SIZE (300, 500 -> 200 for $0.99; 1000, 1500 -> 1200 for $4.99; 3000 -> 3000
+  for $9.99). The pack prices are still stubs: if they change, recompute the piggy prices to keep ~+50 %. The window's
+  live badge uses the same reference pack (in code, from the sheet).
   5 Google Play products. All numbers in the sheet.
 - Full: no more crystals in; «Полна!» on the icon; a «Разбей копилку» banner on entering the main menu at most
   every 4 h and whenever a task's crystals are lost.
