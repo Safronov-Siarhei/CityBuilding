@@ -47,7 +47,7 @@ Concept `Tools/store/piggy_placement_concept.py <photos> <render A> [B] [C]`.
 - Crystals float round it SMOOTHLY and a little CHAOTICALLY (the user 2026-11-16: two waves of unrelated periods on
   up-down, sideways and tilt per crystal) -- in the game they are separate sprites
   (`piggy_bank.py ... gem` renders one crystal), the pig a render without crystals (`*_alone.png`).
-- The number at the pig's feet. FULL: «Полна!» tag centred on the button's TOP edge (the user 2026-11-16; 5 crystals since 2026-11-16, the top centre left free), the number GOLD and glowing (pulse), the
+- The number at the pig's feet. FULL: «Полна!» tag centred on the button's TOP edge (the user 2026-11-16; 4 crystals -- a 5th by the number was tried and rejected; the top centre left free), the number GOLD and glowing (pulse), the
   pig WOBBLES SOFTLY (0.9 s eased in/out every 1.8 s, ~3 Hz, ±2 px / ±3°; the user: smoother), the shine brighter.
 - Script `Tools/store/piggy_button_concept.py <renders> <modes photo>`.
 
