@@ -554,6 +554,18 @@ namespace CityBuilder.Core
         [SerializeField] private int menuShopExitFreeVisits = 1;
         // the campaign's «Поддержи разработку» banner after a won level, from this level on (the user, 2026-11-15: from the 2nd)
         [SerializeField] private int supportBannerFromLevel = 2;
+        // the piggy bank (the user, 2026-11-15/16; card piggy-bank.md): each level's capacity and price (USD stand-in), the
+        // regular pack its gain is measured against, from how many it breaks, the play minute, the tasks' slot
+        [SerializeField] private int[] piggyCap = { 300, 500, 1000, 1500, 3000 };
+        [SerializeField] private float[] piggyUsd = { 0.99f, 1.69f, 2.79f, 4.19f, 6.49f };
+        [SerializeField] private int[] piggyRefPack = { 1, 1, 2, 2, 3 };
+        [SerializeField] private int piggyBreakMin = 150;
+        [SerializeField] private int piggyMinuteCrystals = 1;
+        [SerializeField] private float piggyMinuteSeconds = 60f;
+        [SerializeField] private float piggyIdleSeconds = 120f;
+        [SerializeField] private float piggyTasksResetHours = 8f;
+        [SerializeField] private int piggyTasksPerSlot = 3;
+        [SerializeField] private float piggyFullBannerHours = 4f;
         [SerializeField] private float menuShopExitMineChance = 0.5f;
         [SerializeField] private float[] menuShopPackSaleUsd = { 0.89f, 4.24f, 7.99f };
         [SerializeField] private int[] menuShopPackSaleOffPercent = { 10, 15, 20 };
@@ -1583,6 +1595,26 @@ namespace CityBuilder.Core
 
         [SerializeField] private List<M2WaveRow> m2Waves = new List<M2WaveRow>();
 
+        /// <summary>One task of the piggy bank (the piggytasks tab, the user 2026-11-16): what is counted (`kind`, a word
+        /// Core/PiggyTasks knows), how many, the crystals it puts in the piggy, easy/medium/hard, where it counts (`mode`).</summary>
+        [System.Serializable]
+        public class PiggyTask
+        {
+            public string id, kind, difficulty, mode;
+            public int target, reward;
+        }
+
+        [SerializeField] private List<PiggyTask> piggyTasks = new List<PiggyTask>();
+
+        /// <summary>The piggy bank's tasks as the sheet has them.</summary>
+        public IReadOnlyList<PiggyTask> PiggyTasks => piggyTasks;
+
+        public PiggyTask FindPiggyTask(string id)
+        {
+            foreach (var t in piggyTasks) if (t.id == id) return t;
+            return null;
+        }
+
         /// <summary>Wave `wave` (1 = the first) of part `part`; past the last row of the part, the last again. Null when the part has none.</summary>
         public IReadOnlyList<M2WaveRow> M2Waves => m2Waves;
 
@@ -1620,6 +1652,7 @@ namespace CityBuilder.Core
         /// <summary>The importer's way in (BalanceImporter, the botwaves tab).</summary>
         public void EditorSetBotWaves(List<BotWaveRow> rows) => botWaves = rows ?? new List<BotWaveRow>();
         public void EditorSetM2Waves(List<M2WaveRow> rows) => m2Waves = rows ?? new List<M2WaveRow>();
+        public void EditorSetPiggyTasks(List<PiggyTask> rows) => piggyTasks = rows ?? new List<PiggyTask>();
 #endif
 
         /// <summary>One good inside an offer bundle: a ResourceType name or `Crystals`, and how many.</summary>
@@ -1744,6 +1777,18 @@ namespace CityBuilder.Core
         public float MenuShopExitOfferHours => menuShopExitOfferHours;
         public int MenuShopExitFreeVisits => menuShopExitFreeVisits;
         public int SupportBannerFromLevel => supportBannerFromLevel;
+        public int PiggyLevels => piggyCap.Length;
+        public int PiggyCap(int level) => piggyCap[Mathf.Clamp(level, 0, piggyCap.Length - 1)];
+        public float PiggyUsd(int level) => piggyUsd[Mathf.Clamp(level, 0, piggyUsd.Length - 1)];
+        /// <summary>The regular pack (0-based) a piggy of `level` (0-based) is compared with.</summary>
+        public int PiggyRefPack(int level) => Mathf.Max(0, piggyRefPack[Mathf.Clamp(level, 0, piggyRefPack.Length - 1)] - 1);
+        public int PiggyBreakMin => piggyBreakMin;
+        public int PiggyMinuteCrystals => piggyMinuteCrystals;
+        public float PiggyMinuteSeconds => piggyMinuteSeconds;
+        public float PiggyIdleSeconds => piggyIdleSeconds;
+        public float PiggyTasksResetHours => piggyTasksResetHours;
+        public int PiggyTasksPerSlot => piggyTasksPerSlot;
+        public float PiggyFullBannerHours => piggyFullBannerHours;
         public float MenuShopExitMineChance => menuShopExitMineChance;
         public float MenuShopPackSaleUsd(int i) => menuShopPackSaleUsd[Mathf.Clamp(i, 0, menuShopPackSaleUsd.Length - 1)];
         public int MenuShopPackSaleOffPercent(int i) => menuShopPackSaleOffPercent[Mathf.Clamp(i, 0, menuShopPackSaleOffPercent.Length - 1)];
@@ -2555,6 +2600,19 @@ namespace CityBuilder.Core
             menuShopExitOfferHours = Read(economy, "menu_shop_exit_offer_hours", menuShopExitOfferHours);
             menuShopExitFreeVisits = (int)Read(economy, "menu_shop_exit_free_visits", menuShopExitFreeVisits);
             supportBannerFromLevel = (int)Read(economy, "support_banner_from_level", supportBannerFromLevel);
+            for (var p = 0; p < piggyCap.Length; p++)
+            {
+                piggyCap[p] = (int)Read(economy, $"piggy_cap_{p + 1}", piggyCap[p]);
+                piggyUsd[p] = Read(economy, $"piggy_usd_{p + 1}", piggyUsd[p]);
+                piggyRefPack[p] = (int)Read(economy, $"piggy_ref_pack_{p + 1}", piggyRefPack[p]);
+            }
+            piggyBreakMin = (int)Read(economy, "piggy_break_min", piggyBreakMin);
+            piggyMinuteCrystals = (int)Read(economy, "piggy_minute_crystals", piggyMinuteCrystals);
+            piggyMinuteSeconds = Read(economy, "piggy_minute_seconds", piggyMinuteSeconds);
+            piggyIdleSeconds = Read(economy, "piggy_idle_seconds", piggyIdleSeconds);
+            piggyTasksResetHours = Read(economy, "piggy_tasks_reset_hours", piggyTasksResetHours);
+            piggyTasksPerSlot = (int)Read(economy, "piggy_tasks_per_slot", piggyTasksPerSlot);
+            piggyFullBannerHours = Read(economy, "piggy_full_banner_hours", piggyFullBannerHours);
             menuShopExitMineChance = Read(economy, "menu_shop_exit_mine_chance", menuShopExitMineChance);
             for (var p = 0; p < menuShopPackSaleUsd.Length; p++)
             {

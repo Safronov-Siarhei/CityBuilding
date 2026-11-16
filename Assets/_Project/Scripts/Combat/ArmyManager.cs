@@ -189,6 +189,7 @@ namespace CityBuilder.Combat
             unit.Regroup(to);
             to.Add(unit);
             if (to.IsGarrison) to.SetPost(unit, GarrisonPost());
+            if (!to.IsGarrison) Core.PiggyTasks.ReportMax(Core.PiggyTasks.Squad, to.Count);
             OnArmyChanged?.Invoke();
         }
 
@@ -587,6 +588,9 @@ namespace CityBuilder.Combat
             homes?.Enlist(unit, position, crew);
             // a garrison soldier keeps the spot he stepped out at (army-control.md)
             if (group.IsGarrison) group.SetPost(unit, unit.transform.position);
+            // the piggy bank's tasks: a soldier hired or a machine built; the biggest squad (not the Garrison)
+            Core.PiggyTasks.Report(SoldierStats.IsMachine(type) ? Core.PiggyTasks.Machine : Core.PiggyTasks.Hire);
+            if (!group.IsGarrison && !group.IsMachine) Core.PiggyTasks.ReportMax(Core.PiggyTasks.Squad, group.Count);
 
             EventLogManager.Instance?.Log(Localization.Format("#log_recruited", SoldierStats.DisplayName(type), SoldierCount, SoldierStats.MaxArmySize));
             OnArmyChanged?.Invoke();

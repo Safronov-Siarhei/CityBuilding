@@ -177,6 +177,7 @@ namespace CityBuilder.Dungeon
         private void OpenChest(Chest chest, int index)
         {
             chest.Opening = 0f;
+            Core.PiggyTasks.Report(Core.PiggyTasks.DungeonChest);
             if (chest.Glint != null) Destroy(chest.Glint);
             var c = BalanceConfig.Instance;
             var popups = UI.ResourceGainPopups.Instance;

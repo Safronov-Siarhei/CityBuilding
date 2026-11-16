@@ -103,6 +103,22 @@ namespace CityBuilder.Cheats
                 PlayerPrefs.Save();
             }
             GUILayout.EndHorizontal();
+
+            // the piggy bank (piggy-bank.md): its level and crystals, the window, the tasks
+            GUILayout.BeginHorizontal();
+            Label($"Копилка: ур. {PiggyBank.Level + 1}, {PiggyBank.Stored}/{PiggyBank.Capacity}");
+            if (Button("+" + step, 90f)) PiggyBank.Add(step);
+            if (Button("Полная", 110f)) PiggyBank.CheatSet(PiggyBank.Level, PiggyBank.Capacity);
+            if (Button("0", 60f)) PiggyBank.CheatSet(PiggyBank.Level, 0);
+            if (Button("Ур. −", 80f)) PiggyBank.CheatSet(PiggyBank.Level - 1, PiggyBank.Stored);
+            if (Button("Ур. +", 80f)) PiggyBank.CheatSet(PiggyBank.Level + 1, PiggyBank.Stored);
+            if (Button("Окно копилки")) PiggyWindow.Show();
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            if (Button("Новые задания")) PiggyTasks.CheatRedraw();
+            for (var i = 0; i < PiggyTasks.Count; i++)
+                if (Button("Выполнить " + (i + 1), 150f)) PiggyTasks.CheatFinish(i);
+            GUILayout.EndHorizontal();
         }
 
         // -- Здания -------------------------------------------------------------------------

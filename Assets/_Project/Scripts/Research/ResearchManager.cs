@@ -379,6 +379,7 @@ namespace CityBuilder.Research
             var finished = _running[index].Topic;
             _running.RemoveAt(index);
             _completed.Add(finished.Id);
+            Core.PiggyTasks.Report(Core.PiggyTasks.Research);
 
             // Every soldier of the type, including the ones already standing: the whole point of a
             // level being researched rather than bought per recruit.

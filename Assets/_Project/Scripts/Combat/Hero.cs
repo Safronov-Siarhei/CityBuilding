@@ -251,6 +251,7 @@ namespace CityBuilder.Combat
             if (Level >= maxLevel) return;
 
             Experience += amount;
+            var levelBefore = Level;
             var levelled = false;
             while (Level < maxLevel && Experience >= XpForLevel(Level))
             {
@@ -260,6 +261,7 @@ namespace CityBuilder.Combat
             }
             if (Level >= maxLevel) Experience = 0;
             if (!levelled) return;
+            Core.PiggyTasks.Report(Core.PiggyTasks.HeroLevel, Level - levelBefore);
 
             ApplyLevel();
             // A level is a fresh breath, as in Dota: what he gains is added to what he has.

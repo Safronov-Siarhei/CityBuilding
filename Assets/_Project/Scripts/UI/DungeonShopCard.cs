@@ -55,7 +55,7 @@ namespace CityBuilder.UI
         {
             var potions = DungeonPotions.Instance;
             if (Shown == null || potions == null || kind < 0 || kind >= DungeonPotions.Kinds) return;
-            potions.Buy((PotionKind)kind);
+            if (potions.Buy((PotionKind)kind)) Core.PiggyTasks.Report(Core.PiggyTasks.DungeonPotion);
             Refresh();
         }
 

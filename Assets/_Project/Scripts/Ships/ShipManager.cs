@@ -363,7 +363,9 @@ namespace CityBuilder.Ships
         public int TryLand(ShipUnit ship)
         {
             if (DescribeLandBlocker(ship) != null || !TryFindLanding(ship, out var at)) return 0;
-            return ship.Disembark(at);
+            var landed = ship.Disembark(at);
+            if (landed > 0) Core.PiggyTasks.Landed(MapIdNow, Citizens.HousePeople.IslandOf(at));
+            return landed;
         }
 
         private void Update()
@@ -466,8 +468,12 @@ namespace CityBuilder.Ships
             if (price > 0 && resources != null && !resources.TrySpend(new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Coins, amount = price } })) return null;
             var ship = Spawn(kind, at, Quaternion.LookRotation(at - shipyard.transform.position == Vector3.zero ? Vector3.forward : (at - shipyard.transform.position).normalized), ShipStats.MaxHealth(kind));
             EventLogManager.Instance?.Log(Localization.Format("#ship_built", ShipStats.DisplayName(kind)));
+            Core.PiggyTasks.Report(Core.PiggyTasks.Ship);
+            Core.PiggyTasks.Visit(MapIdNow, Citizens.HousePeople.IslandOf(shipyard.transform.position), false);
             return ship;
         }
+
+        private static string MapIdNow => Maps.MeshMapApplier.Instance != null ? Maps.MeshMapApplier.Instance.CurrentMapId : "";
 
         /// <summary>
         /// The research ship given with the Town Hall (the user, 2026-11-02): a Scout on the sea

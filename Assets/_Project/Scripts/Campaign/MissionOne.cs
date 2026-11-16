@@ -263,6 +263,9 @@ namespace CityBuilder.Campaign
                     _hud?.Hide();
                     Stretch(_c.chase?.checkpoints != null ? _c.chase.checkpoints.Length : 0);
                     if (_bestBefore <= 0f || _elapsed < _bestBefore) PlayerPrefs.SetFloat(BestKey, _elapsed);
+                    // the piggy bank's tasks: a level won; faster than a record that already stood
+                    if (_bestBefore > 0f && _elapsed < _bestBefore) Core.PiggyTasks.Report(Core.PiggyTasks.CampaignRecord);
+                    Core.PiggyTasks.Report(Core.PiggyTasks.CampaignWin);
                     CampaignProgress.MarkDone(LevelId);
                     PlayerPrefs.Save();
                 }

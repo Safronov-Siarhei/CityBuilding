@@ -90,6 +90,15 @@ namespace CityBuilder.Buildings
             done?.Invoke();
             // after the level is applied, so the finish shows the new model
             if (_look != null) _look.Complete();
+            if (Building != null && !Building.IsBot)
+            {
+                if (!IsUpgrade) Core.PiggyTasks.Built(Building.Data);
+                else
+                {
+                    Core.PiggyTasks.Report(Core.PiggyTasks.Upgrade);
+                    Core.PiggyTasks.ReportMax(Core.PiggyTasks.BuildingLevel, Building.Level);
+                }
+            }
             Finished?.Invoke(Building);
         }
     }

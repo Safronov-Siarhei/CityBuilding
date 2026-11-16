@@ -117,6 +117,8 @@ namespace CityBuilder.Campaign
             if (settings != null)
                 MissionSkin.Round(safe, "Settings", "round_main", HudInk.OnMain, settingsGlyph, new Vector2(1f, 1f), new Vector2(-66f, -66f), 92f)
                     .onClick.AddListener(settings.OpenPanel);
+            // the piggy bank under the settings
+            UI.PiggyButton.Create(safe, new Vector2(1f, 1f), new Vector2(9f, -120f), 150f);
 
             // white words with a shadow over the chart (the user, 2026-11-12): the hint and «Скоро» at the
             // bottom centre, the picked level's record at the top centre

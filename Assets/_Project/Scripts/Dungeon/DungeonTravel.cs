@@ -115,6 +115,9 @@ namespace CityBuilder.Dungeon
 
             GameSessionIntent.DungeonId = dungeonId;
             GameSessionIntent.DungeonLevel = Mathf.Clamp(level, 1, 3);
+            // the piggy bank: dungeon tasks may drop from now on; going below the first level is one
+            Core.PiggyTasks.MarkSeen(Core.PiggyTasks.ModeDungeon);
+            if (level >= 2) Core.PiggyTasks.Report(Core.PiggyTasks.DungeonDeeper);
             GameSessionIntent.DungeonHeroes = heroes;
             GameSessionIntent.DungeonReturnName = save.CurrentSaveName;
             // the camera comes back to this mouth, not to the Town Hall (the user, 2026-11-01)

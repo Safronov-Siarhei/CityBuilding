@@ -610,6 +610,7 @@ namespace CityBuilder.Buildings
             UpdateDecayWarningMarker();
             CurrentHealth = MaxHealth;
             if (_healthBar != null) _healthBar.Report(1f);
+            if (!IsBot) Core.PiggyTasks.Report(Core.PiggyTasks.Repair);
             return true;
         }
 

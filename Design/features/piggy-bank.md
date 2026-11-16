@@ -1,9 +1,41 @@
 # Piggy bank («Копилка»)
 
-**Status (2026-11-15):** DISCUSSED with the user, rules below DECIDED; placement concept v2 + 3D-render icon sent for
-approval (`Design/store/Piggy_Placement_Concept.png`, `Design/store/Piggy_Icon_Concept.png`, by
-`Tools/store/piggy_placement_concept.py <photos>`). NOT BUILT. Daily tasks' list: to discuss later (the user).
-Prices APPROVED 2026-11-16 (see Rules). DAILY TASKS: ~50 in batches of 10 for the user to approve/replace (the user 2026-11-16), list in `Design/store/Piggy_Tasks.md`; 40 tasks APPROVED 2026-11-16 (enough for now). RESET EVERY 8 HOURS (the user 2026-11-16): new 3 tasks at 00:00, 08:00, 16:00 local time (proposed fixed slots); unfinished ones are replaced. Key piggy_tasks_reset_hours = 8 in the sheet when built.
+**Status (2026-11-16): BUILT in the game** (the user has not seen it; setup green; the general test run is in the
+log of that day). Everything approved went in: the button, the window v2, the «!» popup, the break animation,
+the prices, 40 tasks reset every 8 h. Earlier history: rules DISCUSSED 2026-11-15, concepts in `Design/store/Piggy_*`.
+
+## How it is built (2026-11-16)
+- `Core/PiggyBank.cs` -- level (0-based) + crystals in PlayerPrefs (`piggy.level`, `piggy.stored`), Add (capped),
+  GainPercent (the live badge), OnBroken (Store calls it). Numbers always from `BalanceConfig.Sandbox`.
+- `Core/Store.cs` -- products `piggy_1..5` (one per level): CrystalsOf = what is in it, UsdOf = piggy_usd_N, CanBuy =
+  the current level's product and CanBreak; Grant pays out then calls PiggyBank.OnBroken.
+- `Core/PiggyTasks.cs` -- the 3 tasks of the 8-hour slot (slot = hours since 2000-01-01 local / 8), 1 easy + 1 medium
+  + 1 any, different kinds, seeded by the slot; JSON in `piggy.tasks`; Report(kind,n) / ReportMax(kind,v);
+  sandbox/archipelago tasks count only in the sandbox (not a run, campaign, tutorial). Dungeon tasks drop after the
+  first dungeon entry (`piggy.seen.dungeon`), archipelago after a minute on an archipelago map, campaign_record once
+  `m1_best` exists. Islands visited per map in `piggy.isl.<mapId>` (the shipyard's island counts as visited).
+- `Core/PiggyRunner.cs` -- made at start, DontDestroyOnLoad: 1 crystal per piggy_minute_seconds of ACTIVE play (scene
+  CityBuilder, timeScale>0, no ModalGate, input within piggy_idle_seconds); the sandbox-minute task; orc deaths
+  (orc_kill = not a monster; dungeon_monster/boss inside a dungeon; king_kill per run; raid = the last raiding orc fell).
+- Where each kind is reported: BuildingPlacer (road; building with no timer), ConstructionSite.Finish (build /
+  upgrade / building_level, not the bot's), ResourceManager.Add (coins) / AddProduced (wood, stone, food, bars),
+  ArmyManager.TryRecruit (hire / machine / squad) + MoveSoldier (squad), HousePeople + MigrationManager (citizen),
+  BuildingInstance.TryRepair, ResearchManager.Complete, Hero.AddExperience (hero_level), OrcCampBuilding.Fall (orc
+  building, not walls; cage), OrcRaidManagerCamps.PlunderCamp (orc_camp), ShipManager.TryBuild / TryLand (ship,
+  island), CityDefenceMode.Win + MissionOne end (campaign_win, campaign_record), DungeonTravel.Enter (seen, deeper),
+  DungeonCrystals.Take, DungeonChests.OpenChest, DungeonShopCard.Buy, InvasionScore.Finish (run), InvasionWaves (wave).
+- UI: `UI/PiggyUi.cs` (helpers), `UI/PiggyButton.cs` (the square button: Create(parent, anchor, offset, size)),
+  `UI/PiggyWindow.cs` (window, «!», shatter coroutine; Show, OfferInMenu, BackCurrent). Pictures:
+  `Tools/store/piggy_art.py <renders>` -> `Resources/Shop/Piggy/` (shards.json is FLAT: 6 numbers a shard).
+- Buttons: main menu top right (settings moved top LEFT, language picker top CENTRE), modes screen under the settings,
+  campaign map under the settings, main-menu shop top right (its balance plaque moved top left), the sandbox's game
+  menu top right. NOT in the Лавка (no free corner: its close seal is top right) -- open.
+- Sheet: tab «Копилка: задания» (gid 2000068, `piggytasks.csv`), keys piggy_* in «Наборы: настройки», texts #piggy_*
+  in «Тексты: лавка»; task names become `#piggy_task_<id>`. Cheats: Экономика tab (level, fill, window, redraw, finish).
+- Test: `Tests/EditMode/PiggyBankTests.cs` (capacity, break, gain ~+50 % full / none below 2/3, tasks credit).
+- Traps: BalanceConfig has a CLASS PiggyTask, so the lookup is `FindPiggyTask` (a same-named method broke compile).
+  The stand-in Store grants at once; real billing must answer through Store.Grant so Broken plays the shatter.
+  Campaign Win kills every orc -- those count toward orc_kill (accepted). Not checked on a phone.
 
 ## Rules (the user, 2026-11-15)
 - A PIGGY (pink pig: the shape everyone knows). Corner icon with a shine, the crystals saved on a plaque under it.

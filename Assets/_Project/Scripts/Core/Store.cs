@@ -56,12 +56,20 @@ namespace CityBuilder.Core
 
         public static bool IsMine(string id) => id == Mine || id == MineSale;
 
+        /// <summary>Breaking the piggy bank (PiggyBank): piggy_1..piggy_5, one product per level, each its price.</summary>
+        public const string PiggyPrefix = "piggy_";
+
+        public static string PiggyId(int level0) => PiggyPrefix + (level0 + 1);
+
+        public static bool IsPiggy(string id) => id != null && id.StartsWith(PiggyPrefix);
+
         /// <summary>Crystals a product puts in the wallet: the mine's gift, a pack's crystals.</summary>
         public static int CrystalsOf(string id)
         {
             var config = BalanceConfig.Instance;
             if (config == null) return 0;
             if (IsMine(id)) return config.MenuShopMineGift;
+            if (IsPiggy(id)) return PiggyBank.Stored;
             var pack = PackIndexOf(id);
             return pack >= 0 ? config.MenuShopPackCrystals(pack) : 0;
         }
@@ -73,6 +81,7 @@ namespace CityBuilder.Core
             if (config == null) return 0f;
             if (id == Mine) return config.MenuShopMineUsd;
             if (id == MineSale) return config.MenuShopMineSaleUsd;
+            if (IsPiggy(id) && int.TryParse(id.Substring(PiggyPrefix.Length), out var lv)) return BalanceConfig.Sandbox.PiggyUsd(lv - 1);
             var pack = PackIndexOf(id, out var sale);
             if (pack < 0) return 0f;
             return sale ? config.MenuShopPackSaleUsd(pack) : config.MenuShopPackUsd(pack);
@@ -90,7 +99,8 @@ namespace CityBuilder.Core
         /// <summary>The mine's two products share one owner flag and one pending flag.</summary>
         private static string Family(string id) => IsMine(id) ? Mine : id;
 
-        public static bool CanBuy(string id) => !IsPending(id) && !(IsMine(id) && Wallet.CrystalMineOwned);
+        public static bool CanBuy(string id) => !IsPending(id) && !(IsMine(id) && Wallet.CrystalMineOwned)
+            && (!IsPiggy(id) || (id == PiggyBank.ProductId && PiggyBank.CanBreak));
 
         /// <summary>Buys a product. The stand-in gives it at once and says true; the billing will answer later through Granted.</summary>
         public static bool Buy(string id)
@@ -107,6 +117,7 @@ namespace CityBuilder.Core
             if (IsMine(id)) Wallet.CrystalMineOwned = true;
             var crystals = CrystalsOf(id);
             if (crystals > 0) Wallet.UpgradeCrystals += crystals;
+            if (IsPiggy(id)) PiggyBank.OnBroken();
             Granted?.Invoke(id);
             Changed?.Invoke();
         }

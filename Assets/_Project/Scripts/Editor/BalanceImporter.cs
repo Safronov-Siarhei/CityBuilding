@@ -45,6 +45,8 @@ namespace CityBuilder.EditorTools
         public const string BotWavesCsvPath = BalanceFolder + "/botwaves.csv";
         /// <summary>The sheet's tab «Кампания: волны обороны» (the user, 2026-11-12): mission 2's waves, a row each.</summary>
         public const string M2WavesCsvPath = BalanceFolder + "/m2waves.csv";
+        /// <summary>The sheet's tab «Копилка: задания» (the user, 2026-11-16): the piggy bank's tasks, a row each.</summary>
+        public const string PiggyTasksCsvPath = BalanceFolder + "/piggytasks.csv";
 
         /// <summary>The sheet's tutorial tab (the user, 2026-11-05): every number of the tutorial, key/value, laid over the economy keys.</summary>
         public const string TutorialCsvPath = BalanceFolder + "/tutorial.csv";
@@ -99,11 +101,13 @@ namespace CityBuilder.EditorTools
             var config = WriteConfig(ConfigAssetPath, sandboxUnits, sandboxBuildings, sandboxEconomy);
             config.EditorSetBotWaves(ReadBotWaves(BotWavesCsvPath));
             config.EditorSetM2Waves(ReadM2Waves(M2WavesCsvPath));
+            config.EditorSetPiggyTasks(ReadPiggyTasks(PiggyTasksCsvPath, out var piggyNames));
             var offers = ReadBundles(BundlesCsvPath);
             config.EditorSetOffers(offers.Bundles, offers.Levels);
             bundleNames = offers.Names;
             config.EditorSetBoosters(boosterTab.Boosters);
             foreach (var pair in boosterTab.Names) bundleNames[pair.Key] = pair.Value;
+            foreach (var pair in piggyNames) bundleNames[pair.Key] = pair.Value;
             EditorUtility.SetDirty(config);
 
             // The run's config: the same tabs with the invasion tab's cells laid over them.
@@ -302,6 +306,45 @@ namespace CityBuilder.EditorTools
                 int.TryParse(Cell(count), System.Globalization.NumberStyles.Integer, culture, out var n);
                 int.TryParse(Cell(level), System.Globalization.NumberStyles.Integer, culture, out var l);
                 result.Add(new BalanceConfig.BotWaveRow { wave = w, unit = Cell(unit), count = Mathf.Max(0, n), level = Mathf.Max(1, l) });
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// The piggytasks tab: id, kind, target, reward, difficulty, mode, name_ru, name_en, comment. Each name becomes
+        /// `#piggy_task_&lt;id&gt;` in the localization asset (like the bundles' names).
+        /// </summary>
+        private static List<BalanceConfig.PiggyTask> ReadPiggyTasks(string path, out Dictionary<string, Dictionary<string, string>> names)
+        {
+            var result = new List<BalanceConfig.PiggyTask>();
+            names = new Dictionary<string, Dictionary<string, string>>();
+            if (!File.Exists(path)) return result;
+            var rows = ReadCsv(path);
+            if (rows.Count == 0) return result;
+            var header = rows[0];
+            int Col(string name) => header.FindIndex(h => h.Trim() == name);
+            int id = Col("id"), kind = Col("kind"), target = Col("target"), reward = Col("reward");
+            if (id < 0 || kind < 0 || target < 0 || reward < 0)
+            {
+                Debug.LogError($"BalanceImporter: {path} needs the columns id, kind, target, reward.");
+                return result;
+            }
+            var culture = System.Globalization.CultureInfo.InvariantCulture;
+            for (var i = 1; i < rows.Count; i++)
+            {
+                var row = rows[i];
+                string Cell(int c) => c >= 0 && c < row.Count ? row[c].Trim() : string.Empty;
+                var key = Cell(id);
+                if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(Cell(kind))) continue;
+                int.TryParse(Cell(target), System.Globalization.NumberStyles.Integer, culture, out var n);
+                int.TryParse(Cell(reward), System.Globalization.NumberStyles.Integer, culture, out var r);
+                var mode = Cell(Col("mode"));
+                result.Add(new BalanceConfig.PiggyTask
+                {
+                    id = key, kind = Cell(kind), target = Mathf.Max(1, n), reward = Mathf.Max(0, r),
+                    difficulty = Cell(Col("difficulty")), mode = string.IsNullOrEmpty(mode) ? "any" : mode,
+                });
+                names["#piggy_task_" + key] = new Dictionary<string, string> { ["ru"] = Cell(Col("name_ru")), ["en"] = Cell(Col("name_en")) };
             }
             return result;
         }

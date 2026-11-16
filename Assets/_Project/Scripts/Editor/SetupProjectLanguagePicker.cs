@@ -43,7 +43,8 @@ namespace CityBuilder.EditorTools
 
             // ---- the pill: flag, the language's own name, a chevron
             var pill = MenuImage(root, "Pill", "plaque", Vector2.zero, PickerPill);
-            Anchor(pill.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-PickerInset, -PickerInset), PickerPill);
+            // top centre (2026-11-16: the piggy bank stands top right)
+            Anchor(pill.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -PickerInset), PickerPill);
             var pillButton = pill.gameObject.AddComponent<Button>();
             var pillFlag = PickerIcon(pill.transform, "Flag", Icon("Flag_en"), new Vector2(18f + 24f, 0f), new Vector2(48f, 32f));
             var pillName = PickerText(pill.transform, "Name", 26, new Vector2(76f, 0f), new Vector2(PickerPill.x - 76f - 44f, PickerPill.y));
@@ -57,7 +58,7 @@ namespace CityBuilder.EditorTools
             outside.transition = Selectable.Transition.None;
             var size = new Vector2(PickerListWidth, PickerPad * 2f + PickerRow * langs.Length);
             var card = MenuImage(list, "Card", "card", Vector2.zero, size);
-            Anchor(card.rectTransform, new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-PickerInset, -PickerInset - PickerPill.y - 18f), size);
+            Anchor(card.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -PickerInset - PickerPill.y - 18f), size);
 
             var codes = new string[langs.Length];
             var names = new string[langs.Length];

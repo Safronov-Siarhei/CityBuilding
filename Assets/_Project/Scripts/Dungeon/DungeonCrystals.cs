@@ -259,6 +259,7 @@ namespace CityBuilder.Dungeon
         {
             var c = _lying[i];
             _lying.RemoveAt(i);
+            Core.PiggyTasks.Report(Core.PiggyTasks.DungeonCrystal);
             if (c.Shown != null) _flares.Add((c.Shown, 0f));
             if (c.Ground != null) Destroy(c.Ground);
             _takenNow.Add(c.Id);

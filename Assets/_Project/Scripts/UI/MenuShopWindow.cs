@@ -165,7 +165,9 @@ namespace CityBuilder.UI
             Label(title.transform, Localization.Get("#menu_offers"), 60, Ink, new Vector2(0f, 4f), new Vector2(580f, 100f), heavy: true);
 
             var plaque = Sliced(_shopView, "Balance", Skin + "plaque", new Vector2(300f, 90f));
-            Anchor(plaque.rectTransform, new Vector2(1f, 1f), new Vector2(-230f, -72f));
+            // top left: the piggy bank stands top right (2026-11-16)
+            Anchor(plaque.rectTransform, new Vector2(0f, 1f), new Vector2(230f, -72f));
+            PiggyButton.Create(_shopView, new Vector2(1f, 1f), new Vector2(-20f, -10f), 170f);
             _shownBalance = _targetBalance = Wallet.UpgradeCrystals;
             _balance = Label(plaque.transform, _shownBalance.ToString(), 42, Ink, new Vector2(-30f, 3f), new Vector2(190f, 70f), heavy: true);
             _balance.alignment = TextAnchor.MiddleRight;

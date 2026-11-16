@@ -47,7 +47,8 @@ namespace CityBuilder.EditorTools
 
             // ---- main
             var main = StretchedChild(canvas, "MainScreen");
-            var settings = Corner(main, "SettingsButton", "Settings", new Vector2(0.5f, 1f), new Vector2(0f, -CornerInset), 150f);
+            // top left (the piggy bank took the top right and the language the top centre, 2026-11-16)
+            var settings = Corner(main, "SettingsButton", "Settings", new Vector2(0f, 1f), new Vector2(CornerInset, -CornerInset), 150f);
             var play = MenuTextButton(main, "ContinueButton", "button", "#menu_continue", HudInk.OnButton, Vector2.zero, new Vector2(560f, 140f), 50);
             Anchor((RectTransform)play.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 330f), new Vector2(560f, 140f));
             var offers = MenuTextButton(main, "OffersButton", "plaque", "#menu_offers", HudInk.OnMenuPlaque, Vector2.zero, new Vector2(440f, 110f), 38);
@@ -58,7 +59,7 @@ namespace CityBuilder.EditorTools
             discordBadges.Add(Badge(discord.transform));
             var youTube = BrandCorner(main, "YouTubeButton", "YouTube", new Vector2(0.5f, 0f), new Vector2(340f, 120f), CornerButton, YouTubeColour);
             youTubeBadges.Add(Badge(youTube.transform));
-            BuildLanguagePicker(main);   // top-right; last, so its open list lies over the rest
+            BuildLanguagePicker(main);   // top centre; last, so its open list lies over the rest
 
             // ---- the modes
             var modes = StretchedChild(canvas, "ModesScreen");
