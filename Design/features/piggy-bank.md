@@ -3,7 +3,7 @@
 **Status (2026-11-15):** DISCUSSED with the user, rules below DECIDED; placement concept v2 + 3D-render icon sent for
 approval (`Design/store/Piggy_Placement_Concept.png`, `Design/store/Piggy_Icon_Concept.png`, by
 `Tools/store/piggy_placement_concept.py <photos>`). NOT BUILT. Daily tasks' list: to discuss later (the user).
-Prices APPROVED 2026-11-16 (see Rules).
+Prices APPROVED 2026-11-16 (see Rules). DAILY TASKS: ~50 in batches of 10 for the user to approve/replace (the user 2026-11-16), list in `Design/store/Piggy_Tasks.md`; batch 1 sent.
 
 ## Rules (the user, 2026-11-15)
 - A PIGGY (pink pig: the shape everyone knows). Corner icon with a shine, the crystals saved on a plaque under it.
