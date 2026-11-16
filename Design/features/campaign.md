@@ -842,6 +842,12 @@
     trees, houses, a slab floating in the sky): export_m2capital.join_set copied the pieces' matrix_world before the
     depsgraph ran -- stale, they landed on the models' library spots. Now view_layer.update() first, and each piece's
     EVALUATED mesh (the still people keep their poses). TRAP for any set joined in a script: update the view layer first.
+    PROPOSED 2026-11-16, renders sent, NOT approved, NOT exported: (4) «лестница обрывается» -- the castle model's own
+    grass plot and plinth stood on the terrace, a gap of green and a high step before the door: the castle is SUNK by its
+    plinth (capital.PLINTH 0.22 x CASTLE_K) so the door's sill is the terrace's floor, the runner reaches the door
+    (DOOR_IN); the arrive animation's heights stay right. (5) «зелень перед воротами, там должна быть площадь» -- a paved
+    CASTLE SQUARE from SQUARE_X 16 to the terrace, y ±4; the street's last houses (Treasury N, Hovel S) and two trees
+    gave way, the kerbs stop at the square. After approval: export_m2capital.py + setup.
     Test CityDefenceIntro skips mid-film (`SkipIntro()`) and checks Ардан within 0.6 of `IntroEnd` 60 frames later.
     Next groups: (2) street gallop + townsfolk dodging, (3) throne room (push + guard fall, kneel/speak, King,
     advisor, court).

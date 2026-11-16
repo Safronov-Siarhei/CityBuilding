@@ -34,15 +34,17 @@ BACK_X = 30                      # the town's east wall
 STREET_Y = 1.5                   # the street's half width
 CASTLE_X, CASTLE_K = 23.5, 1.3   # the castle's middle and its extra growth
 TERRACE_H, STEP_N = 0.5, 8
+SQUARE_X = 16                    # the castle square opens from here to the terrace (cells)
+PLINTH, DOOR_IN = 0.22, 1.37    # the castle model's plinth height and its door's depth from the front (its units)
 TERRACE_HALF = 2.45 * CASTLE_K + 0.45
 STAIR_HALF_W = 1.4
 fg.plain('grass', 'grass_dark', 'stone_light', 'stone_mid', 'stone_dark', 'water', 'gold', 'banner_red', 'wood_dark')
 
 # (model, x middle, its half depth) along each side of the street; the south side is turned to face it
 NORTH = [("Cottage1-lvl5", 2.6, 1.0), ("Tavern1-lvl5", 4.8, 0.5), ("Manor1-lvl5", 7.4, 1.5),
-         ("Baker1-lvl5", 13.0, 1.0), ("Cottage1-lvl5", 14.8, 1.0), ("Treasury1-lvl5", 17.4, 1.0)]
+         ("Baker1-lvl5", 13.0, 1.0), ("Cottage1-lvl5", 14.8, 1.0)]
 SOUTH = [("Hovel1-lvl5", 2.6, 1.0), ("Cottage1-lvl5", 4.8, 1.0), ("Tavern1-lvl5", 7.0, 0.5),
-         ("Manor1-lvl5", 13.4, 1.5), ("Hovel1-lvl5", 16.4, 1.0)]
+         ("Manor1-lvl5", 13.4, 1.5)]
 BACK_ROW = [("Hovel1-lvl5", 3.0), ("Church1-lvl5", 7.0), ("Cottage1-lvl5", 11.0), ("Manor1-lvl5", 15.0),
             ("Hovel1-lvl5", 19.0)]
 
@@ -86,7 +88,7 @@ def ground(b):
         g = 0.12
         _frame(b, (rect[0] - g, rect[1] + g, rect[2] - g, rect[3] + g),
                (rect[0] + g, rect[1] - g, rect[2] + g, rect[3] - g), -0.36, 0.03, 'stone_mid')
-    for x in range(1, int(CASTLE_X - TERRACE_HALF - STEP_N * 0.2)):                        # the street's kerbs
+    for x in range(1, SQUARE_X):                                                         # the street's kerbs, to the square
         for sy in (-1, 1):
             b.box(x, x + 0.92, sy * STREET_Y - 0.06, sy * STREET_Y + 0.06, 0.0, 0.03, 'stone_mid')
 
@@ -103,7 +105,9 @@ def stairs(b):
         b.box(xs, x0, -STAIR_HALF_W, STAIR_HALF_W, 0.0, step_h * (i + 1), 'stone_light', bevel=0.004)
         b.box(xs, xs + 0.03, -STAIR_HALF_W, STAIR_HALF_W, step_h * (i + 1) - 0.012, step_h * (i + 1) + 0.002, 'gold')
         b.box(xs, xs + step_d, -0.35, 0.35, step_h * (i + 1), step_h * (i + 1) + 0.008, 'banner_red')
-    b.box(x0, x0 + 1.0, -0.35, 0.35, TERRACE_H, TERRACE_H + 0.008, 'banner_red')
+    # the runner from the stairs' head to the castle's door: the castle is sunk so its plinth's top is the
+    # terrace's floor (the user, 2026-11-16: «вход в замок ... лестница обрывается»)
+    b.box(x0, CASTLE_X - DOOR_IN * CASTLE_K, -0.35, 0.35, TERRACE_H, TERRACE_H + 0.008, 'banner_red')
     foot = x0 - STEP_N * step_d
     for sy in (-1, 1):                                                                    # the balustrades
         y = sy * (STAIR_HALF_W + 0.09)
@@ -159,6 +163,11 @@ def place():
     stairs_foot = CASTLE_X - TERRACE_HALF - STEP_N * 0.2
     cells += [(x + 0.5, y) for x in range(1, int(stairs_foot) + 1) for y in (-1, 0, 1)]
     cells += [(x, y) for x in (10, 11) for y in (2, 3, 4)]
+    # the castle square: the street opens out before the stairs, paved up to the terrace (the user, 2026-11-16:
+    # «мне не нравится зелень перед воротами, там должна быть площадь»)
+    cells += [(x + 0.5, y) for x in range(SQUARE_X, int(stairs_foot) + 1) for y in (-4, -3, -2, 2, 3, 4)]
+    cells += [(x + 0.5, y) for x in range(int(stairs_foot) + 1, int(CASTLE_X - TERRACE_HALF) + 1)
+              for y in (-4, -3, -2, 2, 3, 4)]
     for x, y in cells:
         add(_copy("Road1-lvl5", x, y, tag=f"road {x},{y}"))
     add(_copy("FortifiedGate1-lvl5", 0, 0, tag="gate"))
@@ -190,12 +199,14 @@ def place():
             add(_copy(name, x, sy * 7.6, 0 if sy > 0 else 180, tag=f"back {sy}"))
     # the market: a well; trees on its square and along the walls
     add(_copy("Well1-lvl5", 10.5, 3.4))
-    for x, y in ((9.8, -3.4), (19.6, 3.0), (19.6, -3.0), (1.6, 10.0), (1.6, -10.0), (5.0, 10.4), (13.0, -10.4),
+    for x, y in ((9.8, -3.4), (15.4, 4.6), (15.4, -4.6), (1.6, 10.0), (1.6, -10.0), (5.0, 10.4), (13.0, -10.4),
                  (-6.0, 3.0), (-7.5, -3.5), (-11.0, 2.6), (-9.0, 6.5), (-10.0, -7.0), (-14.0, -2.8),
                  (-17.0, 3.2), (-8.0, 12.0), (-12.0, -11.0), (-20.0, -5.0), (-6.5, -17.5), (6.0, -19.0), (14.0, 20.0)):
         add(_copy(("Tree3", "Tree10", "Tree2")[int(abs(x * 7 + y * 3)) % 3], x, y, (x * 37) % 360, tag=f"tree {x},{y}"))
     # the castle on its terrace, its door (-y front) turned to the street; banners at the stairs' foot
-    add(_copy("Castle1-lvl5", CASTLE_X, 0, -90, z=TERRACE_H * S, k=CASTLE_K, tag="castle"))
+    # sunk by its plinth: the plinth's top (its door's sill) is the terrace's floor, its grass plot under the
+    # terrace -- the stairs lead straight to the door (the user, 2026-11-16)
+    add(_copy("Castle1-lvl5", CASTLE_X, 0, -90, z=(TERRACE_H - PLINTH * CASTLE_K) * S, k=CASTLE_K, tag="castle"))
     for sy in (-1, 1):
         add(_copy("Flag1-lvl5", CASTLE_X - TERRACE_HALF - STEP_N * 0.2 - 0.6, sy * (STAIR_HALF_W + 0.4), -90, tag=f"flag {sy}"))
     return objs
@@ -287,7 +298,9 @@ def render(out):
                                 ("capital_overview", (10 * S, 0, 0), (-16 * S, -24 * S, 30), 26),
                                 ("capital_street", (CASTLE_X * S, 0, 5.0), (1.2 * S, -0.9 * S, 1.3), 24),
                                 ("capital_bridge", (-2.5 * S, 0, 0.3), (-6.5 * S, -3.6 * S, 2.8), 35),
-                                ("capital_stairs", ((CASTLE_X - 3) * S, 0, 3.0), ((CASTLE_X - 11) * S, -3.2 * S, 1.4), 26)):
+                                ("capital_stairs", ((CASTLE_X - 3) * S, 0, 3.0), ((CASTLE_X - 11) * S, -3.2 * S, 1.4), 26),
+                                ("capital_square", ((CASTLE_X - 2) * S, 0, 0.5), ((CASTLE_X - 10) * S, -7 * S, 9.0), 26),
+                                ("capital_door", ((CASTLE_X - 2) * S, 0, 1.2), ((CASTLE_X - 6.5) * S, -2.2 * S, 2.6), 30)):
         at, frm = Vector(at), Vector(frm)
         cam.location = frm
         cam.data.lens = lens
