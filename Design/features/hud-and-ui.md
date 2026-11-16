@@ -52,7 +52,8 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
   `UI/MenuShopWindow` since 2026-11-15, card monetization.md; the old ShopDialog is gone) (= the
   shop; was «Предложения», renamed 2026-11-15: same parchment plaque, the word moved left, the in-game shop's
   `UI/Shop/Stall.png` in its right end -- `ShopStall()`, the user's pick «1 — внутри» from
-  Design/store/ShopButton_Plaque.png; its «!» badge sits top-LEFT, `Badge(.., left: true)`), Discord + YouTube rounds under them. No resume-last-save plaque any more.
+  Design/store/ShopButton_Plaque.png; since 2026-11-16 that icon is concept A «Богатая лавка» from
+  Design/store/ShopIcon_Concepts.png (Tools/store/shop_icon_concepts.py, also the sandbox shop button); its «!» badge sits top-LEFT, `Badge(.., left: true)`), Discord + YouTube rounds under them. No resume-last-save plaque any more.
 - modes (REDONE 2026-11-10, the user: «дёшево и скучно» -> «Зал знамён»): four BANNERS hanging in a
   row -- Обучение (teal), Песочница (green), Нашествие (red, iron perch, torn tail, emblem = horned orc skull over crossed axes since 11-10 round 2), Кампания (grey,
   lock, «Скоро») -- art `UI/MenuArt/Banner_<Mode>.png` drawn by `Tools/ui/make_mode_banners.py` in
