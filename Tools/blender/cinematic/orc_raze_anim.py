@@ -161,6 +161,7 @@ def build_raze():
 
 FLEE_SECONDS = 6.0
 RUN_V = a2.RUN_SPEED * 1.25
+LANCE_REACH = 1.3
 GATE_Y = 9.0
 # (kind, x, y start, look-back phase, stumbles)
 FLEERS = [("CineOrcSpear", -0.3, 0.0, 0.0, False), ("CineOrcTorch", 0.35, -0.5, 1.3, True),
@@ -197,19 +198,54 @@ def build_flee():
         r_arm = ka.rig_figure(fg.make(f"CineCavalryChase{i}", cav.PARTS, cav.SCALE, (0, 0, 0)), cav.SCALE)
         start_action(h_arm, "Chase")
         start_action(r_arm, "Chase")
-        riders.append({"h": h_arm, "r": r_arm, "hname": hname, "x": x, "back": -5.2 - 0.8 * i, "phase": 0.3 * i})
+        riders.append({"h": h_arm, "r": r_arm, "hname": hname, "x": x, "back": -5.2 - 0.8 * i, "phase": 0.3 * i,
+                       "dist": 0.0, "struck": None})
     reins = None
     sc = bpy.context.scene
+    dt = 1.0 / FPS
+    for fr in figs:
+        fr["hit"] = None
     for f in range(int(FLEE_SECONDS * FPS) + 1):
         t = f / FPS
         sc.frame_set(f + 1)
+        # the riders gallop on until their blow, then rein back to a canter: the rest get away through the gate
+        # (the user, 2026-11-16: «кавалерия проносится по оркам, но орки продолжают бежать» -- now whoever a rider
+        # reaches is ridden down, nobody is passed through)
+        for p in riders:
+            v = cr.V * 1.05
+            if p["struck"] is not None:
+                v = cr.V * 1.05 + (1.1 - cr.V * 1.05) * ease(min(1.0, (t - p["struck"]) / 1.0))
+            if f:
+                p["dist"] += v * dt
+            ry = p["back"] + p["dist"]
+            for fr in figs:
+                if fr["hit"] is not None:
+                    continue
+                oy = fr["y0"] + fr.get("d", 0.0)
+                if abs(fr["x"] - p["x"]) < 0.4 and ry + LANCE_REACH >= oy and ry < oy + 0.3:
+                    fr["hit"] = t
+                    fr["hit_y"] = oy
+                    if p["struck"] is None:
+                        p["struck"] = t
         for fr in figs:
             arm = fr["arm"]
+            if fr["hit"] is not None:
+                # ridden down from behind: thrown forwards onto his face, sliding a little
+                u = min(1.0, (t - fr["hit"]) / 0.5)
+                w = ease(u)
+                m = (Matrix.Translation((fr["x"], fr["hit_y"] + 0.7 * w, 0.1 * math.sin(math.pi * u) + 0.06 * w))
+                     @ Matrix.Rotation(math.pi, 4, 'Z') @ Matrix.Rotation(math.radians(86 * w), 4, 'X'))
+                arm.matrix_world = m
+                aa.rest(arm)
+                ka.apply(arm, ls.orc_down(w), fr["scale"])
+                key(arm, f + 1)
+                continue
             d = RUN_V * t
             if fr["stumble"]:
                 # the sprawl: down at STUMBLE, up again by UP_AGAIN, slower after
                 lost = 0.0 if t < STUMBLE else min(t - STUMBLE, UP_AGAIN - STUMBLE) * RUN_V * 0.85
                 d -= lost
+            fr["d"] = d
             y = fr["y0"] + d
             look = max(0.0, math.sin(TAU * (t + fr["lp"]) / 2.6)) ** 3
             q = panic_run(fr["kind"], (d / (a2.RUN_SPEED * a2.RUN_CYCLE)) % 1.0, t, look)
@@ -229,7 +265,7 @@ def build_flee():
             key(arm, f + 1)
         for p in riders:
             h_arm, r_arm = p["h"], p["r"]
-            dist = cr.V * 1.05 * t
+            dist = p["dist"]
             h_arm.location = (p["x"], p["back"] + dist, 0)
             h_arm.rotation_euler = (0, 0, ra.ROAD)
             aa.rest(h_arm)
@@ -237,7 +273,8 @@ def build_flee():
             bpy.context.view_layer.update()
             r_arm.matrix_world = gt.bone_world(h_arm, "body") @ Matrix.Translation(ra.SEAT)
             q = ra.seated(t, 1.0, 0.0)
-            q["upper_arm.R"] = [-78, 4, 0]
+            jolt = 0.0 if p["struck"] is None else env(t, p["struck"] - 0.15, p["struck"]) * (1 - env(t, p["struck"], p["struck"] + 0.35))
+            q["upper_arm.R"] = [-78 + 10 * jolt, 4, 0]
             q["forearm.R"] = [-6, 0, 0]
             if reins is None:
                 aa.rest(r_arm)
