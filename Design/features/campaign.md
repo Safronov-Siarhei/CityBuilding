@@ -886,7 +886,10 @@
      his right, close shots `cut`/`lance` -- APPROVED 2026-11-16; (3) `last_stand_anim.py` the square: Ардан, captain, 2 men-at-arms
      (lookout stand-ins) with swords (ardan_sword.sword), back to back in a ring of 6 orcs; orcs attack by turns, Ардан
      kills 2, guard2 run through (falls on his face), the champion beats the captain to a knee (he rises), the ring
-     closes, HORN at 5.7 s -> all heads to the gate (-y) -- in review; (3) the square's
+     closes, HORN at 5.7 s -> all heads to the gate (-y) -- APPROVED 2026-11-16; (4)+(5) `orc_raze_anim.py`: `raze` two orcs
+     hack a door in turns, the champion's fists knock stone chunks (props) out of a wall, the torchbearer holds his torch
+     to the thatch (fire = Unity); `flee` 6 orcs run in panic for the gate looking back, one sprawls and scrambles on,
+     2 horsemen chase -- in review. (3) the square's
      last stand (captain, Ардан, men-at-arms), (4) orcs smashing houses, (5) orcs fleeing.
   3. (older draft) «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
      orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя
