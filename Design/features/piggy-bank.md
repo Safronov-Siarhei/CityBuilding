@@ -32,7 +32,7 @@ the prices, 40 tasks reset every 8 h. Earlier history: rules DISCUSSED 2026-11-1
   menu top right, the Лавка top right of the screen beside its frame (OfferShopWindow.Awake; the user 2026-11-16 showed
   the free corner on a game screenshot -- the frame is smaller in the game than in the mock-up).
 - Sheet: tab «Копилка: задания» (gid 2000068, `piggytasks.csv`), keys piggy_* in «Наборы: настройки», texts #piggy_*
-  in «Тексты: лавка»; task names become `#piggy_task_<id>`. Cheats: Экономика tab (level, fill, window, redraw, finish).
+  in «Тексты: лавка»; task names become `#piggy_task_<id>`. Cheats: Экономика tab (level, fill, window, redraw, finish; row «Добавить кристаллы в копилку» +10/+50/+100/+step/+typed, through PiggyBank.Add so the cap holds).
 - Test: `Tests/EditMode/PiggyBankTests.cs` (capacity, break, gain ~+50 % full / none below 2/3, tasks credit).
 - Traps: BalanceConfig has a CLASS PiggyTask, so the lookup is `FindPiggyTask` (a same-named method broke compile).
   The stand-in Store grants at once; real billing must answer through Store.Grant so Broken plays the shatter.

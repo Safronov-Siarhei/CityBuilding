@@ -107,12 +107,20 @@ namespace CityBuilder.Cheats
             // the piggy bank (piggy-bank.md): its level and crystals, the window, the tasks
             GUILayout.BeginHorizontal();
             Label($"Копилка: ур. {PiggyBank.Level + 1}, {PiggyBank.Stored}/{PiggyBank.Capacity}");
-            if (Button("+" + step, 90f)) PiggyBank.Add(step);
             if (Button("Полная", 110f)) PiggyBank.CheatSet(PiggyBank.Level, PiggyBank.Capacity);
             if (Button("0", 60f)) PiggyBank.CheatSet(PiggyBank.Level, 0);
             if (Button("Ур. −", 80f)) PiggyBank.CheatSet(PiggyBank.Level - 1, PiggyBank.Stored);
             if (Button("Ур. +", 80f)) PiggyBank.CheatSet(PiggyBank.Level + 1, PiggyBank.Stored);
             if (Button("Окно копилки")) PiggyWindow.Show();
+            GUILayout.EndHorizontal();
+            // crystals INTO the piggy the way the game puts them (capped at its capacity), to watch it fill
+            GUILayout.BeginHorizontal();
+            Label("Добавить кристаллы в копилку:");
+            if (Button("+10", 70f)) PiggyBank.Add(10);
+            if (Button("+50", 70f)) PiggyBank.Add(50);
+            if (Button("+100", 80f)) PiggyBank.Add(100);
+            if (Button("+" + step, 90f)) PiggyBank.Add(step);
+            if (Button("+ введённое", 140f)) PiggyBank.Add(Typed);
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             if (Button("Новые задания")) PiggyTasks.CheatRedraw();
