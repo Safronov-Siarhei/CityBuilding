@@ -891,10 +891,22 @@
      to the thatch (fire = Unity); `flee` 6 orcs run in panic for the gate looking back, one sprawls and scrambles on,
      2 horsemen chase; the user: «кавалерия проносится по оркам, но орки продолжают бежать» -> whoever a rider reaches
      (lane |dx| < 0.4, lance reach 1.3) is ridden down (thrown onto his face), the rider then reins back to 1.1 so the
-     rest escape through the gate -- raze + flee APPROVED 2026-11-16. ALL FIVE GROUPS APPROVED; next: Unity
-     (export like export_m2capital, a director like Capital.cs placing the groups in the mission's own town, cavalry
-     copies, the horn, fire on the razed houses; plays at the win instead of «every orc dies»). (3) the square's
-     last stand (captain, Ардан, men-at-arms), (4) orcs smashing houses, (5) orcs fleeing.
+     rest escape through the gate -- raze + flee APPROVED 2026-11-16. ALL FIVE GROUPS APPROVED.
+     **IN UNITY 2026-11-16 (built, not seen by the user):** `export_m2help.py` (one Blender run: 11 Cap* figures --
+     CapKingRide/CapCavalry/CapKingHorse/CapWarhorse/CapWarhorseGrey/CapOrcSpear/Torch/Champion/CapArdan/CapCaptain/
+     CapGuardStand -- each copy in a group its OWN take "Ride", "Ride1"..., the stone CapPropRazeChunk with a zero
+     scale while hidden; Campaign/M2Help/<group>.json; OpeningCast.json). `CityDefenceMode.Help.cs` runs on Capital.cs's
+     machinery, generalised to `StartFilm(..., inTown, onEnd)`: places are PLAN CELLS of the town (Mission2Help.json,
+     made by scratch make_help_json-style from the approved review shots, turned 180 where the take's +y must point
+     south), the raze's place = a step north of the standing house nearest (45, 38.5) (`anchor` "house"), that house + 3
+     random lower-town houses BURN (Look.cs Fire, stays after); the town's orcs/soldiers/Ардан/townsfolk renderers are
+     hidden while it plays, the darkness stays; horn = introHorn at 10.7 s; music mus_attack, then mus_gate from 11.0.
+     Timeline 28.8 s: raze 0-5 (dolly in) -> square 5-11.2 (horn) -> north road 11.2-17.2 (the King's group + 3 rider
+     copies: behind, both flanks in the fields) -> main street through the outer gate 17.2-22.8 (+1 rider copy) ->
+     flight through the gate 22.8-28.8 (+1 chase copy). The clock out (TimeLeft <= 0) starts it instead of Win(); its
+     end calls Win() (Win guarded against twice; CheatWin aborts a playing scene first). Cheat «Перемотать к концовке
+     (подкрепление)» = CheatToHelp. Test CityDefenceIntro checks it starts, stands the game, has > 60 figures, ends in
+     Won. OPEN: the user's look; the town has NO bridge (the ride is on the north road) -- ask whether to add one.
   3. (older draft) «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
      orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя
      этот камень?») as the mission-3 hook.

@@ -327,6 +327,8 @@ namespace CityBuilder.Cheats
                 if (Button($"Ардан: +уровень (сейчас {defence.ArdenLevel})")) defence.CheatLevelUp();
                 // straight to scene 2 «Гонец у короля» (the user, 2026-11-16): the clock to the courier's arrival
                 if (Button("Перемотать к гонцу (сцена у короля)")) { SetOpen(false); defence.CheatToCapital(); }
+                // straight to the last scene «Подкрепление» (the user, 2026-11-16): the clock out, then the win
+                if (Button("Перемотать к концовке (подкрепление)")) { SetOpen(false); defence.CheatToHelp(); }
             }
 
             Header("Сохранение");

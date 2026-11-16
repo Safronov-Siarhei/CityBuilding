@@ -744,6 +744,17 @@ namespace CityBuilder.EditorTools
                 AssetDatabase.LoadAssetAtPath<GameObject>(cine + "M2CapitalSet.fbx"),
                 AssetDatabase.LoadAssetAtPath<GameObject>(cine + "M2ThroneSet.fbx"),
             });
+            // the last scene «Подкрепление», at the win (approved 2026-11-16; Tools/blender/cinematic/export_m2help.py,
+            // CityDefenceMode.Help.cs): its figures and props are among the Cap* above; the fight's music, then the
+            // cavalry's from the horn
+            cityDefenceSO.FindProperty("helpScript").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Mission2Help.json");
+            cityDefenceSO.FindProperty("helpMusic").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_attack.ogg");
+            cityDefenceSO.FindProperty("helpMusic2").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_gate.ogg");
+            var helpTakes = new System.Collections.Generic.List<Object>();
+            if (System.IO.Directory.Exists("Assets/_Project/Campaign/M2Help"))
+                foreach (var file in System.IO.Directory.GetFiles("Assets/_Project/Campaign/M2Help", "*.json"))
+                    helpTakes.Add(AssetDatabase.LoadAssetAtPath<TextAsset>(file.Replace('\\', '/')));
+            WriteArray(cityDefenceSO.FindProperty("helpTakes"), helpTakes.ToArray());
             cityDefenceSO.ApplyModifiedPropertiesWithoutUndo();
 
             // The dungeon (Dungeon/DungeonMode): idle in a town; when DungeonTravel sent the heroes

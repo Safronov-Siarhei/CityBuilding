@@ -311,6 +311,7 @@ namespace CityBuilder.Campaign
             BeginPart1();
             // the scene at the capital when the courier gets there (CityDefenceMode.Capital.cs), not in the tests
             _noCapital = _skipCapitalOnce;
+            _noHelp = _skipCapitalOnce;      // the tests' runs: no last scene either
             _skipCapitalOnce = false;
             // the opening scene at the north gate first (CityDefenceMode.Intro.cs): the siege's clock waits for it
             try { StartIntro(); }
@@ -487,7 +488,8 @@ namespace CityBuilder.Campaign
             WatchTheSquare(dt);
             if (Current == Stage.Lost) return;
             WatchForCapital();
-            if (TimeLeft <= 0f) Win();
+            // the clock out: the last scene «Подкрепление» (CityDefenceMode.Help.cs), the win at its end
+            if (TimeLeft <= 0f && _capital == null && !StartHelp()) Win();
         }
 
         // ------------------------------------------------------------------ the waves
@@ -747,11 +749,14 @@ namespace CityBuilder.Campaign
         /// <summary>Cheat (the user, 2026-11-12): the level won on the spot.</summary>
         public void CheatWin()
         {
-            if (_active && Current != Stage.Won && Current != Stage.Setup) Win();
+            if (!_active || Current == Stage.Won || Current == Stage.Setup) return;
+            if (_capital != null) AbortCapital();      // a scene playing: closed first (the last one wins on its own)
+            Win();
         }
 
         private void Win()
         {
+            if (Current == Stage.Won) return;
             Current = Stage.Won;
             // the help rides in and cuts them all down (later: the scene)
             foreach (var orc in new List<OrcUnit>(OrcUnit.All))

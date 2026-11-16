@@ -47,15 +47,18 @@ namespace CityBuilder.Campaign
             public CapitalShot[] shots;
             public Line[] lines;
             public float end, fadeIn, fade, subFadeIn, subFadeOut, musicVolume = 0.5f, musicFadeOut,
-                music2At = -1f, musicCross = 1f;     // the throne room's music from music2At, the streets' fading out before it
-            public int subSize;
+                music2At = -1f, musicCross = 1f,     // the throne room's music from music2At, the streets' fading out before it
+                hornAt = -1f, fireSize = 1f;         // the last scene: the King's horn; the burning houses' flames
+            public int subSize, fires;               // the last scene: how many more houses burn besides the razed one
         }
 
-        /// <summary>A set and where it stands (Unity, far from the town).</summary>
+        /// <summary>A set and where it stands (Unity, far from the town) -- or, for the last scene, a spot in the
+        /// mission's own town: `cell` (the plan's x, y), `anchor` "house" = the north face of the standing house nearest
+        /// it (CityDefenceMode.Help.cs).</summary>
         [Serializable] private class Place
         {
-            public string name, set;
-            public float[] at;
+            public string name, set, anchor;
+            public float[] at, cell;
         }
 
         /// <summary>A group's take in a place: its Blender frame at `origin` (Blender x, y, z) turned `turn` degrees
@@ -107,6 +110,11 @@ namespace CityBuilder.Campaign
             public AudioSource music, music2;
             public float timeScale = 1f;
             public bool darkWas;
+            public bool inTown;                                    // the last scene: in the town itself, its darkness kept
+            public Action onEnd;
+            public AudioClip horn;
+            public bool hornDone;
+            public readonly List<Renderer> unseen = new List<Renderer>();   // the town's living, hidden while it plays
 
             bool IFilm.Playing => !done;
             float IFilm.Time => time;
@@ -157,14 +165,19 @@ namespace CityBuilder.Campaign
             }
         }
 
-        private bool StartCapital()
+        private bool StartCapital() => StartFilm(capitalScript, capitalTakes, capitalFigures, capitalClips, capitalProps, capitalSets,
+            capitalMusic, capitalMusic2, null, false, null);
+
+        /// <summary>A film of placed takes (scene 2 far out; the last scene, `inTown`, in the town itself).</summary>
+        private bool StartFilm(TextAsset scriptAsset, TextAsset[] takeAssets, GameObject[] figures, CineClips[] clips, GameObject[] props,
+            GameObject[] sets, AudioClip music1, AudioClip music2, AudioClip horn, bool inTown, Action onEnd)
         {
-            if (capitalScript == null || capitalTakes.Length == 0) return false;
-            var script = JsonUtility.FromJson<CapitalScript>(capitalScript.text);
+            if (scriptAsset == null || takeAssets == null || takeAssets.Length == 0) return false;
+            var script = JsonUtility.FromJson<CapitalScript>(scriptAsset.text);
             if (script == null || script.places == null || script.uses == null) return false;
-            var s = new CapitalState { mode = this, script = script };
-            s.root = new GameObject("M2Capital").transform;
-            s.root.position = CapitalFar;
+            var s = new CapitalState { mode = this, script = script, inTown = inTown, onEnd = onEnd, horn = horn };
+            s.root = new GameObject(inTown ? "M2Help" : "M2Capital").transform;
+            s.root.position = inTown ? Vector3.zero : CapitalFar;
             _capital = s;
 
             foreach (var p in script.places)
@@ -172,7 +185,8 @@ namespace CityBuilder.Campaign
                 var place = new GameObject("Place " + p.name).transform;
                 place.SetParent(s.root, false);
                 place.localPosition = p.at != null && p.at.Length == 3 ? new Vector3(p.at[0], p.at[1], p.at[2]) : Vector3.zero;
-                var set = Array.Find(capitalSets, m => m != null && m.name == p.set);
+                if (inTown && p.cell != null && p.cell.Length == 2) place.position = PlaceInTown(p, script);
+                var set = Array.Find(sets, m => m != null && m.name == p.set);
                 if (set != null)
                 {
                     var go = Instantiate(set, place, false);
@@ -183,7 +197,7 @@ namespace CityBuilder.Campaign
             }
 
             var takes = new Dictionary<string, TakeFile>();
-            foreach (var asset in capitalTakes)
+            foreach (var asset in takeAssets)
             {
                 if (asset == null) continue;
                 var take = JsonUtility.FromJson<TakeFile>(asset.text);
@@ -200,13 +214,13 @@ namespace CityBuilder.Campaign
                 foreach (var f in take.figures)
                 {
                     if (use.figures != null && use.figures.Length > 0 && Array.IndexOf(use.figures, f.figure) < 0) continue;
-                    var i = Array.FindIndex(capitalFigures, m => m != null && m.name == f.figure);
-                    if (i < 0 || i >= capitalClips.Length || capitalClips[i] == null) continue;
-                    var go = Instantiate(capitalFigures[i], frame, false);
+                    var i = Array.FindIndex(figures, m => m != null && m.name == f.figure);
+                    if (i < 0 || i >= clips.Length || clips[i] == null) continue;
+                    var go = Instantiate(figures[i], frame, false);
                     go.name = f.figure + " " + f.take;
-                    go.transform.localScale = capitalFigures[i].transform.localScale;
+                    go.transform.localScale = figures[i].transform.localScale;
                     var fig = go.AddComponent<CineFigure>();
-                    fig.Init(capitalClips[i]);
+                    fig.Init(clips[i]);
                     fig.Play(f.take, 0f, 0f);
                     go.SetActive(false);
                     s.actors.Add(new CapitalActor { fig = fig, take = f.take, track = f.root, use = use, fps = take.fps, frames = take.frames, seconds = take.seconds, place = place });
@@ -214,7 +228,7 @@ namespace CityBuilder.Campaign
                 if (!use.props || take.props == null) continue;
                 foreach (var p in take.props)
                 {
-                    var model = Array.Find(capitalProps, m => m != null && m.name == p.piece);
+                    var model = Array.Find(props, m => m != null && m.name == p.piece);
                     if (model == null) continue;
                     var go = Instantiate(model, frame, false);
                     go.name = p.piece;
@@ -238,35 +252,36 @@ namespace CityBuilder.Campaign
                 s.camLocalPos = s.cam.transform.localPosition;
                 s.camLocalRot = s.cam.transform.localRotation;
             }
-            // the darkness over the land's edge reads the world's place: out here all would be dark
-            if (_darkRenderer != null)
+            // the darkness over the land's edge reads the world's place: out here all would be dark (in the town it stays)
+            if (_darkRenderer != null && !inTown)
             {
                 s.darkWas = _darkRenderer.enabled;
                 _darkRenderer.enabled = false;
             }
             if (_music != null) _music.Pause();
-            if (capitalMusic != null)
+            if (music1 != null)
             {
                 s.music = s.root.gameObject.AddComponent<AudioSource>();
-                s.music.clip = capitalMusic;
+                s.music.clip = music1;
                 s.music.loop = false;      // a 23 s clip looped mid-scene (the user, 2026-11-16): never again
                 s.music.spatialBlend = 0f;
                 s.music.volume = script.musicVolume;
                 s.music.ignoreListenerPause = true;
                 s.music.Play();
             }
-            if (capitalMusic2 != null && script.music2At >= 0f)
+            if (music2 != null && script.music2At >= 0f)
             {
                 s.music2 = s.root.gameObject.AddComponent<AudioSource>();
-                s.music2.clip = capitalMusic2;
+                s.music2.clip = music2;
                 s.music2.loop = false;
                 s.music2.spatialBlend = 0f;
                 s.music2.volume = 0f;
                 s.music2.ignoreListenerPause = true;
             }
+            if (inTown) HideTheLiving(s);
             BuildCapitalUi(s);
             HideCanvases(s.hidden, s.canvas);
-            Debug.Log($"[M2Capital] places={s.places.Count} actors={s.actors.Count} end={script.end}");
+            Debug.Log($"[{s.root.name}] places={s.places.Count} actors={s.actors.Count} end={script.end}");
             FilmSkip.Attach(s);
             TickCapital(0f);
             return true;
@@ -359,6 +374,14 @@ namespace CityBuilder.Campaign
             }
             CapitalCamera(s, t);
             CapitalLines(s, t);
+            if (s.horn != null && !s.hornDone && sc.hornAt >= 0f && t >= sc.hornAt)
+            {
+                s.hornDone = true;
+                var src = s.root.gameObject.AddComponent<AudioSource>();
+                src.spatialBlend = 0f;
+                src.ignoreListenerPause = true;
+                src.PlayOneShot(s.horn, 1f);
+            }
             if (s.black != null)
             {
                 var fadeIn = Mathf.Max(0.01f, sc.fadeIn);
@@ -447,8 +470,11 @@ namespace CityBuilder.Campaign
                 try { EndCapital(); }
                 catch (Exception e) { Debug.LogException(e); _capital = null; }
             }
-            var leftover = GameObject.Find("M2Capital");
-            if (leftover != null) Destroy(leftover);
+            foreach (var name in new[] { "M2Capital", "M2Help" })
+            {
+                var leftover = GameObject.Find(name);
+                if (leftover != null) Destroy(leftover);
+            }
             if (RTSCameraController.Instance != null) RTSCameraController.Instance.enabled = true;
             if (Time.timeScale == 0f) Time.timeScale = 1f;
         }
@@ -470,9 +496,11 @@ namespace CityBuilder.Campaign
             }
             if (_darkRenderer != null) _darkRenderer.enabled = s.darkWas;
             if (s.rig != null) s.rig.enabled = true;
+            foreach (var r in s.unseen) if (r != null) r.enabled = true;
             Time.timeScale = s.timeScale;
-            JumpToArden();
+            if (!s.inTown) JumpToArden();
             if (s.root != null) Destroy(s.root.gameObject);
+            s.onEnd?.Invoke();
         }
 
         /// <summary>A shot of the second scene: in a place's Blender frame.</summary>

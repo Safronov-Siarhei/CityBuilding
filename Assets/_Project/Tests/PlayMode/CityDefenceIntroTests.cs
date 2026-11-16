@@ -86,6 +86,24 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(1f, Time.timeScale, "The game's time was not given back.");
             Assert.AreEqual(CityDefenceMode.Stage.Part1, mode.Current, "The siege is not on after the capital scene.");
             Assert.IsNull(GameObject.Find("M2Capital"), "The capital scene was left behind.");
+
+            // the last scene «Подкрепление» (CityDefenceMode.Help.cs): the clock out plays it instead of the win at once,
+            // in the town, the game standing; its end is the win
+            mode.CheatToHelp();
+            for (var frame = 0; frame < 10 && !mode.HelpPlaying; frame++) yield return null;
+            Assert.IsTrue(mode.HelpPlaying, "The last scene did not start when the clock ran out.");
+            Assert.AreEqual(CityDefenceMode.Stage.Part1, mode.Current, "The level was won before the last scene.");
+            var h0 = mode.HelpTime;
+            for (var frame = 0; frame < 20; frame++) yield return null;
+            Assert.Greater(mode.HelpTime, h0, "The last scene's clock stands still.");
+            Assert.AreEqual(0f, Time.timeScale, "The game did not stand under the last scene.");
+            var help = GameObject.Find("M2Help");
+            Assert.IsNotNull(help, "The last scene is not there.");
+            Assert.Greater(help.GetComponentsInChildren<CineFigure>(true).Length, 60, "The last scene has too few figures (the cavalry's copies?).");
+            mode.SkipHelp();
+            yield return null;
+            Assert.IsFalse(mode.HelpPlaying, "The last scene never ended.");
+            Assert.AreEqual(CityDefenceMode.Stage.Won, mode.Current, "The level was not won at the last scene's end.");
         }
     }
 }
