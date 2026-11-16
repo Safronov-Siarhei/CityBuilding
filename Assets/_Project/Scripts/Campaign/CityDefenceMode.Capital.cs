@@ -59,6 +59,7 @@ namespace CityBuilder.Campaign
         {
             public string name, set, anchor;
             public float[] at, cell;
+            public float[] smoke;       // the last scene's far places: fires on the horizon, [x, y, z, size] each (Blender)
         }
 
         /// <summary>A group's take in a place: its Blender frame at `origin` (Blender x, y, z) turned `turn` degrees
@@ -114,6 +115,8 @@ namespace CityBuilder.Campaign
             public Action onEnd;
             public AudioClip horn;
             public bool hornDone;
+            public readonly HashSet<string> far = new HashSet<string>();   // the last scene's places away from the town
+            public bool away;                                      // a far place's shot is on: the town's darkness off
             public readonly List<Renderer> unseen = new List<Renderer>();   // the town's living, hidden while it plays
 
             bool IFilm.Playing => !done;
@@ -186,6 +189,7 @@ namespace CityBuilder.Campaign
                 place.SetParent(s.root, false);
                 place.localPosition = p.at != null && p.at.Length == 3 ? new Vector3(p.at[0], p.at[1], p.at[2]) : Vector3.zero;
                 if (inTown && p.cell != null && p.cell.Length == 2) place.position = PlaceInTown(p, script);
+                else if (inTown) s.far.Add(p.name);
                 var set = Array.Find(sets, m => m != null && m.name == p.set);
                 if (set != null)
                 {
@@ -194,6 +198,9 @@ namespace CityBuilder.Campaign
                     go.transform.localScale = set.transform.localScale;
                 }
                 s.places[p.name] = place;
+                if (inTown && p.smoke != null)
+                    for (var k = 0; k + 3 < p.smoke.Length; k += 4)
+                        Fire(place.TransformPoint(new Vector3(p.smoke[k], p.smoke[k + 2], p.smoke[k + 1])), p.smoke[k + 3]);
             }
 
             var takes = new Dictionary<string, TakeFile>();
@@ -432,6 +439,7 @@ namespace CityBuilder.Campaign
             foreach (var sh in shots)
                 if (t >= sh.t0 && t < sh.t1) { shot = sh; break; }
             if (shot == null) shot = shots[shots.Length - 1];
+            s.away = s.far.Contains(shot.place ?? "");
             var u = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((t - shot.t0) / Mathf.Max(0.01f, shot.t1 - shot.t0)));
             var from = PlacePoint(s, shot.place, shot.from);
             var at = PlacePoint(s, shot.place, shot.at);

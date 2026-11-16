@@ -32,7 +32,7 @@ import ardan_anim2 as a2  # noqa: E402
 import export_m2intro as lib  # noqa: E402
 
 FPS = aa.FPS
-GROUPS = ("ride", "charge", "stand", "raze", "flee")
+GROUPS = ("ride", "charge", "stand", "raze", "flee", "chase", "dead")
 
 
 def group_build(name):
@@ -45,8 +45,49 @@ def group_build(name):
     if name == "stand":
         import last_stand_anim as m
         return m.build()
+    if name in ("chase", "dead"):
+        import town_chase_anim as m
+        return m.build_chase() if name == "chase" else m.build_dead()
     import orc_raze_anim as m
     return m.build_raze() if name == "raze" else m.build_flee()
+
+
+def join_set(name, objs):
+    """The set as ONE static mesh (export_m2capital.join_set: that module runs its export on import)."""
+    sc = bpy.context.scene
+    bpy.context.view_layer.update()
+    real = []
+    for o in objs:
+        if o.type != 'MESH':
+            continue
+        c = o.copy()
+        c.data = bpy.data.meshes.new_from_object(o.evaluated_get(bpy.context.evaluated_depsgraph_get()))
+        c.parent = None
+        c.matrix_world = o.matrix_world.copy()
+        c.modifiers.clear()
+        c.vertex_groups.clear()
+        sc.collection.objects.link(c)
+        real.append(c)
+    bpy.ops.object.select_all(action='DESELECT')
+    for c in real:
+        c.select_set(True)
+    bpy.context.view_layer.objects.active = real[0]
+    bpy.ops.object.join()
+    out = bpy.context.view_layer.objects.active
+    out.name = name
+    out.data.name = name
+    mats = [m for m in out.data.materials if m is not None]
+    keep = next((m for m in mats if m.name.startswith("Buildings")), mats[0] if mats else None)
+    for poly in out.data.polygons:
+        poly.material_index = 0
+    out.data.materials.clear()
+    if keep is not None:
+        out.data.materials.append(keep)
+    bpy.ops.object.select_all(action='DESELECT')
+    out.select_set(True)
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    print("SET", name, "tris", sum(len(poly.vertices) - 2 for poly in out.data.polygons))
+    return out
 
 
 def park(objs, tag):
@@ -152,6 +193,10 @@ def main():
         entries.append({"name": name, "walkSpeed": 0.42, "runSpeed": round(a2.RUN_SPEED, 4), "clips": clips})
         park([arm] + meshes, "Done")
         print("FIGURE", name, len(clips), "takes")
+
+    # the bridge the cavalry crosses (help_bridge.py, approved 2026-11-16): one static mesh, a far place in Unity
+    import help_bridge
+    lib.export_piece(join_set("M2HelpBridgeSet", help_bridge.make()), model_dir)
 
     cast_path = os.path.join(project, "Assets", "_Project", "Campaign", "OpeningCast.json")
     with open(cast_path, encoding="utf-8") as f:

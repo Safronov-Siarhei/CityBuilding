@@ -99,7 +99,7 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(0f, Time.timeScale, "The game did not stand under the last scene.");
             var help = GameObject.Find("M2Help");
             Assert.IsNotNull(help, "The last scene is not there.");
-            Assert.Greater(help.GetComponentsInChildren<CineFigure>(true).Length, 60, "The last scene has too few figures (the cavalry's copies?).");
+            Assert.Greater(help.GetComponentsInChildren<CineFigure>(true).Length, 80, "The last scene has too few figures (the cavalry's copies?).");
             mode.SkipHelp();
             yield return null;
             Assert.IsFalse(mode.HelpPlaying, "The last scene never ended.");

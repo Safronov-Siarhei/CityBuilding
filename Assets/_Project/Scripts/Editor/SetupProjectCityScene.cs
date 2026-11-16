@@ -755,6 +755,7 @@ namespace CityBuilder.EditorTools
                 foreach (var file in System.IO.Directory.GetFiles("Assets/_Project/Campaign/M2Help", "*.json"))
                     helpTakes.Add(AssetDatabase.LoadAssetAtPath<TextAsset>(file.Replace('\\', '/')));
             WriteArray(cityDefenceSO.FindProperty("helpTakes"), helpTakes.ToArray());
+            WriteArray(cityDefenceSO.FindProperty("helpSets"), new Object[] { AssetDatabase.LoadAssetAtPath<GameObject>(cine + "M2HelpBridgeSet.fbx") });
             cityDefenceSO.ApplyModifiedPropertiesWithoutUndo();
 
             // The dungeon (Dungeon/DungeonMode): idle in a town; when DungeonTravel sent the heroes
