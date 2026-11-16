@@ -185,6 +185,63 @@ def _caparison(cloth, trim, cross):
     return build
 
 
+# where the rider's left fist holds the reins: over the pommel, a hand's breadth up and forward (the horse's rest
+# space). The user, 2026-11-16: «они странно держат упряжки, нужно сделать точнее» -- the reins ran to the pommel
+# while the hands were elsewhere; now they run from the bit to this point and the left hand is put on it.
+REIN_HAND = Vector((0.0, -0.13, 0.52))
+
+
+def _neck(b):
+    """horse.neck with the reins gathered up into the rider's left fist instead of lying on the pommel."""
+    nb, pl = horse.NECK_BASE, horse.POLL
+    b.rod((nb[0], nb[1], nb[2] - 0.04), (pl[0], pl[1] + 0.02, pl[2] - 0.03), 0.115, horse.COAT)
+    b.rod((nb[0], nb[1] + 0.03, nb[2] + 0.02), (pl[0], pl[1] + 0.035, pl[2] + 0.005), 0.08, horse.COAT)
+    b.rod((0, nb[1] + 0.06, nb[2] + 0.045), (0, pl[1] + 0.04, pl[2] + 0.035), 0.032, horse.COAT_DARK)
+    b.rod((0.022, nb[1] + 0.06, nb[2] + 0.02), (0.018, pl[1] + 0.045, pl[2] + 0.005), 0.028, horse.COAT_DARK)
+    bit = horse._at(0.2, -0.004)
+    for k in (-1, 1):
+        b.rod((k * 0.038, bit.y, bit.z), (REIN_HAND.x + k * 0.012, REIN_HAND.y, REIN_HAND.z), 0.007, horse.TACK)
+
+
+def hold_reins(h_arm, r_arm, scale, q):
+    """The left arm's angles that put the left fist on the reins (a coarse-to-fine search over the shoulder's
+    pitch and swing and the elbow): writes them into q and returns q."""
+    import bpy
+    import gate_talk_anim as gt
+    import kids_anim as ka
+    import ardan_anim as aa
+    target = gt.bone_world(h_arm, "neck") @ REIN_HAND
+
+    def miss(a, b_, c):
+        q["upper_arm.L"] = [a, 0, b_]
+        q["forearm.L"] = [c, 0, 0]
+        aa.rest(r_arm)
+        ka.apply(r_arm, q, scale)
+        bpy.context.view_layer.update()
+        pb = r_arm.pose.bones["forearm.L"]
+        return ((r_arm.matrix_world @ pb.tail) - target).length
+
+    best = (1e9, 0, 0, 0)
+    for step, span in ((10, None), (3, 12), (1, 4)):
+        if span is None:
+            grid = [(a, b_, c) for a in range(-90, 31, step) for b_ in range(-40, 41, step) for c in range(-120, 1, step)]
+        else:
+            _, a0, b0, c0 = best
+            grid = [(a, b_, c) for a in range(a0 - span, a0 + span + 1, step)
+                    for b_ in range(b0 - span, b0 + span + 1, step) for c in range(c0 - span, c0 + span + 1, step)]
+        for a, b_, c in grid:
+            m = miss(a, b_, c)
+            if m < best[0]:
+                best = (m, a, b_, c)
+    m, a, b_, c = best
+    q["upper_arm.L"] = [a, 0, b_]
+    q["forearm.L"] = [c, 0, 0]
+    print(f"REINS miss {m:.3f} upper_arm.L {[a, 0, b_]} forearm.L {[c, 0, 0]}")
+    aa.rest(r_arm)
+    ka.apply(r_arm, q, scale)
+    return q
+
+
 HORSES = {
     # name: coat, coat dark, cloth, trim, cross
     "CineWarhorse": ('wood_dark', 'door', BLUE, GOLD, True),
@@ -198,7 +255,7 @@ def make_horse(name, location=(0, 0, 0)):
     keep = horse.COAT, horse.COAT_DARK
     horse.COAT, horse.COAT_DARK = coat, dark
     fg.plain(coat, dark)
-    parts = [(n, _caparison(cloth, trim, cross) if n == "body" else f) for n, f in horse.PARTS]
+    parts = [(n, _caparison(cloth, trim, cross) if n == "body" else _neck if n == "neck" else f) for n, f in horse.PARTS]
     try:
         return fg.make(name, parts, horse.SCALE, location)
     finally:
@@ -245,9 +302,8 @@ def render(out):
         else:                                               # the lance lowered for the charge, the shield up
             q["upper_arm.R"] = [-78, 4, 0]
             q["forearm.R"] = [-6, 0, 0]
-            q["upper_arm.L"] = [-20, -10, 0]
-            q["forearm.L"] = [-70, 0, 0]
         ka.apply(r_arm, q, scale)
+        hold_reins(h_arm, r_arm, scale, q)
         for o in (h_arm, r_arm):
             keep.add(o.name)
             keep |= {c.name for c in o.children}

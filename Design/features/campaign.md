@@ -875,7 +875,9 @@
      plume, breastplate under a blue surcoat with the gold cross, lance along the arm with a pennon, kite shield,
      sword) + horses via `cavalry.make_horse` (horse.py recoloured + caparison: CineWarhorse bay, CineWarhorseGrey,
      CineKingHorse white/red); `king_ride.py` CineKingRide = CineKing cut for the saddle (split tunic, short cape,
-     drawn sword). Render: `cavalry.py -- render <out>`.
+     drawn sword). Render: `cavalry.py -- render <out>`. User: «странно держат упряжки» -> the war horses' reins run from the bit to
+     cavalry.REIN_HAND (over the pommel, up and forward) and `hold_reins()` searches the left arm's angles so the fist
+     sits on it (miss < 1 cm; solved ~upper_arm.L [-60,0,-44], forearm.L [4,0,0]); the shield stays on that forearm.
   3. (older draft) «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
      orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя
      этот камень?») as the mission-3 hook.
