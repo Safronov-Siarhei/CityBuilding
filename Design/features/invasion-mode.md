@@ -201,3 +201,5 @@ Playtest fixes: `TheKing_LetGo_GoesBackToGuardTheBase`, `WaveOrcs_AreTougher_And
   imports as a multi-sprite sheet and `LoadAssetAtPath<Sprite>` returns null.
 - `PlaytestCapture.ShootWithUi(At)` does not show the HUD's corner widgets correctly (the menu button
   and the King's portrait come out cut or missing) -- check corners on a device.
+
+**Menu hub redesign (the user, 2026-11-16: «мне не нравится окно режима Нашествие, хочу ... другую концепцию»):** three concepts drawn by `Tools/ui/invasion_hub_concepts.py` -> `Design/ui/InvasionHub_A/B/C.png`: A «Военный совет» (war table: the theme as a gilt painting + season seals, a scroll «Доска славы» with day/week/month bookmarks, red «В бой!»), B «Зал знамён» (the modes screen carried on: theme strip, three period banners on a beam -- all periods at once, the picked one hangs low and lit), C «Ночь осады» (plague/fire banner look: night field with the horde's torches, parchment with seals, a period switch, a 1-2-3 podium «скоро», the best runs as wave shields, «Защищать замок»). Sent, NOT picked yet; the game still has the old hub (`SetupProjectMainMenuScreens.BuildInvasionScreen`).
