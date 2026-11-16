@@ -78,3 +78,10 @@ BUILT 2026-10-20 (commits 6536c5c9 + 431f2594):
 
 
 **2026-11-15 shop button:** the main menu's «Предложения» renamed «Магазин» (key #menu_offers, sheet tab «Тексты: интерфейс и меню» row 23), same plaque, stall icon in its right end, «!» top-left. The user REJECTED the bigger looks (stall-as-button, chest, medallion): keep the original menu concept. Card hud-and-ui.md.
+
+**2026-11-16: modes screen v2 AGREED, not built** -- «лента по кругу»: six banners in one row (picked big in the
+centre, two smaller+darker each side, sixth off screen), closed endless chain, arrows + swipe + tap a side banner;
+arrows = gold chevron «A» at 70 % with a nudge hint (step out, trailing «‹‹» twin, glow; rests after the first
+scroll, back after 10-15 s idle; press squeeze). New locked «Скоро» banners: Мастерская (violet) and Онлайн (amber).
+Full spec in Design/features/hud-and-ui.md (modes screen v2); concepts Design/ui/ModeWheel_*.
+Order confirmed: Обучение, Песочница, Кампания, Нашествие, Онлайн, Мастерская; centred on entry: Обучение at first, then the last played mode (the user 2026-11-16).
