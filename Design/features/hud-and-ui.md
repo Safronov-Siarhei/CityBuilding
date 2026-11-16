@@ -89,8 +89,12 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
     gold glow breathing; after the player's first scroll the hint rests and returns after 10-15 s idle; a press
     squeezes the chevron briefly.
   - The two new modes on the row, both LOCKED «Скоро» (gold lock on the medallion): «Мастерская» (own building
-    models, ideas.md; violet, house blueprint + hammer + compasses) and «Онлайн» (lobby of up to 4 by code; amber,
-    four shields round a ring + crown). ORDER (the user 2026-11-16): Обучение, Песочница, Кампания, Нашествие,
+    models, ideas.md; violet) and «Онлайн» (lobby of up to 4 by code; amber). Their emblems REDRAWN 2026-11-16 in
+    the other modes' rich style (the user: the flat ink ones did not match): Онлайн «Круглый стол» (oak round table,
+    crown on a red cushion, four shields blue/star, green/tower, red/cross, gold/fleur), Мастерская «Чертёж и молот»
+    (parchment plan of a house rolled top+bottom, brass compasses, oak-and-leather hammer) -- concepts
+    `Design/ui/ModeEmblems_Concepts.png` (round 1) / `ModeEmblems_Round2.png` (chosen), drawn by
+    `Tools/ui/mode_emblem_concepts.py`, final code in make_mode_banners.py `online()` / `workshop()`. ORDER (the user 2026-11-16): Обучение, Песочница, Кампания, Нашествие,
     Онлайн, Мастерская. CENTRED ON ENTRY (the user): Обучение the first time, afterwards the LAST PLAYED mode.
     Open: the piggy button top right nearly touches the right outer banner.
 - (before 2026-11-10) modes: back TL, settings TR, Discord BL, YouTube BR; «Песочница» / «Нашествие» pills, a round «!»
