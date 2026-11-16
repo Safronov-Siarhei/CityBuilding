@@ -51,7 +51,7 @@ Concept `Tools/store/piggy_placement_concept.py <photos> <render A> [B] [C]`.
   pig WOBBLES SOFTLY (0.9 s eased in/out every 1.8 s, ~3 Hz, ±2 px / ±3°; the user: smoother), the shine brighter.
 - Script `Tools/store/piggy_button_concept.py <renders> <modes photo>`.
 
-## The window (concept v2 2026-11-16, waiting for the user; `Design/store/Piggy_Window_Concept.png` saving,
+## The window (APPROVED by the user 2026-11-16; `Design/store/Piggy_Window_Concept.png` saving,
 `Piggy_Window_Full_Concept.png` full, `Piggy_Window_Info_Concept.png` the «!» popup; `Tools/store/piggy_window_concept.py <renders>`)
 RULE (the user 2026-11-16): v1 had too much text and looked off-putting -- the window keeps only what the player acts
 on; every explanation goes behind the «!» button.
