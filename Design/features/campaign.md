@@ -851,7 +851,7 @@
     2026-11-16 round 4: (6) MUSIC began again mid-scene -- mus_village is 23 s, the scene 39 s, looped. Now two
     parts, neither looped: the streets mus_gate (The Old Tower Inn whole, 50 s), from music2At 18.9 (the cut to the
     throne room) mus_attack (war theme, 26 s), the first fading out over musicCross 1.2 s (Mission2Capital.json;
-    capitalMusic/capitalMusic2). (7) PROPOSED, renders sent, NOT approved/exported: the empty country round the town
+    capitalMusic/capitalMusic2). (7) APPROVED + EXPORTED 2026-11-16 (set 194k tris; not seen in game): the empty country round the town
     filled -- capital.FIELDS (24 cheap row-box fields: wheat, green, plough, stubble), haystacks (farm_props'
     approved stack, x1.4-1.9) on the stubble, rail fences on the town side of four, 2 Windmill1-lvl5 + Farm1 + Barn1;
     trees moved off the fields. User round 2: fields by the WATER in the first shots (west fields run to x -4.3, the
