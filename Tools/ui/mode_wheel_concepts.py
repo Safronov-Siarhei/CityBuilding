@@ -407,6 +407,46 @@ def arrows_sheet(bg, shot, cards):
     close.convert('RGB').save(os.path.join(OUT, 'ModeWheel_Arrows_Close.png'))
 
 
+# --- the picked arrows: chevron A at 70 %, with a «you can scroll» nudge (the user 2026-11-16) -------------------
+def arrows_animated(bg, shot, cards):
+    """Every 2.4 s each chevron steps outward ~10 px and back (ease out-in), a fainter twin trails it like «‹‹»,
+    and a soft gold glow breathes behind; the rest of the time it stands still. Written as a GIF."""
+    base = row(bg, shot, cards, 3, lambda: (Image.new('RGBA', (1, 1), (0, 0, 0, 0)), 0),
+               ('Стрелки A, 70 %, с подсказкой', 'раз в 2,4 с шаг наружу + след «‹‹» + мягкое свечение'))
+    big, _ = arrow_chevron()
+    ch = big.resize((int(big.width * 0.7), int(big.height * 0.7)), Image.LANCZOS)
+    frames, fps, period = [], 20, 2.4
+    for f in range(int(fps * period)):
+        tt = f / fps
+        ph = tt / 0.9 if tt < 0.9 else 1.0           # the nudge takes 0.9 s, then rest
+        nudge = math.sin(math.pi * ph) if ph < 1 else 0.0
+        nudge = nudge * nudge * (3 - 2 * nudge)
+        canvas = base.copy()
+        for side in (-1, 1):
+            img = ch if side < 0 else ch.transpose(Image.FLIP_LEFT_RIGHT)
+            x0 = 34 if side < 0 else 1342 - 34 - img.width
+            y = 343 - img.height // 2
+            dx = int(-side * 10 * nudge) * -1 if False else int(side * 10 * nudge)
+            dx = -abs(dx) if side < 0 else abs(dx)
+            # the glow
+            g = Image.new('RGBA', canvas.size, (0, 0, 0, 0))
+            cx = x0 + img.width // 2 + dx
+            r = 46
+            ImageDraw.Draw(g).ellipse((cx - r, 343 - r, cx + r, 343 + r), fill=(255, 214, 110, int(60 + 90 * nudge)))
+            canvas = Image.alpha_composite(canvas, g.filter(ImageFilter.GaussianBlur(18)))
+            # the trailing twin
+            if nudge > 0.05:
+                twin = fade(img, 0.45 * nudge)
+                canvas.alpha_composite(twin, (x0 + dx + (16 if side < 0 else -16), y))
+            canvas.alpha_composite(img, (x0 + dx, y))
+        frames.append(canvas.convert('RGB').resize((671, 378), Image.LANCZOS))
+    frames[0].save(os.path.join(OUT, 'ModeWheel_Arrows_A_Anim.gif'), save_all=True, append_images=frames[1:],
+                   duration=int(1000 / fps), loop=0, optimize=True)
+    # a still at the peak of the nudge, full size
+    peak = int(fps * 0.45)
+    frames[peak].save(os.path.join(OUT, 'ModeWheel_Arrows_A.png'))
+
+
 def main():
     shot = Image.open(sys.argv[1]).convert('RGBA')
     cards = [card(*m) for m in MODES]
@@ -417,6 +457,7 @@ def main():
     row(bg, shot, cards).convert('RGB').save(os.path.join(OUT, 'ModeWheel_3_Row.png'))
     row(bg, shot, cards, 1).convert('RGB').save(os.path.join(OUT, 'ModeWheel_3_Row_Sandbox.png'))
     arrows_sheet(bg, shot, cards)
+    arrows_animated(bg, shot, cards)
     sheet = Image.new('RGBA', (2 * 400 + 60, 720), (44, 36, 46, 255))
     for j, i in enumerate((5, 4)):
         sheet.alpha_composite(cards[i].resize((380, 660), Image.LANCZOS), (20 + j * 420, 40))
