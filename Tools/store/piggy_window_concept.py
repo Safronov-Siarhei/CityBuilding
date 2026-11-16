@@ -105,9 +105,13 @@ def pig_column(img, pig, gem, count, cap, full):
     x = cx - (w1 + w2) / 2
     text(d, (x, by - 4), s1, 40, anchor='lm')
     text(d, (x + w1, by - 4), s2, 40, fill=GOLD, anchor='lm')
-    bx, byy = cx + 205, by - 46
-    d.ellipse((bx - 44, byy - 44, bx + 44, byy + 44), fill=(220, 50, 40), outline=INK, width=4)
-    text(d, (bx, byy), '+50%', 26, stroke=3)
+    # the badge shows the REAL gain right now (the user 2026-11-16): a full piggy is +50 % over a regular pack at the
+    # same price, so now it is count/cap * 1.5 - 1; below the break-even (2/3 full) there is no gain -- no badge
+    pct = round((count / cap * 1.5 - 1) * 100)
+    if pct > 0:
+        bx, byy = cx + 205, by - 46
+        d.ellipse((bx - 44, byy - 44, bx + 44, byy + 44), fill=(220, 50, 40), outline=INK, width=4)
+        text(d, (bx, byy), '+%d%%' % pct, 26, stroke=3)
 
 
 def tasks_panel(img, box, full):
@@ -151,7 +155,7 @@ def tasks_panel(img, box, full):
 def window(pig, gem, count, cap, full):
     img = menu_scene()
     img = Image.alpha_composite(img.filter(ImageFilter.GaussianBlur(6)), Image.new('RGBA', (W, H), (14, 6, 30, 190)))
-    win = frame()
+    win = frame(near=False)   # the big front crystals fought the pig (the user 2026-11-16)
     rx0, rx1, ry0, ry1 = 560, 1360, Y0 - 82, IY0 + 66
     win, rib_o = band(win, rx0, rx1, ry0, ry1)
     img = Image.alpha_composite(img, win)
@@ -176,7 +180,7 @@ def info(base):
     text(d, ((x0 + x1) / 2, y0 + 62), 'Как работает копилка', 46, fill=DARK, stroke=0)
     text(d, ((x0 + x1) / 2, y0 + 112), 'Уровень 1 из 5', 30, fill=(140, 70, 170), stroke=0)
     rows = [('+1', 'за каждую минуту игры'), ('✓', 'задания дня добавляют ещё'), ('150', 'разбить можно от 150'),
-            ('%', 'на 50% выгоднее обычного набора'), ('↑', 'покупка открывает копилку побольше')]
+            ('%', 'полная — на 50% выгоднее набора'), ('↑', 'покупка открывает копилку побольше')]
     y = y0 + 200
     for glyph, s in rows:
         cxx = x0 + 110
@@ -206,6 +210,7 @@ def main():
     b = window(pig, gem, 300, 300, True)
     a.convert('RGB').save(R + 'Design/store/Piggy_Window_Concept.png', optimize=True)
     b.convert('RGB').save(R + 'Design/store/Piggy_Window_Full_Concept.png', optimize=True)
+    window(pig, gem, 170, 300, False).convert('RGB').save(R + 'Design/store/Piggy_Window_Low_Concept.png', optimize=True)
     info(a).convert('RGB').save(R + 'Design/store/Piggy_Window_Info_Concept.png', optimize=True)
     print('written Piggy_Window_Concept.png, Piggy_Window_Full_Concept.png, Piggy_Window_Info_Concept.png')
 

@@ -57,11 +57,15 @@ RULE (the user 2026-11-16): v1 had too much text and looked off-putting -- the w
 on; every explanation goes behind the «!» button.
 - Frame of the support banner, ribbon «Копилка», «!» top LEFT corner, ✕ top right.
 - Left: the big pig (its material = the level; no level text/pips), floating crystals, the fill bar «245 / 300 💎»
-  (gold + «Полна!» tag when full), green «Разбить за $0.99» with a small red «+50%» badge; full: the button glows.
+  (gold + «Полна!» tag when full), green «Разбить за $0.99» with a small red badge; full: the button glows.
+- The badge = the REAL gain right now (the user 2026-11-16): price per crystal vs the regular pack, i.e. with a full
+  piggy at +50 %: count/cap*1.5-1 (245/300 -> +23 %); at or below break-even (2/3 full) NO badge. In the game compute
+  it from the real pack price, not the formula. `Piggy_Window_Low_Concept.png` = 170/300, no badge.
+- No big front crystals in the field (they fought the pig; `frame(near=False)`).
 - Right: «Задания» + clock «07:42»; 3 short task cards (name, bar, +N 💎 / a tick when done -- credited by itself);
   full: the rewards go GREY (no warning text). Task names are EXAMPLES, the list is to be discussed.
 - «!» popup (parchment): «Как работает копилка», «Уровень 1 из 5», five icon rows: +1 a minute of play; day tasks add
-  more; break from 150; 50 % better than a regular pack; a purchase opens a bigger piggy; «Понятно».
+  more; break from 150; a FULL one is 50 % better than a pack; a purchase opens a bigger piggy; «Понятно».
 
 ## Levels (APPROVED by the user 2026-11-16, `Design/store/Piggy_Levels_Concept.png`)
 Same royal pig, the material changes: 1 pink ceramic (300), 2 bronze (500), 3 silver (1000), 4 gold (1500),
