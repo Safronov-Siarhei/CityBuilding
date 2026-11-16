@@ -42,12 +42,12 @@ Three models were shown (А glossy, Б ROYAL, В blocky; `Design/store/Piggy_Mod
 (2026-11-16) -- gold crown with rubies, gold slot rim and hooves.
 Concept `Tools/store/piggy_placement_concept.py <photos> <render A> [B] [C]`.
 
-## The button (the user, 2026-11-16; concept `Design/store/Piggy_Button_Concept.gif`, waiting for approval)
+## The button (the user, 2026-11-16; concept `Design/store/Piggy_Button_Concept.webp`; animation APPROVED 2026-11-16)
 - Its area is a SQUARE (~200 px in the 1080 reference), the piggy centred, as wide as the settings button (~130).
 - Crystals float round it SMOOTHLY and a little CHAOTICALLY (the user 2026-11-16: two waves of unrelated periods on
   up-down, sideways and tilt per crystal) -- in the game they are separate sprites
   (`piggy_bank.py ... gem` renders one crystal), the pig a render without crystals (`*_alone.png`).
-- The number at the pig's feet. FULL: «Полна!» tag right by the head, the number GOLD and glowing (pulse), the
+- The number at the pig's feet. FULL: «Полна!» tag centred on the button's TOP edge (the user 2026-11-16; 4 crystals, the top centre left free), the number GOLD and glowing (pulse), the
   pig WOBBLES SOFTLY (0.9 s eased in/out every 1.8 s, ~3 Hz, ±2 px / ±3°; the user: smoother), the shine brighter.
 - Script `Tools/store/piggy_button_concept.py <renders> <modes photo>`.
 
@@ -56,5 +56,6 @@ Same royal pig, the material changes: 1 pink ceramic (300), 2 bronze (500), 3 si
 5 amethyst -- glowing purple crystal (3000). `piggy_bank.py <out> <pink|bronze|silver|gold|amethyst> royal`.
 
 ## Traps
-- A GIF with a palette per frame makes the pig's shading flicker: one palette for all frames, no dither.
+- GIF bands the pig's smooth shading into lines (256 colours) and a palette per frame flickers: concept animations go as
+  full-colour animated WebP. The model itself is smooth -- the lines were never in the render.
 - The menu shop does not render in a batchmode capture (its blur/ScreenCapture) -- the concept used its mockup.

@@ -7,7 +7,7 @@ Also the five levels' looks. Concepts for approval:
     python Tools/store/piggy_button_concept.py <renders folder> <modes screen photo>
 
 <renders folder> holds piggy_royal_<pink|bronze|silver|gold|amethyst>_alone.png and piggy_gem_pink.png from
-Tools/blender/store/piggy_bank.py. Writes Design/store/Piggy_Button_Concept.gif and Piggy_Levels_Concept.png.
+Tools/blender/store/piggy_bank.py. Writes Design/store/Piggy_Button_Concept.webp and Piggy_Levels_Concept.png.
 """
 import math
 import os
@@ -25,7 +25,7 @@ PIG_W = 132          # the piggy as wide as the settings button
 LEVELS = [('pink', 'Розовая керамика', 300), ('bronze', 'Бронза', 500), ('silver', 'Серебро', 1000),
           ('gold', 'Золото', 1500), ('amethyst', 'Аметист', 3000)]
 # the floating crystals: (x, y in the square, height, bob phase, bob period s)
-GEMS = [(26, 44, 34, 0.0, 1.9), (174, 36, 30, 1.3, 2.3), (20, 126, 26, 2.4, 2.1), (182, 120, 28, 0.7, 1.7), (100, 14, 24, 3.1, 2.6)]
+GEMS = [(26, 44, 34, 0.0, 1.9), (174, 36, 30, 1.3, 2.3), (20, 126, 26, 2.4, 2.1), (182, 120, 28, 0.7, 1.7)]   # the top centre is kept for «Полна!»
 
 
 def font(size, name='Rubik-ExtraBold.ttf'):
@@ -78,8 +78,8 @@ def button(pig, gem, count, t, full=False, scale=1):
         im.alpha_composite(glow.filter(ImageFilter.GaussianBlur(7 * k)))
         d = ImageDraw.Draw(im)
         d.text((100 * k, 170 * k), s, font=f, fill=GOLD, anchor='mm', stroke_width=round(4 * k), stroke_fill=INK)
-        # «Полна!» right by the head (the snout points right)
-        tx, ty = 160 * k, 62 * k
+        # «Полна!» centred on the button's top edge (the user, 2026-11-16)
+        tx, ty = 100 * k, 16 * k
         tf = font(19 * k)
         w = d.textlength('Полна!', font=tf)
         d.rounded_rectangle((tx - w / 2 - 9 * k, ty - 15 * k, tx + w / 2 + 9 * k, ty + 15 * k), 14 * k, fill=(220, 50, 40),
@@ -117,16 +117,9 @@ def main():
         d.rounded_rectangle((20, 440, 480, 505), 18, fill=(30, 22, 16, 200))
         d.text((250, 472), 'Копилка полна' if full else 'Копится', font=font(26), fill=CREAM, anchor='mm')
         frames.append(fr.convert('RGB'))
-    # ONE palette for every frame (a palette per frame made the pig's shading flicker), taken from a mosaic of
-    # frames of both states so the reds and golds are in it
-    picks = frames[::len(frames) // 12]
-    mosaic = Image.new('RGB', (picks[0].width * len(picks), picks[0].height))
-    for i, f in enumerate(picks):
-        mosaic.paste(f, (i * f.width, 0))
-    pal = mosaic.quantize(colors=256, method=Image.Quantize.MEDIANCUT)
-    frames = [f.quantize(palette=pal, dither=Image.Dither.NONE) for f in frames]   # no dither: its noise crawls across a still pig
-    frames[0].save(R + 'Design/store/Piggy_Button_Concept.gif', save_all=True, append_images=frames[1:],
-                   duration=1000 // fps, loop=0, optimize=True)
+    # full-colour animated WebP: a GIF's 256 colours band the pig's smooth shading into visible lines (the user saw them)
+    frames[0].save(R + 'Design/store/Piggy_Button_Concept.webp', save_all=True, append_images=frames[1:],
+                   duration=1000 // fps, loop=0, quality=92, method=4)
     # the five levels, as buttons
     sheet = Image.new('RGBA', (5 * 300 + 40, 430), (52, 40, 30, 255))
     d = ImageDraw.Draw(sheet)
@@ -139,7 +132,7 @@ def main():
         d.text((x + 150, 360), name, font=font(28), fill=(250, 236, 200), anchor='mm')
         d.text((x + 150, 398), 'вмещает %s' % '{:,}'.format(cap).replace(',', ' '), font=font(22, 'Rubik-Medium.ttf'), fill=(220, 200, 160), anchor='mm')
     sheet.convert('RGB').save(R + 'Design/store/Piggy_Levels_Concept.png', optimize=True)
-    print('written Piggy_Button_Concept.gif, Piggy_Levels_Concept.png')
+    print('written Piggy_Button_Concept.webp, Piggy_Levels_Concept.png')
 
 
 if __name__ == '__main__':
