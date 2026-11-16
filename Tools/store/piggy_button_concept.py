@@ -46,18 +46,23 @@ def button(pig, gem, count, t, full=False, scale=1):
     gl = Image.new('RGBA', im.size, 0)
     ImageDraw.Draw(gl).ellipse((30 * k, 25 * k, 170 * k, 165 * k), fill=(255, 214, 110, 150 if full else 90))
     im.alpha_composite(gl.filter(ImageFilter.GaussianBlur(18 * k)))
-    for x, y, h, ph, per in GEMS:   # crystals bob up and down, each at its own pace, and sway a little
-        g = trim(gem, h=h * k).rotate(8 * math.sin(2 * math.pi * t / per + ph), resample=Image.BICUBIC, expand=True)
-        dy = 5 * math.sin(2 * math.pi * t / per + ph)
-        im.alpha_composite(g, (round(x * k - g.width / 2), round((y + dy) * k - g.height / 2)))
+    for x, y, h, ph, per in GEMS:
+        # crystals drift SMOOTHLY and a little chaotically (the user, 2026-11-16): two waves of unrelated
+        # periods on each of up-down, side-to-side and tilt, so no two crystals move alike and nothing repeats soon
+        w = 2 * math.pi * t
+        dy = 4.0 * math.sin(w / per + ph) + 1.8 * math.sin(w / (per * 0.57) + ph * 1.7)
+        dx = 2.2 * math.sin(w / (per * 1.43) + ph * 2.3) + 0.9 * math.sin(w / (per * 0.71) + ph * 0.6)
+        tilt = 7.0 * math.sin(w / (per * 1.21) + ph) + 3.0 * math.sin(w / (per * 0.63) + ph * 0.4)
+        g = trim(gem, h=h * k).rotate(tilt, resample=Image.BICUBIC, expand=True)
+        im.alpha_composite(g, (round((x + dx) * k - g.width / 2), round((y + dy) * k - g.height / 2)))
     p = trim(pig, w=PIG_W * k)
     dx, rot = 0.0, 0.0
-    if full:   # a little shake: 0.45 s of it every 1.4 s
-        ph = t % 1.4
-        if ph < 0.45:
-            fade = math.sin(math.pi * ph / 0.45)
-            dx = 3 * fade * math.sin(ph * 70)
-            rot = 4 * fade * math.sin(ph * 55)
+    if full:   # a SOFT wobble (the user, 2026-11-16: smoother): 0.9 s of it every 1.8 s, easing in and out
+        ph = t % 1.8
+        if ph < 0.9:
+            fade = math.sin(math.pi * ph / 0.9) ** 2
+            dx = 2.0 * fade * math.sin(2 * math.pi * 3.2 * ph)
+            rot = 3.0 * fade * math.sin(2 * math.pi * 3.2 * ph + 0.6)
     if rot:
         p = p.rotate(rot, resample=Image.BICUBIC, expand=True)
     feet = 152
@@ -93,13 +98,13 @@ def main():
     shot = Image.open(photo).convert('RGBA')
     base = shot.crop((1880, 0, 2400, 520))   # the top-right corner, the settings button at its top
     frames = []
-    fps = 15
+    fps = 30
     CX = 415   # under the settings button
     for i in range(fps * 6):
         t = i / fps
         full = t >= 3.0
         fr = base.copy()
-        b = button(pig, gem, 1000 if full else 245, t, full, 2)
+        b = button(pig, gem, 1000 if full else 245, t, full, 4)
         fr.alpha_composite(b, (CX - S // 2, 300 - S // 2))
         d = ImageDraw.Draw(fr)
         # the square: the button's tap area
@@ -112,7 +117,14 @@ def main():
         d.rounded_rectangle((20, 440, 480, 505), 18, fill=(30, 22, 16, 200))
         d.text((250, 472), 'Копилка полна' if full else 'Копится', font=font(26), fill=CREAM, anchor='mm')
         frames.append(fr.convert('RGB'))
-    frames = [f.quantize(colors=256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE) for f in frames]   # each its own palette: the reds and golds stay
+    # ONE palette for every frame (a palette per frame made the pig's shading flicker), taken from a mosaic of
+    # frames of both states so the reds and golds are in it
+    picks = frames[::len(frames) // 12]
+    mosaic = Image.new('RGB', (picks[0].width * len(picks), picks[0].height))
+    for i, f in enumerate(picks):
+        mosaic.paste(f, (i * f.width, 0))
+    pal = mosaic.quantize(colors=256, method=Image.Quantize.MEDIANCUT)
+    frames = [f.quantize(palette=pal, dither=Image.Dither.NONE) for f in frames]   # no dither: its noise crawls across a still pig
     frames[0].save(R + 'Design/store/Piggy_Button_Concept.gif', save_all=True, append_images=frames[1:],
                    duration=1000 // fps, loop=0, optimize=True)
     # the five levels, as buttons

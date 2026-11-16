@@ -44,15 +44,17 @@ Concept `Tools/store/piggy_placement_concept.py <photos> <render A> [B] [C]`.
 
 ## The button (the user, 2026-11-16; concept `Design/store/Piggy_Button_Concept.gif`, waiting for approval)
 - Its area is a SQUARE (~200 px in the 1080 reference), the piggy centred, as wide as the settings button (~130).
-- Crystals float round it and BOB (each its own pace, a little sway) -- in the game they are separate sprites
+- Crystals float round it SMOOTHLY and a little CHAOTICALLY (the user 2026-11-16: two waves of unrelated periods on
+  up-down, sideways and tilt per crystal) -- in the game they are separate sprites
   (`piggy_bank.py ... gem` renders one crystal), the pig a render without crystals (`*_alone.png`).
 - The number at the pig's feet. FULL: «Полна!» tag right by the head, the number GOLD and glowing (pulse), the
-  pig SHAKES a little (0.45 s every 1.4 s), the shine brighter.
+  pig WOBBLES SOFTLY (0.9 s eased in/out every 1.8 s, ~3 Hz, ±2 px / ±3°; the user: smoother), the shine brighter.
 - Script `Tools/store/piggy_button_concept.py <renders> <modes photo>`.
 
-## Levels (proposed 2026-11-16, `Design/store/Piggy_Levels_Concept.png`, waiting for approval)
+## Levels (APPROVED by the user 2026-11-16, `Design/store/Piggy_Levels_Concept.png`)
 Same royal pig, the material changes: 1 pink ceramic (300), 2 bronze (500), 3 silver (1000), 4 gold (1500),
 5 amethyst -- glowing purple crystal (3000). `piggy_bank.py <out> <pink|bronze|silver|gold|amethyst> royal`.
 
 ## Traps
+- A GIF with a palette per frame makes the pig's shading flicker: one palette for all frames, no dither.
 - The menu shop does not render in a batchmode capture (its blur/ScreenCapture) -- the concept used its mockup.
