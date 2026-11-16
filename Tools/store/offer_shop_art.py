@@ -171,25 +171,12 @@ def stamp():
 
 # ------------------------------------------------------------------ the HUD side
 def stall():
-    """The shop's icon: a market stall, a striped awning over a counter."""
-    s = 4   # drawn big, saved small
-    img = layer(128 * s, 128 * s)
-    d = ImageDraw.Draw(img)
-    cx, cy, r = 64 * s, 70 * s, 46 * s
-    w = r * 1.25
-    d.rectangle((cx - w * 0.8, cy - r * 0.05, cx + w * 0.8, cy + r * 0.65), fill=(150, 96, 48), outline=(70, 40, 16), width=4 * s)
-    d.line((cx - w * 0.8, cy + r * 0.25, cx + w * 0.8, cy + r * 0.25), fill=(110, 66, 30), width=4 * s)
-    n = 5
-    for k in range(n):
-        a = cx - w + k * 2 * w / n
-        d.polygon([(a, cy - r * 0.62), (a + 2 * w / n, cy - r * 0.62), (a + 2 * w / n, cy - r * 0.05), (a, cy - r * 0.05)],
-                  fill=(206, 50, 46) if k % 2 == 0 else (250, 240, 220), outline=(90, 20, 18))
-    for k in range(n):
-        a = cx - w + k * 2 * w / n
-        d.pieslice((a, cy - r * 0.22, a + 2 * w / n, cy + r * 0.12), 0, 180, fill=(206, 50, 46) if k % 2 == 0 else (250, 240, 220), outline=(90, 20, 18))
-    d.polygon([(cx - w * 1.05, cy - r * 0.62), (cx + w * 1.05, cy - r * 0.62), (cx + w * 0.7, cy - r * 0.95), (cx - w * 0.7, cy - r * 0.95)],
-              fill=(176, 36, 34), outline=(90, 20, 18))
-    save(img.resize((128, 128), Image.LANCZOS), 'Stall')
+    """The shop's icon: concept A «Богатая лавка» (the user chose it 2026-11-16) -- drawn in shop_icon_concepts.py,
+    used on the main menu's «Магазин» plaque and in the sandbox's shop button and notices."""
+    import sys
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from shop_icon_concepts import stall as rich_stall
+    save(rich_stall().resize((256, 256), Image.LANCZOS), 'Stall')
 
 
 def glow():
