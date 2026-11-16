@@ -39,6 +39,7 @@ the prices, 40 tasks reset every 8 h. Earlier history: rules DISCUSSED 2026-11-1
   the window hides every other canvas and stands centred (Lift 74), the grey button is the same button in grey
   (Button/ButtonGrey, sliced 420x96 by piggy_art.py --pieces), no glow -- the button breathes (scale +-4.5 %) while
   breakable, the column's rays/shine fade out for the burst and come back. «Полна!» is a capsule (two dots + box).
+- Playtest 2 (the user, 2026-11-16) DONE: no dark top strip in the bar troughs; the «+N%» badge is a child of the break button so it breathes with it; the button has Transition.None (Unity's disabled tint made the grey one see-through). Trap: a Button left on ColorTint fades its sprite to 50 % alpha when not interactable.
 - Traps: BalanceConfig has a CLASS PiggyTask, so the lookup is `FindPiggyTask` (a same-named method broke compile).
   The stand-in Store grants at once; real billing must answer through Store.Grant so Broken plays the shatter.
   Campaign Win kills every orc -- those count toward orc_kill (accepted). Not checked on a phone.

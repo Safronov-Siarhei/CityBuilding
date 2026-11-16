@@ -1,0 +1,92 @@
+### buildings: 7 new columns, paste into cell AT1 (50 rows incl. header)
+id_check	starts_unlocked	research_coins	research_sec	research_coins_2	research_sec_2	research_coins_3	research_sec_3
+Hovel	1	0	0	15	60	25	120
+Cottage	0	20	60	30	60	50	120
+Manor	0	50	60	70	60	120	120
+Castle	1	0	0	15	60	25	120
+FisherHut	1	0	0	15	60	25	120
+Farm	0	10	60	20	60	30	120
+Sawmill	1	0	0	20	60	40	120
+Quarry	1	0	0	20	60	30	120
+IronMine	0	25	60	35	60	60	120
+CoalMine	0	20	60	30	60	50	120
+Warehouse	1	0	0	35	60	60	120
+Barn	0	20	60	25	60	45	120
+Treasury	0	30	60	45	60	75	120
+BigWarehouse	0	70	60	110	60	180	120
+BigBarn	0	60	60	90	60	150	120
+BigTreasury	0	85	60	125	60	210	120
+Tower	0	10	60	20	60	30	120
+Barracks	1	0	0	40	60	70	120
+Gate	1	0	0	15	60	25	120
+FortifiedTower	0	35	60	50	60	85	120
+FortifiedGate	0	30	60	40	60	70	120
+Fence	1	0	0	15	60	25	120
+Road	1	0	0	15	60	25	120
+Bridge	0	10	60	15	60	25	120
+WaterMill	0	20	60	30	60	50	120
+Dock	0	15	60	25	60	40	120
+TownSquare	1	0	0	20	60	40	120
+Flag	1	0	0	15	60	25	120
+DecTree	1	0	0	15	60	25	120
+DecBush	1	0	0	15	60	25	120
+DecGarden	0	10	60	15	60	25	120
+Granary	1	0	0	25	60	45	120
+BigGranary	0	60	60	90	60	150	120
+Baker	0	25	60	35	60	60	120
+Windmill	0	25	60	40	60	70	120
+Smokehouse	0	20	60	30	60	50	120
+PigFarm	0	20	60	30	60	50	120
+Orchard	1	0	0	20	60	30	120
+Smelter	0	35	60	55	60	90	120
+CopperMine	0	25	60	35	60	60	120
+GoldMine	0	30	60	45	60	75	120
+Laboratory	1	0	0	0	0	0	0
+HealerHouse	0	25	60	40	60	70	120
+FireBrigade	0	25	60	40	60	70	120
+Well	1	0	0	15	60	25	120
+Church	0	40	60	65	60	105	120
+Tavern	0	30	60	45	60	75	120
+Theater	0	50	60	75	60	130	120
+Colosseum	0	100	60	150	60	250	120
+
+### units: 17 new columns, paste into cell P1 (3 rows incl. header)
+id_check	starts_unlocked	max_health_2	max_health_3	attack_damage_2	attack_damage_3	attack_interval_sec_2	attack_interval_sec_3	walk_speed_2	walk_speed_3	recruit_coins_2	recruit_coins_3	upkeep_coins_per_day_2	upkeep_coins_per_day_3	research_coins_2	research_sec_2	research_coins_3	research_sec_3
+militia	1	18	26	7	10	1,0	0,9			40	60	2	3	80	90	150	150
+orc	1																
+
+### economy: 4 new rows, paste under the last key row
+research_seconds_per_worker	5	На сколько секунд каждый учёный сверх первого ускоряет изучение
+research_free_workers	1	Сколько первых учёных не дают ускорения (один нужен просто чтобы изучение шло)
+research_cancel_refund_percent	70	Сколько процентов монет возвращается при отмене изучения игроком
+research_min_seconds	5	Пол длительности изучения: сколько бы ни было учёных, быстрее не выйдет
+
+### localization: new rows, paste under the last key row
+#research_tab_buildings	Изучение зданий	Buildings	
+#research_tab_units	Изучение солдат	Soldiers	
+#research_empty	Здесь пока нечего изучать	Nothing to research here yet	
+#research_start	Изучить	Research	
+#research_done	Изучено	Researched	
+#research_idle	Ничего не изучается	Nothing is being researched	
+#research_running	Изучается: {0} — осталось {1} с	Researching: {0} — {1}s left	{0} — тема, {1} — секунды
+#research_paused	Изучается: {0} — нет учёных	Researching: {0} — no scientists	Изучение стоит на месте пока в лаборатории никого нет
+#research_cancel	Отменить (вернётся {0} монет)	Cancel (refunds {0} coins)	
+#research_cost	{0} монет · {1} с	{0} coins · {1}s	
+#research_unit_gain	прочность +{0}, урон +{1}	health +{0}, damage +{1}	Не начинать строку с плюса — Google Sheets прочтёт её как формулу
+#research_scientists	Учёные: {0} / {1}   ·   свободных: {2}	Scientists: {0} / {1}   ·   idle: {2}	
+#research_lab_state	Уровень {0} / {1}   ·   Прочность {2}/{3}   ·   Ветхость {4}	Level {0} / {1}   ·   Health {2}/{3}   ·   Wear {4}	
+#research_unlock	Открыть: {0}	Unlock: {0}	
+#research_level	{0} — уровень {1}	{0} — level {1}	
+#research_blocked_busy	Уже идёт другое изучение	Another research is under way	
+#research_blocked_no_lab	Нужна лаборатория	A Laboratory is needed	
+#research_blocked_lab_level	Нужна лаборатория {0} уровня	Needs a level {0} Laboratory	
+#research_blocked_prereq	Сначала: {0}	First: {0}	
+#research_blocked_workers	Нужен хотя бы один учёный	Needs at least one scientist	
+#research_blocked_coins	Не хватает монет	Not enough coins	
+#research_blocked_unknown	Неизвестная тема изучения	Unknown research topic	
+#building_upgrade_locked	Уровень {0} ещё не изучен в лаборатории	Level {0} is not researched yet	
+#workforce_research	ведёт изучение	does research	
+#log_research_started	Начато изучение: {0}	Research started: {0}	
+#log_research_done	Изучено: {0}	Researched: {0}	
+#log_research_cancelled	Изучение отменено: {0}	Research cancelled: {0}	
+#log_research_lost	Лаборатория потеряна — изучение «{0}» прервано, монеты возвращены	Laboratory lost — research {0} stopped, coins refunded	

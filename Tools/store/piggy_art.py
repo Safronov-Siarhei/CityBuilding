@@ -51,8 +51,6 @@ def bar_piece(w, h, back):
         d.rounded_rectangle((0, 0, w * k - 1, h * k - 1), r, fill=(236, 186, 70, 255))
         rim = max(2, h // 12) * k
         d.rounded_rectangle((rim, rim, w * k - 1 - rim, h * k - 1 - rim), r - rim, fill=(40, 18, 62, 255))
-        # an inner shadow along the top
-        d.rounded_rectangle((rim, rim, w * k - 1 - rim, rim + h * k // 3), r - rim, fill=(32, 14, 52, 255))
     else:
         d.rounded_rectangle((0, 0, w * k - 1, h * k - 1), r, fill=(232, 232, 232, 255))
         d.rounded_rectangle((r // 2, h * k // 7, w * k - 1 - r // 2, h * k * 3 // 7), r // 3, fill=(255, 255, 255, 255))
