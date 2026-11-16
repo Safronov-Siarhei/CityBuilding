@@ -250,14 +250,15 @@ HORSES = {
 }
 
 
-def make_horse(name, location=(0, 0, 0)):
+def make_horse(name, location=(0, 0, 0), obj=None):
+    """One of HORSES; `obj` names the object when a scene needs several of one kind (fg.make reuses by name)."""
     coat, dark, cloth, trim, cross = HORSES[name]
     keep = horse.COAT, horse.COAT_DARK
     horse.COAT, horse.COAT_DARK = coat, dark
     fg.plain(coat, dark)
     parts = [(n, _caparison(cloth, trim, cross) if n == "body" else _neck if n == "neck" else f) for n, f in horse.PARTS]
     try:
-        return fg.make(name, parts, horse.SCALE, location)
+        return fg.make(obj or name, parts, horse.SCALE, location)
     finally:
         horse.COAT, horse.COAT_DARK = keep
 
