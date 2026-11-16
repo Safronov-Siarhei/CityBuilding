@@ -198,12 +198,14 @@ namespace CityBuilder.UI
             _buttonImage = PiggyUi.Pic(_controls, Art + "Button", R(PX, 912), new Vector2(420, 96));
             _buttonImage.raycastTarget = true;
             var button = _buttonImage.gameObject.AddComponent<Button>();
+            button.transition = Selectable.Transition.None;   // the grey sprite says it; no see-through tint (the user 2026-11-16)
             button.onClick.AddListener(BreakIt);
             _buttonText = PiggyUi.Stroke(PiggyUi.Label(_buttonImage.transform, "", 40, PiggyUi.Cream, new Vector2(0, 2), new Vector2(400, 80)), 3f, PiggyUi.Ink);
             var badge = PiggyUi.Pic(_controls, Art + "Dot", R(845, 866), new Vector2(88, 88));
             badge.color = new Color(0.98f, 0.76f, 0.2f);
             badge.gameObject.AddComponent<Outline>().effectColor = PiggyUi.Ink;
             _badge = badge.rectTransform;
+            _badge.SetParent(_buttonImage.transform, true);   // breathes with the button (the user 2026-11-16)
             _badgeText = PiggyUi.Stroke(PiggyUi.Label(_badge, "", 26, PiggyUi.Cream, new Vector2(0, 0), new Vector2(120, 40)), 2f, PiggyUi.Ink);
 
             // the tasks
