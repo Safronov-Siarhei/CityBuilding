@@ -881,7 +881,8 @@
      MODELS APPROVED 2026-11-16. Animations next, group by group as videos: (1) `cav_ride_anim.py` the King + 11
      horsemen gallop over the causeway (formation rows, own gait phases, sword pumping, lances couched; reins solved
      once per kind; the user: «не нужно трясти коней» -> `legs_only()`: body/neck/head/tail still, no sway or rider
-     rock) -- in review; then (2) the charge through the streets (riders strike, orcs fall), (3) the square's
+     rock) -- APPROVED 2026-11-16; (2) `cav_charge_anim.py` the charge down a street: 4 orcs turn and brace, the King's
+     sword cuts one (spins, drops on his side), lances throw three onto their backs, the striker jolts -- in review; (3) the square's
      last stand (captain, Ардан, men-at-arms), (4) orcs smashing houses, (5) orcs fleeing.
   3. (older draft) «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
      orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя
