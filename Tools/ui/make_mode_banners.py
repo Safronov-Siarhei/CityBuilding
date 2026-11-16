@@ -369,34 +369,196 @@ def shield_crest(d, cx, cy, ink):
     d.polygon([p(cx - 8, cy + 4), p(cx - 8, cy - 6), p(cx - 4, cy - 1), p(cx, cy - 9), p(cx + 4, cy - 1), p(cx + 8, cy - 6), p(cx + 8, cy + 4)], fill=ink)
 
 
-def workshop(d, cx, cy, ink):
-    """«Мастерская»: a little house drawn as a blueprint, a hammer and a pair of compasses crossed over it."""
-    w = 3 * SS
-    d.polygon([p(cx - 38, cy - 4), p(cx, cy - 40), p(cx + 38, cy - 4)], outline=ink, width=w * 2)
-    d.rectangle([p(cx - 30, cy - 4), p(cx + 30, cy + 40)], outline=ink, width=w * 2)
-    d.rectangle([p(cx - 9, cy + 16), p(cx + 9, cy + 40)], fill=ink)
-    d.rectangle([p(cx - 22, cy + 4), p(cx - 10, cy + 14)], outline=ink, width=w)
-    d.rectangle([p(cx + 10, cy + 4), p(cx + 22, cy + 14)], outline=ink, width=w)
-    d.line([p(cx - 58, cy + 52), p(cx + 30, cy - 36)], fill=ink, width=9 * SS)
-    head = [(cx + 14, cy - 64), (cx + 62, cy - 16), (cx + 50, cy - 4), (cx + 2, cy - 52)]
-    d.polygon([p(x, y) for x, y in head], fill=ink)
-    d.ellipse([p(cx - 50, cy - 60), p(cx - 34, cy - 44)], fill=ink)
-    d.line([p(cx - 42, cy - 52), p(cx - 64, cy + 50)], fill=ink, width=6 * SS)
-    d.line([p(cx - 42, cy - 52), p(cx + 2, cy + 56)], fill=ink, width=6 * SS)
+
+
+
+
+# the colours of the richer emblems (Online, Workshop -- the user chose them 2026-11-16, Design/ui/ModeEmblems_Round2.png)
+RED, RED_LO = (200, 44, 36, 255), (140, 28, 22, 255)
+BLUE, BLUE_LO = (52, 84, 168, 255), (34, 56, 120, 255)
+GREEN, GREEN_LO = (70, 146, 58, 255), (44, 98, 36, 255)
+OAK, OAK_LO, OAK_HI = (164, 104, 52, 255), (116, 70, 32, 255), (204, 148, 90, 255)
+STEEL, STEEL_LO, STEEL_HI = (120, 118, 124, 255), (78, 76, 84, 255), (178, 176, 182, 255)
+PAPER, PAPER_LO = (250, 240, 214, 255), (222, 204, 166, 255)
+
+
+def poly(d, pts, fill, ink, w=3):
+    d.polygon([p(x, y) for x, y in pts], fill=fill, outline=ink, width=w * SS)
+
+
+def rot(pts, cx, cy, deg):
+    a = math.radians(deg)
+    c, s = math.cos(a), math.sin(a)
+    return [(cx + (x - cx) * c - (y - cy) * s, cy + (x - cx) * s + (y - cy) * c) for x, y in pts]
+
+
+def heater(sx, sy, w, h):
+    """A heater shield's outline centred at (sx, sy)."""
+    pts = [(sx - w / 2, sy - h / 2), (sx + w / 2, sy - h / 2)]
+    for k in range(9):
+        t = k / 8
+        pts.append((sx + w / 2 * (1 - t * t), sy - h * 0.1 + h * 0.6 * t))
+    for k in range(8, -1, -1):
+        t = k / 8
+        pts.append((sx - w / 2 * (1 - t * t), sy - h * 0.1 + h * 0.6 * t))
+    return pts
+
+
+def crown(d, cx, cy, s, ink):
+    pts = [(cx - 16 * s, cy + 6 * s), (cx - 18 * s, cy - 12 * s), (cx - 8 * s, cy - 3 * s), (cx, cy - 17 * s),
+           (cx + 8 * s, cy - 3 * s), (cx + 18 * s, cy - 12 * s), (cx + 16 * s, cy + 6 * s)]
+    poly(d, pts, GOLD, ink, 2)
+    d.polygon([p(x, y) for x, y in [(cx - 13 * s, cy + 4 * s), (cx - 14 * s, cy - 7 * s), (cx - 7 * s, cy), (cx - 5 * s, cy + 4 * s)]], fill=GOLD_HI)
+    for x in (-8, 0, 8):
+        d.ellipse([p(cx + x * s - 2.5 * s, cy + 1 * s), p(cx + x * s + 2.5 * s, cy + 6 * s)], fill=RED if x else BLUE)
+
+
+def charge(d, kind, sx, sy, ink):
+    """A small gold charge on a shield: a cross, a star, a tower, a fleur."""
+    g = GOLD_HI
+    if kind == 'cross':
+        d.line([p(sx, sy - 9), p(sx, sy + 7)], fill=g, width=4 * SS)
+        d.line([p(sx - 7, sy - 3), p(sx + 7, sy - 3)], fill=g, width=4 * SS)
+    elif kind == 'star':
+        pts = []
+        for k in range(10):
+            a = math.pi / 5 * k - math.pi / 2
+            r = 8 if k % 2 == 0 else 3.4
+            pts.append((sx + r * math.cos(a), sy - 2 + r * math.sin(a)))
+        d.polygon([p(x, y) for x, y in pts], fill=g, outline=ink, width=1 * SS)
+    elif kind == 'tower':
+        d.rectangle([p(sx - 5, sy - 6), p(sx + 5, sy + 6)], fill=g, outline=ink, width=1 * SS)
+        for x in (-5, -1, 3):
+            d.rectangle([p(sx + x, sy - 10), p(sx + x + 2, sy - 6)], fill=g, outline=ink, width=1 * SS)
+        d.rectangle([p(sx - 1.5, sy + 1), p(sx + 1.5, sy + 6)], fill=ink)
+    else:
+        d.ellipse([p(sx - 3, sy - 11), p(sx + 3, sy - 1)], fill=g, outline=ink, width=1 * SS)
+        d.ellipse([p(sx - 10, sy - 6), p(sx - 3, sy + 1)], fill=g, outline=ink, width=1 * SS)
+        d.ellipse([p(sx + 3, sy - 6), p(sx + 10, sy + 1)], fill=g, outline=ink, width=1 * SS)
+        d.rectangle([p(sx - 7, sy + 1), p(sx + 7, sy + 4)], fill=g, outline=ink, width=1 * SS)
+
+
+def shield_v2(d, sx, sy, w, h, field, field_lo, field_hi, kind, ink):
+    poly(d, heater(sx, sy, w, h), GOLD_LO, ink)
+    d.polygon([p(x, y) for x, y in heater(sx, sy, w - 3, h - 3)], fill=GOLD)
+    inner = heater(sx, sy + 1, w - 9, h - 9)
+    d.polygon([p(x, y) for x, y in inner], fill=field, outline=ink, width=1 * SS)
+    half = [pt for pt in inner if pt[0] >= sx - 0.5]
+    d.polygon([p(x, y) for x, y in [(sx, sy - h / 2 + 5)] + half + [(sx, sy + h / 2 - 5)]], fill=field_lo)
+    d.line([p(sx - w / 2 + 7, sy - h / 2 + 7), p(sx - w / 2 + 7, sy + 2)], fill=field_hi, width=2 * SS)
+    for x, y in ((-w / 2 + 3.5, -h / 2 + 3.5), (w / 2 - 3.5, -h / 2 + 3.5), (0, h / 2 - 3)):
+        d.ellipse([p(sx + x - 1.8, sy + y - 1.8), p(sx + x + 1.8, sy + y + 1.8)], fill=GOLD_HI)
+    charge(d, kind, sx, sy + 1, ink)
 
 
 def online(d, cx, cy, ink):
-    """«Онлайн»: four small shields round a ring -- four players at one table -- and the host's crown."""
-    import math
-    d.ellipse([p(cx - 42, cy - 42), p(cx + 42, cy + 42)], outline=ink, width=6 * SS)
+    """O1 v2 «Круглый стол»: a round oak table seen a little from above (plank top with grain, a gold-studded edge,
+    a carved leg), a royal crown on a red cushion in its middle, the four players' shields round it in four colours,
+    each with its own gold charge."""
+    cy -= 4
+    shades = {
+        'red': (RED, RED_LO, (232, 96, 80, 255)),
+        'blue': (BLUE, BLUE_LO, (98, 132, 210, 255)),
+        'green': (GREEN, GREEN_LO, (120, 190, 96, 255)),
+        'gold': ((214, 150, 40, 255), (168, 108, 24, 255), (246, 200, 100, 255)),
+    }
+    shield_v2(d, cx - 27, cy - 26, 30, 37, *shades['blue'], 'star', ink)
+    shield_v2(d, cx + 27, cy - 26, 30, 37, *shades['green'], 'tower', ink)
+    poly(d, [(cx - 9, cy + 26), (cx + 9, cy + 26), (cx + 13, cy + 48), (cx - 13, cy + 48)], OAK_LO, ink)
+    poly(d, [(cx - 20, cy + 46), (cx + 20, cy + 46), (cx + 16, cy + 52), (cx - 16, cy + 52)], OAK, ink, 2)
+    d.ellipse([p(cx - 54, cy - 6), p(cx + 54, cy + 34)], fill=OAK_LO, outline=ink, width=3 * SS)
+    for k in range(9):
+        a = math.pi * (0.08 + 0.84 * k / 8)
+        x, y = cx + 52 * math.cos(a), cy + 16 + 18 * math.sin(a)
+        d.ellipse([p(x - 1.8, y - 1.8), p(x + 1.8, y + 1.8)], fill=GOLD_HI)
+    top = (cx - 54, cy - 14, cx + 54, cy + 26)
+    d.ellipse([p(top[0], top[1]), p(top[2], top[3])], fill=OAK, outline=ink, width=3 * SS)
+    mask = Image.new('L', d.im.size, 0)
+    ImageDraw.Draw(mask).ellipse([p(top[0] + 3, top[1] + 3), p(top[2] - 3, top[3] - 3)], fill=255)
+    lines = Image.new('RGBA', d.im.size, (0, 0, 0, 0))
+    ld = ImageDraw.Draw(lines)
+    for x in (-30, -10, 10, 30):
+        ld.line([p(cx + x, cy - 16), p(cx + x * 1.05, cy + 28)], fill=OAK_LO, width=2 * SS)
+    for x, y in ((-42, 0), (-20, 12), (18, -6), (38, 10)):
+        ld.arc([p(cx + x - 6, cy + y - 2), p(cx + x + 6, cy + y + 2)], 180, 360, fill=OAK_LO, width=1 * SS)
+    from PIL import ImageChops
+    d._image.paste(lines, (0, 0), ImageChops.multiply(lines.getchannel('A'), mask))
+    d.arc([p(top[0] + 6, top[1] + 3), p(top[2] - 6, top[3] - 10)], 200, 340, fill=OAK_HI, width=3 * SS)
+    poly(d, [(cx - 24, cy + 4), (cx - 14, cy - 4), (cx + 14, cy - 4), (cx + 24, cy + 4), (cx + 14, cy + 12), (cx - 14, cy + 12)], RED, ink, 2)
+    d.polygon([p(x, y) for x, y in [(cx - 20, cy + 3), (cx - 12, cy - 2), (cx + 4, cy - 2), (cx - 4, cy + 4)]], fill=(232, 96, 80, 255))
+    for x in (-24, 24):
+        d.ellipse([p(cx + x - 2.5, cy + 2), p(cx + x + 2.5, cy + 7)], fill=GOLD, outline=ink, width=1 * SS)
+    crown(d, cx, cy - 11, 1.2, ink)
+    shield_v2(d, cx - 44, cy + 22, 30, 37, *shades['red'], 'cross', ink)
+    shield_v2(d, cx + 38, cy + 24, 30, 37, *shades['gold'], 'fleur', ink)
+
+
+def workshop(d, cx, cy, ink):
+    """W1 v2 «Чертёж и молот»: a parchment plan rolled at the top and the bottom, a house front in brown ink (roof
+    tiles, chimney, door, windows, measure lines with ticks), brass compasses on it, a red wax seal, and a carpenter's
+    hammer laid across: oak handle with a leather grip, iron head with a claw."""
+    cy -= 2
+    ink2 = (128, 78, 40, 255)
+    faint = (196, 168, 126, 255)
+    tilt = -6
+    sheet = rot([(cx - 46, cy - 40), (cx + 40, cy - 40), (cx + 40, cy + 40), (cx - 46, cy + 40)], cx, cy, tilt)
+    poly(d, sheet, PAPER, ink)
+    sh = rot([(cx + 30, cy - 40), (cx + 40, cy - 40), (cx + 40, cy + 40), (cx + 30, cy + 40)], cx, cy, tilt)
+    d.polygon([p(x, y) for x, y in sh], fill=PAPER_LO)
+    for yy in (-42, 42):
+        roll = rot([(cx - 50, cy + yy - 6), (cx + 44, cy + yy - 6), (cx + 44, cy + yy + 6), (cx - 50, cy + yy + 6)], cx, cy, tilt)
+        poly(d, roll, PAPER_LO, ink, 2)
+        hi = rot([(cx - 48, cy + yy - 4), (cx + 42, cy + yy - 4), (cx + 42, cy + yy - 1), (cx - 48, cy + yy - 1)], cx, cy, tilt)
+        d.polygon([p(x, y) for x, y in hi], fill=PAPER)
+        for s in (-50, 44):
+            e = rot([(cx + s, cy + yy)], cx, cy, tilt)[0]
+            d.ellipse([p(e[0] - 3, e[1] - 6), p(e[0] + 3, e[1] + 6)], fill=PAPER, outline=ink, width=1 * SS)
+
+    def L(pts, w=2, col=ink2):
+        pts = [(x + 8, y) for x, y in pts]
+        q = rot(pts, cx, cy, tilt)
+        d.line([p(x, y) for x, y in q], fill=col, width=w * SS, joint='curve')
+
+    L([(cx - 30, cy - 4), (cx - 8, cy - 26), (cx + 14, cy - 4)], 3)
+    L([(cx - 26, cy - 4), (cx - 26, cy + 26), (cx + 10, cy + 26), (cx + 10, cy - 4)], 3)
+    for k in (1, 2):
+        y = cy - 4 - k * 7
+        half = 22 * (1 - k * 7 / 22)
+        L([(cx - 8 - half, y), (cx - 8 + half, y)], 1)
+    L([(cx + 2, cy - 18), (cx + 2, cy - 28), (cx + 8, cy - 28), (cx + 8, cy - 12)], 2)
+    L([(cx - 13, cy + 26), (cx - 13, cy + 12), (cx - 5, cy + 12), (cx - 5, cy + 26)], 2)
+    for x0 in (-22, 1):
+        L([(cx + x0, cy + 2), (cx + x0 + 7, cy + 2), (cx + x0 + 7, cy + 9), (cx + x0, cy + 9), (cx + x0, cy + 2)], 2)
+        L([(cx + x0 + 3.5, cy + 2), (cx + x0 + 3.5, cy + 9)], 1)
+    L([(cx - 26, cy + 32), (cx + 10, cy + 32)], 1, faint)
+    for x in (-26, 10):
+        L([(cx + x, cy + 29), (cx + x, cy + 35)], 1, faint)
+    L([(cx - 36, cy - 4), (cx - 36, cy + 26)], 1, faint)
+    for y in (-4, 26):
+        L([(cx - 39, cy + y), (cx - 33, cy + y)], 1, faint)
+    # brass compasses, open, lying on the left of the sheet
+    hinge = (cx + 30, cy - 34)
+    for tip in ((cx + 22, cy - 2), (cx + 42, cy - 4)):
+        d.line([p(*hinge), p(*tip)], fill=ink, width=5 * SS)
+        d.line([p(*hinge), p(*tip)], fill=GOLD, width=3 * SS)
+    d.ellipse([p(hinge[0] - 5, hinge[1] - 5), p(hinge[0] + 5, hinge[1] + 5)], fill=GOLD, outline=ink, width=2 * SS)
+    d.ellipse([p(hinge[0] - 2, hinge[1] - 3), p(hinge[0] + 1, hinge[1])], fill=GOLD_HI)
+    # the hammer: handle from the lower left, head upper right (the lock's corner stays free)
+    x0, y0, x1, y1 = cx - 26, cy + 54, cx - 38, cy - 12
+    a = math.atan2(y1 - y0, x1 - x0)
+    ux, uy, vx, vy = math.cos(a), math.sin(a), -math.sin(a), math.cos(a)
+    Ln = math.hypot(x1 - x0, y1 - y0)
+    at = lambda al, of: (x0 + ux * al + vx * of, y0 + uy * al + vy * of)
+    poly(d, [at(0, 6), at(Ln, 4.5), at(Ln, -4.5), at(0, -6)], OAK, ink)
+    d.line([p(*at(14, -3)), p(*at(Ln - 6, -2.5))], fill=OAK_HI, width=2 * SS)
+    poly(d, [at(0, 7), at(26, 6.5), at(26, -6.5), at(0, -7)], (96, 54, 26, 255), ink, 2)
     for k in range(4):
-        a = math.pi / 2 * k + math.pi / 4
-        sx, sy = cx + 46 * math.cos(a), cy + 46 * math.sin(a)
-        pts = [(sx - 17, sy - 18), (sx + 17, sy - 18), (sx + 17, sy + 2), (sx, sy + 22), (sx - 17, sy + 2)]
-        d.polygon([p(x, y) for x, y in pts], fill=ink)
-        d.line([p(sx, sy - 12), p(sx, sy + 12)], fill=PARCHMENT, width=3 * SS)
-        d.line([p(sx - 10, sy - 4), p(sx + 10, sy - 4)], fill=PARCHMENT, width=3 * SS)
-    d.polygon([p(cx - 18, cy + 10), p(cx - 20, cy - 10), p(cx - 8, cy), p(cx, cy - 16), p(cx + 8, cy), p(cx + 20, cy - 10), p(cx + 18, cy + 10)], fill=ink)
+        d.line([p(*at(4 + k * 6, 7)), p(*at(8 + k * 6, -7))], fill=(66, 36, 16, 255), width=2 * SS)
+    poly(d, [at(Ln - 9, -10), at(Ln + 9, -10), at(Ln + 9, -26), at(Ln - 9, -26)], STEEL, ink)
+    poly(d, [at(Ln - 11, -26), at(Ln + 11, -26), at(Ln + 11, -32), at(Ln - 11, -32)], STEEL_LO, ink, 2)
+    poly(d, [at(Ln - 8, -10), at(Ln + 8, -10), at(Ln + 8, 8), at(Ln - 8, 8)], STEEL, ink)
+    poly(d, [at(Ln - 8, 8), at(Ln + 8, 8), at(Ln + 6, 20), at(Ln + 1, 22), at(Ln, 14), at(Ln - 1, 22), at(Ln - 6, 20)], STEEL, ink)
+    d.polygon([p(x, y) for x, y in [at(Ln - 6, -24), at(Ln - 2, -24), at(Ln - 2, 6), at(Ln - 6, 6)]], fill=STEEL_HI)
 
 
 def gold_lock(d, cx, cy):
@@ -495,7 +657,7 @@ def banner(name, spec):
     elif name == "Tutorial":
         book_rich(d, cx, cy + 6, WOOD_DARK)
     elif name == "Workshop":
-        workshop(d, cx, cy + 4, WOOD_DARK)
+        workshop(d, cx, cy + 2, WOOD_DARK)
     elif name == "Online":
         online(d, cx, cy + 2, WOOD_DARK)
     else:
