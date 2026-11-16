@@ -62,6 +62,9 @@ on; every explanation goes behind the «!» button.
   piggy at +50 %: count/cap*1.5-1 (245/300 -> +23 %); at or below break-even (2/3 full) NO badge. In the game compute
   it from the real pack price, not the formula. `Piggy_Window_Low_Concept.png` = 170/300, no badge.
 - No big front crystals in the field (they fought the pig; `frame(near=False)`).
+- ALIVE (the user 2026-11-16; animation `Design/store/Piggy_Window_Concept.webp`): the 4 crystals by the pig bob like the
+  button's (2x amplitude) on a pulsing violet-white halo so they stand out; the pig is never still -- saving: a small
+  wiggle (0.8 s every 2.6 s, ±2 px/±2°), full: the button's wobble bigger (0.9 s every 1.8 s, ±4 px/±3°).
 - Right: «Задания» + clock «07:42»; 3 short task cards (name, bar, +N 💎 / a tick when done -- credited by itself);
   full: the rewards go GREY (no warning text). Task names are EXAMPLES, the list is to be discussed.
 - «!» popup (parchment): «Как работает копилка», «Уровень 1 из 5», five icon rows: +1 a minute of play; day tasks add

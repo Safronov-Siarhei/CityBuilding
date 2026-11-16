@@ -52,7 +52,7 @@ def round_button(d, c, r, fill, glyph):
     text(d, (x, y - 2), glyph, int(r * 1.15), stroke=4)
 
 
-def pig_column(img, pig, gem, count, cap, full):
+def pig_column(img, pig, gem, count, cap, full, live=True):
     cx, cy = PX, 560
     g = layer()
     ImageDraw.Draw(g).ellipse((cx - 300, cy - 260, cx + 300, cy + 220), fill=(255, 214, 110, 170 if full else 110))
@@ -64,16 +64,11 @@ def pig_column(img, pig, gem, count, cap, full):
         ld.polygon([(cx, cy), (cx + math.cos(a - 0.08) * 380, cy + math.sin(a - 0.08) * 380),
                     (cx + math.cos(a + 0.08) * 380, cy + math.sin(a + 0.08) * 380)], fill=(255, 230, 150, 50 if full else 30))
     img.alpha_composite(lay.filter(ImageFilter.GaussianBlur(4)))
-    p = trim(pig, w=400)
-    if full:
-        p = p.rotate(-3, resample=Image.BICUBIC, expand=True)
     sh = layer()
     ImageDraw.Draw(sh).ellipse((cx - 160, cy + 150, cx + 160, cy + 192), fill=(0, 0, 0, 130))
     img.alpha_composite(sh.filter(ImageFilter.GaussianBlur(10)))
-    img.alpha_composite(p, (round(cx - p.width / 2), round(cy + 178 - p.height)))
-    for x, y, h, t in ((cx - 250, 390, 70, -12), (cx + 250, 370, 60, 14), (cx - 275, 600, 52, 8), (cx + 275, 590, 56, -10)):
-        q = trim(gem, h=h).rotate(t, resample=Image.BICUBIC, expand=True)
-        img.alpha_composite(q, (x - q.width // 2, y - q.height // 2))
+    if live:
+        live_layer(img, pig, gem, 0.3, full)
     d = ImageDraw.Draw(img)
     for x, y, r in ((cx - 140, 330, 14), (cx + 160, 310, 11), (cx + 300, 480, 10), (cx - 320, 500, 9)):
         sparkle(d, x, y, r)
@@ -114,6 +109,79 @@ def pig_column(img, pig, gem, count, cap, full):
         text(d, (bx, byy), '+%d%%' % pct, 26, stroke=3)
 
 
+# the crystals floating by the pig: (x offset from PX, y, height, base tilt, bob phase, bob period s)
+GEMS = [(-250, 390, 70, -12, 0.0, 1.9), (250, 370, 60, 14, 1.3, 2.3), (-275, 600, 52, 8, 2.4, 2.1), (275, 590, 56, -10, 0.7, 1.7)]
+_CACHE = {}
+
+
+def gem_glow(h):
+    """A soft violet-white halo behind a floating crystal so it stands out from the field (the user 2026-11-16)."""
+    if h not in _CACHE:
+        s = h * 3
+        g = Image.new('RGBA', (s, s), 0)
+        ImageDraw.Draw(g).ellipse((s * 0.18, s * 0.14, s * 0.82, s * 0.86), fill=(200, 140, 255, 255))
+        g = g.filter(ImageFilter.GaussianBlur(h * 0.28))
+        core = Image.new('RGBA', (s, s), 0)
+        ImageDraw.Draw(core).ellipse((s * 0.34, s * 0.3, s * 0.66, s * 0.7), fill=(255, 240, 255, 235))
+        g.alpha_composite(core.filter(ImageFilter.GaussianBlur(h * 0.16)))
+        _CACHE[h] = g
+    return _CACHE[h]
+
+
+def live_layer(img, pig, gem, t, full):
+    """The moving part at time t: crystals bob smoothly and a little chaotically (as on the button) with a pulsing
+    halo; the pig is never still -- saving: a small wiggle every 2.6 s; full: the button's softer-but-bigger wobble."""
+    cx, cy = PX, 560
+    w = 2 * math.pi * t
+    for ox, y, h, tilt0, ph, per in GEMS:
+        dy = 8.0 * math.sin(w / per + ph) + 3.5 * math.sin(w / (per * 0.57) + ph * 1.7)
+        dx = 4.0 * math.sin(w / (per * 1.43) + ph * 2.3) + 1.8 * math.sin(w / (per * 0.71) + ph * 0.6)
+        tilt = tilt0 + 7.0 * math.sin(w / (per * 1.21) + ph) + 3.0 * math.sin(w / (per * 0.63) + ph * 0.4)
+        x, yy = cx + ox + dx, y + dy
+        halo = gem_glow(h)
+        pulse = 0.75 + 0.25 * math.sin(w / (per * 0.8) + ph)
+        if pulse < 1:
+            halo = halo.copy()
+            halo.putalpha(halo.getchannel('A').point(lambda v, k=pulse: int(v * k)))
+        img.alpha_composite(halo, (round(x - halo.width / 2), round(yy - halo.height / 2)))
+        q = trim(gem, h=h).rotate(tilt, resample=Image.BICUBIC, expand=True)
+        img.alpha_composite(q, (round(x - q.width / 2), round(yy - q.height / 2)))
+    if 'pig' not in _CACHE:
+        _CACHE['pig'] = trim(pig, w=400)
+    p = _CACHE['pig']
+    dx = rot = 0.0
+    if full:
+        ph = t % 1.8
+        if ph < 0.9:
+            fade = math.sin(math.pi * ph / 0.9) ** 2
+            dx = 4.0 * fade * math.sin(2 * math.pi * 3.2 * ph)
+            rot = 3.0 * fade * math.sin(2 * math.pi * 3.2 * ph + 0.6)
+    else:
+        ph = t % 2.6
+        if ph < 0.8:
+            fade = math.sin(math.pi * ph / 0.8) ** 2
+            dx = 2.0 * fade * math.sin(2 * math.pi * 2.6 * ph)
+            rot = 2.0 * fade * math.sin(2 * math.pi * 2.6 * ph + 0.6)
+    if rot:
+        p = p.rotate(rot, resample=Image.BICUBIC, expand=True)
+    img.alpha_composite(p, (round(cx + dx - p.width / 2), round(cy + 178 - p.height)))
+
+
+def animate(pig, gem):
+    """Concept animation (full-colour WebP, a GIF bands the shading): 4 s saving, then 4 s full; 1280 x 720."""
+    fps = 25
+    bases = {False: window(pig, gem, 245, 300, False, live=False), True: window(pig, gem, 300, 300, True, live=False)}
+    frames = []
+    for i in range(fps * 8):
+        t = i / fps
+        full = t >= 4.0
+        fr = bases[full].copy()
+        live_layer(fr, pig, gem, t, full)
+        frames.append(fr.convert('RGB').resize((1280, 720), Image.LANCZOS))
+    frames[0].save(R + 'Design/store/Piggy_Window_Concept.webp', save_all=True, append_images=frames[1:],
+                   duration=1000 // fps, loop=0, quality=88, method=4)
+
+
 def tasks_panel(img, box, full):
     x0, y0, x1, y1 = box
     p = layer()
@@ -152,7 +220,7 @@ def tasks_panel(img, box, full):
         y += rh
 
 
-def window(pig, gem, count, cap, full):
+def window(pig, gem, count, cap, full, live=True):
     img = menu_scene()
     img = Image.alpha_composite(img.filter(ImageFilter.GaussianBlur(6)), Image.new('RGBA', (W, H), (14, 6, 30, 190)))
     win = frame(near=False)   # the big front crystals fought the pig (the user 2026-11-16)
@@ -165,7 +233,7 @@ def window(pig, gem, count, cap, full):
     d.line((X1 - 36, Y0 + 4, X1 - 4, Y0 + 36), fill=CREAM, width=9)
     d.line((X1 - 36, Y0 + 36, X1 - 4, Y0 + 4), fill=CREAM, width=9)
     round_button(d, (X0 + 20, Y0 + 20), 42, (60, 120, 200), '!')    # info: all the explanations
-    pig_column(img, pig, gem, count, cap, full)
+    pig_column(img, pig, gem, count, cap, full, live)
     tasks_panel(img, (1180, IY0 + 70, IX1 - 34, IY1 - 34), full)
     return img
 
@@ -211,6 +279,7 @@ def main():
     a.convert('RGB').save(R + 'Design/store/Piggy_Window_Concept.png', optimize=True)
     b.convert('RGB').save(R + 'Design/store/Piggy_Window_Full_Concept.png', optimize=True)
     window(pig, gem, 170, 300, False).convert('RGB').save(R + 'Design/store/Piggy_Window_Low_Concept.png', optimize=True)
+    animate(pig, gem)
     info(a).convert('RGB').save(R + 'Design/store/Piggy_Window_Info_Concept.png', optimize=True)
     print('written Piggy_Window_Concept.png, Piggy_Window_Full_Concept.png, Piggy_Window_Info_Concept.png')
 
