@@ -117,6 +117,7 @@ price, % sticker, green price) and the word «Продолжить». `Design/st
 (render_ardan_banner.py with mage.make()/CineMage, camera x -0.9).
 - RULE (the user, 2026-11-15): shown after EVERY won level from the 2nd on (never after the 1st), replays too;
   `support_banner_from_level` = 2 in economy («Наборы: настройки» row 91).
+- The user's look after mission 2 (2026-11-16): the window sat low -> the layout is lifted so the Window piece's middle is the screen's (`_lift`, from layout.json's Window rect); every other root canvas is OFF while it shows (`_hidden`, back in OnDestroy). Not built/seen yet.
 - BUILT: `Assets/_Project/Scripts/UI/SupportOfferWindow.cs` -- `SupportOfferWindow.ShowAfterWin(levelNumber, onDone)`
   (1-based level; not due -> onDone at once). Runtime overlay canvas (order 960), pauses time + ModalGate; pieces
   Window + Row1-3 and layout.json in `Assets/_Project/UI/Shop/Resources/Shop/Support/` written by

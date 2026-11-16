@@ -44,6 +44,8 @@ namespace CityBuilder.UI
         private readonly List<RectTransform> _rows = new List<RectTransform>();
         private float _timeScaleBefore = 1f;
         private bool _gateBefore;
+        private float _lift;                                         // the window's middle to the screen's (layout px)
+        private readonly List<Canvas> _hidden = new List<Canvas>();  // the HUD behind, off while it shows
 
         /// <summary>
         /// After the campaign's level `level` (1-based) is won: the banner when it is due, then onDone; else onDone at
@@ -90,6 +92,22 @@ namespace CityBuilder.UI
                 Debug.LogWarning("SupportOfferWindow: no Resources/Shop/Support/layout.json -- run Tools/store/support_banner_v2_mockup.py.");
                 Continue();
                 return;
+            }
+            // the mock-up's window sits low (its ribbon reaches up, its foot is the frame's): its middle on the
+            // screen's (the user, 2026-11-16: «подними окно ... чтобы оно было по центру»)
+            foreach (var r in _layout.pieces)
+                if (r.name == "Window" && r.rect != null && r.rect.Length >= 4)
+                {
+                    var h = _layout.reference != null && _layout.reference.Length > 1 ? _layout.reference[1] : 1080f;
+                    _lift = (r.rect[1] + r.rect[3]) / 2f - h / 2f;
+                }
+            // nothing of the game's interface behind it (the user, the same day: «скрывай задний интерфейс»)
+            var own = GetComponent<Canvas>();
+            foreach (var c in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+            {
+                if (c == null || c == own || !c.isRootCanvas || !c.enabled) continue;
+                c.enabled = false;
+                _hidden.Add(c);
             }
             Store.Changed += RedrawRows;
             Build();
@@ -189,6 +207,7 @@ namespace CityBuilder.UI
         private void OnDestroy()
         {
             Store.Changed -= RedrawRows;
+            foreach (var c in _hidden) if (c != null) c.enabled = true;
             Time.timeScale = _timeScaleBefore;
             ModalGate.SetBlocked(_gateBefore);
             if (_current == this) _current = null;
@@ -206,7 +225,7 @@ namespace CityBuilder.UI
                 if (r.name != name || r.rect == null || r.rect.Length < 4) continue;
                 float w = _layout.reference != null && _layout.reference.Length > 1 ? _layout.reference[0] : 1920f;
                 float h = _layout.reference != null && _layout.reference.Length > 1 ? _layout.reference[1] : 1080f;
-                centre = new Vector2((r.rect[0] + r.rect[2]) / 2f - w / 2f, h / 2f - (r.rect[1] + r.rect[3]) / 2f);
+                centre = new Vector2((r.rect[0] + r.rect[2]) / 2f - w / 2f, h / 2f - (r.rect[1] + r.rect[3]) / 2f + _lift);
                 size = new Vector2(r.rect[2] - r.rect[0], r.rect[3] - r.rect[1]);
                 return true;
             }
