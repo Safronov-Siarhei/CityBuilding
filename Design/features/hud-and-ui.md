@@ -82,9 +82,9 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
     squeezes the chevron briefly.
   - The two new modes on the row, both LOCKED «Скоро» (gold lock on the medallion): «Мастерская» (own building
     models, ideas.md; violet, house blueprint + hammer + compasses) and «Онлайн» (lobby of up to 4 by code; amber,
-    four shields round a ring + crown). Proposed order (not confirmed): Обучение, Песочница, Кампания, Нашествие,
-    Онлайн, Мастерская. Open: which mode is centred on entry (proposed: the last played); the piggy button top right
-    nearly touches the right outer banner.
+    four shields round a ring + crown). ORDER (the user 2026-11-16): Обучение, Песочница, Кампания, Нашествие,
+    Онлайн, Мастерская. CENTRED ON ENTRY (the user): Обучение the first time, afterwards the LAST PLAYED mode.
+    Open: the piggy button top right nearly touches the right outer banner.
 - (before 2026-11-10) modes: back TL, settings TR, Discord BL, YouTube BR; «Песочница» / «Нашествие» pills, a round «!»
   under each → info dialog (`#mode_info_*`).
 - sandbox (REDONE 2026-11-10, the user picked concept В «Знамя и доска» of three, PIL concepts in

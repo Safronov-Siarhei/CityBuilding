@@ -84,3 +84,4 @@ centre, two smaller+darker each side, sixth off screen), closed endless chain, a
 arrows = gold chevron «A» at 70 % with a nudge hint (step out, trailing «‹‹» twin, glow; rests after the first
 scroll, back after 10-15 s idle; press squeeze). New locked «Скоро» banners: Мастерская (violet) and Онлайн (amber).
 Full spec in Design/features/hud-and-ui.md (modes screen v2); concepts Design/ui/ModeWheel_*.
+Order confirmed: Обучение, Песочница, Кампания, Нашествие, Онлайн, Мастерская; centred on entry: Обучение at first, then the last played mode (the user 2026-11-16).
