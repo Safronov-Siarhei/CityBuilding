@@ -1,7 +1,7 @@
 """Mission 2's last scene «Подкрепление», group 2: the cavalry bursts into a street of the burning town and rides
 the orcs down (the user, 2026-11-16: «они проносятся по городу и уничтожают всех орков»). Never saves.
 
-    blender --background <Buildings-Size1-Models.blend> --python cav_charge_anim.py -- render <out dir> [street|side|all]
+    blender --background <Buildings-Size1-Models.blend> --python cav_charge_anim.py -- render <out dir> [street|cut|lance|all]
 
 The ride as group 1 (cav_ride_anim: legs only, the King ahead, sword up; lances couched). Four orcs in the street
 hear them, turn and brace; as each is reached he is struck down -- the King's sword cuts the first (he spins and
@@ -169,10 +169,13 @@ def build():
                 strike = env(t, p["hit"] - 0.25, p["hit"]) * (1 - env(t, p["hit"], p["hit"] + 0.35))
             if p["king"]:
                 # the sword up and pumping, then a cut down to the right across the orc as he passes
+                # (the cut's angles searched on the rig: the blade down and out to his right, onto the orc)
                 pump = math.sin(TAU * t / 0.9) * (1 - strike)
-                q["upper_arm.R"] = [-150 + 12 * pump + 110 * strike, 10 + 25 * strike, 0]
-                q["forearm.R"] = [-20 - 10 * pump - 20 * strike, 0, 0]
-                q["chest"][2] -= 18 * strike
+                up, cut = (-150 + 12 * pump, 10, 0), (-30, -10, -60)
+                q["upper_arm.R"] = [up[i] + (cut[i] - up[i]) * strike for i in range(3)]
+                q["forearm.R"] = [-20 - 10 * pump + 10 * strike, 0, 0]
+                q["chest"][2] += 15 * strike
+                q["chest"][1] -= 10 * strike
             else:
                 q["upper_arm.R"] = [-78 + 10 * strike, 4, 0]       # the lance jolts at the blow
                 q["forearm.R"] = [-6, 0, 0]
@@ -221,12 +224,17 @@ def street_stage():
         me.materials.append(mat)
         o = bpy.data.objects.new(name, me)
         bpy.context.scene.collection.objects.link(o)
-    box("ChargeStreet", (0.6, 0.57, 0.52), -STREET_HALF, STREET_HALF, -12, 14, -0.02, 0.0)
+    # a cobbled street (dark, so it never reads as the bridge), timber-framed fronts with red roofs, some smoke-dark
+    box("ChargeStreet", (0.2, 0.18, 0.16), -STREET_HALF, STREET_HALF, -12, 14, -0.02, 0.0)
+    box("ChargeGround", (0.12, 0.22, 0.08), -12, 12, -12, 14, -0.03, -0.02)
     for k in (-1, 1):
         for i in range(7):
             y0 = -8 + i * 3.0
-            box(f"ChargeHouse{k}{i}", (0.78, 0.7, 0.55) if i % 2 else (0.7, 0.6, 0.48),
-                k * (STREET_HALF + 0.2), k * (STREET_HALF + 2.2), y0, y0 + 2.6, 0.0, 1.4 + 0.3 * (i % 3))
+            h = 1.2 + 0.3 * (i % 3)
+            x0, x1 = sorted((k * (STREET_HALF + 0.2), k * (STREET_HALF + 2.2)))
+            box(f"ChargeHouse{k}{i}", (0.55, 0.45, 0.33) if i % 2 else (0.42, 0.33, 0.25), x0, x1, y0, y0 + 2.6, 0.0, h)
+            box(f"ChargeRoof{k}{i}", (0.45, 0.1, 0.07) if i % 3 else (0.16, 0.13, 0.12), x0 - 0.1, x1 + 0.1,
+                y0 - 0.1, y0 + 2.7, h, h + 0.35)
     for o in bpy.context.scene.objects:
         if o.name in ("ArdanGround", "ArdanPath") or o.name.startswith("ArdanTuft"):
             o.hide_render = True
@@ -240,8 +248,9 @@ def main():
     actors, props, total = build()
     aa.stage(gt.keep_of(actors, props))
     street_stage()
-    shots = (("street", (0.0, 2.0, 0.4), (0.9, 6.5, 1.5), 26),         # down the street at the charge
-             ("side", (0.0, 4.0, 0.4), (-0.6 - 0.0, -4.6, 2.6), 30))   # from behind and above the riders
+    shots = (("street", (0.0, 2.5, 0.4), (1.0, 7.5, 1.6), 30),         # down the street at the charge
+             ("cut", (0.2, 2.3, 0.5), (0.95, -0.9, 0.35), 18),            # close, from his sword side: the King cuts the first orc
+             ("lance", (0.45, 4.9, 0.45), (0.7, -1.3, 0.4), 18))          # close: a lance throws the champion
     for key, at, off, lens in shots:
         if what in (key, "all"):
             ea.shoot(out, "charge_" + key, total, at, off, lens)
