@@ -179,9 +179,9 @@ def hint(canvas, y, picked, n=6):
 
 def label(canvas, text, sub):
     d = ImageDraw.Draw(canvas)
-    d.rounded_rectangle((14, 700 - 590, 480, 700 - 520), 18, fill=(30, 20, 14, 200))
-    d.text((30, 700 - 584), text, font=font(26), fill=(255, 230, 190, 255))
-    d.text((30, 700 - 552), sub, font=ImageFont.truetype(FONT.replace('ExtraBold', 'Medium'), 19), fill=(230, 220, 200, 255))
+    d.rounded_rectangle((14, 548, 480, 618), 18, fill=(30, 20, 14, 200))
+    d.text((30, 554), text, font=font(26), fill=(255, 230, 190, 255))
+    d.text((30, 586), sub, font=ImageFont.truetype(FONT.replace('ExtraBold', 'Medium'), 19), fill=(230, 220, 200, 255))
 
 
 # --- variant 1: the carousel ring ---------------------------------------------------------------------------
@@ -262,6 +262,41 @@ def fan(bg, cards, picked=3):
     label(canvas, 'Вариант 2 — веер на изогнутой балке', 'свайп сдвигает штандарты вдоль балки; центральный крупнее')
     return canvas
 
+# --- variant 3: the user's own (2026-11-16): one straight row, the picked one big in the centre, two smaller and
+# darker each side, the sixth off screen; arrows at the screen's edges, swipe and a tap on a side banner too;
+# the chain is closed and scrolls without end ---------------------------------------------------------------
+def row(bg, shot, cards, picked=3):
+    canvas = bg.copy()
+    cx, n = 671, len(cards)
+    place = {0: (0, 0.60, 0.0), 1: (290, 0.45, 0.30), 2: (478, 0.34, 0.50)}   # offset, scale, darkening
+    items = []
+    for i in range(n):
+        k = ((i - picked + n // 2) % n) - n // 2
+        if abs(k) <= 2:
+            items.append((abs(k), k, i))
+    for ak, k, i in sorted(items, reverse=True):
+        off, s, dk = place[ak]
+        c = cards[i]
+        w, h = int(c.width * s), int(c.height * s)
+        x = cx + off * (1 if k > 0 else -1)
+        top = 118 + (0.60 - s) * 110
+        if ak == 0:
+            canvas = glow_under(canvas, x, top, w, h)
+        canvas.alpha_composite(darken(c.resize((w, h), Image.LANCZOS), dk), (int(x - w / 2), int(top)))
+    # the arrows: the screen's own round wooden «back» button, mirrored for the right
+    arrow = shot.crop((22, 22, 118, 118)).resize((86, 86), Image.LANCZOS)
+    mask = Image.new('L', arrow.size, 0)
+    ImageDraw.Draw(mask).ellipse((1, 1, 85, 85), fill=255)
+    canvas.paste(arrow, (14, 300), mask)
+    canvas.paste(arrow.transpose(Image.FLIP_LEFT_RIGHT), (1342 - 14 - 86, 300), mask.transpose(Image.FLIP_LEFT_RIGHT))
+    d = ImageDraw.Draw(canvas)
+    for j in range(n):
+        x = cx + (j - (n - 1) / 2) * 26
+        r = 8 if j == picked else 6
+        d.ellipse((x - r, 586 - r, x + r, 586 + r), fill=(255, 226, 150, 255) if j == picked else (60, 40, 24, 170))
+    label(canvas, 'Вариант 3 — лента по кругу', 'стрелки, свайп и тап по боковому; цепочка замкнута')
+    return canvas
+
 
 def main():
     shot = Image.open(sys.argv[1]).convert('RGBA')
@@ -270,6 +305,8 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     carousel(bg, cards).convert('RGB').save(os.path.join(OUT, 'ModeWheel_1_Carousel.png'))
     fan(bg, cards).convert('RGB').save(os.path.join(OUT, 'ModeWheel_2_Fan.png'))
+    row(bg, shot, cards).convert('RGB').save(os.path.join(OUT, 'ModeWheel_3_Row.png'))
+    row(bg, shot, cards, 1).convert('RGB').save(os.path.join(OUT, 'ModeWheel_3_Row_Sandbox.png'))
     sheet = Image.new('RGBA', (2 * 400 + 60, 720), (44, 36, 46, 255))
     for j, i in enumerate((5, 4)):
         sheet.alpha_composite(cards[i].resize((380, 660), Image.LANCZOS), (20 + j * 420, 40))
