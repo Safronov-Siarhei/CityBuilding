@@ -185,7 +185,7 @@ namespace CityBuilder.EditorTools
             stall.sprite = ShopSprite("Stall");
             stall.preserveAspect = true;
             stall.raycastTarget = false;
-            Anchor(stall.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(size.x * 0.5f - 80f, 6f), new Vector2(130f, 130f));
+            Anchor(stall.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(size.x * 0.5f - 74f, 2f), new Vector2(96f, 96f));   // the rich stall fills its square (the user 2026-11-16: 130 too big)
         }
 
         /// <summary>The orange «!» on a button's top-right (top-left if <paramref name="left"/>), until its place is first opened (MainMenuController).</summary>
