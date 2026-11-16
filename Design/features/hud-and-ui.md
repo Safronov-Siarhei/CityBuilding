@@ -69,6 +69,22 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
   gone (MainMenuController.tutorialReward left unwired). Round 3 (the user saw it, 11-10): smaller name plaques (196x54, 26 pt); the MOTTO moved off the banners to ONE line bottom centre over «Играть», showing the picked mode's; the live line sits under the plaque, 190 wide and best-fit (14..26 pt) so big numbers stay inside the seam.
   **CAMPAIGN BANNER OPEN (the user, 2026-11-11: «сделай активным баннер кампании… в релиз это пойдёт»):** picking it is remembered like the others, «Играть» is no longer dimmed for it, and it starts `LoadingScreen.IntoGame("CampaignOpening")` (the opening film, then mission 1; the scene is now in the build list, SetupProject). Its live line is `#banner_campaign_line` «Глава 1: Бегство» (was «Скоро»; sheet «Тексты: интерфейс и меню» row 142). Not seen by the user yet.
   **Campaign banner ART open too (the user, 2026-11-12: «он серый и не активный»):** it was still drawn grey with a LOCK in the medallion; now royal blue cloth, gold seam, finials and ring like the wooden banners, emblem `shield_crest()` (2026-11-12, the user chose variant 5 of `Design/campaign_emblem_variants.png` and asked for it drawn richer): a heater shield in a gold rim with rivets, quartered field in two blues, a gold boss with a small crown, crossed swords with fullers, curled guards, wrapped grips (a sword-behind-scroll first version was rejected). The SANDBOX and TUTORIAL emblems drawn as rich too (the user, 2026-11-12: «более дорогими»): `castle_rich()` -- two-tone stone with block lines, terracotta cone roofs, a wooden gate under a gold portcullis, a red pennant; `book_rich()` -- a leather-bound open book with gold corners, shaded pages with text lines, a red ribbon, a jewelled gold crown. Close-ups: `Design/mode_emblems_close.png`. ALL FOUR emblems APPROVED by the user 2026-11-12. `make_mode_banners.py` has no grey/locked look any more (`lock()` kept, unused). Lineup: `Design/campaign_banner_lineup.png`. Not built/seen in the game yet.
+- modes screen v2 «ЛЕНТА ПО КРУГУ» -- AGREED with the user 2026-11-16, NOT BUILT. Concepts:
+  `Design/ui/ModeWheel_3_Row.png` (+ `_Sandbox`), arrows `ModeWheel_Arrows_A_Anim.gif` / `ModeWheel_Arrows_A.png`,
+  drawn by `Tools/ui/mode_wheel_concepts.py` (variants 1 carousel, 2 fan and arrows B/C/D were rejected).
+  - SIX banners in ONE straight row, the chain CLOSED and endless: the picked one big and bright in the centre (as
+    today's picked banner, with a warm glow); one each side ~3/4 its size and darkened; one more each side smaller
+    and darker; the sixth off screen and slides in from the edge. Side banners keep their name plaque and live line.
+  - Scrolled by the arrows at the screen's edges, by SWIPE and by a TAP on a side banner (it comes to the centre).
+  - Arrows = gold CHEVRON «A» (no plate), 70 % of the concept's first size, at the banners' mid height, NOT like the
+    round «Назад». Hint: every 2.4 s a 0.9 s step outward ~10 px and back, a faint twin trailing (reads «‹‹»), a soft
+    gold glow breathing; after the player's first scroll the hint rests and returns after 10-15 s idle; a press
+    squeezes the chevron briefly.
+  - The two new modes on the row, both LOCKED «Скоро» (gold lock on the medallion): «Мастерская» (own building
+    models, ideas.md; violet, house blueprint + hammer + compasses) and «Онлайн» (lobby of up to 4 by code; amber,
+    four shields round a ring + crown). Proposed order (not confirmed): Обучение, Песочница, Кампания, Нашествие,
+    Онлайн, Мастерская. Open: which mode is centred on entry (proposed: the last played); the piggy button top right
+    nearly touches the right outer banner.
 - (before 2026-11-10) modes: back TL, settings TR, Discord BL, YouTube BR; «Песочница» / «Нашествие» pills, a round «!»
   under each → info dialog (`#mode_info_*`).
 - sandbox (REDONE 2026-11-10, the user picked concept В «Знамя и доска» of three, PIL concepts in
