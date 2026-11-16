@@ -891,7 +891,9 @@
      to the thatch (fire = Unity); `flee` 6 orcs run in panic for the gate looking back, one sprawls and scrambles on,
      2 horsemen chase; the user: «кавалерия проносится по оркам, но орки продолжают бежать» -> whoever a rider reaches
      (lane |dx| < 0.4, lance reach 1.3) is ridden down (thrown onto his face), the rider then reins back to 1.1 so the
-     rest escape through the gate -- raze in review, flee in review. (3) the square's
+     rest escape through the gate -- raze + flee APPROVED 2026-11-16. ALL FIVE GROUPS APPROVED; next: Unity
+     (export like export_m2capital, a director like Capital.cs placing the groups in the mission's own town, cavalry
+     copies, the horn, fire on the razed houses; plays at the win instead of «every orc dies»). (3) the square's
      last stand (captain, Ардан, men-at-arms), (4) orcs smashing houses, (5) orcs fleeing.
   3. (older draft) «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
      orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя
