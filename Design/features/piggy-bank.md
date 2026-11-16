@@ -3,7 +3,7 @@
 **Status (2026-11-15):** DISCUSSED with the user, rules below DECIDED; placement concept v2 + 3D-render icon sent for
 approval (`Design/store/Piggy_Placement_Concept.png`, `Design/store/Piggy_Icon_Concept.png`, by
 `Tools/store/piggy_placement_concept.py <photos>`). NOT BUILT. Daily tasks' list: to discuss later (the user).
-Prices APPROVED 2026-11-16 (see Rules). DAILY TASKS: ~50 in batches of 10 for the user to approve/replace (the user 2026-11-16), list in `Design/store/Piggy_Tasks.md`; 40 tasks APPROVED 2026-11-16 (enough for now). Reset: once a day at local midnight.
+Prices APPROVED 2026-11-16 (see Rules). DAILY TASKS: ~50 in batches of 10 for the user to approve/replace (the user 2026-11-16), list in `Design/store/Piggy_Tasks.md`; 40 tasks APPROVED 2026-11-16 (enough for now). RESET EVERY 8 HOURS (the user 2026-11-16): new 3 tasks at 00:00, 08:00, 16:00 local time (proposed fixed slots); unfinished ones are replaced. Key piggy_tasks_reset_hours = 8 in the sheet when built.
 
 ## Rules (the user, 2026-11-15)
 - A PIGGY (pink pig: the shape everyone knows). Corner icon with a shine, the crystals saved on a plaque under it.
@@ -11,7 +11,7 @@ Prices APPROVED 2026-11-16 (see Rules). DAILY TASKS: ~50 in batches of 10 for th
   while playing and doing tasks, the daily tasks.
 - Filled by: 1 crystal per minute of play (NO daily limit -- long play is rewarded; only active play: not
   paused, not menus, input in the last ~2 min -- proposed) + DAILY TASKS (e.g. play an Invasion battle,
-  destroy an orc building in the sandbox, kill 100 orcs), crystals by difficulty; tasks reset at local midnight;
+  destroy an orc building in the sandbox, kill 100 orcs), crystals by difficulty; tasks reset every 8 h (was midnight);
   one free/ad swap a day proposed.
 - Breakable from 150 crystals. NO reset/expiry (the 7-day timer was dropped).
 - 5 levels, each PURCHASE levels it up (and it costs more); level 5 stays forever.
