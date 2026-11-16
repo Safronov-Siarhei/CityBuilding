@@ -452,7 +452,9 @@ namespace CityBuilder.EditorTools
             rect.anchorMin = new Vector2(0f, 1f);
             rect.anchorMax = new Vector2(1f, 1f);
             rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = new Vector2(0f, -64f);
+            // centred on the same line as the king's portrait and hp plaque (SetupProjectHud: -0.7*28 - 108/2 = -73.6;
+            // the user 2026-11-16: at -64 the pills stood higher than the hp bar and looked odd)
+            rect.anchoredPosition = new Vector2(0f, -73.6f);
             rect.sizeDelta = new Vector2(-2f * margin, chipHeight);
             // In the looks: a capsule behind each resource (chip), one behind them all (bar), or both.
             var chipSprite = HudSprite("chip") ?? HudSprite("bar");
