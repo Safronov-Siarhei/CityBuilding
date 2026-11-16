@@ -882,7 +882,11 @@
      horsemen gallop over the causeway (formation rows, own gait phases, sword pumping, lances couched; reins solved
      once per kind; the user: «не нужно трясти коней» -> `legs_only()`: body/neck/head/tail still, no sway or rider
      rock) -- APPROVED 2026-11-16; (2) `cav_charge_anim.py` the charge down a street: 4 orcs turn and brace, the King's
-     sword cuts one (spins, drops on his side), lances throw three onto their backs, the striker jolts -- in review; (3) the square's
+     sword cuts one (spins, drops on his side), lances throw three onto their backs, the striker jolts; the user could not see the blows -> dark street with roofs, the King's cut searched to
+     his right, close shots `cut`/`lance` -- APPROVED 2026-11-16; (3) `last_stand_anim.py` the square: Ардан, captain, 2 men-at-arms
+     (lookout stand-ins) with swords (ardan_sword.sword), back to back in a ring of 6 orcs; orcs attack by turns, Ардан
+     kills 2, guard2 run through (falls on his face), the champion beats the captain to a knee (he rises), the ring
+     closes, HORN at 5.7 s -> all heads to the gate (-y) -- in review; (3) the square's
      last stand (captain, Ардан, men-at-arms), (4) orcs smashing houses, (5) orcs fleeing.
   3. (older draft) «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
      orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя
