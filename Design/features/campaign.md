@@ -930,7 +930,7 @@
      Place.smoke [x,y,z,size]* lights Look.cs fires on its horizon. Help.cs `helpSets`. Timeline 33.3 s: raze 0-5 ->
      chase 5-9.5 (cell 46,47.5, turn 90, running west) -> square 9.5-15.7 (horn 15.2) -> BRIDGE 15.7-21.7 (far place at
      Unity 6000,0,-6000; the King's company + 2 columns behind) -> street charge 21.7-27.3 -> flight 27.3-33.3; the dead
-     lie at 4 spots all scene (deadA..D, subsets of the arrangement).
+     lie at 4 spots all scene (deadA..D, subsets of the arrangement). Setup x2 + CityDefenceIntro GREEN 2026-11-16 (163 actors); the user has not seen it.
   3. (older draft) «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
      orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя
      этот камень?») as the mission-3 hook.
