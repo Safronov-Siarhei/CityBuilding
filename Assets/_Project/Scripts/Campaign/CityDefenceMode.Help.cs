@@ -73,7 +73,7 @@ namespace CityBuilder.Campaign
 
         /// <summary>A place of the last scene in the town: its plan cell on the ground -- or, `anchor` "house", a step
         /// north of the north face of the standing house nearest it (the raze take's wall at its Blender y 1); that
-        /// house burns, and `fires` more in the lower town.</summary>
+        /// house burns, `fires` more with it, `ruins` houses are burnt shells.</summary>
         private Vector3 PlaceInTown(Place p, CapitalScript script)
         {
             var at = World(p.cell[0], p.cell[1]);
@@ -93,14 +93,31 @@ namespace CityBuilder.Campaign
                     at = new Vector3(c.x, at.y, c.z + 2f);      // a 2x2 house: its face 1 north of its middle, + the step
                     Burn(best, script.fireSize);
                 }
+                // the town sacked (the user, 2026-11-16: «город не похож на атакованный орками, нет пожаров и руин»):
+                // `ruins` houses left burnt shells (some still smoking), `fires` more burning -- never the raze house's
+                // row, the take needs its walls
                 var rnd = new System.Random(11);
-                var left = script.fires;
-                for (var k = 0; k < 40 && left > 0 && _lowerTown.Count > 0; k++)
+                var pool = new System.Collections.Generic.List<BuildingInstance>();
+                foreach (var h in _houses)
+                    if (h != null && h != best && h.CurrentHealth > 0 && (best == null || Flat(h.transform.position - best.transform.position) > 4f))
+                        pool.Add(h);
+                for (var i = pool.Count - 1; i > 0; i--)
                 {
-                    var h = _lowerTown[rnd.Next(_lowerTown.Count)];
-                    if (h == null || h == best || h.CurrentHealth <= 0) continue;
-                    Burn(h, script.fireSize);
-                    left--;
+                    var j = rnd.Next(i + 1);
+                    (pool[i], pool[j]) = (pool[j], pool[i]);
+                }
+                var n = 0;
+                foreach (var h in pool)
+                {
+                    if (n < script.ruins)
+                    {
+                        var spot = h.transform.position;
+                        Ruin(h);
+                        if (n % 2 == 0) Fire(new Vector3(spot.x, GroundAt(spot) + 0.3f, spot.z), Mathf.Max(0.3f, script.fireSize * 0.7f));
+                    }
+                    else if (n < script.ruins + script.fires) Burn(h, script.fireSize);
+                    else break;
+                    n++;
                 }
             }
             at.y = GroundAt(at);

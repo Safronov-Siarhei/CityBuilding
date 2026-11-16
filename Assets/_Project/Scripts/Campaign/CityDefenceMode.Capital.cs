@@ -49,7 +49,7 @@ namespace CityBuilder.Campaign
             public float end, fadeIn, fade, subFadeIn, subFadeOut, musicVolume = 0.5f, musicFadeOut,
                 music2At = -1f, musicCross = 1f,     // the throne room's music from music2At, the streets' fading out before it
                 hornAt = -1f, fireSize = 1f;         // the last scene: the King's horn; the burning houses' flames
-            public int subSize, fires;               // the last scene: how many more houses burn besides the razed one
+            public int subSize, fires, ruins;        // the last scene: more houses burning besides the razed one, houses in ruins
         }
 
         /// <summary>A set and where it stands (Unity, far from the town) -- or, for the last scene, a spot in the
