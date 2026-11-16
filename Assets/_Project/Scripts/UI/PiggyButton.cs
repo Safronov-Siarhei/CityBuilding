@@ -50,7 +50,7 @@ namespace CityBuilder.UI
             _shine = PiggyUi.Pic(transform, PiggyUi.Art + "Shine", At(100f, 95f), new Vector2(170f, 170f));
             for (var i = 0; i < 4; i++)
             {
-                var g = PiggyUi.PicH(transform, PiggyUi.Art + "Gem", At(Gems[i, 0], Gems[i, 1]), Gems[i, 2]);
+                var g = PiggyUi.PicH(transform, PiggyUi.Crystal, At(Gems[i, 0], Gems[i, 1]), Gems[i, 2] * 1.25f);
                 _gems[i] = g.rectTransform;
             }
             _pigImage = PiggyUi.Pic(transform, PiggyUi.Art + "Pig1", Vector2.zero, Vector2.one);

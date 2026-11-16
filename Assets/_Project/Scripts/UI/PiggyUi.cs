@@ -11,6 +11,9 @@ namespace CityBuilder.UI
         public const string Art = "Shop/Piggy/";
         public const string ShopArt = "Shop/MenuShop/";
 
+        /// <summary>The game's crystal (the wallet's, the shop's) -- the user 2026-11-16: not the pig's pink gem render.</summary>
+        public const string Crystal = ShopArt + "Crystal";
+
         public static readonly Color Ink = new Color(0.29f, 0.17f, 0.086f);
         public static readonly Color Dark = new Color(0.23f, 0.12f, 0.055f);
         public static readonly Color Cream = new Color(1f, 0.957f, 0.863f);
@@ -86,13 +89,29 @@ namespace CityBuilder.UI
         public static RectTransform FullPill(Transform parent, Vector2 at, int fontSize)
         {
             var text = Localization.Get("#piggy_full");
-            var pill = Pic(parent, Art + "Pill", at, Vector2.one);
-            pill.color = Red;
-            pill.type = Image.Type.Simple;
-            var label = Stroke(Label(pill.transform, text, fontSize, Cream, Vector2.zero, new Vector2(300f, fontSize * 1.5f)), 2f, RedInk);
-            pill.rectTransform.sizeDelta = new Vector2(label.preferredWidth + fontSize * 1.1f, fontSize * 1.6f);
-            pill.gameObject.AddComponent<Outline>().effectColor = RedInk;
-            return pill.rectTransform;
+            var root = new GameObject("FullPill", typeof(RectTransform)).GetComponent<RectTransform>();
+            root.SetParent(parent, false);
+            root.anchoredPosition = at;
+            var probe = Label(root, text, fontSize, Cream, Vector2.zero, new Vector2(300f, fontSize * 1.5f));
+            var size = new Vector2(probe.preferredWidth + fontSize * 1.1f, fontSize * 1.6f);
+            Object.DestroyImmediate(probe.gameObject);
+            root.sizeDelta = size;
+            Capsule(root, size + new Vector2(6f, 6f), RedInk);
+            Capsule(root, size, Red);
+            Stroke(Label(root, text, fontSize, Cream, Vector2.zero, new Vector2(300f, fontSize * 1.5f)), 2f, RedInk);
+            return root;
+        }
+
+        /// <summary>A capsule of `size` centred on its parent: two round ends and a box, so its ends stay round at any width.</summary>
+        public static void Capsule(Transform parent, Vector2 size, Color colour)
+        {
+            var h = size.y;
+            var mid = Pic(parent, ShopArt + "White", Vector2.zero, new Vector2(Mathf.Max(0f, size.x - h), h));
+            mid.color = colour;
+            var left = Pic(parent, Art + "Dot", new Vector2(-(size.x - h) / 2f, 0f), new Vector2(h, h) * 1.03f);
+            left.color = colour;
+            var right = Pic(parent, Art + "Dot", new Vector2((size.x - h) / 2f, 0f), new Vector2(h, h) * 1.03f);
+            right.color = colour;
         }
 
         /// <summary>Two-wave drift of a floating crystal (the approved button: no two crystals move alike).</summary>
