@@ -38,7 +38,8 @@ SQUARE_X = 16                    # the castle square opens from here to the terr
 PLINTH, DOOR_IN = 0.22, 1.37    # the castle model's plinth height and its door's depth from the front (its units)
 TERRACE_HALF = 2.45 * CASTLE_K + 0.45
 STAIR_HALF_W = 1.4
-fg.plain('grass', 'grass_dark', 'stone_light', 'stone_mid', 'stone_dark', 'water', 'gold', 'banner_red', 'wood_dark')
+fg.plain('grass', 'grass_dark', 'stone_light', 'stone_mid', 'stone_dark', 'water', 'gold', 'banner_red', 'wood_dark',
+         'hay', 'roof_straw', 'roof_straw_dark', 'leaf', 'wood_mid')
 
 # (model, x middle, its half depth) along each side of the street; the south side is turned to face it
 NORTH = [("Cottage1-lvl5", 2.6, 1.0), ("Tavern1-lvl5", 4.8, 0.5), ("Manor1-lvl5", 7.4, 1.5),
@@ -144,9 +145,89 @@ def bridge_steps(b):
                     (0, 0, 1), 0.08, 'stone_mid', back_cap=True)
 
 
+# the country round the town (the user, 2026-11-16: «мне не нравится пустота вокруг города ... поставь поля и стоги
+# сена»): (x0, x1, y0, y1, kind, rows along x?) in cells. Kinds: wheat (ripe, standing), green (vegetables), plough
+# (furrows), stubble (mown, the haystacks on it). Cheap on purpose -- rows are plain boxes, a phone draws the set.
+FIELDS = [
+    (-30, -20, 2.5, 9, 'wheat', True), (-18.5, -4.3, 2.3, 8.5, 'green', True), (-30, -18, 10, 18, 'stubble', False),
+    (-16, -4.3, 10, 20, 'plough', False), (-30, -21, -2.5, -9, 'wheat', True), (-19, -4.3, -2.3, -8.5, 'wheat', True),
+    (-30, -14, -11, -20, 'green', False), (-12, -4.3, -13, -22, 'stubble', False), (-30, -8, 21, 30, 'wheat', True),
+    (-28, -8, -23, -31, 'plough', True), (-12, -4.3, -9.5, -12, 'green', True),
+    (-2, 10, 18.5, 26, 'wheat', True), (11.5, 22, 18.5, 26, 'plough', True), (23.5, 36, 18.5, 26, 'green', True),
+    (-2, 12, -18.5, -26, 'stubble', True), (13.5, 25, -18.5, -26, 'wheat', True), (26.5, 36, -18.5, -26, 'green', True),
+    (2, 20, 27.5, 36, 'stubble', True), (22, 40, 27.5, 36, 'wheat', True), (2, 22, -27.5, -36, 'green', True),
+    (37, 47, 1.5, 13, 'wheat', False), (37, 47, -1.5, -13, 'plough', False), (48.5, 60, -13, 13, 'green', False),
+    (37, 60, 14.5, 26, 'stubble', True), (37, 60, -14.5, -26, 'wheat', True),
+]
+HAY_ON = (2, 7, 14, 17, 23)         # the stubble fields' haystacks: 2-5 stacks each
+FENCED = (0, 1, 4, 5, 11, 14)
+ROW_GAP = 0.28                 # rows' spacing (cells)
+NEAR = {1: -10.0, 5: -10.0}         # fields the first shots look down on: ears / heads on their rows east of this x              # fields with a rail fence on their road / moat side
+
+
+def haystack(b, x, y, k):
+    """farm_props.haystack (approved for the opening film) laid at (x, y) in cells, k times its size."""
+    b.box(x - 0.012 * k, x + 0.012 * k, y - 0.012 * k, y + 0.012 * k, 0, 0.62 * k, 'wood_mid')
+    b.blob(x, y, 0.0, 0.3 * k, 0.42 * k, 'hay', sides=10)
+    b.blob(x, y, 0.12 * k, 0.25 * k, 0.4 * k, 'roof_straw', sides=10)
+    b.blob(x, y, 0.3 * k, 0.14 * k, 0.26 * k, 'hay', sides=8)
+    b.cylinder(x, y, 0.47 * k, 0.5 * k, 0.035 * k, 'roof_straw_dark', sides=6)
+
+
+def near_row(b, rnd, kind, xa, xb, y, w, h):
+    """Close to the camera a row is more than a box: ears standing out of the wheat, heads along a vegetable row."""
+    x = xa
+    while x < xb:
+        if kind == 'wheat':
+            lean = rnd.uniform(-0.05, 0.05)
+            top = h + rnd.uniform(0.01, 0.035)
+            b.obox((x, y + rnd.uniform(-w, w) * 0.45, top), (1, 0, 0), (0, 1, 0), (lean, rnd.uniform(-0.05, 0.05), 1),
+                   0.008, 0.008, 0.02, 'hay' if rnd.random() < 0.4 else 'roof_straw')
+            x += rnd.uniform(0.07, 0.12)
+        else:
+            b.blob(x, y + rnd.uniform(-0.02, 0.02), 0.0, rnd.uniform(0.05, 0.065), rnd.uniform(0.05, 0.07), 'leaf', sides=5)
+            x += rnd.uniform(0.17, 0.22)
+
+
+def fields(b):
+    import random
+    rnd = random.Random(16)
+    look = {'wheat': ('roof_straw_dark', 'roof_straw', 0.08, 0.18), 'green': ('wood_dark', 'leaf', 0.035, 0.13),
+            'plough': ('wood_dark', 'wood_mid', 0.025, 0.15), 'stubble': ('hay', 'roof_straw_dark', 0.012, 0.1)}
+    gap = ROW_GAP
+    for n, (x0, x1, y0, y1, kind, along_x) in enumerate(FIELDS):
+        x0, x1 = sorted((x0, x1))
+        y0, y1 = sorted((y0, y1))
+        base, row, h, w = look[kind]
+        b.box(x0, x1, y0, y1, -0.02, 0.012, base)
+        if along_x:
+            y = y0 + 0.25
+            while y < y1 - 0.15:
+                b.box(x0 + 0.15, x1 - 0.15, y - w / 2, y + w / 2, 0.0, h, row)
+                if n in NEAR:
+                    near_row(b, rnd, kind, max(x0 + 0.2, NEAR[n]), x1 - 0.2, y, w, h)
+                y += gap
+        else:
+            x = x0 + 0.25
+            while x < x1 - 0.15:
+                b.box(x - w / 2, x + w / 2, y0 + 0.15, y1 - 0.15, 0.0, h, row)
+                x += gap
+        if n in HAY_ON:
+            for _ in range(rnd.randint(2, 5)):
+                haystack(b, rnd.uniform(x0 + 1, x1 - 1), rnd.uniform(y0 + 1, y1 - 1), rnd.uniform(1.1, 1.4))
+        if n in FENCED:                                  # posts and two rails along the side nearest the town
+            fy = y1 + 0.2 if abs(y1) < abs(y0) else y0 - 0.2
+            for i in range(int((x1 - x0) / 0.7) + 1):
+                px = x0 + i * 0.7
+                b.box(px - 0.022, px + 0.022, fy - 0.022, fy + 0.022, 0.0, 0.19, 'wood_dark')
+            for z in (0.07, 0.15):
+                b.box(x0, x1, fy - 0.012, fy + 0.012, z, z + 0.025, 'wood_mid')
+
+
 def build():
     b = Builder()
     ground(b)
+    fields(b)
     stairs(b)
     bridge_steps(b)
     return b
@@ -200,9 +281,14 @@ def place():
     # the market: a well; trees on its square and along the walls
     add(_copy("Well1-lvl5", 10.5, 3.4))
     for x, y in ((9.8, -3.4), (15.4, 4.6), (15.4, -4.6), (1.6, 10.0), (1.6, -10.0), (5.0, 10.4), (13.0, -10.4),
-                 (-6.0, 3.0), (-7.5, -3.5), (-11.0, 2.6), (-9.0, 6.5), (-10.0, -7.0), (-14.0, -2.8),
-                 (-17.0, 3.2), (-8.0, 12.0), (-12.0, -11.0), (-20.0, -5.0), (-6.5, -17.5), (6.0, -19.0), (14.0, 20.0)):
+                 (-19.6, 1.4), (-20.5, -10.0), (-33.0, -2.5),
+                 (-33.0, 2.6), (-17.0, 9.6), (-31.5, 20.0), (0.0, 27.0), (36.0, -27.0), (36.0, 14.0)):
         add(_copy(("Tree3", "Tree10", "Tree2")[int(abs(x * 7 + y * 3)) % 3], x, y, (x * 37) % 360, tag=f"tree {x},{y}"))
+    # out in the fields: windmills and a farmstead
+    add(_copy("Windmill1-lvl5", -34.0, 13.0, 30, tag="mill west"))
+    add(_copy("Windmill1-lvl5", 43.0, 31.0, 200, tag="mill east"))
+    add(_copy("Farm1-lvl5", -34.5, -12.0, 90, tag="farm"))
+    add(_copy("Barn1-lvl5", -34.5, -16.5, 90, tag="barn"))
     # the castle on its terrace, its door (-y front) turned to the street; banners at the stairs' foot
     # sunk by its plinth: the plinth's top (its door's sill) is the terrace's floor, its grass plot under the
     # terrace -- the stairs lead straight to the door (the user, 2026-11-16)
@@ -300,6 +386,9 @@ def render(out):
                                 ("capital_bridge", (-2.5 * S, 0, 0.3), (-6.5 * S, -3.6 * S, 2.8), 35),
                                 ("capital_stairs", ((CASTLE_X - 3) * S, 0, 3.0), ((CASTLE_X - 11) * S, -3.2 * S, 1.4), 26),
                                 ("capital_square", ((CASTLE_X - 2) * S, 0, 0.5), ((CASTLE_X - 10) * S, -7 * S, 9.0), 26),
+                                ("capital_shot1", (-3.0, 0, 1.0), (-22.0, -9.0, 3.5), 49),
+                                ("capital_country_w", (-12 * S, 0, 0), (-46 * S, -34 * S, 42), 24),
+                                ("capital_country_e", (24 * S, 4 * S, 0), (58 * S, -40 * S, 48), 24),
                                 ("capital_door", ((CASTLE_X - 2) * S, 0, 1.2), ((CASTLE_X - 6.5) * S, -2.2 * S, 2.6), 30)):
         at, frm = Vector(at), Vector(frm)
         cam.location = frm

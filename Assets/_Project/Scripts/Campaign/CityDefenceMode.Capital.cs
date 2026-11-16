@@ -32,7 +32,8 @@ namespace CityBuilder.Campaign
         [SerializeField] private CineClips[] capitalClips = new CineClips[0];      // their clips, in the same order
         [SerializeField] private GameObject[] capitalProps = new GameObject[0];    // Models/Cinematic/CapProp*.fbx
         [SerializeField] private GameObject[] capitalSets = new GameObject[0];     // M2CapitalSet, M2ThroneSet
-        [SerializeField] private AudioClip capitalMusic;                          // Audio/Campaign/mus_village.ogg
+        [SerializeField] private AudioClip capitalMusic;                          // Audio/Campaign/mus_gate.ogg (the streets)
+        [SerializeField] private AudioClip capitalMusic2;                         // Audio/Campaign/mus_attack.ogg (the throne room)
 
         /// <summary>Set by the play-mode tests (with SkipIntroOnce): no scene at the turn either.</summary>
         private static bool _skipCapitalOnce;
@@ -45,7 +46,8 @@ namespace CityBuilder.Campaign
             public Use[] uses;
             public CapitalShot[] shots;
             public Line[] lines;
-            public float end, fadeIn, fade, subFadeIn, subFadeOut, musicVolume = 0.5f, musicFadeOut;
+            public float end, fadeIn, fade, subFadeIn, subFadeOut, musicVolume = 0.5f, musicFadeOut,
+                music2At = -1f, musicCross = 1f;     // the throne room's music from music2At, the streets' fading out before it
             public int subSize;
         }
 
@@ -102,7 +104,7 @@ namespace CityBuilder.Campaign
             public Canvas canvas;
             public Text sub;
             public Image black;
-            public AudioSource music;
+            public AudioSource music, music2;
             public float timeScale = 1f;
             public bool darkWas;
 
@@ -247,11 +249,20 @@ namespace CityBuilder.Campaign
             {
                 s.music = s.root.gameObject.AddComponent<AudioSource>();
                 s.music.clip = capitalMusic;
-                s.music.loop = true;
+                s.music.loop = false;      // a 23 s clip looped mid-scene (the user, 2026-11-16): never again
                 s.music.spatialBlend = 0f;
                 s.music.volume = script.musicVolume;
                 s.music.ignoreListenerPause = true;
                 s.music.Play();
+            }
+            if (capitalMusic2 != null && script.music2At >= 0f)
+            {
+                s.music2 = s.root.gameObject.AddComponent<AudioSource>();
+                s.music2.clip = capitalMusic2;
+                s.music2.loop = false;
+                s.music2.spatialBlend = 0f;
+                s.music2.volume = 0f;
+                s.music2.ignoreListenerPause = true;
             }
             BuildCapitalUi(s);
             HideCanvases(s.hidden, s.canvas);
@@ -355,8 +366,18 @@ namespace CityBuilder.Campaign
                 var dark = Mathf.Max(1f - Mathf.Clamp01(t / fadeIn), Mathf.Clamp01((t - (sc.end - fade)) / fade));
                 s.black.color = new Color(0f, 0f, 0f, dark);
             }
-            if (s.music != null && sc.musicFadeOut > 0f)
-                s.music.volume = sc.musicVolume * Mathf.Clamp01((sc.end - t) / sc.musicFadeOut);
+            {
+                var cross = Mathf.Max(0.01f, sc.musicCross);
+                var tail = sc.musicFadeOut > 0f ? Mathf.Clamp01((sc.end - t) / sc.musicFadeOut) : 1f;
+                var two = s.music2 != null;
+                if (s.music != null)
+                    s.music.volume = sc.musicVolume * tail * (two ? Mathf.Clamp01((sc.music2At - t) / cross) : 1f);
+                if (two)
+                {
+                    if (t >= sc.music2At && !s.music2.isPlaying && s.music2.time <= 0f) s.music2.Play();
+                    s.music2.volume = sc.musicVolume * tail * Mathf.Clamp01((t - sc.music2At) / 0.4f);
+                }
+            }
             if (t >= sc.end) EndCapital();
         }
 

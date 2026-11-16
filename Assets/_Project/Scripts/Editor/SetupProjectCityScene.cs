@@ -713,7 +713,10 @@ namespace CityBuilder.EditorTools
             // the second scene, at the capital when the courier gets there (approved 2026-11-15;
             // Tools/blender/cinematic/export_m2capital.py, CityDefenceMode.Capital.cs)
             cityDefenceSO.FindProperty("capitalScript").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Mission2Capital.json");
-            cityDefenceSO.FindProperty("capitalMusic").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_village.ogg");
+            // scene 2's music in two parts, neither looped (the user, 2026-11-16: the 23 s mus_village began again
+            // mid-scene): the streets The Old Tower Inn whole (50 s), the throne room the war theme
+            cityDefenceSO.FindProperty("capitalMusic").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_gate.ogg");
+            cityDefenceSO.FindProperty("capitalMusic2").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_attack.ogg");
             var capitalTakes = new System.Collections.Generic.List<Object>();
             if (System.IO.Directory.Exists("Assets/_Project/Campaign/M2Capital"))
                 foreach (var file in System.IO.Directory.GetFiles("Assets/_Project/Campaign/M2Capital", "*.json"))
