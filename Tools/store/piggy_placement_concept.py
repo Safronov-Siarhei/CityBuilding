@@ -5,7 +5,7 @@ crystals float around it (none stick out of it), under it just the number (no pl
 left, language top centre, piggy top right; menu shop: piggy top right, the crystal balance a plain light number
 + crystal left of it (no plaque behind).
 
-    python Tools/store/piggy_placement_concept.py <folder with the piggy-*.png screen photos> <piggy render png>
+    python Tools/store/piggy_placement_concept.py <folder with the piggy-*.png screen photos> <piggy render png> [render B] [render C]
 
 The photos come from a throwaway PlayMode capture (PlaytestCapture.ShootThrough, 2400 x 1080); the menu shop
 from its approved mockup. Writes Design/store/Piggy_Placement_Concept.png and Design/store/Piggy_Icon_Concept.png.
@@ -47,12 +47,12 @@ def icon(count, full=False):
     p = PIG.crop(PIG.getbbox())
     k = 236 / max(p.width, p.height)
     p = p.resize((round(p.width * k), round(p.height * k)), Image.LANCZOS)
-    im.alpha_composite(p, (130 - p.width // 2, 120 - p.height // 2))
+    im.alpha_composite(p, (130 - p.width // 2, 250 - p.height))     # standing on the number
     d = ImageDraw.Draw(im)
     for x, y, r in ((40, 70, 13), (226, 150, 10), (196, 30, 8)):
         sparkle(d, x, y, r)
     s = '{:,}'.format(count).replace(',', ' ')
-    d.text((130, 262), s, font=font(42), fill=CREAM, anchor='mm', stroke_width=5, stroke_fill=INK)
+    d.text((130, 246), s, font=font(42), fill=CREAM, anchor='mm', stroke_width=5, stroke_fill=INK)   # at the pig's feet
     if full:
         d.rounded_rectangle((150, 4, 256, 50), 22, fill=(220, 50, 40), outline=(90, 14, 10), width=4)
         d.text((203, 26), 'Полна!', font=font(24), fill=(255, 245, 225), anchor='mm', stroke_width=2, stroke_fill=(90, 14, 10))
@@ -92,9 +92,10 @@ def menu_shop():
     shot.alpha_composite(patch, (1530, 18))
     d = ImageDraw.Draw(shot)
     g = gem(50)
-    tx = 1640
-    d.text((tx, 70), '1 250', font=font(50), fill=CREAM, anchor='rm', stroke_width=5, stroke_fill=INK)
-    shot.alpha_composite(g, (tx + 8, 70 - g.height // 2))
+    # the player's crystals: top LEFT (the user, 2026-11-16), a plain light number + crystal
+    d.text((60, 70), '1 250', font=font(50), fill=CREAM, anchor='lm', stroke_width=5, stroke_fill=INK)
+    tw = d.textlength('1 250', font=font(50))
+    shot.alpha_composite(g, (round(60 + tw + 10), 70 - g.height // 2))
     place(shot, (1800, 130), 0.8, 245)
     frame = Image.new('RGBA', (2400, 1080), (20, 16, 12, 255))
     frame.alpha_composite(shot, (240, 0))
@@ -114,7 +115,7 @@ def main():
     screens = [
         ('1. Главное меню: настройки слева, язык по центру, копилка справа', main_menu(src)),
         ('2. Выбор режима: под настройками', photo('piggy-menu-modes.png', (2300, 300))),
-        ('3. Магазин: копилка справа, кристаллы левее без плашки', menu_shop()),
+        ('3. Магазин: копилка справа, кристаллы игрока слева вверху', menu_shop()),
         ('4. Песочница, Лавка: правый верхний угол', photo('piggy-sandbox-shop.png', (2250, 175), 1000, True)),
         ('5. Песочница, окно меню: правый верхний угол', photo('piggy-sandbox-menu.png', (2260, 175))),
         ('6. Кампания, карта: под настройками', photo('piggy-campaign-map.png', (2300, 300))),
@@ -133,7 +134,17 @@ def main():
     for j, (count, full) in enumerate(((245, False), (1000, True), (245, False), (1000, True))):
         b.alpha_composite(icon(count, full), (10 + j * 272, 20))
     b.convert('RGB').save(R + 'Design/store/Piggy_Icon_Concept.png', optimize=True)
-    print('written Piggy_Placement_Concept.png, Piggy_Icon_Concept.png')
+    # the models to choose from (the user, 2026-11-16: «ещё пару моделей, потом я выберу»)
+    names = ['А. Глянцевая', 'Б. Королевская', 'В. Блочная, как герои игры']
+    renders = sys.argv[2:5]
+    m = Image.new('RGBA', (1500, 560), (52, 40, 30, 255))
+    dm = ImageDraw.Draw(m)
+    for j, path in enumerate(renders):
+        PIG = Image.open(path).convert('RGBA')
+        m.alpha_composite(icon(245).resize((390, 435), Image.LANCZOS), (55 + j * 490, 90))
+        dm.text((250 + j * 490, 50), names[j], font=font(34), fill=(250, 236, 200), anchor='mm')
+    m.convert('RGB').save(R + 'Design/store/Piggy_Models_Concept.png', optimize=True)
+    print('written Piggy_Placement_Concept.png, Piggy_Icon_Concept.png, Piggy_Models_Concept.png')
 
 
 if __name__ == '__main__':

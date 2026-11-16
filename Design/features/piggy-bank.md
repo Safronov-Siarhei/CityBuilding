@@ -29,16 +29,30 @@ Prices: proposed, not explicitly confirmed yet.
 ## Where the icon stands (v2 concept after the user's notes 2026-11-16, waiting for approval)
 Top-right corner everywhere, never a card:
 1. Main menu: settings MOVE to the top LEFT, the language picker to the top CENTRE, the piggy top right.
-2. Modes screen: under settings. 3. Menu shop: top right; the crystal balance left of it as a plain LIGHT
-number + crystal icon (the beige plaque behind it goes). 4. Sandbox Лавка: screen top right next to the window.
+2. Modes screen: under settings. 3. Menu shop: top right; the player's crystal balance in the top LEFT corner as a plain
+LIGHT number + crystal icon (the beige plaque behind it goes; the user 2026-11-16). 4. Sandbox Лавка: screen top right next to the window.
 5. Sandbox menu window: top right (not on the bare map). 6. Campaign map: under settings.
 
 ## The icon (v2)
 A RENDER of the 3D piggy (`Tools/blender/store/piggy_bank.py <out> [pink|silver|gold]`, glossy ceramic, coin
 slot, 5 crystals FLOATING around -- none stick out of it; render `Design/store/shop_art/Piggy_render.png`) on a soft
-golden shine with sparkles; under it JUST the number (light, dark outline) -- no plaque (the user rejected the
+golden shine with sparkles; the number AT THE PIG'S FEET (light, dark outline; the user 2026-11-16) -- no plaque (the user rejected the
 flat drawing, crystals in the slot and the plaque). Full: «Полна!» tag + brighter shine.
-Concept `Tools/store/piggy_placement_concept.py <photos> <render>`.
+Three models were shown (А glossy, Б ROYAL, В blocky; `Design/store/Piggy_Models_Concept.png`): the user CHOSE Б ROYAL
+(2026-11-16) -- gold crown with rubies, gold slot rim and hooves.
+Concept `Tools/store/piggy_placement_concept.py <photos> <render A> [B] [C]`.
+
+## The button (the user, 2026-11-16; concept `Design/store/Piggy_Button_Concept.gif`, waiting for approval)
+- Its area is a SQUARE (~200 px in the 1080 reference), the piggy centred, as wide as the settings button (~130).
+- Crystals float round it and BOB (each its own pace, a little sway) -- in the game they are separate sprites
+  (`piggy_bank.py ... gem` renders one crystal), the pig a render without crystals (`*_alone.png`).
+- The number at the pig's feet. FULL: «Полна!» tag right by the head, the number GOLD and glowing (pulse), the
+  pig SHAKES a little (0.45 s every 1.4 s), the shine brighter.
+- Script `Tools/store/piggy_button_concept.py <renders> <modes photo>`.
+
+## Levels (proposed 2026-11-16, `Design/store/Piggy_Levels_Concept.png`, waiting for approval)
+Same royal pig, the material changes: 1 pink ceramic (300), 2 bronze (500), 3 silver (1000), 4 gold (1500),
+5 amethyst -- glowing purple crystal (3000). `piggy_bank.py <out> <pink|bronze|silver|gold|amethyst> royal`.
 
 ## Traps
 - The menu shop does not render in a batchmode capture (its blur/ScreenCapture) -- the concept used its mockup.

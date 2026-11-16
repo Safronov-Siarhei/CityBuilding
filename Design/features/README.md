@@ -67,7 +67,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | [hud-and-ui](hud-and-ui.md) | HUD layout, skins/looks, event feed, panels, main menu (modes, live scene), settings | интерфейс, HUD, лента событий, главное меню, экран режимов, знамёна |
 | [save-load](save-load.md) | save format, autosave, restore order | сохранение, автосейв |
 | [monetization](monetization.md) | direction decided; paid Crystal Mine BUILT (lvl 1-2 models approved, 3-5 shown); sandbox offer shop BUILT: 4 offers (2 goods, crystals for an ad, crystals for money -- a stand-in), bundles sheet by family x 5 levels, bonus % badge; ideas: paid looks | монетизация, реклама, покупки |
-| [piggy-bank](piggy-bank.md) | «Копилка»: rules decided 2026-11-15 (5 levels 300..3000, +50 % when full, 1/min + daily tasks, from 150, no reset); icon placement concept sent; NOT BUILT | копилка, свинка, задания дня |
+| [piggy-bank](piggy-bank.md) | «Копилка»: rules decided 2026-11-15 (5 levels 300..3000, +50 % when full, 1/min + daily tasks, from 150, no reset); ROYAL piggy chosen, square button + levels concepts sent 2026-11-16; NOT BUILT | копилка, свинка, задания дня |
 | [ideas](ideas.md) | the user's PARKED ideas (PvP raids, lane mode, whirlpool, water tower, roulette…) — not to be built until asked | идеи, PvP, тракт, водоворот, водная башня, рулетка |
 | [store-listing](store-listing.md) | Google Play icon candidates (orc over the wall, builder king), Tools/store/make_icons.py; the rate-us window concept (king + orc over a blurred town) | иконка, гугл плей, стор, листинг, оценка, отзыв, окно оценки |
 | **Pipelines** | | |
