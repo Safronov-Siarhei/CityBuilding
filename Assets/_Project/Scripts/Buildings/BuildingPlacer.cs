@@ -1108,6 +1108,9 @@ namespace CityBuilder.Buildings
             }
 
             var placedData = _selectedBuilding;
+            // the piggy bank's tasks: a road piece at once; a building once it stands (now, or when its scaffolding comes down)
+            if (placedData.isRoad) Core.PiggyTasks.Report(Core.PiggyTasks.Road);
+            else if (buildingInstance.Site == null) Core.PiggyTasks.Built(placedData);
 
             // Roads excluded -- laying a dozen tiles in a row would otherwise flood the log out
             // of usefulness (see EventLogManager).

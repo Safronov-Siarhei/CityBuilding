@@ -8862,6 +8862,21 @@ MonoBehaviour:
   menuShopExitOfferHours: 24
   menuShopExitFreeVisits: 1
   supportBannerFromLevel: 2
+  piggyCap: 2c010000f4010000e8030000dc050000b80b0000
+  piggyUsd:
+  - 0.99
+  - 1.69
+  - 2.79
+  - 4.19
+  - 6.49
+  piggyRefPack: 0100000001000000020000000200000003000000
+  piggyBreakMin: 150
+  piggyMinuteCrystals: 1
+  piggyMinuteSeconds: 60
+  piggyIdleSeconds: 120
+  piggyTasksResetHours: 8
+  piggyTasksPerSlot: 3
+  piggyFullBannerHours: 4
   menuShopExitMineChance: 0.5
   menuShopPackSaleUsd:
   - 0.89
@@ -10129,6 +10144,247 @@ MonoBehaviour:
     rams: 000000000000000000000000
     towers: 000000000000000000000000
     pause: 3
+  piggyTasks:
+  - id: invasion_run
+    kind: invasion_run
+    difficulty: medium
+    mode: invasion
+    target: 1
+    reward: 20
+  - id: invasion_wave_6
+    kind: invasion_wave
+    difficulty: hard
+    mode: invasion
+    target: 6
+    reward: 25
+  - id: orcs_100
+    kind: orc_kill
+    difficulty: medium
+    mode: any
+    target: 100
+    reward: 20
+  - id: orc_building_1
+    kind: orc_building
+    difficulty: medium
+    mode: sandbox
+    target: 1
+    reward: 20
+  - id: build_5
+    kind: build
+    difficulty: easy
+    mode: sandbox
+    target: 5
+    reward: 15
+  - id: upgrade_1
+    kind: upgrade
+    difficulty: easy
+    mode: sandbox
+    target: 1
+    reward: 15
+  - id: wood_500
+    kind: wood
+    difficulty: easy
+    mode: sandbox
+    target: 500
+    reward: 15
+  - id: hire_10
+    kind: hire
+    difficulty: easy
+    mode: sandbox
+    target: 10
+    reward: 15
+  - id: campaign_level
+    kind: campaign_win
+    difficulty: hard
+    mode: campaign
+    target: 1
+    reward: 25
+  - id: dungeon_crystals_3
+    kind: dungeon_crystal
+    difficulty: hard
+    mode: dungeon
+    target: 3
+    reward: 25
+  - id: stone_300
+    kind: stone
+    difficulty: easy
+    mode: sandbox
+    target: 300
+    reward: 15
+  - id: food_200
+    kind: food
+    difficulty: easy
+    mode: sandbox
+    target: 200
+    reward: 15
+  - id: repair_3
+    kind: repair
+    difficulty: easy
+    mode: sandbox
+    target: 3
+    reward: 15
+  - id: citizens_10
+    kind: citizen
+    difficulty: easy
+    mode: sandbox
+    target: 10
+    reward: 15
+  - id: research_1
+    kind: research
+    difficulty: medium
+    mode: sandbox
+    target: 1
+    reward: 20
+  - id: raids_2
+    kind: raid
+    difficulty: medium
+    mode: sandbox
+    target: 2
+    reward: 20
+  - id: islands_2
+    kind: island
+    difficulty: medium
+    mode: archipelago
+    target: 2
+    reward: 20
+  - id: hero_levels_3
+    kind: hero_level
+    difficulty: medium
+    mode: any
+    target: 3
+    reward: 20
+  - id: prisoners
+    kind: cage
+    difficulty: hard
+    mode: sandbox
+    target: 1
+    reward: 25
+  - id: dungeon_boss
+    kind: dungeon_boss
+    difficulty: hard
+    mode: dungeon
+    target: 1
+    reward: 25
+  - id: coins_1000
+    kind: coins
+    difficulty: easy
+    mode: sandbox
+    target: 1000
+    reward: 15
+  - id: decor_3
+    kind: decor
+    difficulty: easy
+    mode: sandbox
+    target: 3
+    reward: 15
+  - id: sandbox_15min
+    kind: sandbox_minute
+    difficulty: easy
+    mode: sandbox
+    target: 15
+    reward: 15
+  - id: level_3
+    kind: building_level
+    difficulty: medium
+    mode: sandbox
+    target: 3
+    reward: 20
+  - id: ship
+    kind: ship
+    difficulty: medium
+    mode: archipelago
+    target: 1
+    reward: 20
+  - id: king_10
+    kind: king_kill
+    difficulty: medium
+    mode: invasion
+    target: 10
+    reward: 20
+  - id: chests_2
+    kind: dungeon_chest
+    difficulty: medium
+    mode: dungeon
+    target: 2
+    reward: 20
+  - id: orc_camp
+    kind: orc_camp
+    difficulty: hard
+    mode: sandbox
+    target: 1
+    reward: 25
+  - id: orcs_300
+    kind: orc_kill
+    difficulty: hard
+    mode: any
+    target: 300
+    reward: 25
+  - id: campaign_record
+    kind: campaign_record
+    difficulty: hard
+    mode: campaign
+    target: 1
+    reward: 25
+  - id: potion
+    kind: dungeon_potion
+    difficulty: easy
+    mode: dungeon
+    target: 1
+    reward: 15
+  - id: roads_20
+    kind: road
+    difficulty: easy
+    mode: sandbox
+    target: 20
+    reward: 15
+  - id: upgrade_5
+    kind: upgrade
+    difficulty: medium
+    mode: sandbox
+    target: 5
+    reward: 20
+  - id: bars_20
+    kind: bar
+    difficulty: medium
+    mode: sandbox
+    target: 20
+    reward: 20
+  - id: machine
+    kind: machine
+    difficulty: medium
+    mode: sandbox
+    target: 1
+    reward: 20
+  - id: squad_20
+    kind: squad
+    difficulty: medium
+    mode: sandbox
+    target: 20
+    reward: 20
+  - id: monsters_50
+    kind: dungeon_monster
+    difficulty: medium
+    mode: dungeon
+    target: 50
+    reward: 20
+  - id: dungeon_deeper
+    kind: dungeon_deeper
+    difficulty: medium
+    mode: dungeon
+    target: 1
+    reward: 20
+  - id: invasion_wave_11
+    kind: invasion_wave
+    difficulty: hard
+    mode: invasion
+    target: 11
+    reward: 25
+  - id: orc_buildings_3
+    kind: orc_building
+    difficulty: hard
+    mode: sandbox
+    target: 3
+    reward: 25
   boosters:
   - id: lumberjack
     nameKey: '#booster_lumberjack'

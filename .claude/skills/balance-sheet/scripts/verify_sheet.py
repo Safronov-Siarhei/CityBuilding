@@ -54,6 +54,8 @@ TABS = {
     # the bot's raid waves at war (2026-11-04): a row per unit type in a wave
     "botwaves": {"key": ["wave", "unit"]},
     "m2waves": {"key": ["part", "wave"]},
+    # the piggy bank's tasks (2026-11-16): a row per task
+    "piggytasks": {"key": ["id"]},
     # every number of the tutorial (2026-11-05): key/value like economy
     "tutorial": {"key": ["key"]},
 }

@@ -43,7 +43,7 @@ def tinted(gem, hue):
     return out
 
 
-def crystal_field(w, h):
+def crystal_field(w, h, near=True):
     """Royal purple, golden rays from the top centre, crystals far (small, blurred) to near (big), confetti."""
     img = Image.new('RGBA', (w, h), 0)
     d = ImageDraw.Draw(img)
@@ -56,7 +56,8 @@ def crystal_field(w, h):
     hues = [(255, 120, 230), (130, 200, 255), (190, 140, 255), (120, 255, 220), (255, 210, 120)]
     gems = [gem] + [tinted(gem, c) for c in hues]
     rnd = random.Random(21)
-    for count, (s0, s1), dim, blur in ((80, (26, 56), 0.45, 3), (36, (64, 110), 0.7, 1.2), (12, (130, 190), 1.0, 0)):
+    depths = ((80, (26, 56), 0.45, 3), (36, (64, 110), 0.7, 1.2), (12, (130, 190), 1.0, 0))
+    for count, (s0, s1), dim, blur in (depths if near else depths[:2]):   # near=False: no big front crystals (piggy window)
         depth = Image.new('RGBA', (w, h), 0)
         for _ in range(count):
             size = rnd.randint(s0, s1)
@@ -94,7 +95,7 @@ def crystal_field(w, h):
     return img
 
 
-def frame():
+def frame(near=True):
     win = layer()
     sh = layer()
     ImageDraw.Draw(sh).rounded_rectangle((X0 + 8, Y0 + 24, X1 + 8, Y1 + 24), 60, fill=(0, 0, 0, 170))
@@ -104,7 +105,7 @@ def frame():
     d.rounded_rectangle((X0 + 14, Y0 + 14, X1 - 14, Y1 - 14), 50, fill=(126, 77, 37))
     for y in range(Y0 + 30, Y1 - 20, 26):
         d.line((X0 + 26, y, X1 - 26, y + 3), fill=(113, 68, 32), width=2)
-    field = crystal_field(IX1 - IX0, IY1 - IY0)
+    field = crystal_field(IX1 - IX0, IY1 - IY0, near)
     mask = Image.new('L', field.size, 0)
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, field.width - 1, field.height - 1), 36, fill=255)
     win.paste(field, (IX0, IY0), mask)

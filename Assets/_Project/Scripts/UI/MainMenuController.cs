@@ -80,8 +80,12 @@ namespace CityBuilder.UI
                 _screen = Screen.Modes;
             }
             if (tutorialReward != null) tutorialReward.text = "+" + BalanceConfig.Instance.TutorialRewardCrystals;
+            // the piggy bank: top right of the main screen, under the settings on the modes screen
+            if (mainScreen != null) PiggyButton.Create(mainScreen.transform, new Vector2(1f, 1f), new Vector2(-20f, -20f));
+            if (modesScreen != null) PiggyButton.Create(modesScreen.transform, new Vector2(1f, 1f), new Vector2(0f, -180f));
             RefreshBadges();
             Snap();
+            PiggyWindow.OfferInMenu();
         }
 
         private void Update()
@@ -114,6 +118,7 @@ namespace CityBuilder.UI
         /// <summary>One step back: a dialog, then the settings, then the screens; on the main screen, the question whether to quit.</summary>
         public void Back()
         {
+            if (PiggyWindow.IsOpen) { PiggyWindow.BackCurrent(); return; }
             if (MenuShopWindow.IsOpen) { MenuShopWindow.BackCurrent(); return; }
             foreach (var dialog in new[] { savesDialog, infoDialog, exitDialog })
             {

@@ -81,7 +81,7 @@ namespace CityBuilder.EditorTools
                 format = TextureImporterFormat.ASTC_4x4,
                 // the rate-us window shows its art at half size: half the texture is enough
                 // (the campaign's support banner is drawn at full size: its window keeps 2048)
-                maxTextureSize = assetPath.StartsWith(RateUsFolder + "/") || (assetPath.StartsWith(ShopFolder + "/") && !assetPath.Contains("/Support/")) || assetPath.StartsWith(DailyBonusFolder + "/") || assetPath.StartsWith(PlagueFolder + "/") || assetPath.StartsWith(FireFolder + "/") ? 1024 : 2048,
+                maxTextureSize = assetPath.StartsWith(RateUsFolder + "/") || (assetPath.StartsWith(ShopFolder + "/") && !assetPath.Contains("/Support/") && !assetPath.Contains("/Piggy/")) || assetPath.StartsWith(DailyBonusFolder + "/") || assetPath.StartsWith(PlagueFolder + "/") || assetPath.StartsWith(FireFolder + "/") ? 1024 : 2048,
                 compressionQuality = 100,
             });
 

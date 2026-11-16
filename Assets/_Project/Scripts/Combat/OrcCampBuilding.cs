@@ -255,6 +255,9 @@ namespace CityBuilder.Combat
             if (announce && Kind == OrcCampBuildingKind.Cage) ReleasePrisoners();
             // the same for the treasury: one a save puts back broken was paid out back then
             if (announce && Kind == OrcCampBuildingKind.Treasury) PayOutTreasury();
+            // the piggy bank's tasks: an orc building the player broke (not a stretch of wall), a cage opened
+            if (announce && !IsWall) Core.PiggyTasks.Report(Core.PiggyTasks.OrcBuilding);
+            if (announce && Kind == OrcCampBuildingKind.Cage) Core.PiggyTasks.Report(Core.PiggyTasks.Cage);
             // falling down, as the player's buildings do (the user, 2026-11-06) -- not one a save puts back broken
             if (announce)
             {

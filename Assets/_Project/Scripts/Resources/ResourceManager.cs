@@ -171,6 +171,7 @@ namespace CityBuilder.Resources
 
             _resources[type] = updated;
             OnResourceChanged?.Invoke(type, updated);
+            if (stored > 0 && type == ResourceType.Coins) Core.PiggyTasks.Report(Core.PiggyTasks.Coins, stored);
             return stored;
         }
 
@@ -199,7 +200,22 @@ namespace CityBuilder.Resources
         {
             var stored = Add(type, amount);
             if (stored > 0) LifetimeProduced += stored;
+            if (stored > 0) ReportProduced(type, stored);
             return stored;
+        }
+
+        /// <summary>The piggy bank's tasks that count what the town made: wood, stone, food, bars.</summary>
+        private static void ReportProduced(ResourceType type, int stored)
+        {
+            switch (type)
+            {
+                case ResourceType.Wood: Core.PiggyTasks.Report(Core.PiggyTasks.Wood, stored); break;
+                case ResourceType.Stone: Core.PiggyTasks.Report(Core.PiggyTasks.Stone, stored); break;
+                case ResourceType.Food: Core.PiggyTasks.Report(Core.PiggyTasks.Food, stored); break;
+                case ResourceType.IronBar:
+                case ResourceType.CopperBar:
+                case ResourceType.GoldBar: Core.PiggyTasks.Report(Core.PiggyTasks.Bar, stored); break;
+            }
         }
 
         /// <summary>Puts the lifetime tally back from a save. Without it every reload knocked the player's progression to zero and the next raid arrived as though they had just founded the place -- which would make saving and loading a way to call the war off.</summary>

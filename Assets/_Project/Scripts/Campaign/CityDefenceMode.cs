@@ -758,6 +758,7 @@ namespace CityBuilder.Campaign
                 if (orc != null) orc.TakeDamage(orc.CurrentHealth * 10 + 1);
             PlayerPrefs.DeleteKey(Part2Key);
             CampaignProgress.MarkDone(LevelId);
+            Core.PiggyTasks.Report(Core.PiggyTasks.CampaignWin);
             StopMusic();
             Ended?.Invoke(true);
         }

@@ -686,6 +686,7 @@ namespace CityBuilder.Combat
             if (camp == null || camp.Cleared) return;
             var level = Mathf.Max(1, camp.Level);
             camp.MarkCleared();
+            Core.PiggyTasks.Report(Core.PiggyTasks.OrcCampKind);
 
             var balance = BalanceConfig.Instance;
             var coins = balance.OrcCampLootCoins * level;

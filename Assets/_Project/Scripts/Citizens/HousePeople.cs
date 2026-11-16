@@ -250,6 +250,7 @@ namespace CityBuilder.Citizens
             house.Timer = 0f;
             house.Citizens++;
             CitizenManager.Instance?.AddCitizens(1);
+            Core.PiggyTasks.Report(Core.PiggyTasks.Citizen);
         }
 
         /// <summary>

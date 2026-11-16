@@ -98,6 +98,7 @@ namespace CityBuilder.Invasion
                 foreach (var run in day.runs) best = Math.Max(best, run);
             InvasionRecords.Record(Total, DateTime.Now, BalanceConfig.Instance.InvasionRunsCountedPerDay);
             if (Total > best) UI.RateUsDirector.Note("invasion_record", menu: true);
+            Core.PiggyTasks.Report(Core.PiggyTasks.InvasionRun);
         }
     }
 }

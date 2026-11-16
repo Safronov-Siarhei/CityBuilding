@@ -48,7 +48,11 @@ namespace CityBuilder.UI
             LayEntries();
             ShowMapCode();
             ShowMenu();
+            // the piggy bank, top right of the open menu (made once)
+            if (_piggy == null && menuRoot != null) _piggy = PiggyButton.Create(menuRoot.transform, new Vector2(1f, 1f), new Vector2(-20f, -20f), 180f);
         }
+
+        private PiggyButton _piggy;
 
         private float _firstEntryY = float.NaN;
 

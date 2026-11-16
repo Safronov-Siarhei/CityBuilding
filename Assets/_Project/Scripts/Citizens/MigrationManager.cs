@@ -195,7 +195,11 @@ namespace CityBuilder.Citizens
             if (_timer >= interval)
             {
                 _timer = 0f;
-                if (arriving) citizenManager.AddCitizens(1);
+                if (arriving)
+                {
+                    citizenManager.AddCitizens(1);
+                    Core.PiggyTasks.Report(Core.PiggyTasks.Citizen);
+                }
                 else citizenManager.RemoveCitizens(1);
             }
 
