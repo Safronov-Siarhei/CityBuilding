@@ -29,7 +29,8 @@ the prices, 40 tasks reset every 8 h. Earlier history: rules DISCUSSED 2026-11-1
   `Tools/store/piggy_art.py <renders>` -> `Resources/Shop/Piggy/` (shards.json is FLAT: 6 numbers a shard).
 - Buttons: main menu top right (settings moved top LEFT, language picker top CENTRE), modes screen under the settings,
   campaign map under the settings, main-menu shop top right (its balance plaque moved top left), the sandbox's game
-  menu top right. NOT in the Лавка (no free corner: its close seal is top right) -- open.
+  menu top right, the Лавка top right of the screen beside its frame (OfferShopWindow.Awake; the user 2026-11-16 showed
+  the free corner on a game screenshot -- the frame is smaller in the game than in the mock-up).
 - Sheet: tab «Копилка: задания» (gid 2000068, `piggytasks.csv`), keys piggy_* in «Наборы: настройки», texts #piggy_*
   in «Тексты: лавка»; task names become `#piggy_task_<id>`. Cheats: Экономика tab (level, fill, window, redraw, finish).
 - Test: `Tests/EditMode/PiggyBankTests.cs` (capacity, break, gain ~+50 % full / none below 2/3, tasks credit).

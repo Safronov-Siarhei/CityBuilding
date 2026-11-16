@@ -158,6 +158,8 @@ namespace CityBuilder.Shop
 
         private void Awake()
         {
+            // the piggy bank in the free top-right corner beside the frame (the user, 2026-11-16, from a game screenshot)
+            UI.PiggyButton.Create(transform, new Vector2(1f, 1f), new Vector2(-20f, -20f), 170f);
             shade.onClick.AddListener(Close);
             close.onClick.AddListener(Close);
             for (var i = 0; i < slots.Length; i++)
