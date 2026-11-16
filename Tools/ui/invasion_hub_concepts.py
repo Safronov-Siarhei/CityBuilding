@@ -467,9 +467,148 @@ def concept_c():
     return img
 
 
+
+# ================================================================== B2: «Зал знамён», the user's answers (2026-11-16)
+# a castle hall behind (arches, pillars, torches, a plank floor, a carpet), the theme as a painting with bigger
+# seals, everything on the PICKED banner only (points, 5 runs, the player's place), the others just their points,
+# the gold «В бой!» button.
+
+def torch(img, x, y):
+    d = ImageDraw.Draw(img)
+    g = layer()
+    ImageDraw.Draw(g).ellipse((x - 170, y - 200, x + 170, y + 140), fill=(255, 170, 70, 120))
+    img = Image.alpha_composite(img, g.filter(ImageFilter.GaussianBlur(50)))
+    d = ImageDraw.Draw(img)
+    d.rectangle((x - 30, y + 40, x + 30, y + 54), fill=(50, 32, 20), outline=INK)     # the bracket
+    d.polygon([(x - 18, y - 6), (x + 18, y - 6), (x + 10, y + 70), (x - 10, y + 70)], fill=(96, 58, 26), outline=INK)
+    d.ellipse((x - 22, y - 20, x + 22, y + 4), fill=(70, 40, 18), outline=INK)
+    d.polygon([(x - 22, y - 8), (x - 8, y - 70), (x + 2, y - 40), (x + 12, y - 84), (x + 22, y - 8)], fill=(255, 140, 30))
+    d.polygon([(x - 12, y - 10), (x - 2, y - 52), (x + 12, y - 10)], fill=(255, 220, 110))
+    return img
+
+
+def hall():
+    img = Image.new('RGBA', (W, H), (60, 48, 40, 255))
+    d = ImageDraw.Draw(img)
+    for row in range(0, 900, 56):                                    # the back wall's courses
+        off = 0 if (row // 56) % 2 else 64
+        for x in range(-off, W, 128):
+            t = ((x * 7 + row * 3) % 23) - 11
+            d.rectangle((x + 3, row + 3, x + 125, row + 53), fill=(98 + t, 84 + t, 72 + t, 255))
+    for cx in (560, 1360):                                           # two tall arched recesses
+        d.rectangle((cx - 190, 260, cx + 190, 900), fill=(34, 26, 24))
+        d.pieslice((cx - 190, 70, cx + 190, 450), 180, 360, fill=(34, 26, 24))
+        for k in range(15):                                          # their voussoirs
+            a = math.pi + k * math.pi / 14
+            x0, y0 = cx + math.cos(a) * 190, 260 + math.sin(a) * 190
+            x1, y1 = cx + math.cos(a) * 236, 260 + math.sin(a) * 236
+            d.line((x0, y0, x1, y1), fill=(130, 114, 98), width=26)
+            d.line((x0, y0, x1, y1), fill=(70, 58, 50), width=2)
+    for px in (120, 960, 1800):                                      # pillars
+        d.rectangle((px - 60, 0, px + 60, 900), fill=(118, 104, 90), outline=(60, 50, 42), width=4)
+        for y in range(40, 900, 112):
+            d.line((px - 60, y, px + 60, y), fill=(84, 72, 62), width=3)
+    d.rectangle((0, 0, W, 34), fill=(52, 32, 18))                    # the ceiling beam
+    # the floor: planks, a red carpet up the middle to the button
+    d.rectangle((0, 900, W, H), fill=(110, 70, 36))
+    for y in range(906, H, 30):
+        d.line((0, y, W, y), fill=(84, 50, 24), width=3)
+    d.polygon([(W / 2 - 230, 900), (W / 2 + 230, 900), (W / 2 + 330, H), (W / 2 - 330, H)], fill=(150, 34, 30))
+    d.line((W / 2 - 230, 900, W / 2 - 330, H), fill=(236, 186, 70), width=6)
+    d.line((W / 2 + 230, 900, W / 2 + 330, H), fill=(236, 186, 70), width=6)
+    d.rectangle((0, 892, W, 904), fill=(70, 56, 46))                  # the skirting
+    shade = Image.new('RGBA', (W, H))
+    sd = ImageDraw.Draw(shade)
+    for i in range(30):                                              # darker corners
+        sd.rectangle((i * 12, i * 8, W - i * 12, H - i * 4), outline=(0, 0, 0, 7), width=14)
+    img = Image.alpha_composite(img, shade.filter(ImageFilter.GaussianBlur(20)))
+    for x in (330, 1590):
+        img = torch(img, x, 300)
+    return img
+
+
+def banner_v2(img, cx, top, w, h, colour, dark, title, points, runs, picked):
+    lay = layer()
+    d = ImageDraw.Draw(lay)
+    tip = 46
+    d.line((cx - w / 2 - 20, top - 30, cx, top - 92), fill=(60, 40, 20), width=5)
+    d.line((cx + w / 2 + 20, top - 30, cx, top - 92), fill=(60, 40, 20), width=5)
+    d.rounded_rectangle((cx - w / 2 - 34, top - 40, cx + w / 2 + 34, top - 10), 14, fill=(110, 66, 30), outline=INK, width=4)
+    body = [(cx - w / 2, top - 14), (cx + w / 2, top - 14), (cx + w / 2, top + h), (cx, top + h + tip), (cx - w / 2, top + h)]
+    d.polygon(body, fill=colour, outline=INK)
+    d.line([(cx - w / 2 + 14, top), (cx + w / 2 - 14, top), (cx + w / 2 - 14, top + h - 6), (cx, top + h + tip - 18),
+            (cx - w / 2 + 14, top + h - 6), (cx - w / 2 + 14, top)], fill=(236, 186, 70), width=4)
+    if picked:
+        g = layer()
+        ImageDraw.Draw(g).polygon([(x + (8 if x > cx else -8 if x < cx else 0), y) for x, y in body], fill=(255, 220, 120, 200))
+        img = Image.alpha_composite(img, g.filter(ImageFilter.GaussianBlur(26)))
+    img = Image.alpha_composite(img, lay)
+    d = ImageDraw.Draw(img)
+    text(d, (cx, top + 34), title, 40, stroke=4, stroke_fill=dark)
+    put(img, tinted(icon('Hud_Trophy', 56), (250, 206, 80)), (cx - 92, top + 100))
+    text(d, (cx + 24, top + 100), points, 50, stroke=5, stroke_fill=dark)
+    if picked:
+        for i, (wave, pts) in enumerate(runs):
+            yy = top + 168 + i * 38
+            d.rounded_rectangle((cx - w / 2 + 30, yy - 16, cx + w / 2 - 30, yy + 16), 12, fill=tuple(int(c * .74) for c in colour))
+            text(d, (cx - w / 2 + 50, yy), str(i + 1), 24, stroke=3, stroke_fill=dark, anchor='lm')
+            text(d, (cx - w / 2 + 84, yy), 'волна ' + wave, 22, stroke=3, stroke_fill=dark, anchor='lm', heavy=False)
+            text(d, (cx + w / 2 - 48, yy), pts, 26, stroke=3, stroke_fill=dark, anchor='rm')
+        yy = top + 168 + 5 * 38 + 18
+        d.rounded_rectangle((cx - w / 2 + 24, yy - 22, cx + w / 2 - 24, yy + 22), 14, fill=(255, 238, 196), outline=(236, 186, 70), width=4)
+        text(d, (cx - w / 2 + 46, yy), 'Ты', 26, fill=(90, 56, 24), stroke=0, anchor='lm')
+        text(d, (cx + w / 2 - 46, yy), 'место — скоро', 22, fill=(150, 104, 40), stroke=0, anchor='rm', heavy=False)
+    else:
+        text(d, (cx, top + 160), 'нажми, чтобы', 22, stroke=3, stroke_fill=dark, heavy=False)
+        text(d, (cx, top + 186), 'открыть', 22, stroke=3, stroke_fill=dark, heavy=False)
+        sh = layer()
+        ImageDraw.Draw(sh).polygon(body, fill=(20, 10, 4, 70))
+        img = Image.alpha_composite(img, sh)
+    return img
+
+
+def concept_b2():
+    img = hall()
+    # the theme: the painting in a gilt frame, its season on a brass plate, bigger seals on a shelf under it
+    pw, ph = 1040, 236
+    px0, py0 = (W - pw) // 2, 140
+    img = shadowed(img, (px0 - 24, py0 - 24, px0 + pw + 24, py0 + ph + 24), 8, 16, 160, (6, 14))
+    d = ImageDraw.Draw(img)
+    d.rectangle((px0 - 24, py0 - 24, px0 + pw + 24, py0 + ph + 24), fill=GOLD_D, outline=INK, width=5)
+    d.rectangle((px0 - 12, py0 - 12, px0 + pw + 12, py0 + ph + 12), fill=GOLD)
+    img.paste(picture(THEMES[PICKED], pw, ph).convert('RGB'), (px0, py0))
+    d = ImageDraw.Draw(img)
+    d.rectangle((px0, py0, px0 + pw, py0 + ph), outline=INK, width=4)
+    d.rounded_rectangle((px0 + 24, py0 + ph - 62, px0 + 214, py0 + ph - 14), 10, fill=(212, 160, 56), outline=INK, width=4)
+    text(d, (px0 + 119, py0 + ph - 38), 'Лето', 32, fill=(70, 40, 10), stroke=0)
+    d.rounded_rectangle((px0 + 60, py0 + ph + 30, px0 + pw - 60, py0 + ph + 52), 8, fill=(96, 58, 26), outline=INK, width=4)
+    for i, th in enumerate(THEMES):
+        seal(img, (W / 2 + (i - 2) * 160, py0 + ph + 52), 52, th, i == PICKED)
+    img = ribbon(img, W / 2, 24, 116, 560, (122, 52, 168), (60, 20, 92), (48, 14, 74), 'Нашествие', 58)
+    # the beam and the banners
+    d = ImageDraw.Draw(img)
+    by = 500
+    d.rounded_rectangle((300, by - 20, W - 300, by + 20), 12, fill=(96, 58, 26), outline=INK, width=5)
+    for x in (318, W - 318):
+        d.ellipse((x - 24, by - 24, x + 24, by + 24), fill=(70, 40, 18), outline=INK, width=4)
+    for i, (title, pts, col, dark) in enumerate((('День', '4 120', (178, 44, 36), (90, 16, 10)),
+                                                 ('Неделя', '10 190', (46, 84, 170), (16, 30, 80)),
+                                                 ('Месяц', '16 250', (54, 120, 60), (16, 50, 20)))):
+        picked = i == 0
+        img = banner_v2(img, W / 2 + (i - 1) * 400, by + 62, 330 if picked else 290, 400 if picked else 210,
+                        col, dark, title, pts, RUNS, picked)
+    big_button(img, (W / 2 - 240, H - 100, W / 2 + 240, H - 18), 'В бой!', (214, 150, 40), (130, 80, 16), 54)
+    img = figure(img, 'King', 560, 185, H + 20)
+    img = figure(img, 'Queen', 540, W - 185, H + 20)
+    chip(img, (W - 330, 70), 250, '350', 'gem')
+    round_button(img, (W - 110, 70), 46, '?')
+    round_button(img, (80, 70), 52, '‹')
+    return img
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
-    for name, fn in (('A', concept_a), ('B', concept_b), ('C', concept_c)):
+    for name, fn in (('A', concept_a), ('B', concept_b), ('C', concept_c), ('B2', concept_b2)):
         fn().convert('RGB').save(OUT + 'InvasionHub_%s.png' % name, optimize=True)
         print('written InvasionHub_%s.png' % name)
 
