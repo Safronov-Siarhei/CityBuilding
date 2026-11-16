@@ -1,9 +1,11 @@
 """
-Piggy bank («Копилка», the user, 2026-11-15): where its corner icon stands on every screen -- a placement concept
-for approval. The icon here is a flat stand-in drawing (the real one will be a render of the approved 3D piggy):
-a pink pig with a shine, the crystals saved on a plaque under it.
+Piggy bank («Копилка», the user, 2026-11-15/16): where its corner icon stands on every screen -- a placement concept
+for approval, v2 after the user's notes: the icon is a RENDER of the 3D piggy (Tools/blender/store/piggy_bank.py),
+crystals float around it (none stick out of it), under it just the number (no plaque); main menu: settings top
+left, language top centre, piggy top right; menu shop: piggy top right, the crystal balance a plain light number
++ crystal left of it (no plaque behind).
 
-    python Tools/store/piggy_placement_concept.py <folder with the piggy-*.png screen photos>
+    python Tools/store/piggy_placement_concept.py <folder with the piggy-*.png screen photos> <piggy render png> [render B] [render C]
 
 The photos come from a throwaway PlayMode capture (PlaytestCapture.ShootThrough, 2400 x 1080); the menu shop
 from its approved mockup. Writes Design/store/Piggy_Placement_Concept.png and Design/store/Piggy_Icon_Concept.png.
@@ -16,123 +18,133 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 R = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) + '/'
 F = R + 'Assets/_Project/Resources/Fonts/'
 GEM = R + 'Assets/_Project/UI/Icons/Res_UpgradeCrystal.png'
-INK = (74, 40, 20)
+CREAM = (255, 244, 220)
+INK = (58, 30, 14)
+PIG = None
 
 
 def font(size, name='Rubik-ExtraBold.ttf'):
     return ImageFont.truetype(F + name, size)
 
 
-def pig(full=False):
-    """The pig drawn at 4x and scaled down to 200 x 200 (smooth edges)."""
-    s = Image.new('RGBA', (800, 800), 0)
-    d = ImageDraw.Draw(s)
-    out = (122, 46, 70)
-    body, light, dark = (247, 158, 182), (255, 196, 212), (222, 120, 150)
-    gl = Image.new('RGBA', s.size, 0)   # a soft golden glow behind (the shine)
-    ImageDraw.Draw(gl).ellipse((60, 90, 740, 740), fill=(255, 220, 120, 150 if full else 90))
-    s.alpha_composite(gl.filter(ImageFilter.GaussianBlur(60)))
-    for x in (230, 330, 470, 570):                                   # legs
-        d.rounded_rectangle((x - 46, 560, x + 46, 700), 30, fill=dark, outline=out, width=18)
-    d.arc((40, 330, 170, 460), 90, 330, fill=out, width=22)        # the tail
-    d.polygon([(430, 262), (470, 175), (520, 258)], fill=dark, outline=out, width=16)          # the far ear
-    d.ellipse((110, 230, 690, 640), fill=body, outline=out, width=20)                # the body
-    d.ellipse((190, 270, 470, 420), fill=light)                                      # its light
-    d.polygon([(500, 268), (560, 180), (600, 300)], fill=body, outline=out, width=16)   # the near ear
-    d.ellipse((470, 262, 610, 330), fill=body)
-    d.ellipse((600, 360, 760, 500), fill=light, outline=out, width=18)               # the snout
-    d.ellipse((645, 405, 672, 450), fill=out)
-    d.ellipse((690, 405, 717, 450), fill=out)
-    d.ellipse((560, 320, 600, 365), fill=(40, 20, 26))                               # the eye
-    d.ellipse((572, 326, 586, 340), fill=(255, 255, 255))
-    d.rounded_rectangle((300, 236, 440, 262), 12, fill=out)                          # the coin slot
-    gem = Image.open(GEM).convert('RGBA')
-    gem = gem.crop(gem.getbbox())
-    gem = gem.resize((round(150 * gem.width / gem.height), 150), Image.LANCZOS).rotate(-12, expand=True, resample=Image.BICUBIC)
-    s.alpha_composite(gem, (370 - gem.width // 2, 110))                              # a crystal in the slot
-    d = ImageDraw.Draw(s)
-    d.rounded_rectangle((300, 236, 440, 262), 12, outline=out, width=6)
-    sh = Image.new('RGBA', s.size, 0)                                                # the gloss streak
-    ImageDraw.Draw(sh).ellipse((220, 300, 300, 330), fill=(255, 255, 255, 170))
-    s.alpha_composite(sh.filter(ImageFilter.GaussianBlur(6)))
-    d = ImageDraw.Draw(s)
-    for x, y, r in ((150, 210, 40), (690, 230, 30), (720, 610, 24)):                 # sparkles
-        d.polygon([(x, y - r), (x + r * .25, y - r * .25), (x + r, y), (x + r * .25, y + r * .25),
-                   (x, y + r), (x - r * .25, y + r * .25), (x - r, y), (x - r * .25, y - r * .25)], fill=(255, 250, 220))
-    return s.resize((200, 200), Image.LANCZOS)
+def gem(h):
+    g = Image.open(GEM).convert('RGBA')
+    g = g.crop(g.getbbox())
+    return g.resize((round(h * g.width / g.height), h), Image.LANCZOS)
+
+
+def sparkle(d, x, y, r, col=(255, 252, 230, 255)):
+    d.polygon([(x, y - r), (x + r * .22, y - r * .22), (x + r, y), (x + r * .22, y + r * .22),
+               (x, y + r), (x - r * .22, y + r * .22), (x - r, y), (x - r * .22, y - r * .22)], fill=col)
 
 
 def icon(count, full=False):
-    """The corner icon: the pig and, under it, a plaque with the crystals saved (220 x 270)."""
-    im = Image.new('RGBA', (240, 280), 0)
-    im.alpha_composite(pig(full), (20, 0))
+    """The corner icon (260 x 290): a soft golden shine, the rendered piggy, sparkles, the number under it."""
+    im = Image.new('RGBA', (260, 290), 0)
+    gl = Image.new('RGBA', im.size, 0)
+    ImageDraw.Draw(gl).ellipse((25, 15, 235, 225), fill=(255, 214, 110, 170 if full else 110))
+    im.alpha_composite(gl.filter(ImageFilter.GaussianBlur(26)))
+    p = PIG.crop(PIG.getbbox())
+    k = 236 / max(p.width, p.height)
+    p = p.resize((round(p.width * k), round(p.height * k)), Image.LANCZOS)
+    im.alpha_composite(p, (130 - p.width // 2, 250 - p.height))     # standing on the number
     d = ImageDraw.Draw(im)
-    x0, y0, x1, y1 = 30, 196, 210, 252
-    d.rounded_rectangle((x0, y0 + 5, x1, y1 + 5), 28, fill=(60, 30, 12))
-    d.rounded_rectangle((x0, y0, x1, y1), 28, fill=(250, 236, 200), outline=(110, 66, 28), width=5)
-    f = font(34)
-    s = str(count)
-    gem = Image.open(GEM).convert('RGBA')
-    gem = gem.crop(gem.getbbox())
-    gem = gem.resize((round(34 * gem.width / gem.height), 34), Image.LANCZOS)
-    w = d.textlength(s, font=f) + 6 + gem.width
-    tx = (x0 + x1) / 2 - w / 2
-    d.text((tx, (y0 + y1) / 2), s, font=f, fill=INK, anchor='lm')
-    im.alpha_composite(gem, (round(tx + w - gem.width), round((y0 + y1) / 2 - gem.height / 2)))
+    for x, y, r in ((40, 70, 13), (226, 150, 10), (196, 30, 8)):
+        sparkle(d, x, y, r)
+    s = '{:,}'.format(count).replace(',', ' ')
+    d.text((130, 246), s, font=font(42), fill=CREAM, anchor='mm', stroke_width=5, stroke_fill=INK)   # at the pig's feet
     if full:
-        bx, by = 196, 40
-        d.rounded_rectangle((bx - 62, by - 24, bx + 40, by + 24), 22, fill=(220, 50, 40), outline=(90, 14, 10), width=4)
-        d.text((bx - 11, by - 1), 'Полна!', font=font(22), fill=(255, 245, 225), anchor='mm', stroke_width=2, stroke_fill=(90, 14, 10))
+        d.rounded_rectangle((150, 4, 256, 50), 22, fill=(220, 50, 40), outline=(90, 14, 10), width=4)
+        d.text((203, 26), 'Полна!', font=font(24), fill=(255, 245, 225), anchor='mm', stroke_width=2, stroke_fill=(90, 14, 10))
     return im
 
 
-def place(shot, centre, scale, count, full=False, ring=True):
+def place(shot, centre, scale, count, full=False):
     ic = icon(count, full)
     ic = ic.resize((round(ic.width * scale), round(ic.height * scale)), Image.LANCZOS)
     x, y = round(centre[0] - ic.width / 2), round(centre[1] - ic.height / 2)
-    if ring:   # a red marker ring so the place reads at a glance on the sheet
-        d = ImageDraw.Draw(shot)
-        d.rounded_rectangle((x - 14, y - 14, x + ic.width + 14, y + ic.height + 14), 30, outline=(235, 40, 40), width=8)
+    d = ImageDraw.Draw(shot)   # a red marker ring so the place reads at a glance on the sheet
+    d.rounded_rectangle((x - 10, y - 10, x + ic.width + 10, y + ic.height + 10), 30, outline=(235, 40, 40), width=7)
     shot.alpha_composite(ic, (x, y))
 
 
+def move(shot, box, to, fill_from):
+    """Cuts a piece of the interface out of `box`, covers the hole with the patch at `fill_from`, pastes it at `to`."""
+    piece = shot.crop(box)
+    w, h = box[2] - box[0], box[3] - box[1]
+    patch = shot.crop((fill_from[0], fill_from[1], fill_from[0] + w, fill_from[1] + h))
+    shot.alpha_composite(patch, (box[0], box[1]))
+    shot.alpha_composite(piece, (round(to[0] - w / 2), round(to[1] - h / 2)))
+
+
+def main_menu(src):
+    shot = Image.open(os.path.join(src, 'piggy-menu-main.png')).convert('RGBA')
+    move(shot, (1135, 36, 1265, 160), (100, 98), (1500, 36))      # settings: top right of centre -> top left
+    move(shot, (2112, 34, 2366, 106), (1200, 66), (1850, 34))       # language: top right -> top centre
+    place(shot, (2255, 160), 1.0, 245)
+    return shot
+
+
+def menu_shop():
+    shot = Image.open(R + 'Design/store/MenuShop_Mockup.png').convert('RGBA')
+    # the balance plaque goes: a plain light number + crystal left of the piggy
+    patch = shot.crop((1275, 18, 1540, 128)).resize((330, 110), Image.LANCZOS)
+    shot.alpha_composite(patch, (1530, 18))
+    d = ImageDraw.Draw(shot)
+    g = gem(50)
+    # the player's crystals: top LEFT (the user, 2026-11-16), a plain light number + crystal
+    d.text((60, 70), '1 250', font=font(50), fill=CREAM, anchor='lm', stroke_width=5, stroke_fill=INK)
+    tw = d.textlength('1 250', font=font(50))
+    shot.alpha_composite(g, (round(60 + tw + 10), 70 - g.height // 2))
+    place(shot, (1800, 130), 0.8, 245)
+    frame = Image.new('RGBA', (2400, 1080), (20, 16, 12, 255))
+    frame.alpha_composite(shot, (240, 0))
+    return frame
+
+
 def main():
+    global PIG
     src = sys.argv[1]
-    # (photo, title, centre in the photo's pixels, scale, count, full)
+    PIG = Image.open(sys.argv[2]).convert('RGBA')
+
+    def photo(name, at, count=245, full=False):
+        shot = Image.open(os.path.join(src, name)).convert('RGBA')
+        place(shot, at, 1.0, count, full)
+        return shot
+
     screens = [
-        ('piggy-menu-main.png', '1. Главное меню: под выбором языка', (2290, 260), 1.0, 245, False),
-        ('piggy-menu-modes.png', '2. Выбор режима: под настройками', (2300, 290), 1.0, 245, False),
-        (R + 'Design/store/MenuShop_Mockup.png', '3. Магазин: под балансом кристаллов', (1805, 270), 0.85, 245, False),
-        ('piggy-sandbox-shop.png', '4. Песочница, Лавка: правый верхний угол', (2240, 175), 1.0, 1000, True),
-        ('piggy-sandbox-menu.png', '5. Песочница, окно меню: правый верхний угол', (2265, 175), 1.0, 245, False),
-        ('piggy-campaign-map.png', '6. Кампания, карта: под настройками', (2300, 290), 1.0, 245, False),
+        ('1. Главное меню: настройки слева, язык по центру, копилка справа', main_menu(src)),
+        ('2. Выбор режима: под настройками', photo('piggy-menu-modes.png', (2300, 300))),
+        ('3. Магазин: копилка справа, кристаллы игрока слева вверху', menu_shop()),
+        ('4. Песочница, Лавка: правый верхний угол', photo('piggy-sandbox-shop.png', (2250, 175), 1000, True)),
+        ('5. Песочница, окно меню: правый верхний угол', photo('piggy-sandbox-menu.png', (2260, 175))),
+        ('6. Кампания, карта: под настройками', photo('piggy-campaign-map.png', (2300, 300))),
     ]
     tw, th = 1200, 540
     sheet = Image.new('RGB', (tw * 2 + 30, (th + 70) * 3 + 20), (34, 26, 20))
     d = ImageDraw.Draw(sheet)
-    for i, (name, title, at, scale, count, full) in enumerate(screens):
-        path = name if os.path.isabs(name) or name.startswith(R) else os.path.join(src, name)
-        shot = Image.open(path).convert('RGBA')
-        k = 2400 / shot.width
-        if k != 1:   # the 1920 x 1080 mockup sits in a 2400-wide frame like the phone photos
-            frame = Image.new('RGBA', (2400, 1080), (20, 16, 12, 255))
-            frame.alpha_composite(shot.resize((1920, 1080)), (240, 0))
-            shot = frame
-            at = (at[0] + 240, at[1])
-        place(shot, at, scale, count, full)
+    for i, (title, shot) in enumerate(screens):
         cx, cy = 10 + (i % 2) * (tw + 10), 10 + (i // 2) * (th + 70)
-        d.text((cx + 6, cy + 34), title, font=font(34), fill=(250, 236, 200), anchor='lm')
+        d.text((cx + 6, cy + 34), title, font=font(30), fill=(250, 236, 200), anchor='lm')
         sheet.paste(shot.convert('RGB').resize((tw, th), Image.LANCZOS), (cx, cy + 66))
     sheet.save(R + 'Design/store/Piggy_Placement_Concept.png', optimize=True)
-    # the icon alone, saving and full
-    big = Image.new('RGB', (760, 420), (52, 40, 30))
-    big.paste(Image.new('RGB', (1, 1)), (0, 0))
-    b = big.convert('RGBA')
-    for j, (count, full, label) in enumerate(((245, False, 'копится'), (1000, True, 'полна'))):
-        ic = icon(count, full).resize((360, 420), Image.LANCZOS)
-        b.alpha_composite(ic, (20 + j * 380, 0))
+    # the icon alone, saving and full, on a dark and on a light ground
+    b = Image.new('RGBA', (1100, 330), (52, 40, 30, 255))
+    ImageDraw.Draw(b).rectangle((550, 0, 1100, 330), fill=(120, 168, 88, 255))
+    for j, (count, full) in enumerate(((245, False), (1000, True), (245, False), (1000, True))):
+        b.alpha_composite(icon(count, full), (10 + j * 272, 20))
     b.convert('RGB').save(R + 'Design/store/Piggy_Icon_Concept.png', optimize=True)
-    print('written Piggy_Placement_Concept.png, Piggy_Icon_Concept.png')
+    # the models to choose from (the user, 2026-11-16: «ещё пару моделей, потом я выберу»)
+    names = ['А. Глянцевая', 'Б. Королевская', 'В. Блочная, как герои игры']
+    renders = sys.argv[2:5]
+    m = Image.new('RGBA', (1500, 560), (52, 40, 30, 255))
+    dm = ImageDraw.Draw(m)
+    for j, path in enumerate(renders):
+        PIG = Image.open(path).convert('RGBA')
+        m.alpha_composite(icon(245).resize((390, 435), Image.LANCZOS), (55 + j * 490, 90))
+        dm.text((250 + j * 490, 50), names[j], font=font(34), fill=(250, 236, 200), anchor='mm')
+    m.convert('RGB').save(R + 'Design/store/Piggy_Models_Concept.png', optimize=True)
+    print('written Piggy_Placement_Concept.png, Piggy_Icon_Concept.png, Piggy_Models_Concept.png')
 
 
 if __name__ == '__main__':
