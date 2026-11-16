@@ -171,6 +171,9 @@ Hidden while the card is up (`BuildingFocus.DetailsShown`).
 - A tap on the minimap jumps the camera to the Town Hall (`UI/MinimapHomeTap`; nothing in a dungeon).
 - Building hp bars sit over the model's top when it is taller than 3.9 (the lighthouse).
 - Dungeon card «Можно найти: [crystal]» is a centred HorizontalLayoutGroup.
+- The row's centre is y -73.6 = the king's portrait and hp plaque centre (-0.7*HudMargin - RoundButton/2,
+  SetupProjectHud); the user 2026-11-16: at -64 the pills stood higher and looked odd (concept
+  `Design/ui/HUD_TopBar_Align_Concept.png`). Change HudMargin/RoundButton → change this number too.
 
 ## Event feed
 Round temporary icons at the left edge whose rim drains; tap = camera glides to the source; hold =
