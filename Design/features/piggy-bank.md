@@ -34,6 +34,11 @@ the prices, 40 tasks reset every 8 h. Earlier history: rules DISCUSSED 2026-11-1
 - Sheet: tab «Копилка: задания» (gid 2000068, `piggytasks.csv`), keys piggy_* in «Наборы: настройки», texts #piggy_*
   in «Тексты: лавка»; task names become `#piggy_task_<id>`. Cheats: Экономика tab (level, fill, window, redraw, finish; row «Добавить кристаллы в копилку» +10/+50/+100/+step/+typed, through PiggyBank.Add so the cap holds).
 - Test: `Tests/EditMode/PiggyBankTests.cs` (capacity, break, gain ~+50 % full / none below 2/3, tasks credit).
+- Playtest 1 (the user, 2026-11-16) DONE: bars drawn at their exact size (BarBack/BarFill, TaskBarBack/TaskBarFill --
+  a stretched Pill looked silly), the crystal everywhere is the game's MenuShop/Crystal (not the pink gem render),
+  the window hides every other canvas and stands centred (Lift 74), the grey button is the same button in grey
+  (Button/ButtonGrey, sliced 420x96 by piggy_art.py --pieces), no glow -- the button breathes (scale +-4.5 %) while
+  breakable, the column's rays/shine fade out for the burst and come back. «Полна!» is a capsule (two dots + box).
 - Traps: BalanceConfig has a CLASS PiggyTask, so the lookup is `FindPiggyTask` (a same-named method broke compile).
   The stand-in Store grants at once; real billing must answer through Store.Grant so Broken plays the shatter.
   Campaign Win kills every orc -- those count toward orc_kill (accepted). Not checked on a phone.

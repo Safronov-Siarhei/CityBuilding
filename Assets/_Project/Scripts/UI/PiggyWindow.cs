@@ -37,7 +37,9 @@ namespace CityBuilder.UI
 
         private RectTransform _root, _column, _controls, _tasks, _fx;
         private GameObject _info;
-        private Image _pig, _shine, _rays, _barFill, _buttonImage, _glow;
+        private Image _pig, _shine, _rays, _barFill, _buttonImage;
+        private RectTransform _walletGem;
+        private readonly List<Canvas> _hidden = new List<Canvas>();
         private readonly RectTransform[] _gems = new RectTransform[4];
         private readonly Image[] _halos = new Image[4];
         private Text _wallet, _count, _buttonText, _timer;
@@ -100,6 +102,7 @@ namespace CityBuilder.UI
             Time.timeScale = 0f;
             _gateBefore = ModalGate.IsBlocked;
             ModalGate.SetBlocked(true);
+            HideTheInterfaceBehind();
             Build();
             PiggyBank.Changed += Redraw;
             PiggyBank.Broken += OnBroken;
@@ -118,11 +121,29 @@ namespace CityBuilder.UI
             Wallet.UpgradeCrystalsChanged -= RedrawWallet;
             Time.timeScale = _timeScaleBefore;
             ModalGate.SetBlocked(_gateBefore);
+            foreach (var canvas in _hidden) if (canvas != null) canvas.enabled = true;
+            _hidden.Clear();
             if (_current == this) _current = null;
         }
 
+        /// <summary>Every other interface off while it is open (the user 2026-11-16), as the Лавка does; back on close.</summary>
+        private void HideTheInterfaceBehind()
+        {
+            var own = GetComponent<Canvas>();
+            foreach (var canvas in FindObjectsByType<Canvas>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            {
+                if (canvas == own || !canvas.enabled || !canvas.isRootCanvas) continue;
+                if (canvas.renderMode == RenderMode.WorldSpace || canvas.sortingOrder > own.sortingOrder) continue;
+                canvas.enabled = false;
+                _hidden.Add(canvas);
+            }
+        }
+
         /// <summary>The concept's point (1920 x 1080, y down) in the canvas (centre 0,0, y up).</summary>
-        private static Vector2 R(float x, float y) => new Vector2(x - 960f, 540f - y);
+        private static Vector2 R(float x, float y) => new Vector2(x - 960f, 540f - y + Lift);
+
+        /// <summary>The concept's frame spans y 148..1080; lifted by half the gap, it stands centred (the user 2026-11-16).</summary>
+        private const float Lift = 74f;
 
         private static Vector2 Centre(float x0, float y0, float x1, float y1) => R((x0 + x1) / 2f, (y0 + y1) / 2f);
 
@@ -140,9 +161,12 @@ namespace CityBuilder.UI
             PiggyUi.Stroke(PiggyUi.Label(_root, Localization.Get("#piggy_title"), 70, PiggyUi.Cream, R(960, 241), new Vector2(760, 100)), 5f, PiggyUi.Ribbon);
 
             // the wallet, top left: what a break pays into
-            var walletGem = PiggyUi.Pic(_root, PiggyUi.ShopArt + "Crystal", R(72, 72), new Vector2(64, 64));
+            var walletGem = PiggyUi.Pic(_root, PiggyUi.Crystal, new Vector2(72, -60), new Vector2(72, 72));
             walletGem.name = "WalletGem";
-            _wallet = PiggyUi.Stroke(PiggyUi.Label(_root, "", 44, PiggyUi.Cream, R(116 + 200, 72), new Vector2(400, 60)), 3f, PiggyUi.Ink);
+            walletGem.rectTransform.anchorMin = walletGem.rectTransform.anchorMax = new Vector2(0f, 1f);
+            _walletGem = walletGem.rectTransform;
+            _wallet = PiggyUi.Stroke(PiggyUi.Label(_root, "", 44, PiggyUi.Cream, new Vector2(116 + 200, -60), new Vector2(400, 60)), 3f, PiggyUi.Ink);
+            _wallet.rectTransform.anchorMin = _wallet.rectTransform.anchorMax = new Vector2(0f, 1f);
             _wallet.alignment = TextAnchor.MiddleLeft;
 
             RoundButton(R(1840, 250), PiggyUi.Red, Close, true);
@@ -157,25 +181,21 @@ namespace CityBuilder.UI
             for (var i = 0; i < 4; i++)
             {
                 _halos[i] = PiggyUi.Pic(_column, Art + "Halo", R(PX + Gems[i, 0], Gems[i, 1]), Vector2.one * Gems[i, 2] * 2.6f);
-                _gems[i] = PiggyUi.PicH(_column, Art + "Gem", R(PX + Gems[i, 0], Gems[i, 1]), Gems[i, 2]).rectTransform;
+                _gems[i] = PiggyUi.PicH(_column, PiggyUi.Crystal, R(PX + Gems[i, 0], Gems[i, 1]), Gems[i, 2] * 1.25f).rectTransform;
             }
             _pig = PiggyUi.Pic(_column, Art + "Pig1", R(PX, Feet), Vector2.one);
             _pig.rectTransform.pivot = new Vector2(0.5f, 0f);
 
             _controls = Group(_root, "Controls");
-            var barBack = PiggyUi.Pic(_controls, Art + "Pill", R(PX, 808), new Vector2(500, 56));
-            barBack.color = new Color(0.12f, 0.055f, 0.2f, 0.92f);
-            barBack.gameObject.AddComponent<Outline>().effectColor = new Color(0.93f, 0.73f, 0.27f);
-            _barFill = PiggyUi.Pic(_controls, Art + "Pill", R(PX, 808), new Vector2(492, 48));
+            PiggyUi.Pic(_controls, Art + "BarBack", R(PX, 808), new Vector2(500, 56));
+            _barFill = PiggyUi.Pic(_controls, Art + "BarFill", R(PX, 808), new Vector2(486, 42));
             _barFill.type = Image.Type.Filled;
             _barFill.fillMethod = Image.FillMethod.Horizontal;
             _count = PiggyUi.Stroke(PiggyUi.Label(_controls, "", 36, PiggyUi.Cream, R(PX, 806), new Vector2(400, 50)), 3f, PiggyUi.Ink);
-            _countGem = PiggyUi.PicH(_controls, Art + "Gem", R(PX, 806), 44).rectTransform;
+            _countGem = PiggyUi.PicH(_controls, PiggyUi.Crystal, R(PX, 806), 52).rectTransform;
             _full = PiggyUi.FullPill(_controls, R(PX + 230, 767), 28);
 
-            _glow = PiggyUi.Pic(_controls, Art + "Pill", R(PX, 912), new Vector2(480, 140));
-            _glow.color = new Color(1f, 0.86f, 0.35f, 0f);
-            _buttonImage = PiggyUi.Pic(_controls, PiggyUi.ShopArt + "ButtonGreen", R(PX, 912), new Vector2(420, 96));
+            _buttonImage = PiggyUi.Pic(_controls, Art + "Button", R(PX, 912), new Vector2(420, 96));
             _buttonImage.raycastTarget = true;
             var button = _buttonImage.gameObject.AddComponent<Button>();
             button.onClick.AddListener(BreakIt);
@@ -282,7 +302,7 @@ namespace CityBuilder.UI
             var product = PiggyBank.ProductId;
             var pending = Store.IsPending(product);
             var can = PiggyBank.CanBreak && !pending;
-            _buttonImage.color = can ? Color.white : new Color(0.62f, 0.62f, 0.62f);
+            _buttonImage.sprite = PiggyUi.Sprite(Art + (can ? "Button" : "ButtonGrey"));
             _buttonImage.GetComponent<Button>().interactable = can;
             _buttonText.text = pending ? Localization.Get("#shop_pending")
                 : PiggyBank.CanBreak ? Localization.Format("#piggy_break", Store.PriceText(product))
@@ -317,9 +337,8 @@ namespace CityBuilder.UI
                 if (done) card.color = new Color(0.87f, 0.83f, 0.74f);
                 var name = PiggyUi.Label(_tasks, PiggyTasks.Name(task), 30, PiggyUi.Dark, R(1230 + 200, mid - 28), new Vector2(400, 44));
                 name.alignment = TextAnchor.MiddleLeft;
-                var back = PiggyUi.Pic(_tasks, Art + "Pill", R(1426.5f, mid + 23), new Vector2(393, 34));
-                back.color = new Color(0.12f, 0.055f, 0.2f, 0.85f);
-                var fill = PiggyUi.Pic(_tasks, Art + "Pill", R(1426.5f, mid + 23), new Vector2(387, 28));
+                PiggyUi.Pic(_tasks, Art + "TaskBarBack", R(1426.5f, mid + 23), new Vector2(393, 32));
+                var fill = PiggyUi.Pic(_tasks, Art + "TaskBarFill", R(1426.5f, mid + 23), new Vector2(383, 22));
                 fill.type = Image.Type.Filled;
                 fill.fillMethod = Image.FillMethod.Horizontal;
                 fill.fillAmount = Mathf.Clamp01(have / (float)Mathf.Max(1, task.target));
@@ -337,7 +356,7 @@ namespace CityBuilder.UI
                     var col = full ? new Color(0.59f, 0.55f, 0.51f) : PiggyUi.Cream;
                     var reward = PiggyUi.Stroke(PiggyUi.Label(_tasks, "+" + task.reward, 32, col, R(rx - 4 - 60, mid), new Vector2(120, 44)), 3f, PiggyUi.Ink);
                     reward.alignment = TextAnchor.MiddleRight;
-                    var gem = PiggyUi.PicH(_tasks, Art + "Gem", R(rx + 25, mid), 42);
+                    var gem = PiggyUi.PicH(_tasks, PiggyUi.Crystal, R(rx + 25, mid), 52);
                     if (full) gem.color = new Color(0.6f, 0.6f, 0.6f, 0.8f);
                 }
             }
@@ -377,8 +396,9 @@ namespace CityBuilder.UI
                     _halos[i].color = new Color(1f, 1f, 1f, 0.55f + 0.45f * pulse);
                     _halos[i].rectTransform.localScale = Vector3.one * (0.9f + 0.2f * pulse);
                 }
-                var glow = full ? 0.35f + 0.35f * Mathf.Sin(2f * Mathf.PI * t / 1.2f) : 0f;
-                _glow.color = new Color(1f, 0.86f, 0.35f, Mathf.Max(0f, glow));
+                // the break button breathes while it can be pressed (the user 2026-11-16: no glow round it)
+                var breath = PiggyBank.CanBreak ? 1f + 0.045f * Mathf.Sin(2f * Mathf.PI * t / 1.1f) : 1f;
+                _buttonImage.rectTransform.localScale = Vector3.one * breath;
             }
             _rays.rectTransform.localRotation = Quaternion.Euler(0, 0, -t * 6f);
             _timerTick -= Time.unscaledDeltaTime;
@@ -421,7 +441,7 @@ namespace CityBuilder.UI
                 {
                     case 0:
                         PiggyUi.Stroke(PiggyUi.Label(dot.transform, "+1", 26, PiggyUi.Cream, new Vector2(-12, 6), new Vector2(60, 36)), 2f, PiggyUi.Ink);
-                        PiggyUi.PicH(dot.transform, Art + "Gem", new Vector2(14, -6), 38);
+                        PiggyUi.PicH(dot.transform, PiggyUi.Crystal, new Vector2(14, -6), 44);
                         break;
                     case 1:
                         Tick(dot.transform, Vector2.zero, 1f, PiggyUi.Cream);
@@ -550,7 +570,7 @@ namespace CityBuilder.UI
             Image flash = null, rays = null, built = null;
             Text levelText = null;
             var flying = new List<(RectTransform rect, Vector2 from, float start)>();
-            var walletAt = R(72, 72);
+            var walletAt = (Vector2)_fx.InverseTransformPoint(_walletGem.position);
             var walletShown = walletBefore;
             const int GemCount = 18;
             var rnd = new System.Random(crystals + oldLevel * 31);
@@ -559,6 +579,10 @@ namespace CityBuilder.UI
             while (t < 5.6f)
             {
                 t += Mathf.Min(Time.unscaledDeltaTime, 0.05f);
+                // the column's own rays and shine go while the burst has its rays, and come back with the new pig
+                var back = t < 0.6f ? 1f - t / 0.6f : t < 5.1f ? 0f : (t - 5.1f) / 0.5f;
+                _rays.canvasRenderer.SetAlpha(Mathf.Clamp01(back));
+                _shine.canvasRenderer.SetAlpha(Mathf.Clamp01(back));
                 // 1. the flight to the centre
                 if (t < 0.6f)
                 {
@@ -634,7 +658,7 @@ namespace CityBuilder.UI
                 {
                     while (flying.Count < GemCount && t >= 2.0f + flying.Count * 0.06f)
                     {
-                        var gem = PiggyUi.PicH(_fx, Art + "Gem", centre, 56f).rectTransform;
+                        var gem = PiggyUi.PicH(_fx, PiggyUi.Crystal, centre, 64f).rectTransform;
                         flying.Add((gem, centre + new Vector2(Rand(-160f, 160f), Rand(-120f, 160f)), 2.0f + flying.Count * 0.06f));
                     }
                     var arrived = 0;
@@ -714,6 +738,8 @@ namespace CityBuilder.UI
             }
 
             for (var c = _fx.childCount - 1; c >= 0; c--) Destroy(_fx.GetChild(c).gameObject);
+            _rays.canvasRenderer.SetAlpha(1f);
+            _shine.canvasRenderer.SetAlpha(1f);
             _pig.enabled = true;
             _controls.gameObject.SetActive(true);
             foreach (var g in _gems) g.gameObject.SetActive(true);

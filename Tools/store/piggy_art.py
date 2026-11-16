@@ -15,6 +15,7 @@ The piggy bank's pictures for the game (the user approved the button, window, «
 UI/PiggyWindow.cs places them (its positions mirror Tools/store/piggy_window_concept.py, 1920 x 1080, y down).
 
     python Tools/store/piggy_art.py <renders folder>
+    python Tools/store/piggy_art.py --pieces     (only the bars and the buttons)
 
 <renders folder>: piggy_royal_<colour>_alone.png and piggy_gem_pink.png from Tools/blender/store/piggy_bank.py.
 """
@@ -25,7 +26,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from PIL import Image, ImageDraw, ImageFilter
-from menu_shop_mockup import W, H, R
+from menu_shop_mockup import W, H, R, sliced
 from support_banner_v2_mockup import frame, band, parchment, layer, IY0, IY1, IX1, Y0
 from piggy_window_concept import trim, gem_glow
 from piggy_break_concept import shards, cracks, crack_layer
@@ -39,7 +40,48 @@ def save(im, name):
     im.save(OUT + name, optimize=True)
 
 
+def bar_piece(w, h, back):
+    """A capsule drawn at its exact size (the game shows it unstretched): the dark trough with a gold rim, or the
+    white glossy fill the code tints (pink filling, gold full, green done) and cuts with Image.Filled."""
+    k = 4
+    im = Image.new('RGBA', (w * k, h * k), 0)
+    d = ImageDraw.Draw(im)
+    r = h * k // 2
+    if back:
+        d.rounded_rectangle((0, 0, w * k - 1, h * k - 1), r, fill=(236, 186, 70, 255))
+        rim = max(2, h // 12) * k
+        d.rounded_rectangle((rim, rim, w * k - 1 - rim, h * k - 1 - rim), r - rim, fill=(40, 18, 62, 255))
+        # an inner shadow along the top
+        d.rounded_rectangle((rim, rim, w * k - 1 - rim, rim + h * k // 3), r - rim, fill=(32, 14, 52, 255))
+    else:
+        d.rounded_rectangle((0, 0, w * k - 1, h * k - 1), r, fill=(232, 232, 232, 255))
+        d.rounded_rectangle((r // 2, h * k // 7, w * k - 1 - r // 2, h * k * 3 // 7), r // 3, fill=(255, 255, 255, 255))
+        d.rounded_rectangle((0, h * k * 3 // 4, w * k - 1, h * k - 1), r // 2, fill=(196, 196, 196, 255))
+        mask = Image.new('L', im.size, 0)
+        ImageDraw.Draw(mask).rounded_rectangle((0, 0, w * k - 1, h * k - 1), r, fill=255)
+        im.putalpha(mask)
+    return im.resize((w, h), Image.LANCZOS)
+
+
+def exact_pieces():
+    """The pieces the window shows at their own size (the user 2026-11-16: stretched pills looked silly)."""
+    os.makedirs(OUT, exist_ok=True)
+    save(bar_piece(500, 56, True), 'BarBack.png')
+    save(bar_piece(486, 42, False), 'BarFill.png')
+    save(bar_piece(393, 32, True), 'TaskBarBack.png')
+    save(bar_piece(383, 22, False), 'TaskBarFill.png')
+    btn = sliced(R + 'Assets/_Project/UI/Shop/Resources/Shop/MenuShop/ButtonGreen.png', 420, 96, 40)
+    save(btn, 'Button.png')
+    grey = btn.convert('LA').convert('RGBA')
+    grey.putalpha(btn.getchannel('A'))
+    save(grey, 'ButtonGrey.png')
+    print('pieces written')
+
+
 def main():
+    if len(sys.argv) > 1 and sys.argv[1] == '--pieces':
+        exact_pieces()
+        return
     src = sys.argv[1]
     os.makedirs(OUT, exist_ok=True)
     meta = {'pigWidth': PIG_W, 'levels': []}
@@ -123,6 +165,7 @@ def main():
     save(ring, 'DotRing.png')
     with open(OUT + 'layout.json', 'w', encoding='utf-8') as f:
         json.dump(meta_ui, f, indent=1)
+    exact_pieces()
     print('written', len(os.listdir(OUT)), 'files to', OUT, meta_ui)
 
 
