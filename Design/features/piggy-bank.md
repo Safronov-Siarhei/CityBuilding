@@ -51,17 +51,17 @@ Concept `Tools/store/piggy_placement_concept.py <photos> <render A> [B] [C]`.
   pig WOBBLES SOFTLY (0.9 s eased in/out every 1.8 s, ~3 Hz, ±2 px / ±3°; the user: smoother), the shine brighter.
 - Script `Tools/store/piggy_button_concept.py <renders> <modes photo>`.
 
-## The window (concept 2026-11-16, waiting for the user; `Design/store/Piggy_Window_Concept.png` saving,
-`Piggy_Window_Full_Concept.png` full; `Tools/store/piggy_window_concept.py <renders>`)
-On the support banner's look: wood frame, purple crystal field, ribbon «Копилка», ✕ top right.
-- Left: the big pig of the current level on a golden shine with rays, floating crystals; «Уровень N» + 5 pips;
-  fill bar «245 / 300 💎» (gold when full + a «Полна!» tag on it); the level's material name.
-- Centre parchment: «Кристаллы копятся сами, пока вы играете и выполняете задания»; rows «Минута игры +1»,
-  «Задание дня +15–25»; red seal «+50 % выгоднее чем обычный набор»; green «Разбить за $0.99» + «Вы получите N
-  кристаллов» (below 150: grey «Разбить от 150»); full: the button glows.
-- Right: «Задания дня», «Новые через hh:mm:ss», 3 task cards (name, progress bar, +N 💎 / a green tick «В копилке»
-  when done -- rewards go in by themselves, no claim button); full: a red line «награды заданий пропадут!».
-  The tasks shown are EXAMPLES; the list is to be discussed.
+## The window (concept v2 2026-11-16, waiting for the user; `Design/store/Piggy_Window_Concept.png` saving,
+`Piggy_Window_Full_Concept.png` full, `Piggy_Window_Info_Concept.png` the «!» popup; `Tools/store/piggy_window_concept.py <renders>`)
+RULE (the user 2026-11-16): v1 had too much text and looked off-putting -- the window keeps only what the player acts
+on; every explanation goes behind the «!» button.
+- Frame of the support banner, ribbon «Копилка», «!» top LEFT corner, ✕ top right.
+- Left: the big pig (its material = the level; no level text/pips), floating crystals, the fill bar «245 / 300 💎»
+  (gold + «Полна!» tag when full), green «Разбить за $0.99» with a small red «+50%» badge; full: the button glows.
+- Right: «Задания» + clock «07:42»; 3 short task cards (name, bar, +N 💎 / a tick when done -- credited by itself);
+  full: the rewards go GREY (no warning text). Task names are EXAMPLES, the list is to be discussed.
+- «!» popup (parchment): «Как работает копилка», «Уровень 1 из 5», five icon rows: +1 a minute of play; day tasks add
+  more; break from 150; 50 % better than a regular pack; a purchase opens a bigger piggy; «Понятно».
 
 ## Levels (APPROVED by the user 2026-11-16, `Design/store/Piggy_Levels_Concept.png`)
 Same royal pig, the material changes: 1 pink ceramic (300), 2 bronze (500), 3 silver (1000), 4 gold (1500),
