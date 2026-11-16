@@ -25,7 +25,7 @@ PIG_W = 132          # the piggy as wide as the settings button
 LEVELS = [('pink', 'Розовая керамика', 300), ('bronze', 'Бронза', 500), ('silver', 'Серебро', 1000),
           ('gold', 'Золото', 1500), ('amethyst', 'Аметист', 3000)]
 # the floating crystals: (x, y in the square, height, bob phase, bob period s)
-GEMS = [(26, 44, 34, 0.0, 1.9), (174, 36, 30, 1.3, 2.3), (20, 126, 26, 2.4, 2.1), (182, 120, 28, 0.7, 1.7)]   # the top centre is kept for «Полна!»
+GEMS = [(26, 44, 34, 0.0, 1.9), (174, 36, 30, 1.3, 2.3), (20, 126, 26, 2.4, 2.1), (182, 120, 28, 0.7, 1.7), (170, 164, 22, 3.1, 2.6)]   # five; the top centre is kept for «Полна!»
 
 
 def font(size, name='Rubik-ExtraBold.ttf'):
