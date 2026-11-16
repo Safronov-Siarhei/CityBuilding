@@ -880,7 +880,8 @@
      sits on it (miss < 1 cm; solved ~upper_arm.L [-60,0,-44], forearm.L [4,0,0]); the shield stays on that forearm.
      MODELS APPROVED 2026-11-16. Animations next, group by group as videos: (1) `cav_ride_anim.py` the King + 11
      horsemen gallop over the causeway (formation rows, own gait phases, sword pumping, lances couched; reins solved
-     once per kind) -- in review; then (2) the charge through the streets (riders strike, orcs fall), (3) the square's
+     once per kind; the user: «не нужно трясти коней» -> `legs_only()`: body/neck/head/tail still, no sway or rider
+     rock) -- in review; then (2) the charge through the streets (riders strike, orcs fall), (3) the square's
      last stand (captain, Ардан, men-at-arms), (4) orcs smashing houses, (5) orcs fleeing.
   3. (older draft) «Подкрепление» ~30 s on the win: horn on the causeway, the King leads the cavalry, the charge scatters the
      orcs, smoke and ruins, King + captain + Ардан on the square, the King notices the amulet («Откуда у тебя

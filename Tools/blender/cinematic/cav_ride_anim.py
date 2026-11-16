@@ -49,6 +49,17 @@ def formation():
     return out
 
 
+def legs_only(phase):
+    """rider_anim.gait with only the legs moving: the body, neck, head and tail held still (the user, 2026-11-16:
+    «не нужно трясти коней, у них должны просто передвигаться ноги»)."""
+    q = ra.gait(ra.h_blank(), phase, 1.0)
+    q["body"] = [0.0, 0.0, 0.0]
+    q["neck"] = [12.0, 0.0, 0.0]
+    q["head"] = [-10.0, 0.0, 0.0]
+    q["tail"] = [22.0, 0.0, 0.0]
+    return q
+
+
 def build():
     """[(export name, take, rig, extras)], [props], seconds."""
     rnd = random.Random(7)
@@ -79,17 +90,16 @@ def build():
         sc.frame_set(f + 1)
         for p in pairs:
             d = V * t
-            pos = Vector((p["x"] + 0.03 * math.sin(TAU * t / 1.7 + p["sway"]), START_Y + p["back"] + d, 0.0))
+            pos = Vector((p["x"], START_Y + p["back"] + d, 0.0))
             phase = (d / CYCLE + p["phase"]) % 1.0
             h_arm, r_arm = p["h"], p["r"]
             h_arm.location = pos
-            h_arm.rotation_euler = (0, 0, ra.ROAD + math.radians(2.0 * math.sin(TAU * t / 2.3 + p["sway"])))
+            h_arm.rotation_euler = (0, 0, ra.ROAD)
             aa.rest(h_arm)
-            ra.h_apply(h_arm, ra.gait(ra.h_blank(), phase, 1.0))
+            ra.h_apply(h_arm, legs_only(phase))
             bpy.context.view_layer.update()
             r_arm.matrix_world = gt.bone_world(h_arm, "body") @ Matrix.Translation(ra.SEAT)
             q = ra.seated(t, 1.0, 0.0)
-            q["chest"][0] += 3 * math.sin(TAU * phase)                 # the rider rocks with the stride
             if p["king"]:
                 pump = math.sin(TAU * t / 0.9)
                 q["upper_arm.R"] = [-150 + 12 * pump, 10, 0]           # the sword up, pumped: «Вперёд!»
