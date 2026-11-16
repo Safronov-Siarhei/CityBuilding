@@ -70,6 +70,15 @@ on; every explanation goes behind the «!» button.
 - «!» popup (parchment): «Как работает копилка», «Уровень 1 из 5», five icon rows: +1 a minute of play; day tasks add
   more; break from 150; a FULL one is 50 % better than a pack; a purchase opens a bigger piggy; «Понятно».
 
+## Break animation (concept 2026-11-16, waiting for the user; `Design/store/Piggy_Break_Concept.webp`,
+`Tools/store/piggy_break_concept.py <renders>`)
+~6.6 s over the window: 0-0.6 the window dims, the full pig flies to the centre and grows x1.35; 0.6-1.9 it shakes
+harder and harder, cracks spread in 3 steps (a tick of light each); 1.9 white flash + golden rays; the pig bursts into
+~22 Voronoi shards (spin + gravity) and crystals fountain up; 2.4-4.0 they stream into the crystal counter (top left),
+which rolls up (+300); 3.8 «Уровень 2» pops in, bronze shards fly in and assemble the next pig, a flash; 5.1 the dim
+lifts, the bronze pig returns to its place: 0 / 500, grey «Разбить от 150» (below 150 the button is grey).
+In the game: shards = the render cut on the fly or a pre-cut sprite sheet; the counter = the screen's real balance.
+
 ## Levels (APPROVED by the user 2026-11-16, `Design/store/Piggy_Levels_Concept.png`)
 Same royal pig, the material changes: 1 pink ceramic (300), 2 bronze (500), 3 silver (1000), 4 gold (1500),
 5 amethyst -- glowing purple crystal (3000). `piggy_bank.py <out> <pink|bronze|silver|gold|amethyst> royal`.

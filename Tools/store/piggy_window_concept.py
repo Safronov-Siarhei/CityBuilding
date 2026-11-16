@@ -52,7 +52,7 @@ def round_button(d, c, r, fill, glyph):
     text(d, (x, y - 2), glyph, int(r * 1.15), stroke=4)
 
 
-def pig_column(img, pig, gem, count, cap, full, live=True):
+def pig_column(img, pig, gem, count, cap, full, live=True, price='$0.99'):
     cx, cy = PX, 560
     g = layer()
     ImageDraw.Draw(g).ellipse((cx - 300, cy - 260, cx + 300, cy + 220), fill=(255, 214, 110, 170 if full else 110))
@@ -92,10 +92,15 @@ def pig_column(img, pig, gem, count, cap, full, live=True):
         gl = layer()
         ImageDraw.Draw(gl).rounded_rectangle((cx - 230, by - 58, cx + 230, by + 58), 40, outline=(255, 220, 90, 220), width=16)
         img.alpha_composite(gl.filter(ImageFilter.GaussianBlur(10)))
+    if count < 150:   # not breakable yet: a grey button «Разбить от 150»
+        put(img, sliced(SHOP + 'ButtonGreen.png', 420, 96, 40).convert('LA').convert('RGBA'), (cx, by))
+        d = ImageDraw.Draw(img)
+        text(d, (cx, by - 4), 'Разбить от 150', 40)
+        return
     put(img, sliced(SHOP + 'ButtonGreen.png', 420, 96, 40), (cx, by))
     d = ImageDraw.Draw(img)
     f = font(40)
-    s1, s2 = 'Разбить за ', '$0.99'
+    s1, s2 = 'Разбить за ', price
     w1, w2 = d.textlength(s1, font=f), d.textlength(s2, font=f)
     x = cx - (w1 + w2) / 2
     text(d, (x, by - 4), s1, 40, anchor='lm')
@@ -220,7 +225,7 @@ def tasks_panel(img, box, full):
         y += rh
 
 
-def window(pig, gem, count, cap, full, live=True):
+def window(pig, gem, count, cap, full, live=True, price='$0.99'):
     img = menu_scene()
     img = Image.alpha_composite(img.filter(ImageFilter.GaussianBlur(6)), Image.new('RGBA', (W, H), (14, 6, 30, 190)))
     win = frame(near=False)   # the big front crystals fought the pig (the user 2026-11-16)
@@ -233,7 +238,7 @@ def window(pig, gem, count, cap, full, live=True):
     d.line((X1 - 36, Y0 + 4, X1 - 4, Y0 + 36), fill=CREAM, width=9)
     d.line((X1 - 36, Y0 + 36, X1 - 4, Y0 + 4), fill=CREAM, width=9)
     round_button(d, (X0 + 20, Y0 + 20), 42, (60, 120, 200), '!')    # info: all the explanations
-    pig_column(img, pig, gem, count, cap, full, live)
+    pig_column(img, pig, gem, count, cap, full, live, price)
     tasks_panel(img, (1180, IY0 + 70, IX1 - 34, IY1 - 34), full)
     return img
 
