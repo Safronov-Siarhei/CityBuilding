@@ -70,7 +70,7 @@ on; every explanation goes behind the «!» button.
 - «!» popup (parchment): «Как работает копилка», «Уровень 1 из 5», five icon rows: +1 a minute of play; day tasks add
   more; break from 150; a FULL one is 50 % better than a pack; a purchase opens a bigger piggy; «Понятно».
 
-## Break animation (concept 2026-11-16, waiting for the user; `Design/store/Piggy_Break_Concept.webp`,
+## Break animation (APPROVED by the user 2026-11-16; `Design/store/Piggy_Break_Concept.webp`,
 `Tools/store/piggy_break_concept.py <renders>`)
 ~6.6 s over the window: 0-0.6 the window dims, the full pig flies to the centre and grows x1.35; 0.6-1.9 it shakes
 harder and harder, cracks spread in 3 steps (a tick of light each); 1.9 white flash + golden rays; the pig bursts into
