@@ -1,6 +1,6 @@
 # Piggy bank («Копилка»)
 
-**Status (2026-11-15):** DISCUSSED with the user, rules below DECIDED; placement concept + stand-in icon sent for
+**Status (2026-11-15):** DISCUSSED with the user, rules below DECIDED; placement concept v2 + 3D-render icon sent for
 approval (`Design/store/Piggy_Placement_Concept.png`, `Design/store/Piggy_Icon_Concept.png`, by
 `Tools/store/piggy_placement_concept.py <photos>`). NOT BUILT. Daily tasks' list: to discuss later (the user).
 Prices: proposed, not explicitly confirmed yet.
@@ -26,10 +26,19 @@ Prices: proposed, not explicitly confirmed yet.
   model (renders for approval first); the corner icon = its render. Colour per level proposed (pink..gold).
 - Not in «Подожди!» (its value is the savings, not a discount).
 
-## Where the icon stands (concept, waiting for approval)
-Top-right corner, under the screen's own top-right control: main menu (under the language picker), modes
-screen (under settings), menu shop (under the crystal balance), sandbox Лавка window, sandbox menu window
-(NOT on the bare sandbox map), campaign map (under settings). Never a card -- always the corner icon.
+## Where the icon stands (v2 concept after the user's notes 2026-11-16, waiting for approval)
+Top-right corner everywhere, never a card:
+1. Main menu: settings MOVE to the top LEFT, the language picker to the top CENTRE, the piggy top right.
+2. Modes screen: under settings. 3. Menu shop: top right; the crystal balance left of it as a plain LIGHT
+number + crystal icon (the beige plaque behind it goes). 4. Sandbox Лавка: screen top right next to the window.
+5. Sandbox menu window: top right (not on the bare map). 6. Campaign map: under settings.
+
+## The icon (v2)
+A RENDER of the 3D piggy (`Tools/blender/store/piggy_bank.py <out> [pink|silver|gold]`, glossy ceramic, coin
+slot, 5 crystals FLOATING around -- none stick out of it; render `Design/store/shop_art/Piggy_render.png`) on a soft
+golden shine with sparkles; under it JUST the number (light, dark outline) -- no plaque (the user rejected the
+flat drawing, crystals in the slot and the plaque). Full: «Полна!» tag + brighter shine.
+Concept `Tools/store/piggy_placement_concept.py <photos> <render>`.
 
 ## Traps
 - The menu shop does not render in a batchmode capture (its blur/ScreenCapture) -- the concept used its mockup.
