@@ -60,6 +60,12 @@ replaced by CRLF" warnings (`core.autocrlf` is true and half the repo is LF). Se
 `D:\Fork` machine; run it once on any other device.
 
 ## Traps
+- **Unity is open (setup exits 1 in 0 s) and the code must still be checked:** compile outside Unity with its own
+  Roslyn and the response files Unity left: take `Library/Bee/artifacts/<latest>E.dag/CityBuilder.Runtime.rsp`, change
+  `-out:` to a scratch path, drop `-refout/-doc/-pdb`, REPLACE its `.cs` list with the current tree (files pulled
+  since its last compile are missing otherwise), run `"<Unity>/Editor/Data/DotNetSdk/dotnet.exe"
+  "<...>/DotNetSdk/sdk/<ver>/Roslyn/bincore/csc.dll" -nologo @rt.rsp`; then the Editor rsp the same way with its
+  `-r:` to `CityBuilder.Runtime.ref.dll` pointed at the fresh dll. Compiles only -- nothing runs (2026-11-16).
 - Call `run.ps1` from PowerShell itself (`& ./Tools/research/run.ps1 -Steps setup,setup,...`). Through
   `powershell -File` the comma list arrives as ONE step name, nothing runs, and it still prints
   `RUN FINISHED` with exit 0.

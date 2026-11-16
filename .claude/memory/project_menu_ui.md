@@ -85,3 +85,4 @@ arrows = gold chevron «A» at 70 % with a nudge hint (step out, trailing «‹�
 scroll, back after 10-15 s idle; press squeeze). New locked «Скоро» banners: Мастерская (violet) and Онлайн (amber).
 Full spec in Design/features/hud-and-ui.md (modes screen v2); concepts Design/ui/ModeWheel_*.
 Order confirmed: Обучение, Песочница, Кампания, Нашествие, Онлайн, Мастерская; centred on entry: Обучение at first, then the last played mode (the user 2026-11-16).
+BUILT 2026-11-16 (compiled outside Unity, not run, not seen): ModeBannersController v2 + BuildModeBanners + new banner/chevron/glow art + 4 texts (sheet synced).

@@ -42,7 +42,11 @@ MODES = {
     "Tutorial": ((44, 140, 130, 255), (22, 88, 82, 255), GOLD_HI, (WOOD, WOOD_DARK, WOOD_HI), (GOLD, GOLD_HI), False),
     # the campaign OPEN (the user, 2026-11-12: it was grey and locked, «скоро»): royal blue and gold
     "Campaign": ((48, 76, 152, 255), (24, 40, 92, 255), GOLD_HI, (WOOD, WOOD_DARK, WOOD_HI), (GOLD, GOLD_HI), False),
+    # the two modes still to come (the user, 2026-11-16, modes screen v2): locked «Скоро», a gold lock on the medallion
+    "Online": ((206, 128, 38, 255), (126, 70, 18, 255), GOLD_HI, (WOOD, WOOD_DARK, WOOD_HI), (GOLD, GOLD_HI), False),
+    "Workshop": ((122, 74, 168, 255), (68, 38, 102, 255), GOLD_HI, (WOOD, WOOD_DARK, WOOD_HI), (GOLD, GOLD_HI), False),
 }
+LOCKED = {"Online", "Workshop"}
 
 
 def p(x, y):
@@ -365,6 +369,72 @@ def shield_crest(d, cx, cy, ink):
     d.polygon([p(cx - 8, cy + 4), p(cx - 8, cy - 6), p(cx - 4, cy - 1), p(cx, cy - 9), p(cx + 4, cy - 1), p(cx + 8, cy - 6), p(cx + 8, cy + 4)], fill=ink)
 
 
+def workshop(d, cx, cy, ink):
+    """«Мастерская»: a little house drawn as a blueprint, a hammer and a pair of compasses crossed over it."""
+    w = 3 * SS
+    d.polygon([p(cx - 38, cy - 4), p(cx, cy - 40), p(cx + 38, cy - 4)], outline=ink, width=w * 2)
+    d.rectangle([p(cx - 30, cy - 4), p(cx + 30, cy + 40)], outline=ink, width=w * 2)
+    d.rectangle([p(cx - 9, cy + 16), p(cx + 9, cy + 40)], fill=ink)
+    d.rectangle([p(cx - 22, cy + 4), p(cx - 10, cy + 14)], outline=ink, width=w)
+    d.rectangle([p(cx + 10, cy + 4), p(cx + 22, cy + 14)], outline=ink, width=w)
+    d.line([p(cx - 58, cy + 52), p(cx + 30, cy - 36)], fill=ink, width=9 * SS)
+    head = [(cx + 14, cy - 64), (cx + 62, cy - 16), (cx + 50, cy - 4), (cx + 2, cy - 52)]
+    d.polygon([p(x, y) for x, y in head], fill=ink)
+    d.ellipse([p(cx - 50, cy - 60), p(cx - 34, cy - 44)], fill=ink)
+    d.line([p(cx - 42, cy - 52), p(cx - 64, cy + 50)], fill=ink, width=6 * SS)
+    d.line([p(cx - 42, cy - 52), p(cx + 2, cy + 56)], fill=ink, width=6 * SS)
+
+
+def online(d, cx, cy, ink):
+    """«Онлайн»: four small shields round a ring -- four players at one table -- and the host's crown."""
+    import math
+    d.ellipse([p(cx - 42, cy - 42), p(cx + 42, cy + 42)], outline=ink, width=6 * SS)
+    for k in range(4):
+        a = math.pi / 2 * k + math.pi / 4
+        sx, sy = cx + 46 * math.cos(a), cy + 46 * math.sin(a)
+        pts = [(sx - 17, sy - 18), (sx + 17, sy - 18), (sx + 17, sy + 2), (sx, sy + 22), (sx - 17, sy + 2)]
+        d.polygon([p(x, y) for x, y in pts], fill=ink)
+        d.line([p(sx, sy - 12), p(sx, sy + 12)], fill=PARCHMENT, width=3 * SS)
+        d.line([p(sx - 10, sy - 4), p(sx + 10, sy - 4)], fill=PARCHMENT, width=3 * SS)
+    d.polygon([p(cx - 18, cy + 10), p(cx - 20, cy - 10), p(cx - 8, cy), p(cx, cy - 16), p(cx + 8, cy), p(cx + 20, cy - 10), p(cx + 18, cy + 10)], fill=ink)
+
+
+def gold_lock(d, cx, cy):
+    """The «Скоро» lock on a mode's medallion: a gold disc with a wood-ink padlock."""
+    d.ellipse([p(cx - 34, cy - 34 + 4), p(cx + 34, cy + 34 + 4)], fill=SHADOW)
+    d.ellipse([p(cx - 34, cy - 34), p(cx + 34, cy + 34)], fill=WOOD_EDGE)
+    d.ellipse([p(cx - 28, cy - 28), p(cx + 28, cy + 28)], fill=GOLD)
+    d.arc([p(cx - 24, cy - 24), p(cx + 24, cy + 24)], 200, 320, fill=GOLD_HI, width=4 * SS)
+    d.rounded_rectangle([p(cx - 12, cy - 22), p(cx + 12, cy + 2)], radius=12 * SS, outline=WOOD_DARK, width=6 * SS)
+    d.rounded_rectangle([p(cx - 17, cy - 6), p(cx + 17, cy + 18)], radius=4 * SS, fill=WOOD_DARK)
+
+
+def chevron():
+    """The modes row's scroll arrow (the user, 2026-11-16: variant A): a gold chevron with a dark edge, no plate,
+    pointing LEFT (the right one is the same picture mirrored). 160 x 240: shown 80 x 120."""
+    k = 8
+    img = Image.new("RGBA", (80 * k, 120 * k), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    q = lambda pts: [(x * k, y * k) for x, y in pts]
+    ch = [(52, 4), (76, 26), (42, 60), (76, 94), (52, 116), (4, 60)]
+    d.polygon(q([(x, min(119, y + 3)) for x, y in ch]), fill=SHADOW)
+    d.polygon(q(ch), fill=SHADOW)
+    d.polygon(q([(52, 14), (66, 27), (30, 60), (66, 93), (52, 106), (15, 60)]), fill=GOLD)
+    d.polygon(q([(52, 14), (66, 27), (32, 58), (19, 58)]), fill=GOLD_HI)
+    d.polygon(q([(30, 62), (66, 93), (60, 99), (24, 64)]), fill=GOLD_LO)
+    img.resize((160, 240), Image.LANCZOS).save(os.path.join(OUT, "Chevron.png"))
+
+
+def glow():
+    """A soft round gold glow behind the chevron while it nudges (white, tinted in the game). 128 x 128."""
+    from PIL import ImageFilter
+    img = Image.new("RGBA", (128, 128), (255, 255, 255, 0))
+    a = Image.new("L", (128, 128), 0)
+    ImageDraw.Draw(a).ellipse([24, 24, 104, 104], fill=255)
+    img.putalpha(a.filter(ImageFilter.GaussianBlur(14)))
+    img.save(os.path.join(OUT, "Glow.png"))
+
+
 def lock(d, cx, cy, ink):
     d.rounded_rectangle([p(cx - 28, cy - 50), p(cx + 28, cy + 6)], radius=28 * SS, outline=ink, width=12 * SS)
     d.rounded_rectangle([p(cx - 42, cy - 10), p(cx + 42, cy + 48)], radius=8 * SS, fill=ink)
@@ -424,8 +494,14 @@ def banner(name, spec):
         orc_skull(d, cx, cy + 2, (226, 214, 186, 255), (24, 20, 18, 255), (160, 156, 148, 255))
     elif name == "Tutorial":
         book_rich(d, cx, cy + 6, WOOD_DARK)
+    elif name == "Workshop":
+        workshop(d, cx, cy + 4, WOOD_DARK)
+    elif name == "Online":
+        online(d, cx, cy + 2, WOOD_DARK)
     else:
         shield_crest(d, cx, cy + 2, WOOD_DARK)
+    if name in LOCKED:
+        gold_lock(d, cx + 74, cy + 66)
 
     img = img.resize((W, H), Image.LANCZOS)
     img.save(os.path.join(OUT, f"Banner_{name}.png"))
@@ -434,6 +510,8 @@ def banner(name, spec):
 def main():
     for name, spec in MODES.items():
         banner(name, spec)
+    chevron()
+    glow()
     print("banners written to", OUT)
 
 

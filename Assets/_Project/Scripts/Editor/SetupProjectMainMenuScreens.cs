@@ -556,8 +556,16 @@ namespace CityBuilder.EditorTools
         /// </summary>
         private static void BuildModeBanners(RectTransform modes, MainMenuController menu)
         {
-            var names = new[] { "Tutorial", "Sandbox", "Invasion", "Campaign" };
-            var keys = new[] { "#mode_tutorial", "#mode_sandbox", "#mode_invasion", "#mode_campaign" };
+            // indices = ModeBannersController's mode constants; the row's order is the controller's (v2, the user 2026-11-16)
+            var names = new[] { "Tutorial", "Sandbox", "Invasion", "Campaign", "Online", "Workshop" };
+            var keys = new[] { "#mode_tutorial", "#mode_sandbox", "#mode_invasion", "#mode_campaign", "#mode_online", "#mode_workshop" };
+            // a swipe anywhere across the banners' band scrolls the row (behind the banners; the corners' buttons stay free)
+            var swipe = CreateImage(modes, "SwipeArea", new Color(0f, 0f, 0f, 0f));
+            var swipeRect = swipe.rectTransform;
+            swipeRect.anchorMin = new Vector2(0f, 0f);
+            swipeRect.anchorMax = new Vector2(1f, 1f);
+            swipeRect.offsetMin = new Vector2(0f, 300f);
+            swipeRect.offsetMax = new Vector2(0f, -170f);
             var hall = StretchedChild(modes, "Banners");
             var banners = new Object[names.Length];
             var cloths = new Object[names.Length];
@@ -575,7 +583,7 @@ namespace CityBuilder.EditorTools
                 cloth.sprite = MenuArt($"Banner_{names[i]}");
                 cloth.preserveAspect = true;
                 var rect = cloth.rectTransform;
-                Anchor(rect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 1f), new Vector2((i - 1.5f) * 350f, 380f), size);
+                Anchor(rect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 1f), new Vector2(0f, 380f), size);   // ModeBannersController lays the row out
                 var button = cloth.gameObject.AddComponent<Button>();
                 button.transition = Selectable.Transition.None;
                 UnityEventTools.AddIntPersistentListener(button.onClick, bannerControl.TapBanner, i);
@@ -621,8 +629,44 @@ namespace CityBuilder.EditorTools
             Anchor(motto.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 205f), new Vector2(760f, 52f));
             motto.resizeTextForBestFit = false;
 
+            // the row's scroll chevrons at the screen's edges, at the banners' mid height: a gold chevron (variant A,
+            // the user 2026-11-16 -- not like the round «Назад»), a twin and a glow for the nudge hint; the right one mirrored
+            var arrowRoots = new Object[2];
+            var chevronRects = new Object[2];
+            var twinImages = new Object[2];
+            var glowImages = new Object[2];
+            for (var a = 0; a < 2; a++)
+            {
+                var root = CreateImage(modes, a == 0 ? "ArrowLeft" : "ArrowRight", new Color(0f, 0f, 0f, 0f));
+                Anchor(root.rectTransform, new Vector2(a, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(a == 0 ? 80f : -80f, 100f), new Vector2(130f, 170f));
+                if (a == 1) root.rectTransform.localScale = new Vector3(-1f, 1f, 1f);
+                var arrowButton = root.gameObject.AddComponent<Button>();
+                arrowButton.transition = Selectable.Transition.None;
+                UnityEventTools.AddPersistentListener(arrowButton.onClick, a == 0 ? bannerControl.ScrollLeft : bannerControl.ScrollRight);
+                var halo = CreateImage(root.transform, "Glow", new Color(1f, 0.84f, 0.43f, 1f));
+                halo.sprite = MenuArt("Glow");
+                halo.raycastTarget = false;
+                Anchor(halo.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(150f, 150f));
+                var twin = CreateImage(root.transform, "Twin", Color.white);
+                twin.sprite = MenuArt("Chevron");
+                twin.raycastTarget = false;
+                Anchor(twin.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(80f, 120f));
+                var chevron = CreateImage(root.transform, "Chevron", Color.white);
+                chevron.sprite = MenuArt("Chevron");
+                chevron.raycastTarget = false;
+                Anchor(chevron.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(80f, 120f));
+                arrowRoots[a] = root.rectTransform;
+                chevronRects[a] = chevron.rectTransform;
+                twinImages[a] = twin;
+                glowImages[a] = halo;
+            }
+
             var so = new SerializedObject(bannerControl);
             so.FindProperty("menu").objectReferenceValue = menu;
+            WriteArray(so.FindProperty("arrows"), arrowRoots);
+            WriteArray(so.FindProperty("chevrons"), chevronRects);
+            WriteArray(so.FindProperty("twins"), twinImages);
+            WriteArray(so.FindProperty("glows"), glowImages);
             so.FindProperty("screen").objectReferenceValue = Group(modes.gameObject);
             so.FindProperty("playButton").objectReferenceValue = play.GetComponent<Image>();
             WriteArray(so.FindProperty("banners"), banners);
