@@ -107,11 +107,22 @@ namespace CityBuilder.Saving
 
         private void Start()
         {
-            if (GameSessionIntent.LookAtAfterLoad.HasValue) StartCoroutine(LookAfterLoad(GameSessionIntent.LookAtAfterLoad.Value));
+            var lookAt = GameSessionIntent.LookAtAfterLoad;
+            if (lookAt.HasValue) StartCoroutine(LookAfterLoad(lookAt.Value));
             GameSessionIntent.LookAtAfterLoad = null;
             if (_pendingLoad == null) return;
             ApplyLoadedState(_pendingLoad);
             _pendingLoad = null;
+            // a resumed save opens on the Town Hall (the user 2026-11-16: it opened "who knows where")
+            if (!lookAt.HasValue) StartCoroutine(LookAtTownHallAfterLoad());
+        }
+
+        private System.Collections.IEnumerator LookAtTownHallAfterLoad()
+        {
+            for (var frame = 0; frame < 3; frame++) yield return null;
+            var hall = CityBuilder.Buildings.BuildingInstance.TownHall;
+            if (hall == null) yield break;
+            StartCoroutine(LookAfterLoad(hall.transform.position));
         }
 
         /// <summary>The camera to a spot once the loaded game has settled (whatever looked at the Town Hall first).</summary>
