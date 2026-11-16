@@ -51,6 +51,18 @@ Concept `Tools/store/piggy_placement_concept.py <photos> <render A> [B] [C]`.
   pig WOBBLES SOFTLY (0.9 s eased in/out every 1.8 s, ~3 Hz, ±2 px / ±3°; the user: smoother), the shine brighter.
 - Script `Tools/store/piggy_button_concept.py <renders> <modes photo>`.
 
+## The window (concept 2026-11-16, waiting for the user; `Design/store/Piggy_Window_Concept.png` saving,
+`Piggy_Window_Full_Concept.png` full; `Tools/store/piggy_window_concept.py <renders>`)
+On the support banner's look: wood frame, purple crystal field, ribbon «Копилка», ✕ top right.
+- Left: the big pig of the current level on a golden shine with rays, floating crystals; «Уровень N» + 5 pips;
+  fill bar «245 / 300 💎» (gold when full + a «Полна!» tag on it); the level's material name.
+- Centre parchment: «Кристаллы копятся сами, пока вы играете и выполняете задания»; rows «Минута игры +1»,
+  «Задание дня +15–25»; red seal «+50 % выгоднее чем обычный набор»; green «Разбить за $0.99» + «Вы получите N
+  кристаллов» (below 150: grey «Разбить от 150»); full: the button glows.
+- Right: «Задания дня», «Новые через hh:mm:ss», 3 task cards (name, progress bar, +N 💎 / a green tick «В копилке»
+  when done -- rewards go in by themselves, no claim button); full: a red line «награды заданий пропадут!».
+  The tasks shown are EXAMPLES; the list is to be discussed.
+
 ## Levels (APPROVED by the user 2026-11-16, `Design/store/Piggy_Levels_Concept.png`)
 Same royal pig, the material changes: 1 pink ceramic (300), 2 bronze (500), 3 silver (1000), 4 gold (1500),
 5 amethyst -- glowing purple crystal (3000). `piggy_bank.py <out> <pink|bronze|silver|gold|amethyst> royal`.
