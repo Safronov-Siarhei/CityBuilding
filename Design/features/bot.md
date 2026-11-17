@@ -302,5 +302,5 @@ from `ArchipelagoBotCell`; `TheBotKingdom_StandsOnItsIsland...` now checks each 
 - THE WINDOW (the user, 2026-11-17): keep the ROUND-1 layout (`main_window` in Tools/ui/diplomacy_concepts.py ->
   Design/ui/Diplomacy_1_Window_Peace / _2_Window_War), NOT the big v2 one: title, relations number, scale, «Сейчас: Мир»,
   three buttons. Changes: no «Здание» button (the two help lines sit where it was, panel shorter); instead of the hall
-  icon and the crest -- TWO KINGS facing each other in round frames, «Вы» left, «Сосед» right (the neighbour's portrait
+  icon and the crest -- TWO KINGS facing each other INSIDE round buttons (clipped to the face, not over the rim), «Вы» left, «Сосед» right (the neighbour's portrait
   mirrored, cape red). The game has one King portrait (PortraitKing); the neighbour's needs its own sprite when built.

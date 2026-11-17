@@ -201,7 +201,7 @@ def scale(c, x0, y, w, value, war=False):
 def king_badge(size, neighbour):
     """A King portrait in the game's round frame; the neighbour's is mirrored (faces ours), cape recoloured red."""
     frame = load(SKIN, "round", (size, int(size * 202 / 192)))
-    k = load(ICONS, "PortraitKing", (int(size * .78), int(size * .78)))
+    k = load(ICONS, "PortraitKing", (int(size * .9), int(size * .9)))
     if neighbour:
         k = k.transpose(Image.FLIP_LEFT_RIGHT)
         r, g, b, a = k.split()
@@ -215,7 +215,16 @@ def king_badge(size, neighbour):
                     hp[x, y] = 0
         r2, g2, b2 = Image.merge("HSV", (h, sat, v)).convert("RGB").split()
         k = Image.merge("RGBA", (r2, g2, b2, a))
-    frame.alpha_composite(k, ((frame.width - k.width) // 2, (frame.height - k.height) // 2 - 4))
+    # the portrait lives INSIDE the button (the user, 2026-11-17): clipped to the face of the button, inside the rim
+    r = int(size * .43)
+    ox, oy = frame.width // 2, int(size * .5)
+    layer = Image.new("RGBA", frame.size)
+    layer.alpha_composite(k, (ox - k.width // 2, oy - k.height // 2 + int(size * .06)))
+    mask = Image.new("L", frame.size)
+    ImageDraw.Draw(mask).ellipse([ox - r, oy - r, ox + r, oy + r], fill=255)
+    a = Image.composite(layer.split()[3], Image.new("L", frame.size), mask)
+    layer.putalpha(a)
+    frame.alpha_composite(layer)
     return frame
 
 
