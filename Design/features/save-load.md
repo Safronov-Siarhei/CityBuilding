@@ -6,8 +6,13 @@
 > **Read with:** the card of whatever system you are adding state to.
 
 ## Rules
-- Named saves via the save dialog; ONE autosave slot `_autosave` (240 s, the user's choice, plus
-  `OnApplicationPause/Quit`); the autosave never becomes the "current" save. ~10 ms per save for an
+- Named saves via the save dialog; ONE AUTOSAVE PER MAP (the user, 2026-11-17; it was one shared `_autosave` and a
+  game on another map overwrote it): slot `GameSaveController.AutosaveSlot(mapId)` = `_autosave_<mapId>` (a new game on
+  the same map replaces it); a MANUAL save on a map deletes that map's autosave (it is newer); the list shows the
+  autosaves first, newest first, as «Автосохранение — <map code>» (`#save_autosave_map`, code = `ArchipelagoMapId.Code`)
+  + the date; the old shared `_autosave` is moved onto its map's slot when the list opens (`MigrateSharedAutosave`,
+  `SaveSystem.Replace` keeps the newer). `IsAutosave(slot)` covers both. Test `AutosaveTests` (incl. the manual-save
+  rule). 240 s, the user's choice, plus `OnApplicationPause/Quit`; the autosave never becomes the "current" save. ~10 ms per save for an
   18 KB town in the editor (move the write off-thread if it hitches on a phone).
 - Home button = autosave + leave, no confirm.
 - **Every new piece of state must be added to `SaveData` AND restored**, and both paths verified by

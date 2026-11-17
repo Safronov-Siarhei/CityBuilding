@@ -12,7 +12,9 @@ namespace CityBuilder.Saving
 {
     /// <summary>
     /// The player saves when and under what name they like (see SaveDialogController). Besides
-    /// that there is ONE autosave slot (AutosaveName) that overwrites itself: every
+    /// that each MAP has one autosave slot (AutosaveSlot(mapId); the user, 2026-11-17 -- it was one slot for all, and a
+    /// game on another map overwrote it) that overwrites itself, and a manual save on that map deletes it (the manual one
+    /// is newer). Written every
     /// autosaveIntervalSeconds of real time (4 minutes, the user's choice), and whenever the app
     /// goes to the background or quits -- on a phone, the moment Android may kill the game and take
     /// everything since the last manual save with it. The autosave never becomes the "current"
@@ -42,6 +44,32 @@ namespace CityBuilder.Saving
         /// anything the player types, so no save the player names can ever collide with it.
         /// </summary>
         public const string AutosaveName = "_autosave";
+
+        /// <summary>The autosave slot of one map: "_autosave_" + its map id (a new game on the same map replaces it).</summary>
+        public static string AutosaveSlot(string mapId) =>
+            string.IsNullOrEmpty(mapId) ? AutosaveName : AutosaveName + "_" + mapId;
+
+        /// <summary>Whether a slot is an autosave (a map's, or the old shared one).</summary>
+        public static bool IsAutosave(string slot) =>
+            slot == AutosaveName || (slot != null && slot.StartsWith(AutosaveName + "_"));
+
+        /// <summary>
+        /// The one shared autosave of before 2026-11-17 becomes its map's autosave (unless that map already has a newer
+        /// one). Called before the saves are listed.
+        /// </summary>
+        public static void MigrateSharedAutosave()
+        {
+            if (!SaveSystem.SaveExists(AutosaveName)) return;
+            var data = SaveSystem.Load(AutosaveName);
+            var slot = AutosaveSlot(data?.mapId);
+            if (slot == AutosaveName) return;
+            SaveSystem.Replace(AutosaveName, slot);
+        }
+
+        /// <summary>The map this game is on.</summary>
+        private string CurrentMapId => meshMapApplier != null && !string.IsNullOrEmpty(meshMapApplier.CurrentMapId)
+            ? meshMapApplier.CurrentMapId
+            : (mapTerrainGenerator != null ? mapTerrainGenerator.CurrentMapId : string.Empty);
 
         [SerializeField] private float autosaveIntervalSeconds = 240f;
         private float _sinceAutosave;
@@ -84,7 +112,7 @@ namespace CityBuilder.Saving
 
             // Resuming from the autosave gives no name to save back under: the dialog should ask
             // for one, not offer "_autosave".
-            CurrentSaveName = nameToLoad == AutosaveName ? string.Empty : nameToLoad;
+            CurrentSaveName = IsAutosave(nameToLoad) ? string.Empty : nameToLoad;
             if (GameSessionIntent.SaveNameAfterLoad != null)
             {
                 CurrentSaveName = GameSessionIntent.SaveNameAfterLoad;
@@ -166,7 +194,8 @@ namespace CityBuilder.Saving
             if (!CanAutosave) return;
             try
             {
-                SaveSystem.Save(AutosaveName, CollectSaveData());
+                var data = CollectSaveData();
+                SaveSystem.Save(AutosaveSlot(data.mapId), data);
             }
             catch (Exception e)
             {
@@ -181,7 +210,10 @@ namespace CityBuilder.Saving
             // below ground the game is the dungeon, not the town: the town waits in its own slot
             if (string.IsNullOrEmpty(saveName) || Dungeon.DungeonMode.IsActive) return;
             CurrentSaveName = saveName;
-            SaveSystem.Save(saveName, CollectSaveData());
+            var data = CollectSaveData();
+            SaveSystem.Save(saveName, data);
+            // the manual save is newer than this map's autosave: the autosave goes (the user, 2026-11-17)
+            if (!IsAutosave(saveName)) SaveSystem.Delete(AutosaveSlot(data.mapId));
         }
 
         /// <summary>Writes the game as it stands into this slot, leaving CurrentSaveName alone (the town before its heroes go down).</summary>
@@ -711,9 +743,7 @@ namespace CityBuilder.Saving
         {
             var data = new GameSaveData
             {
-                mapId = meshMapApplier != null && !string.IsNullOrEmpty(meshMapApplier.CurrentMapId)
-                    ? meshMapApplier.CurrentMapId
-                    : (mapTerrainGenerator != null ? mapTerrainGenerator.CurrentMapId : string.Empty),
+                mapId = CurrentMapId,
                 season = (int)Maps.SeasonStyle.Session,
                 mandatoryBuildingPlaced = buildingPlacer == null || !buildingPlacer.IsPlacingTownHall,
                 population = citizenManager != null ? citizenManager.TotalPopulation : 0,

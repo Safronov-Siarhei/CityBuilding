@@ -22,7 +22,9 @@ namespace CityBuilder.Tests.PlayMode
     public class AutosaveTests
     {
         private static bool _sceneLoaded;
-        private static string AutosavePath => Path.Combine(Application.persistentDataPath, "Saves", GameSaveController.AutosaveName + ".json");
+        // each map has its own autosave (the user, 2026-11-17); this town stands on Map3
+        private static readonly string Slot = GameSaveController.AutosaveSlot("Map3");
+        private static string AutosavePath => Path.Combine(Application.persistentDataPath, "Saves", Slot + ".json");
 
         private byte[] _developersAutosave;
         private GameSaveController _saves;
@@ -91,7 +93,7 @@ namespace CityBuilder.Tests.PlayMode
             yield return new WaitForSecondsRealtime(1.2f);
             Assert.IsTrue(File.Exists(AutosavePath), "No autosave was written when the interval ran out.");
 
-            var data = SaveSystem.Load(GameSaveController.AutosaveName);
+            var data = SaveSystem.Load(Slot);
             Assert.IsNotNull(data, "The autosave cannot be read back.");
             Assert.IsTrue(data.mandatoryBuildingPlaced, "The autosave does not know the Town Hall stands.");
             Assert.Greater(data.buildings.Count, 3, "The autosave holds next to none of the town.");
@@ -120,11 +122,28 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         [Test]
+        public void AManualSaveOnTheMap_DeletesThatMapsAutosave()
+        {
+            _saves.Autosave();
+            Assert.IsTrue(File.Exists(AutosavePath), "The autosave was not written into its map's slot.");
+            const string manual = "AutosaveTestManual";
+            try
+            {
+                _saves.SaveGame(manual);
+                Assert.IsFalse(File.Exists(AutosavePath), "A manual save on this map left the older autosave of the map in the list.");
+            }
+            finally
+            {
+                SaveSystem.Delete(manual);
+            }
+        }
+
+        [Test]
         public void NoSaveThePlayerNames_CanBeTheAutosave()
         {
             foreach (var typed in new[] { "_autosave", "__autosave", " _autosave ", "-autosave", "autosave" })
             {
-                Assert.AreNotEqual(GameSaveController.AutosaveName, SaveSystem.SanitizeName(typed),
+                Assert.IsFalse(GameSaveController.IsAutosave(SaveSystem.SanitizeName(typed)),
                     $"Typing '{typed}' in the save dialog would overwrite the autosave slot.");
             }
         }

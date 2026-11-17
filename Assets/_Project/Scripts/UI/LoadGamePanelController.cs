@@ -70,17 +70,15 @@ namespace CityBuilder.UI
             _selectedName = null;
             UpdateSelectionUI();
 
+            GameSaveController.MigrateSharedAutosave();
             var saves = SaveSystem.ListSaves();
             if (emptyLabel != null) emptyLabel.SetActive(saves.Count == 0);
 
-            // The autosave heads the list whatever its date: it is the "pick up where I was" row.
-            var autosave = saves.FindIndex(s => s.Name == GameSaveController.AutosaveName);
-            if (autosave > 0)
-            {
-                var row = saves[autosave];
-                saves.RemoveAt(autosave);
-                saves.Insert(0, row);
-            }
+            // The autosaves (one a map) head the list whatever their dates, the newest first: they are the
+            // "pick up where I was" rows. ListSaves is newest first, so a stable split keeps that order.
+            var autos = saves.FindAll(s => GameSaveController.IsAutosave(s.Name));
+            saves.RemoveAll(s => GameSaveController.IsAutosave(s.Name));
+            saves.InsertRange(0, autos);
 
             foreach (var save in saves)
             {
@@ -205,8 +203,16 @@ namespace CityBuilder.UI
             return string.IsNullOrEmpty(mapId) || MeshMapCatalog.GetById(mapId) != null || MapCatalog.GetById(mapId) != null;
         }
 
-        private static string DisplayName(string saveName) =>
-            saveName == GameSaveController.AutosaveName ? Localization.Get("#save_autosave") : saveName;
+        /// <summary>A save's name in the list; a map's autosave reads «Автосохранение — <the map's seed code>».</summary>
+        private static string DisplayName(string saveName)
+        {
+            if (!GameSaveController.IsAutosave(saveName)) return saveName;
+            var mapId = saveName.Length > GameSaveController.AutosaveName.Length + 1
+                ? saveName.Substring(GameSaveController.AutosaveName.Length + 1) : string.Empty;
+            var code = Maps.Archipelago.ArchipelagoMapId.Code(mapId);
+            if (string.IsNullOrEmpty(code)) code = mapId;
+            return string.IsNullOrEmpty(code) ? Localization.Get("#save_autosave") : Localization.Format("#save_autosave_map", code);
+        }
 
         private void Select(string name)
         {

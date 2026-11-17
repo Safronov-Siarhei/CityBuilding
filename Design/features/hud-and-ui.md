@@ -123,6 +123,16 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
   (`ArchipelagoPreviewLibrary`, cells only, written next to ArchipelagoLibrary by CreateArchipelagoLibrary)
   via `Generate(seed, version, preview: true)` -- TRAP: never load ArchipelagoLibrary in the menu, it
   drags every island's meshes in. Test `TheMenuChart_IsTheMapTheGameMakes` (also writes RunLogs/ink_map_42.png + INKMAP ms).
+- **SANDBOX MENU REDESIGN (the user, 2026-11-17: «теперь я хочу переделать меню Песочницы»)** with the PAID
+  «Свобода песочницы» (~$0.99 once: set the world up before the start and in the game -- raids, orc camps, portals,
+  neighbour, fires, plague, storms, start goods, build speed, fog... -- the settings drawn are EXAMPLES, the list is to
+  be discussed after the look). Concepts `Tools/ui/sandbox_hub_concepts.py` -> `Design/ui/SandboxHub_A/B/C.png`
+  (A «Стол картографа», B «Знамя и доска» with Карта/Настройки мира bookmarks, C «Мастерская мира» with dials); the
+  user PICKED A («доработай»); v2 sent: `SandboxHub_A2_Locked/Open/Saves.png` (wood frame with brass corners, theme
+  seals + season plate, the chart in a gilt frame with a name tag, quill + inkwell, the settings on a scroll with
+  rollers -- dimmed + lock card «Открыть навсегда $0.99» before the purchase, live + «По умолчанию» after; the saves
+  window with the per-map autosaves). Background = the real menu village shot `Design/ui/MainMenu_VillageShot.jpg`.
+  NOT approved yet, nothing built. Open after the look: the feature's list, crystals/piggy rules in a custom world.
 - saves dialog rows (2026-11-10, the user): the save's THEME glyph alone (no round under it, like the tabs) (season -> first
   theme of it; old saves summer), name + date, then «День N · Жителей N · Зданий N · Код карты v-seed»
   (`#load_row_stats` / `#load_row_code`; buildings = save entries minus Road/Fence/Moat/Bridge/

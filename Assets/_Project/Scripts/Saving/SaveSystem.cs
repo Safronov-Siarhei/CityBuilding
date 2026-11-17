@@ -59,6 +59,20 @@ namespace CityBuilder.Saving
             if (File.Exists(path)) File.Delete(path);
         }
 
+        /// <summary>Moves slot `from` onto slot `to`; if `to` is already there and newer, `from` is just dropped.</summary>
+        public static void Replace(string from, string to)
+        {
+            var src = GetPath(from);
+            if (!File.Exists(src)) return;
+            var dst = GetPath(to);
+            if (File.Exists(dst))
+            {
+                if (File.GetLastWriteTimeUtc(dst) >= File.GetLastWriteTimeUtc(src)) { File.Delete(src); return; }
+                File.Delete(dst);
+            }
+            File.Move(src, dst);
+        }
+
         public static void Save(string name, GameSaveData data)
         {
             if (string.IsNullOrEmpty(name)) return;
