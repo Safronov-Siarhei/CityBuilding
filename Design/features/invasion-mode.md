@@ -213,3 +213,5 @@ The user picked B «Зал знамён» (2026-11-16) and answered: background 
 NOT done: the GPGS plugin (a download -- the user's OK), the Play Console boards and their ids (the user's), sending scores, reading the place before the reset and GIVING the rewards; the local records still count days by the device's clock (GPGS counts Pacific -- align when the plugin lands).
 
 **Covering (the user, 2026-11-17):** the screen's front is one `Content` group (all but `Hall`, `Vignette`, `RatingWindow`); the mode's «!» and the saves (`MainMenuController.Animate` -> `InvasionHubController.SetMenuCovered`) and «Доска славы» (`InvasionRatingWindow` OnEnable/OnDisable -> `SetRatingShown`) hide only it -- the 3D hall stays (the «!» used to fade the whole screen and bare the old menu scene). `#mode_info_invasion` no longer names the month (sheet synced).
+
+**The hall + rating UI APPROVED by the user («утверждаю», 2026-11-17)** after the covering fix. Open for later: the GPGS plugin and boards (the user said «Позже»).
