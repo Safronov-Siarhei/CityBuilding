@@ -1,6 +1,6 @@
 ---
 name: project-storage-rework
-description: Storage rework (sandbox) BUILT IN CODE 2026-11-17 -- StoreLedger, start chain, caps tab, HUD, store card; needs setup,setup + playtest; demolish warning concept awaits approval
+description: Storage rework (sandbox) BUILT IN CODE 2026-11-17 -- StoreLedger, start chain, caps tab, HUD, store card; needs setup,setup + playtest; demolish warning approved and built
 metadata:
   type: project
 ---
@@ -14,7 +14,7 @@ The user's storage rework, decided 2026-11-17 in talk (the user: «пока пр
 - Chain buildings free; food 25 kept on purpose (start with 5 residents, growth must be hard); each store holds its own amounts + an inventory button by the «!»; destroyed = lose its contents, ruin restored = half back, rounded up. Prices above caps: PRE-RELEASE check (user rebalances later).
 
 **Why:** the user wants the start to teach where resources live and caps to be readable («10/10» red).
-**How to apply:** the code is in (card section «How it is built»); next: the user's general setup (setup,setup: Editor code changed) and playtest; build the demolish warning only after the user approves the concept.
+**How to apply:** the code is in (card section «How it is built»); next: the user's general setup (setup,setup: Editor code changed) and playtest; the demolish warning (red «Пропадёт» line) is built too.
 
 2026-11-17 later: overflow lies in the Town Hall; hand demolish moves contents to other stores (warning concept to show first); upgrade keeps old caps; inventory button on the 6 stores only; chain buildings given into the hand with a one-line purpose. New idea DECIDED: MOVE A BUILDING (four-arrows button right of «!», 1 crystal, rebuild time) -- card Design/features/building-relocation.md, not built.
 

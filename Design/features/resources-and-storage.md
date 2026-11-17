@@ -141,5 +141,7 @@ SANDBOX ONLY. Replaces the family pools with a cap PER RESOURCE.
   `UI/StoreInventoryCard.cs` + sack button right of «!» (SetupProjectHud `StoreInventoryButton`,
   SetupProjectPanels `BuildStoreInventoryCard`).
 - Grain: not kept by any store, Barn/BigBarn hidden, nothing makes it; the enum value stays (saves store ints).
-- OPEN: the demolish warning (concept shown to the user 2026-11-17, waits for approval); first setup + playtest;
+- Demolish warning APPROVED and BUILT 2026-11-17: the confirm adds a red line `#demolish_store_loss`
+  («Пропадёт: 30 дерева — другим складам некуда их взять») from `StoreLedger.WouldLose`; no line when all fits.
+- OPEN: first setup + playtest;
   base_capacity_* / start_* still serve the campaign and other modes.

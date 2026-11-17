@@ -140,6 +140,10 @@ namespace CityBuilder.UI
                 demolishConfirmLabel.text = DemolishCrystals(_currentInstance) > 0
                     ? Localization.Format("#demolish_confirm_crystals", _currentInstance.Data.LocalizedName, DemolishCrystals(_currentInstance))
                     : Localization.Format("#demolish_confirm", _currentInstance.Data.LocalizedName, DescribeRefund());
+                // a sandbox store: what the other stores have no room for is lost -- said in red first (the user, 2026-11-17)
+                var lost = DescribeStoreLoss();
+                if (lost.Length > 0) demolishConfirmLabel.text += "
+<color=#B3261E>" + Localization.Format("#demolish_store_loss", lost) + "</color>";
             }
             if (demolishConfirmRoot != null) demolishConfirmRoot.SetActive(true);
         }
@@ -184,6 +188,19 @@ namespace CityBuilder.UI
 
             var text = string.Empty;
             foreach (var amount in refund)
+            {
+                if (text.Length > 0) text += ", ";
+                text += ResourceNames.Of(amount.type) + " " + amount.amount;
+            }
+            return text;
+        }
+
+        /// <summary>«30 дерева, 10 камня» -- a store's goods that no other store could take (StoreLedger.WouldLose), or empty.</summary>
+        private string DescribeStoreLoss()
+        {
+            if (_currentInstance == null || !StoreLedger.Active) return string.Empty;
+            var text = string.Empty;
+            foreach (var amount in StoreLedger.WouldLose(_currentInstance))
             {
                 if (text.Length > 0) text += ", ";
                 text += ResourceNames.Of(amount.type) + " " + amount.amount;
