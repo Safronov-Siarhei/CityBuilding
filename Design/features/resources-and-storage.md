@@ -30,7 +30,8 @@ seen, even at 0). Storage ceilings per family; storehouses raise them. Coins arr
 ## Storage buildings (checked 2026-11-17)
 - In the build menu: Склад `Warehouse` + Большой склад `BigWarehouse` (Materials), Кладовая `Granary` +
   Большая кладовая `BigGranary` (Food), Сокровищница `Treasury` + Большая сокровищница `BigTreasury`
-  (Valuables). The Big one needs the ordinary one. Levels 1-5 each (`storage_capacity.._5`), sandbox prices
+  (Valuables). The Big ones are opened in the Lab; the «needs the ordinary one» rule was REMOVED 2026-11-17 (the user; it was
+  my own rule of 2026-08-16, the sheet column `requires` cleared). Levels 1-5 each (`storage_capacity.._5`), sandbox prices
   in the sheet tab «Песочница: Здания (Склады)», level icons in Design/Reference.md.
 - HIDDEN since the food rework (2026-11-02, `BuildingIds.Hidden`): Амбар `Barn`, `BigBarn` -- all food in the
   Pantries. The `Grain` family stays in the code.
@@ -78,3 +79,42 @@ EditMode `ResourceManagerTests`, `ResourceStorageTests`, `TaxManagerTests`, `Tax
 ## Open
 - Stone is finite (~2 800 on a map) vs ~4 700 to build everything at level 3 — never addressed.
 - Resource wishlist not built: sand, clay, water, hides; fruit, meat, vegetables, fish, wine.
+
+## Storage rework -- DECIDED by the user 2026-11-17, NOT BUILT (talk only so far)
+SANDBOX ONLY. Replaces the family pools with a cap PER RESOURCE.
+- Start chain (shown to the player at map start): Town Hall -> Lighthouse -> Склад -> Кладовая -> Сокровищница
+  (open from the start, no Lab) -> Crystal Mine (if the map has one). After the chain the stores receive
+  wood 40, stone 40, food 20, coins 100 (replaces start_* and the Town Hall's base capacity).
+- Caps by level 1..5 (each building of the kind ADDS its cap: two lvl-1 Склады = 100 wood):
+  | | Склад | Большой склад |
+  |---|---|---|
+  | wood, stone | 50/60/70/80/90 | 70/90/110/130/150 |
+  | iron, gold, copper ore; coal | 20/25/30/35/40 | 40/50/60/70/80 |
+  | iron, copper, gold bars | 10/12/14/16/18 | 20/25/30/35/40 |
+  Кладовая food 25/30/35/40/45, Большая кладовая 50/60/70/80/90.
+  Сокровищница coins 200/250/300/350/400, Большая сокровищница 400/500/600/700/800.
+  Crystals: no cap. The `Grain` family and resource go away.
+- Full: the bar shows «10/10» blinking red (top bar + inventory); a notice «Постройте больше складов или улучшите
+  старый» at most once per 2-3 min PER BUILDING KIND (склад / кладовая / сокровищница).
+- Purchases, gifts and rewards may overfill a store; production stops until the stock drops below the cap.
+- A storage building destroyed: its resources are lost, with a visible «minus» effect on the inventory; restoring
+  the ruin gives back half of them.
+- Islands: one shared store for the whole archipelago.
+- The chain buildings are FREE (the user, 2026-11-17).
+- Food stays 25 at lvl 1 on purpose: the player starts with 5 residents; growth must be hard (the user).
+- Each storage building holds ITS OWN amounts. Tapping a store (or any building holding resources) shows, next to
+  the «!», a round INVENTORY button: what this very building holds. Destroyed with 50 wood inside -> the player
+  loses 50 wood; restoring its ruin gives back 25; fractions round UP (in the player's favour).
+- Overflow (purchases, gifts, rewards past the caps) lies «in the Town Hall»: never lost with a store, spent first.
+- Demolishing a store by hand: its contents move to the other stores as far as they fit, the rest is lost; a
+  WARNING first («пропадёт 30 дерева») -- concept to show the user before building it.
+- A store under upgrade keeps its OLD level's caps until the upgrade ends (no stock thrown away).
+- The inventory button by the «!» sits on the six storage buildings only.
+- The start chain's buildings are given INTO THE HAND one after another (like the Town Hall and the Lighthouse now),
+  not looked up in the build tabs; each, when placed, shows a short line on what it is for («Маяк открывает
+  местность», «Склад хранит ваши ресурсы»...) -- texts in the sheet.
+- PRE-RELEASE CHECK: prices above the caps (Tax House 150/200, Colosseum 90/80, Big Treasury 110 stone, Big
+  Warehouse 80 / Big Granary 70 wood, Manor 55, Moat 25 of a 20-cap resource, research up to 800 coins) -- the user
+  re-balances after the review of every building's logic.
+- Fill / spend order (agreed 2026-11-17): a new resource goes into the stores nearest to where it was made, one by
+  one; a price is paid from the FULLEST store first (stock stays even, losing one store hurts less).

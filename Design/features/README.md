@@ -27,6 +27,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 |---|---|---|
 | **Economy** | | |
 | [resources-and-storage](resources-and-storage.md) | resource types, storage families, capacity, coins, flat tax + Tax House, lifetime produced | ресурсы, склад, вместимость, налог, налоговый дом, монеты |
+| [building-relocation](building-relocation.md) | moving a building (sandbox): a four-arrows button right of the «!», placing again with ✕/✓, 1 crystal, rebuilt in build time, same island (DECIDED 2026-11-17, not built) | перенести здание, перенос, переместить |
 | [production-chains](production-chains.md) | workshops, recipes, grain→flour→bread, ore→bars, Smelter bar buttons (minting removed) | производство, рецепт, плавильня, пекарня, чеканка |
 | [gathering](gathering.md) | trees/rocks stock per node, ore veins, harvest radius, gatherer walk, manual tap-to-gather | лес, камень, сбор, радиус, лесопилка, жила, рудник |
 | [food-and-hunger](food-and-hunger.md) | eating, diet, starvation deaths, food variety | еда, голод, рацион |
@@ -56,6 +57,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | [archipelago-and-ships](archipelago-and-ships.md) | sandbox archipelago: seed generator, Blender island library, map code, Shipyard and ships | архипелаг, острова, сид, код карты, верфь, корабли |
 | [fog-of-war](fog-of-war.md) | exploration, parchment/cloud looks | туман, разведка |
 | [camera-and-input](camera-and-input.md) | RTS camera, touch gestures, input routing | камера, тач, жесты, управление |
+| [../PRE_RELEASE](../PRE_RELEASE.md) | the pre-release checklist: everything to check before shipping | перед релизом, релиз, чеклист |
 | **Modes** | | |
 | [invasion-mode](invasion-mode.md) | «Нашествие»: endless waves, the King hero, run economy, Dota-like map (log: `Design/Invasion.md`) | нашествие, король, герой, волны, забег, рейтинг |
 | [sandbox-run-systems](sandbox-run-systems.md) | the sandbox on the run's systems (2026-10-25): houses make people, heroes for coins, timed build/upgrade, repair by damage, no decay/happiness/migration, run card + minimap, the `sandbox` sheet tab | песочница, жители из домов, герои, стройка по таймеру, ремонт, лист sandbox |
