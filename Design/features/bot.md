@@ -291,3 +291,8 @@ from `ArchipelagoBotCell`; `TheBotKingdom_StandsOnItsIsland...` now checks each 
 - Hall levels: better rates and more interesting offers, richer bot gifts, cheaper peace.
 - Open: exact numbers (gift prices, war chance curve, warning threshold, crystals for the hall, refresh price), the offer table's
   columns, the level ladder; the user reviews the concepts first.
+- Round 2 (the user, 2026-11-17): the Hall held gets its OWN round «Дипломатия» button LEFT of the «!» (the «!» keeps
+  the card and upgrades; the window loses «Здание»). The window: big (1640x960), pictures not sentences -- you vs the
+  neighbour across a relations medallion, МИР/ВОЙНА ribbon, the scale with icons at -50/+30/+60, three picture tiles
+  (Подарок / Торговля locked below +30 / Война; at war: peace for coins, for crystals, raze their hall +N crystals).
+  Concepts: Tools/ui/diplomacy_window_v2.py -> Design/ui/Diplomacy_0_Selection, _1_, _2_, Diplomacy_Window_v2.jpg.
