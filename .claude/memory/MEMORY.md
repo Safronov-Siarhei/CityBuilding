@@ -100,3 +100,4 @@
 - [Main menu village (2026-11-17)](project_main_menu_village.md) — concept 1 stages 1-2 BUILT (village loop + logo, house going up with 2 builders); stage 3 phone check left.
 - [Sandbox menu redesign (2026-11-17)](project_sandbox_menu_redesign.md) — concept A «Стол картографа» + «Свобода песочницы» BUILT 2026-11-17 (not seen); per-map autosave built.
 - [Storage rework (2026-11-17)](project_storage_rework.md) — DECIDED, not built: per-resource caps by level (sandbox), start chain hall→lighthouse→stores, rewards may overfill.
+- [Music by mode (2026-11-17)](project_music.md) — menu/tutorial/sandbox/invasion tracks, quiet + fades + pauses, Музыка/Эффекты sliders; BUILT, not heard.

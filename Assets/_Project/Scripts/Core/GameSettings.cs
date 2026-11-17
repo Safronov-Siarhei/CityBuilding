@@ -121,6 +121,25 @@ namespace CityBuilder.Core
 
         public static event Action OnChanged;
 
+        // the player's loudness of the music and of everything else (the user, 2026-11-17: in the settings), 0..1
+        private const string MusicVolumeKey = "settings.music_volume";
+        private const string SfxVolumeKey = "settings.sfx_volume";
+        private static float? _musicVolume, _sfxVolume;
+
+        /// <summary>The «Музыка» slider: multiplies the sheet's music loudness (MusicPlayer, the campaign's music).</summary>
+        public static float MusicVolume
+        {
+            get => _musicVolume ??= Mathf.Clamp01(PlayerPrefs.GetFloat(MusicVolumeKey, 1f));
+            set { _musicVolume = Mathf.Clamp01(value); PlayerPrefs.SetFloat(MusicVolumeKey, _musicVolume.Value); }
+        }
+
+        /// <summary>The «Эффекты» slider: multiplies every other sound (building, combat, clicks, the campaign's sounds).</summary>
+        public static float SfxVolume
+        {
+            get => _sfxVolume ??= Mathf.Clamp01(PlayerPrefs.GetFloat(SfxVolumeKey, 1f));
+            set { _sfxVolume = Mathf.Clamp01(value); PlayerPrefs.SetFloat(SfxVolumeKey, _sfxVolume.Value); }
+        }
+
         public static FogStyle FogStyle
         {
             get
@@ -172,6 +191,7 @@ namespace CityBuilder.Core
         {
             _loaded = false;
             _hudSkinLoaded = false;
+            _musicVolume = _sfxVolume = null;
             _sandboxTheme = null;
             _invasionTheme = null;
         }

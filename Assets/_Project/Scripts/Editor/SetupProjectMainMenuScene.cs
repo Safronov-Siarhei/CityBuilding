@@ -146,6 +146,57 @@ namespace CityBuilder.EditorTools
         /// from whatever columns the localization sheet has -- see SettingsPanelController -- so a
         /// third language never needs this method touched.
         /// </summary>
+        /// <summary>A settings line «caption ——●——»: the caption left, a slider 0..1 right (the volumes).</summary>
+        private static Slider CreateVolumeSlider(Transform rows, string name, string key)
+        {
+            var line = new GameObject(name, typeof(RectTransform));
+            line.transform.SetParent(rows, false);
+            ((RectTransform)line.transform).sizeDelta = new Vector2(680f, 70f);
+            var caption = CreateText(line.transform, "Label", string.Empty, 26, new Vector2(-230f, 0f), new Vector2(220f, 60f), new Color(1f, 1f, 1f, 0.85f));
+            Localize(caption, key);
+            caption.alignment = TextAnchor.MiddleLeft;
+
+            var go = new GameObject("Slider", typeof(RectTransform), typeof(Slider));
+            go.transform.SetParent(line.transform, false);
+            var rect = (RectTransform)go.transform;
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(110f, 0f);
+            rect.sizeDelta = new Vector2(440f, 40f);
+            var knob = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
+            var back = CreateImage(go.transform, "Background", new Color(0.12f, 0.08f, 0.05f, 0.9f));
+            StretchFull(back.rectTransform);
+            back.rectTransform.offsetMin = new Vector2(0f, 10f);
+            back.rectTransform.offsetMax = new Vector2(0f, -10f);
+            var fillArea = new GameObject("Fill Area", typeof(RectTransform));
+            fillArea.transform.SetParent(go.transform, false);
+            var fillAreaRect = (RectTransform)fillArea.transform;
+            StretchFull(fillAreaRect);
+            fillAreaRect.offsetMin = new Vector2(4f, 13f);
+            fillAreaRect.offsetMax = new Vector2(-4f, -13f);
+            var fill = CreateImage(fillArea.transform, "Fill", new Color(0.86f, 0.66f, 0.26f));
+            StretchFull(fill.rectTransform);
+            var handleArea = new GameObject("Handle Slide Area", typeof(RectTransform));
+            handleArea.transform.SetParent(go.transform, false);
+            var handleAreaRect = (RectTransform)handleArea.transform;
+            StretchFull(handleAreaRect);
+            handleAreaRect.offsetMin = new Vector2(20f, 0f);
+            handleAreaRect.offsetMax = new Vector2(-20f, 0f);
+            var handle = CreateImage(handleArea.transform, "Handle", new Color(0.96f, 0.88f, 0.66f));
+            handle.sprite = knob;
+            handle.rectTransform.anchorMin = new Vector2(0f, 0f);
+            handle.rectTransform.anchorMax = new Vector2(0f, 1f);
+            handle.rectTransform.sizeDelta = new Vector2(44f, 4f);
+            var slider = go.GetComponent<Slider>();
+            slider.fillRect = fill.rectTransform;
+            slider.handleRect = handle.rectTransform;
+            slider.targetGraphic = handle;
+            slider.direction = Slider.Direction.LeftToRight;
+            slider.minValue = 0f;
+            slider.maxValue = 1f;
+            slider.value = 1f;
+            return slider;
+        }
+
         private static SettingsPanelController BuildSettingsPanel(Transform canvasParent, Sprite panelSprite, Button openButton)
         {
             var panelRoot = new GameObject("SettingsPanel", typeof(RectTransform));
@@ -197,6 +248,10 @@ namespace CityBuilder.EditorTools
             scroller.scrollSensitivity = 30f;
             var rows = content.transform;
 
+            // the loudness of the music and of the sounds, first (the user, 2026-11-17)
+            var musicSlider = CreateVolumeSlider(rows, "MusicVolume", "#settings_music");
+            var sfxSlider = CreateVolumeSlider(rows, "SfxVolume", "#settings_sfx");
+
             Localize(CreateText(rows, "LanguageLabel", string.Empty, 26, Vector2.zero, new Vector2(680f, 50f), new Color(1f, 1f, 1f, 0.75f)), "#settings_language");
             var languageRowRect = CreateSettingsRow(rows, "LanguageRow", 0f);
 
@@ -234,10 +289,14 @@ namespace CityBuilder.EditorTools
             controllerSO.FindProperty("graphicsDetails").objectReferenceValue = detailsRect;
             controllerSO.FindProperty("labelTemplate").objectReferenceValue = graphicsLabel;
             controllerSO.FindProperty("cardImage").objectReferenceValue = card;
+            controllerSO.FindProperty("musicSlider").objectReferenceValue = musicSlider;
+            controllerSO.FindProperty("sfxSlider").objectReferenceValue = sfxSlider;
             controllerSO.FindProperty("buttonSprite").objectReferenceValue = SkinSprite("pill_parchment") ?? panelSprite;
             controllerSO.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEventTools.AddPersistentListener(backButton.onClick, controller.ClosePanel);
+            UnityEventTools.AddPersistentListener(musicSlider.onValueChanged, controller.SetMusicVolume);
+            UnityEventTools.AddPersistentListener(sfxSlider.onValueChanged, controller.SetSfxVolume);
             if (openButton != null) UnityEventTools.AddPersistentListener(openButton.onClick, controller.OpenPanel);
 
             panelRoot.SetActive(false);

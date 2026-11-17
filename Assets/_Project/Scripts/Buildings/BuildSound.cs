@@ -46,7 +46,7 @@ namespace CityBuilder.Buildings
                 _source.spatialBlend = 0f;
             }
             _source.pitch = pitch;
-            _source.PlayOneShot(clip, volume);
+            _source.PlayOneShot(clip, volume * GameSettings.SfxVolume);
         }
     }
 }

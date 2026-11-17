@@ -84,7 +84,7 @@ namespace CityBuilder.UI
             var volume = config != null ? config.UiClickVolume : 0.5f;
             if (volume <= 0f) return;
             _source.pitch = Random.Range(0.97f, 1.03f);
-            _source.PlayOneShot(_clips[Random.Range(0, _clips.Length)], volume);
+            _source.PlayOneShot(_clips[Random.Range(0, _clips.Length)], volume * CityBuilder.Core.GameSettings.SfxVolume);
         }
     }
 }

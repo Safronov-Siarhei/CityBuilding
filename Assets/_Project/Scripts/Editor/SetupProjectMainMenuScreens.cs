@@ -138,9 +138,21 @@ namespace CityBuilder.EditorTools
             BuildMenuSkinApplier(canvas);
 
             // the menu's music (the user, 2026-11-17: «medieval-exploration» for the menu and its screens)
-            var music = new GameObject("MenuMusic").AddComponent<MenuMusic>();
+            BuildMusicPlayer(MusicPlayer.Place.Menu);
+        }
+
+        /// <summary>The background music (UI/MusicPlayer, the user 2026-11-17): the menu's track, or the game's lists by mode.</summary>
+        private static void BuildMusicPlayer(MusicPlayer.Place place)
+        {
+            AudioClip Track(string file) => AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/" + file);
+            var music = new GameObject("MusicPlayer").AddComponent<MusicPlayer>();
             var mso = new SerializedObject(music);
-            mso.FindProperty("track").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Music/mus_exploration.mp3");
+            mso.FindProperty("place").enumValueIndex = (int)place;
+            mso.FindProperty("menuTrack").objectReferenceValue = Track("Music/mus_exploration.mp3");
+            mso.FindProperty("tutorialTrack").objectReferenceValue = Track("Music/mus_the_bards_tale.mp3");
+            WriteArray(mso.FindProperty("sandboxTracks"), new Object[] { Track("Music/mus_harvest_season.mp3"), Track("Music/mus_market_day.mp3") });
+            mso.FindProperty("invasionTrack").objectReferenceValue = Track("Music/mus_kings_feast.mp3");
+            mso.FindProperty("battleTrack").objectReferenceValue = Track("Campaign/mus_mission1.ogg");
             mso.ApplyModifiedPropertiesWithoutUndo();
         }
 

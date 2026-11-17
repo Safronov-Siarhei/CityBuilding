@@ -193,6 +193,18 @@ key,ru,en,comment
 #freedom_body,"Набеги, сосед, бедствия, запасы и скорость стройки — как тебе нравится.","Raids, the neighbour, disasters, goods and building speed — just the way you like.",баннер покупки: что открывает
 #freedom_note,"Навсегда, для всех карт","Forever, for every map",баннер покупки: примечание
 #freedom_buy,Открыть за {0},Unlock for {0},"баннер покупки: кнопка, {0} = цена"
+#load_delete_question,Удалить сохранение «{0}»? Его нельзя будет вернуть.,Delete the save «{0}»? It cannot be brought back.,"окно сохранений: вопрос перед удалением, {0} = имя сохранения"
+#load_delete,Удалить,Delete,окно сохранений: кнопка подтверждения удаления
+#lab_research_title,Прокачка зданий,Upgrades,лаборатория: шапка окна исследований (кнопка слева от «!»)
+#lab_info_title,"{0}, ур. {1}","{0}, lvl {1}","лаборатория, окно «!»: шапка, {0} = здание, {1} = уровень"
+#lab_info_health,Прочность,Health,"лаборатория, окно «!»: подпись над полосой прочности"
+#lab_info_scientists,Учёные,Scientists,"лаборатория, окно «!»: подпись над -/+ учёных"
+#lab_info_busy,Идёт исследований: {0},Research under way: {0},"лаборатория, окно «!»: {0} = сколько исследований идёт сейчас"
+#lab_repair_question,Отремонтировать?,Repair?,лаборатория: окно подтверждения ремонта (молоток)
+#lab_repair_gain,"Прочность {0} / {1}, станет {1} / {1}","Health {0} / {1}, will be {1} / {1}","окно ремонта: {0} = сейчас, {1} = максимум (без стрелки: её нет в шрифте)"
+#lab_demolish_question,Снести здание?,Demolish the building?,лаборатория: окно подтверждения сноса (мусорка)
+#lab_demolish_note,Здание исчезнет. Вернётся:,The building will be gone. You get back:,окно сноса: строка над возвратом ресурсов
+#lab_demolish_confirm,Снести,Demolish,окно сноса: красная кнопка подтверждения
 ,,,
 ,,,
 ,,,
@@ -443,6 +455,7 @@ key,ru,en,comment
 #store_full_Valuables,Сокровищницы полны. Постройте ещё одну или улучшите старую,The treasuries are full. Build another or upgrade one,уведомление: монеты упёрлись в лимит сокровищниц
 #store_card_title,"{0}, ур. {1}","{0}, level {1}",окно «запас здания» (кнопка-мешок у «!» на складе): название и уровень
 #demolish_store_loss,Пропадёт: {0} — другим складам некуда их взять,Will be lost: {0} — no other store has room for it,"окно сноса склада (песочница): красная строка, что пропадёт, если другие хранилища не вместят его запас"
+#move_status,Перенести за {0},Move for {0},"перенос здания: строка над ✕ ✓, {0} = кристаллы (иконка на ✓)"
 #army_summary,Армия: {0}/{1}   Содержание: {2} мон./день,Army: {0}/{1}   Upkeep: {2} coins/day,
 #army_summary_run,Армия: {0}/{1},Army: {0}/{1},
 #army_target_units,Цель: враги,Target: enemies,
@@ -780,6 +793,7 @@ key,ru,en,comment
 #log_diplomacy_edge,Отношения с соседом на грани войны,Relations with the neighbour are on the edge of war,журнал: дипломатия
 #log_diplomacy_war,Сосед объявил войну!,The neighbour has declared war!,журнал: дипломатия
 #log_diplomacy_razed,Ратуша соседа пала,The neighbour's town hall has fallen,журнал: дипломатия
+#log_moved,Перенесено: {0},Moved: {0},лента событий: здание перенесено на новое место
 #research_tab_buildings,Здания,Buildings,
 #research_tab_units,Армия,Army,
 #research_empty,Здесь пока нечего изучать,Nothing to research here yet,
@@ -975,6 +989,12 @@ key,ru,en,comment
 #m2_skill_locked,Откроется на {0}-м уровне,Opens at level {0},"кампания, миссия 2: строка подсказки умения, которое ещё закрыто; {0} = уровень"
 #m2_respawn,Ардан поднимется через {0},Ardan rises in {0},"кампания, миссия 2: надпись посреди экрана, пока павший Ардан не поднялся; {0} = секунды"
 #m2_end_stats,Волн отбито: {0}   Продержались: {1}   Уровень Ардана: {2},Waves beaten: {0}   Held: {1}   Ardan's level: {2},"кампания, миссия 2: строка итогов в окне конца; {0} волны, {1} время, {2} уровень"
+#tutorial_offer_title,Обучение,Tutorial,баннер «Обучение» в песочнице: заголовок
+#tutorial_offer_text,"Не знаешь, с чего начать?\nКороль покажет главное\nза 5 минут.",Not sure where to start?\nThe King will show you\nthe basics in 5 minutes.,баннер «Обучение» в песочнице: текст
+#tutorial_offer_reward,Награда: {0},Reward: {0},"баннер «Обучение»: награда, {0} = кристаллы (иконка справа)"
+#tutorial_offer_play,Пройти обучение,Play the tutorial,баннер «Обучение»: зелёная кнопка
+#tutorial_offer_later,Позже,Later,баннер «Обучение»: закрыть
+#tutorial_return,Вернуться в мой город,Back to my town,"победа в обучении, запущенном из песочницы: кнопка вместо «В главное меню»"
 #tip_1,"Ратуша — сердце поселения: если её разрушат, игра окончена.",The Town Hall is the heart of the settlement: lose it and the game is over.,подсказка экрана загрузки (показывается случайная; пустая не показывается)
 #tip_2,Лесопилка и каменоломня берут дерево и камень только в своём радиусе — ставьте их у леса и скал.,A sawmill and a quarry only gather inside their reach: build them by the woods and the rocks.,подсказка экрана загрузки (показывается случайная; пустая не показывается)
 #tip_3,Без хранилища производство работает впустую — стройте склады заранее.,"Without storage, production goes to waste: build storehouses early.",подсказка экрана загрузки (показывается случайная; пустая не показывается)
@@ -1082,23 +1102,5 @@ key,ru,en,comment
 #piggy_info_ok,Понятно,Got it,копилка: окно «!» кнопка-слово внизу
 #piggy_level_up,Уровень {0},Level {0},копилка: надпись при сборке новой свинки после разбивания
 #piggy_task_done,Задание «{0}» выполнено: +{1} в копилку,Task “{0}” done: +{1} to the piggy bank,копилка: сообщение в ленте событий; {0} — задание; {1} — кристаллы
-#load_delete_question,Удалить сохранение «{0}»? Его нельзя будет вернуть.,Delete the save «{0}»? It cannot be brought back.,"окно сохранений: вопрос перед удалением, {0} = имя сохранения"
-#load_delete,Удалить,Delete,окно сохранений: кнопка подтверждения удаления
-#tutorial_offer_title,Обучение,Tutorial,баннер «Обучение» в песочнице: заголовок
-#tutorial_offer_text,"Не знаешь, с чего начать?\nКороль покажет главное\nза 5 минут.",Not sure where to start?\nThe King will show you\nthe basics in 5 minutes.,баннер «Обучение» в песочнице: текст
-#tutorial_offer_reward,Награда: {0},Reward: {0},"баннер «Обучение»: награда, {0} = кристаллы (иконка справа)"
-#tutorial_offer_play,Пройти обучение,Play the tutorial,баннер «Обучение»: зелёная кнопка
-#tutorial_offer_later,Позже,Later,баннер «Обучение»: закрыть
-#tutorial_return,Вернуться в мой город,Back to my town,"победа в обучении, запущенном из песочницы: кнопка вместо «В главное меню»"
-#move_status,Перенести за {0},Move for {0},"перенос здания: строка над ✕ ✓, {0} = кристаллы (иконка на ✓)"
-#log_moved,Перенесено: {0},Moved: {0},лента событий: здание перенесено на новое место
-#lab_research_title,Прокачка зданий,Upgrades,лаборатория: шапка окна исследований (кнопка слева от «!»)
-#lab_info_title,"{0}, ур. {1}","{0}, lvl {1}","лаборатория, окно «!»: шапка, {0} = здание, {1} = уровень"
-#lab_info_health,Прочность,Health,"лаборатория, окно «!»: подпись над полосой прочности"
-#lab_info_scientists,Учёные,Scientists,"лаборатория, окно «!»: подпись над -/+ учёных"
-#lab_info_busy,Идёт исследований: {0},Research under way: {0},"лаборатория, окно «!»: {0} = сколько исследований идёт сейчас"
-#lab_repair_question,Отремонтировать?,Repair?,лаборатория: окно подтверждения ремонта (молоток)
-#lab_repair_gain,"Прочность {0} / {1}, станет {1} / {1}","Health {0} / {1}, will be {1} / {1}","окно ремонта: {0} = сейчас, {1} = максимум (без стрелки: её нет в шрифте)"
-#lab_demolish_question,Снести здание?,Demolish the building?,лаборатория: окно подтверждения сноса (мусорка)
-#lab_demolish_note,Здание исчезнет. Вернётся:,The building will be gone. You get back:,окно сноса: строка над возвратом ресурсов
-#lab_demolish_confirm,Снести,Demolish,окно сноса: красная кнопка подтверждения
+#settings_music,Музыка,Music,настройки: подпись ползунка громкости музыки
+#settings_sfx,Эффекты,Sounds,"настройки: подпись ползунка громкости звуков (стройка, бой, кнопки)"

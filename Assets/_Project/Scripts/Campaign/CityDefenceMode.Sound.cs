@@ -27,7 +27,7 @@ namespace CityBuilder.Campaign
                 _music.clip = music;
                 _music.loop = true;
                 _music.spatialBlend = 0f;
-                _music.volume = B.musicVolume;
+                _music.volume = B.musicVolume * CityBuilder.Core.GameSettings.MusicVolume;
                 _music.playOnAwake = false;
             }
             _musicWanted = true;
@@ -42,7 +42,7 @@ namespace CityBuilder.Campaign
         {
             if (_roar == null || roar == null) return;
             _roar.pitch = Random.Range(0.92f, 1.06f);
-            _roar.PlayOneShot(roar, B.roarVolume);
+            _roar.PlayOneShot(roar, B.roarVolume * CityBuilder.Core.GameSettings.SfxVolume);
         }
 
         /// <summary>The music goes quiet with the mission's end.</summary>

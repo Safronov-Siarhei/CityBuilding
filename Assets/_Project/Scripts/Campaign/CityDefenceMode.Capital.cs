@@ -272,7 +272,7 @@ namespace CityBuilder.Campaign
                 s.music.clip = music1;
                 s.music.loop = false;      // a 23 s clip looped mid-scene (the user, 2026-11-16): never again
                 s.music.spatialBlend = 0f;
-                s.music.volume = script.musicVolume;
+                s.music.volume = script.musicVolume * CityBuilder.Core.GameSettings.MusicVolume;
                 s.music.ignoreListenerPause = true;
                 s.music.Play();
             }
@@ -401,11 +401,11 @@ namespace CityBuilder.Campaign
                 var tail = sc.musicFadeOut > 0f ? Mathf.Clamp01((sc.end - t) / sc.musicFadeOut) : 1f;
                 var two = s.music2 != null;
                 if (s.music != null)
-                    s.music.volume = sc.musicVolume * tail * (two ? Mathf.Clamp01((sc.music2At - t) / cross) : 1f);
+                    s.music.volume = sc.musicVolume * CityBuilder.Core.GameSettings.MusicVolume * tail * (two ? Mathf.Clamp01((sc.music2At - t) / cross) : 1f);
                 if (two)
                 {
                     if (t >= sc.music2At && !s.music2.isPlaying && s.music2.time <= 0f) s.music2.Play();
-                    s.music2.volume = sc.musicVolume * tail * Mathf.Clamp01((t - sc.music2At) / 0.4f);
+                    s.music2.volume = sc.musicVolume * CityBuilder.Core.GameSettings.MusicVolume * tail * Mathf.Clamp01((t - sc.music2At) / 0.4f);
                 }
             }
             if (t >= sc.end) EndCapital();

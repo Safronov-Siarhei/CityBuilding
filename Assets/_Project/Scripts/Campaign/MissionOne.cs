@@ -240,7 +240,7 @@ namespace CityBuilder.Campaign
         public void Step(float dt, Vector2? steer)
         {
             if (steer.HasValue) _stick.Feed(steer.Value, dt);
-            if (_music != null && _c.sound != null) _music.volume = Mathf.MoveTowards(_music.volume, _end != null && _end.Started ? 0f : _c.sound.music, dt * _c.sound.music / Mathf.Max(0.1f, _c.sound.musicFadeIn));
+            if (_music != null && _c.sound != null) _music.volume = Mathf.MoveTowards(_music.volume, _end != null && _end.Started ? 0f : _c.sound.music * CityBuilder.Core.GameSettings.MusicVolume, dt * _c.sound.music / Mathf.Max(0.1f, _c.sound.musicFadeIn));
             var here = _ardan.transform.position;
             if (!_armed && _c.chase != null && new Vector2(here.x - _armFrom.x, here.z - _armFrom.z).magnitude > _c.chase.armAfter)
             {

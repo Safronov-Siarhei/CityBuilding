@@ -78,7 +78,7 @@ namespace CityBuilder.Campaign
                 var w = 1f;
                 if (c.fadeIn > 0f) w *= Mathf.Clamp01(u / c.fadeIn);
                 if (c.fadeOut > 0f && len < float.MaxValue) w *= Mathf.Clamp01((len - u) / c.fadeOut);
-                src.volume = c.volume * w;
+                src.volume = c.volume * w * (src.clip != null && src.clip.name.StartsWith("mus_") ? CityBuilder.Core.GameSettings.MusicVolume : CityBuilder.Core.GameSettings.SfxVolume);
             }
             foreach (var c in _ended)
             {

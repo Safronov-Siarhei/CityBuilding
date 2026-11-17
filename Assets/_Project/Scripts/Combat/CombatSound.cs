@@ -105,7 +105,7 @@ namespace CityBuilder.Combat
             Last[i] = now;
             // Play, not PlayOneShot: a voice taken in turn cuts its old sound, so never more than `voices` at once
             voice.clip = clips[Random.Range(0, clips.Length)];
-            voice.volume = config.CombatSfxVolume * scale * (0.35f + 0.65f * near);
+            voice.volume = config.CombatSfxVolume * scale * (0.35f + 0.65f * near) * CityBuilder.Core.GameSettings.SfxVolume;
             voice.pitch = Random.Range(0.92f, 1.08f);
             voice.Play();
         }

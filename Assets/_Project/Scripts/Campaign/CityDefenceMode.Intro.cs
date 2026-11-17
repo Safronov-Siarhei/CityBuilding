@@ -302,7 +302,7 @@ namespace CityBuilder.Campaign
                 s.ambient.clip = introAmbient;
                 s.ambient.loop = true;
                 s.ambient.spatialBlend = 0f;
-                s.ambient.volume = script.ambientVolume;
+                s.ambient.volume = script.ambientVolume * (introAmbient != null && introAmbient.name.StartsWith("mus_") ? CityBuilder.Core.GameSettings.MusicVolume : CityBuilder.Core.GameSettings.SfxVolume);
                 s.ambient.playOnAwake = false;   // started by TickIntro once the loading screen is gone
             }
             // the crowd's source plays the lookout's horn too: made even with no crowd clip (the user dropped the crowd)
@@ -310,7 +310,7 @@ namespace CityBuilder.Campaign
                 s.crowd = s.root.gameObject.AddComponent<AudioSource>();
                 s.crowd.clip = introCrowd;
                 s.crowd.spatialBlend = 0f;
-                s.crowd.volume = script.crowdVolume;
+                s.crowd.volume = script.crowdVolume * CityBuilder.Core.GameSettings.SfxVolume;
             }
             BuildIntroUi(s);
             HideInterface(s);
@@ -434,7 +434,7 @@ namespace CityBuilder.Campaign
             if (s.crowd != null && introHorn != null && !s.hornPlayed && sc.hornAt >= 0f && t >= sc.hornAt)
             {
                 s.hornPlayed = true;
-                s.crowd.PlayOneShot(introHorn, sc.hornVolume);
+                s.crowd.PlayOneShot(introHorn, sc.hornVolume * CityBuilder.Core.GameSettings.SfxVolume);
             }
             if (s.crowd != null && s.crowd.clip != null && !s.crowdPlayed && sc.crowdAt >= 0f && t >= sc.crowdAt)
             {
@@ -457,7 +457,7 @@ namespace CityBuilder.Campaign
             }
             // the scene's music (mus_gate) goes quiet over its last seconds, not cut by the handover
             if (s.ambient != null && sc.musicFadeOut > 0f)
-                s.ambient.volume = sc.ambientVolume * Mathf.Clamp01((sc.end - t) / sc.musicFadeOut);
+                s.ambient.volume = sc.ambientVolume * (introAmbient != null && introAmbient.name.StartsWith("mus_") ? CityBuilder.Core.GameSettings.MusicVolume : CityBuilder.Core.GameSettings.SfxVolume) * Mathf.Clamp01((sc.end - t) / sc.musicFadeOut);
             if (t >= sc.end) EndIntro();
         }
 

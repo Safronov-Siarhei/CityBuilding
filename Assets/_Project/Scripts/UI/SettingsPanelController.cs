@@ -30,6 +30,9 @@ namespace CityBuilder.UI
         [SerializeField] private RectTransform graphicsDetails;
         [SerializeField] private Text labelTemplate;
         [SerializeField] private Image cardImage;
+        // the loudness of the music and of every other sound (the user, 2026-11-17), GameSettings
+        [SerializeField] private Slider musicSlider;
+        [SerializeField] private Slider sfxSlider;
 
         private static readonly Color SelectedColor = UiTheme.TabSelected;
         private static readonly Color UnselectedColor = UiTheme.TabIdle;
@@ -81,13 +84,20 @@ namespace CityBuilder.UI
             // shown first: a layout rebuilt while the panel is hidden does nothing, and the Auto line
             // then sat on the Auto/Manual buttons
             if (panelRoot != null) panelRoot.SetActive(true);
+            if (musicSlider != null) musicSlider.SetValueWithoutNotify(GameSettings.MusicVolume);
+            if (sfxSlider != null) sfxSlider.SetValueWithoutNotify(GameSettings.SfxVolume);
             BuildGraphicsDetails();
             HighlightSelected();
             ModalGate.SetBlocked(true);
         }
 
+        public void SetMusicVolume(float value) => GameSettings.MusicVolume = value;
+
+        public void SetSfxVolume(float value) => GameSettings.SfxVolume = value;
+
         public void ClosePanel()
         {
+            PlayerPrefs.Save();   // the sliders' values, written once rather than on every step
             if (_info != null) _info.SetActive(false);
             if (panelRoot != null) panelRoot.SetActive(false);
             ModalGate.SetBlocked(false);

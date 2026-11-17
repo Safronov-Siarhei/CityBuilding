@@ -589,6 +589,8 @@ namespace CityBuilder.EditorTools
             // it switches off what a run does not have -- the sandbox's raids, illness, fires,
             // food, taxes, contentment and migration (its people come from its houses) -- and sets
             // the run up.
+            // the background music by mode: tutorial, sandbox, invasion (+ its waves); silent in the campaign
+            BuildMusicPlayer(MusicPlayer.Place.Game);
             var invasionMode = managers.AddComponent<CityBuilder.Invasion.InvasionMode>();
             var invasionModeSO = new SerializedObject(invasionMode);
             invasionModeSO.FindProperty("buildingPlacer").objectReferenceValue = placer;

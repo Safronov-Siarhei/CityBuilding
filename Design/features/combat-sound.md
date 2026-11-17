@@ -1,6 +1,6 @@
 # Combat sound (all modes)
 
-**Status (2026-11-15):** BUILT, setup green, user not heard. The user: «звуки выстрелов для арбалетов и луков и
+**Status (2026-11-17):** + building sounds, MUSIC by mode and the volume sliders (section Music). **Combat (2026-11-15):** BUILT, setup green, user not heard. The user: «звуки выстрелов для арбалетов и луков и
 башен + звуки ударов мечей, чтобы бои были не такими скучными»; scope «во всех режимах».
 
 ## Rules
@@ -57,9 +57,18 @@
   Design/audio/kenney/), `Audio/Resources/Build/place.ogg` (place.wav gone; build_sounds.py writes only built/upgraded now
   -- do NOT re-run its default mode without dropping place). Credits: Audio/Campaign/CREDITS.md.
 
-## Music (2026-11-17)
-- Six CC0 tracks in `Assets/_Project/Audio/Music/` (mus_exploration, mus_the_bards_tale, mus_harvest_season,
-  mus_market_day, mus_minstrel_dance, mus_kings_feast), NOT in Resources: only a referenced track ships.
-- Main menu: `UI/MenuMusic.cs` (loop, fade-in `menu_music_fade_sec`, volume `menu_music_volume`), object «MenuMusic»
-  made by `SetupProjectMainMenuScreens` with mus_exploration (medieval-exploration, the user's pick).
-- OPEN: what plays in the tutorial, the sandbox and the invasion -- proposed to the user 2026-11-17, not decided.
+## Music (2026-11-17) -- BUILT, not heard
+- Six CC0 tracks in `Assets/_Project/Audio/Music/`, NOT in Resources: only a referenced track ships.
+- `UI/MusicPlayer.cs` (replaced MenuMusic): one in the menu (Place.Menu: mus_exploration) and one in the game scene
+  (Place.Game), built by `SetupProjectMainMenuScreens.BuildMusicPlayer`. The user's choice of tracks:
+  tutorial mus_the_bards_tale; sandbox (and dungeons) mus_harvest_season + mus_market_day BY TURNS; invasion
+  mus_kings_feast, and while a wave is Underway (InvasionWaves.Phase) the campaign's mus_mission1 (no pause, loops).
+  Campaign missions (CityDefenceMode, MissionOne) keep their own music; the player is silent there.
+- The user's rules: QUIET background (`music_volume` 0.3); every track swells in (`music_fade_in_sec` 4) and fades
+  out at its end (`music_fade_out_sec` 5); a PAUSE between tracks so the ear rests (`music_pause_sec` 20); a change of
+  list (wave start/end) fades out over `music_switch_sec` 2. All on the sheet «Время и загрузка».
+- Settings: sliders «Музыка» and «Эффекты» at the top of the settings card (menu, game, campaign -- one builder
+  `CreateVolumeSlider`), `GameSettings.MusicVolume / SfxVolume` (PlayerPrefs, 0..1, saved on closing the card).
+  SFX volume multiplies BuildSound, CombatSound, UiClickSound, the roar, the cutscenes' crowd/horn and OpeningSound's
+  non-«mus_» cues; music volume multiplies MusicPlayer and the campaign's music (CityDefence, Capital, MissionOne,
+  mus_* cues). A NEW sound source must multiply by one of the two.
