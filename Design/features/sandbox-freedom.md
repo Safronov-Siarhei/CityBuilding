@@ -1,6 +1,6 @@
 # «Свобода песочницы» — paid world settings
 
-**Status (2026-11-17): DECIDED, NOT BUILT; the piggy warning mock-up awaits the user.** The look is approved (see [hud-and-ui](hud-and-ui.md), SANDBOX MENU
+**Status (2026-11-17): DECIDED, NOT BUILT** (look, list, rules and the piggy warning all agreed). The look is approved (see [hud-and-ui](hud-and-ui.md), SANDBOX MENU
 REDESIGN: `Design/ui/SandboxHub_A3.png`, `_A3_StartPulse.gif`, `_A3_Banner.png`); the list and the rules below are
 the user's answers of 2026-11-17. Related: [monetization](monetization.md), [piggy-bank](piggy-bank.md),
 [save-load](save-load.md).
@@ -38,8 +38,8 @@ In the game the settings that cannot change show their value greyed with a small
 - THE PLAYER IS WARNED (the user, 2026-11-17: «игроку нужно предупреждение про копилку»), mock-up
   `Design/ui/SandboxHub_A3_PiggyWarning.png`: while the world is easier, the scroll's foot shows a rose plate with a
   struck-through pig «Задания копилки здесь не засчитываются» (in place of «Можно менять и в игре»), and each easier
-  choice gets a small struck pig right of its bar. Proposed too (not drawn): the same line on the piggy window's tasks
-  column inside such a world. Not approved yet.
+  choice gets a small struck pig right of its bar. AGREED by the user (2026-11-17): the same line on the piggy
+  window, over its tasks list, while the player is in such a world (`PiggyWindow`; text key shared with the scroll).
 - The numbers (factors of each level, the quiet-start minutes, the start goods per level, the price) go to the sheet.
 
 ## Ideas parked
