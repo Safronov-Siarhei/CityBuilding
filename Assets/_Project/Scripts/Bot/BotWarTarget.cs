@@ -41,9 +41,16 @@ namespace CityBuilder.Bot
         {
             if (!IsAlive) return;
             var level = _building.Level;
+            var data = _building.Data;
+            var origin = _building.OriginCell;
             _building.TryDamage(amount);
-            // razed by the town's army: the ransom falls (the user, 2026-11-05)
-            if (_building == null || _building.CurrentHealth <= 0) BotRelations.NoteRazed(level);
+            // razed by the town's army: the ransom falls (the user, 2026-11-05), and the bot does not
+            // rebuild it until the war is over (the user, 2026-11-17)
+            if (_building == null || _building.CurrentHealth <= 0)
+            {
+                BotRelations.NoteRazed(level);
+                if (BotKingdom.Instance != null) BotKingdom.Instance.NoteRazedByTown(data, origin);
+            }
         }
     }
 }

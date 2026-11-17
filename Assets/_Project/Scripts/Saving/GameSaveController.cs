@@ -201,7 +201,7 @@ namespace CityBuilder.Saving
             {
                 gameCalendar.SetCurrentDay(data.currentDay);
                 if (data.botRelationsSaved) Diplomacy.BotRelations.Restore(data.botRelations, data.botStance, data.botWarSeconds, data.botWarRazed, data.botWarsFought);
-                if (data.botCastleSaved && Bot.BotKingdom.Instance != null) Bot.BotKingdom.Instance.Restore(data.botHallRazed, data.botMissing);
+                if (data.botCastleSaved && Bot.BotKingdom.Instance != null) Bot.BotKingdom.Instance.Restore(data.botHallRazed, data.botMissing, data.botRazedByTown);
             }
 
             if (taxManager != null)
@@ -764,7 +764,7 @@ namespace CityBuilder.Saving
                 if (Bot.BotKingdom.Instance != null && Bot.BotKingdom.Instance.Placed)
                 {
                     data.botCastleSaved = true;
-                    Bot.BotKingdom.Instance.Capture(out data.botHallRazed, data.botMissing);
+                    Bot.BotKingdom.Instance.Capture(out data.botHallRazed, data.botMissing, data.botRazedByTown);
                 }
                 var orcShips = Ships.ShipManager.Instance;
                 if (orcShips != null)
