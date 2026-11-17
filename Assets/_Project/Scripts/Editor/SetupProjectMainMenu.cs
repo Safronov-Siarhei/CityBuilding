@@ -51,7 +51,8 @@ namespace CityBuilder.EditorTools
             var shadow = icon.gameObject.AddComponent<Shadow>();
             shadow.effectColor = new Color(0f, 0f, 0f, 0.35f);
             shadow.effectDistance = new Vector2(0f, -3f);
-            SkinInk(icon, ink);
+            // Keep = the picture's own colours (the news letter came out dark brown: the user, 2026-11-17)
+            if (ink != HudInk.Keep) SkinInk(icon, ink);
             return icon;
         }
 
