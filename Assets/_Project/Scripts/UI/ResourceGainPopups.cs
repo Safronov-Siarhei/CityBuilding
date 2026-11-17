@@ -22,6 +22,7 @@ namespace CityBuilder.UI
         private const float IconPixels = 40f;
         private static readonly Color GainColor = new Color(1f, 0.93f, 0.55f);
         private static readonly Color CoinColor = new Color(1f, 0.82f, 0.25f);
+        private static readonly Color LossColor = new Color(1f, 0.35f, 0.3f);
 
         [SerializeField] private ResourceIconLibrary icons;
         // the upgrade crystal's picture: it is no resource of the town's (Wallet)
@@ -67,7 +68,14 @@ namespace CityBuilder.UI
         /// <summary>Shows «+amount» and the resource's icon at `world`.</summary>
         public void Show(Vector3 world, int amount, ResourceType resource) => Show(world, amount, resource, null);
 
-        private void Show(Vector3 world, int amount, ResourceType resource, Sprite picture)
+        /// <summary>
+        /// A red «-amount» and the resource's icon rising over a building: a store burnt down with what lay in it
+        /// (Resources.StoreLedger; the user, 2026-11-17).
+        /// </summary>
+        public void ShowLoss(Vector3 building, int amount, ResourceType resource) =>
+            Show(building + Vector3.up * HeightOverBuilding, amount, resource, null, loss: true);
+
+        private void Show(Vector3 world, int amount, ResourceType resource, Sprite picture, bool loss = false)
         {
             if (amount <= 0) return;
             EnsurePool();
@@ -81,8 +89,8 @@ namespace CityBuilder.UI
             if (popup.Age >= Seconds) _live++;
             popup.World = world;
             popup.Age = 0f;
-            popup.Color = picture == null && resource == ResourceType.Coins ? CoinColor : GainColor;
-            popup.Label.text = Localization.Format("#popup_gain", amount);
+            popup.Color = loss ? LossColor : picture == null && resource == ResourceType.Coins ? CoinColor : GainColor;
+            popup.Label.text = Localization.Format(loss ? "#popup_loss" : "#popup_gain", amount);
             var sprite = picture != null ? picture : icons != null ? icons.GetIcon(resource) : null;
             popup.Icon.sprite = sprite;
             popup.Icon.enabled = sprite != null;

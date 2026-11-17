@@ -99,4 +99,4 @@
 - [Piggy bank (2026-11-16)](project_piggy_bank.md) — «Копилка» BUILT 2026-11-16 (not seen): button, window, shatter, 40 tasks/8 h; card piggy-bank.md.
 - [Main menu village (2026-11-17)](project_main_menu_village.md) — concept 1 stages 1-2 BUILT (village loop + logo, house going up with 2 builders); stage 3 phone check left.
 - [Sandbox menu redesign (2026-11-17)](project_sandbox_menu_redesign.md) — concept A «Стол картографа» + purchase banner APPROVED, not built; paid «Свобода песочницы» functions to discuss; per-map autosave built.
-- [Storage rework (2026-11-17)](project_storage_rework.md) — DECIDED, not built: per-resource caps by level (sandbox), start chain hall→lighthouse→stores, rewards may overfill.
+- [Storage rework (2026-11-17)](project_storage_rework.md) — BUILT IN CODE 2026-11-17 (needs setup,setup, not seen): StoreLedger per-store stock, caps tab, start chain into the hand, HUD blink/notices, store card; demolish warning = concept awaiting approval.

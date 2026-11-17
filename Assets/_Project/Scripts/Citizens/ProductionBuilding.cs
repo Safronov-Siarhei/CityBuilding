@@ -341,7 +341,7 @@ namespace CityBuilder.Citizens
                 }
             }
 
-            var stored = resources != null ? resources.AddProduced(recipe.output, amount) : amount;
+            var stored = resources != null ? resources.AddProduced(recipe.output, amount, transform.position) : amount;
             ReportOverflow(data, amount - stored);
             // «+N» over the building after each cycle (the user, 2026-11-13)
             if (stored > 0) UI.ResourceGainPopups.Instance?.Show(transform.position + Vector3.up * PopupHeight, stored, recipe.output);
@@ -405,7 +405,7 @@ namespace CityBuilder.Citizens
             _timer -= interval;
 
             var resources = ResourceManager.Instance;
-            var stored = resources != null ? resources.AddProduced(ResourceType.Food, 1) : 1;
+            var stored = resources != null ? resources.AddProduced(ResourceType.Food, 1, transform.position) : 1;
             if (stored <= 0)
             {
                 ReportOverflow(Data, 1);

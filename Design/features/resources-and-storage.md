@@ -80,7 +80,7 @@ EditMode `ResourceManagerTests`, `ResourceStorageTests`, `TaxManagerTests`, `Tax
 - Stone is finite (~2 800 on a map) vs ~4 700 to build everything at level 3 — never addressed.
 - Resource wishlist not built: sand, clay, water, hides; fruit, meat, vegetables, fish, wine.
 
-## Storage rework -- DECIDED by the user 2026-11-17, NOT BUILT (talk only so far)
+## Storage rework -- DECIDED 2026-11-17, BUILT IN CODE 2026-11-17 (no setup/test run yet, user not seen)
 SANDBOX ONLY. Replaces the family pools with a cap PER RESOURCE.
 - Start chain (shown to the player at map start): Town Hall -> Lighthouse -> Склад -> Кладовая -> Сокровищница
   (open from the start, no Lab) -> Crystal Mine (if the map has one). After the chain the stores receive
@@ -118,3 +118,28 @@ SANDBOX ONLY. Replaces the family pools with a cap PER RESOURCE.
   re-balances after the review of every building's logic.
 - Fill / spend order (agreed 2026-11-17): a new resource goes into the stores nearest to where it was made, one by
   one; a price is paid from the FULLEST store first (stock stays even, losing one store hurts less).
+
+### How it is built (2026-11-17)
+- `Resources/StoreLedger.cs` (static): which store holds what. ResourceManager's totals stay the truth; every change
+  goes through `ResourceManager.Write` -> `StoreLedger.Sync` (gain: nearest stores with room, else overflow; loss:
+  overflow first, then the fullest store). `Active` = sandbox (PiggyTasks.InSandbox, not a dungeon, not
+  UnlimitedStorage). Caps from the sheet tab «Склады: лимиты» (`Balance/storage.csv`, gid 2000070:
+  building, resources, cap_1..cap_5); `GetCapacity` = sum of store caps (none = 0). A store still building holds
+  nothing (`BuildingInstance.StorageReady`); an upgrading one keeps its level (the level changes at the end).
+- Gains with a place: `AddProduced(type, n, at)` (workshop, gatherer's yard, tapped tree); `AddOverCapacity(type, n, at)`.
+- Burnt store: `StoreLedger.OnStoreLost` (red «-N», `ResourceGainPopups.ShowLoss`, `ResourceManager.DropKept`), half
+  rounded up into `BuildingRuin.HeldStock`, given back in `TryRestore`. Hand demolish: `OnStoreDemolished` (before
+  the refund); `WouldLose(store)` is ready for the warning.
+- Saved: `BuildingEntry.stock`, `RuinEntry.stock`, `GameSaveData.storesSaved/storeOverflow`; an older save lays its
+  totals into the stores nearest the Town Hall (`StoreLedger.Restored`).
+- Start chain: `BuildingPlacer.TryBeginChain` (replaced the lighthouse-only flow; `ChainIds`, `ChainLink`, `_freeNow`);
+  Lighthouse on the archipelago only; Crystal Mine when `Wallet.CrystalMineOwned`; a loaded game gets missing links
+  free but no reward. The sandbox starts at 0 (ResourceManager.Start); reward keys `chain_reward_*`; hint keys
+  `#chain_hint_<id>` (the lighthouse keeps `#hud_place_lighthouse_hint`); Treasury `starts_unlocked` = 1.
+- HUD: `ResourceHUDController.IsFull` + blink; notices `#store_full_<Materials|Food|Valuables>` every
+  `store_full_notice_sec` (150) per kind; inventory card shows «n/cap» and blinks. Per-store card
+  `UI/StoreInventoryCard.cs` + sack button right of «!» (SetupProjectHud `StoreInventoryButton`,
+  SetupProjectPanels `BuildStoreInventoryCard`).
+- Grain: not kept by any store, Barn/BigBarn hidden, nothing makes it; the enum value stays (saves store ints).
+- OPEN: the demolish warning (concept shown to the user 2026-11-17, waits for approval); first setup + playtest;
+  base_capacity_* / start_* still serve the campaign and other modes.

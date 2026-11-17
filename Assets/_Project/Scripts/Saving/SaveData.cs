@@ -31,6 +31,13 @@ namespace CityBuilder.Saving
         public List<RuinEntry> ruins = new List<RuinEntry>();
 
         /// <summary>
+        /// The sandbox's stores (Resources.StoreLedger, 2026-11-17): true once each BuildingEntry carries its store's
+        /// goods (stock); storeOverflow is what lay «in the Town Hall» above their room. Older saves: false.
+        /// </summary>
+        public bool storesSaved;
+        public List<ResourceAmount> storeOverflow = new List<ResourceAmount>();
+
+        /// <summary>
         /// Ids of everything researched in the Laboratory (see CityBuilder.Research.ResearchTopic),
         /// and the one research under way with how far in it is and what was paid for it -- so
         /// reloading neither forgets it nor refunds it twice. Empty in saves made before research
@@ -530,6 +537,8 @@ namespace CityBuilder.Saving
         public List<Buildings.BuildingRuin.Piece> pieces = new List<Buildings.BuildingRuin.Piece>();
         /// <summary>The cells the ruin holds.</summary>
         public List<Vector2Int> cells = new List<Vector2Int>();
+        /// <summary>A burnt store's half of its goods, given back when it is restored (StoreLedger).</summary>
+        public List<ResourceAmount> stock = new List<ResourceAmount>();
     }
 
     [Serializable]
@@ -557,5 +566,8 @@ namespace CityBuilder.Saving
         public float siteRemaining;
         public float siteTotal;
         public bool siteUpgrade;
+
+        /// <summary>A sandbox store's own goods (Resources.StoreLedger); empty for anything else.</summary>
+        public List<ResourceAmount> stock = new List<ResourceAmount>();
     }
 }

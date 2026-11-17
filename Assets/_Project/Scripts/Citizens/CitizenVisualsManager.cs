@@ -456,7 +456,7 @@ namespace CityBuilder.Citizens
         {
             if (_carriedByAgent.TryGetValue(agent, out var carried) && carried > 0)
             {
-                ResourceManager.Instance?.AddProduced(building.ProducesResource, carried);
+                ResourceManager.Instance?.AddProduced(building.ProducesResource, carried, building.transform.position);
                 Delivered?.Invoke(building, carried);
             }
             _carriedByAgent[agent] = 0;

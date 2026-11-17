@@ -1236,6 +1236,14 @@ namespace CityBuilder.Core
         [SerializeField] private int startFood = 50;
         [SerializeField] private int startGold = 100;
 
+        // the storage rework (the user, 2026-11-17; card resources-and-storage.md), the sandbox only: what the
+        // start chain lays into the new stores, and how often the «stores full» notice may come per kind of store
+        [SerializeField] private int chainRewardWood = 40;
+        [SerializeField] private int chainRewardStone = 40;
+        [SerializeField] private int chainRewardFood = 20;
+        [SerializeField] private int chainRewardCoins = 100;
+        [SerializeField] private float storeFullNoticeSeconds = 150f;
+
         [Header("Research (economy.csv)")]
         // How the Laboratory's scientists shorten a research, what a cancelled one pays back, and
         // the floor a fully staffed lab can never dip below. The first `research_free_workers`
@@ -1659,6 +1667,24 @@ namespace CityBuilder.Core
         public IReadOnlyList<DiplomacyRow> DiplomacyRows => diplomacyRows;
 
         public void EditorSetDiplomacyRows(List<DiplomacyRow> rows) => diplomacyRows = rows ?? new List<DiplomacyRow>();
+
+        /// <summary>
+        /// One row of the storage tab (storage.csv, the user 2026-11-17): how much of EACH of `resources` one
+        /// `building` holds at levels 1-5 (the sandbox's stores; Resources.StoreLedger).
+        /// </summary>
+        [System.Serializable]
+        public class StoreCapRow
+        {
+            public string building;
+            public List<ResourceType> resources = new List<ResourceType>();
+            public int[] caps = new int[5];
+        }
+
+        [SerializeField] private List<StoreCapRow> storeCapRows = new List<StoreCapRow>();
+
+        public IReadOnlyList<StoreCapRow> StoreCapRows => storeCapRows;
+
+        public void EditorSetStoreCapRows(List<StoreCapRow> rows) => storeCapRows = rows ?? new List<StoreCapRow>();
 
         /// <summary>One wave of campaign mission 2 (the m2waves tab, the user 2026-11-12): who comes, at what level,
         /// and the pause after the wave before it is beaten. Each kind's count is set PER ROAD (the user, 2026-11-13):
@@ -2415,6 +2441,11 @@ namespace CityBuilder.Core
         public int StartStone => startStone;
         public int StartFood => startFood;
         public int StartGold => startGold;
+        public int ChainRewardWood => chainRewardWood;
+        public int ChainRewardStone => chainRewardStone;
+        public int ChainRewardFood => chainRewardFood;
+        public int ChainRewardCoins => chainRewardCoins;
+        public float StoreFullNoticeSeconds => storeFullNoticeSeconds;
 
         /// <summary>
         /// The loaded config. Falls back to an in-memory instance carrying the field defaults above
@@ -3233,6 +3264,11 @@ namespace CityBuilder.Core
             startStone = (int)Read(economy, "start_stone", startStone);
             startFood = (int)Read(economy, "start_food", startFood);
             startGold = (int)Read(economy, "start_gold", startGold);
+            chainRewardWood = (int)Read(economy, "chain_reward_wood", chainRewardWood);
+            chainRewardStone = (int)Read(economy, "chain_reward_stone", chainRewardStone);
+            chainRewardFood = (int)Read(economy, "chain_reward_food", chainRewardFood);
+            chainRewardCoins = (int)Read(economy, "chain_reward_coins", chainRewardCoins);
+            storeFullNoticeSeconds = Read(economy, "store_full_notice_sec", storeFullNoticeSeconds);
         }
 
         /// <summary>A missing key is an error, not a silent default: the sheet and the game are supposed to describe the same set of numbers.</summary>

@@ -69,6 +69,9 @@ namespace CityBuilder.Buildings
         /// <summary>The cells the ruin holds: the building's, but those it shared (a road under a gate, a mine's vein, a moat under a bridge).</summary>
         public List<Vector2Int> Cells { get; private set; } = new List<Vector2Int>();
 
+        /// <summary>A burnt store's half of its goods (rounded up), given back when it is restored (Resources.StoreLedger; the user, 2026-11-17).</summary>
+        public List<ResourceAmount> HeldStock { get; set; }
+
         private static Material _baseMaterial;
         private readonly List<Material> _materials = new List<Material>(3);
 
@@ -364,6 +367,17 @@ namespace CityBuilder.Buildings
                 var share = BalanceConfig.Instance != null ? BalanceConfig.Instance.RuinRestoreTimeFraction : 0.5f;
                 building.BuildOnTimer(seconds * share);
                 EventLogManager.Instance?.Log(Localization.Format("#log_ruin_restored", Data.LocalizedName));
+                // the half of a store's goods its ruin kept: back to the town, past the room if need be
+                if (HeldStock != null && ResourceManager.Instance != null)
+                {
+                    foreach (var amount in HeldStock)
+                    {
+                        if (amount == null || amount.amount <= 0) continue;
+                        ResourceManager.Instance.AddOverCapacity(amount.type, amount.amount, building.transform.position);
+                        UI.ResourceGainPopups.Instance?.Show(building.transform.position + Vector3.up * 2.2f, amount.amount, amount.type);
+                    }
+                    HeldStock = null;
+                }
             }
             Destroy(gameObject);
             return building;

@@ -75,6 +75,9 @@ namespace CityBuilder.Buildings
         /// <summary>A building going up for the first time keeps its storage room back until it stands (BuildOnTimer).</summary>
         private bool _storageHeld;
 
+        /// <summary>Its storage room counts (not still going up): what a sandbox store may hold (Resources.StoreLedger).</summary>
+        public bool StorageReady => !_storageHeld;
+
         /// <summary>The bot kingdom's building, not the town's (the user, 2026-11-03): none of the town's sums, cards or orders reach it.</summary>
         public bool IsBot { get; private set; }
 
@@ -193,6 +196,7 @@ namespace CityBuilder.Buildings
                 if (data.isCrossing) Moat.Span(this, true);
                 // A mine stands on its vein, which gives way to it (and comes back when it goes).
                 if (OreDeposit.KindForBuilding(data.buildingName).HasValue) OreDeposit.At(originCell)?.Attach(this);
+                StoreLedger.Register(this);
                 ChangeStoredCapacity(Data.LevelStats(Level).storageCapacity);
                 ChangeHousingCapacity(Data.LevelStats(Level).housingCapacity);
                 ChangeCount(data.buildingName, 1);
@@ -307,6 +311,7 @@ namespace CityBuilder.Buildings
                 if (Data.isMoat) Moat.Remove(this);
                 if (Data.isCrossing) Moat.Span(this, false);
                 if (!_storageHeld && !IsBot) ChangeStoredCapacity(-Data.LevelStats(Level).storageCapacity);
+                if (!IsBot) StoreLedger.Unregister(this);
                 if (!IsBot) ChangeHousingCapacity(-Data.LevelStats(Level).housingCapacity);
                 if (Data.connectsToFences && FenceNetwork.Instance != null)
                 {
@@ -324,6 +329,8 @@ namespace CityBuilder.Buildings
         /// </summary>
         private void ChangeStoredCapacity(int delta)
         {
+            // a sandbox store's caps go by its level and whether it stands done (StoreLedger), whatever the old column says
+            if (!IsBot) StoreLedger.MarkCapacityDirty();
             // the bot kingdom's stores are not the town's (a bot building rising again under scaffolding)
             if (delta == 0 || IsBot || Data == null || Data.storageGroup == ResourceStorageGroup.None) return;
             ResourceManager.Instance?.AddCapacity(Data.storageGroup, delta);
@@ -440,6 +447,8 @@ namespace CityBuilder.Buildings
             // (the bot kingdom's losses are not the town's news)
             if (!IsBot) EventLogManager.Instance?.Post(GameEvent.About(this, Localization.Format("#log_destroyed_combat", Data.LocalizedName), EventSeverity.Danger, EventGlyph.Ruin));
             OnDestroyedInCombat?.Invoke(this);
+            // a sandbox store burns with what lay in it; its ruin keeps half for the restore (the user, 2026-11-17)
+            var kept = IsBot ? null : StoreLedger.OnStoreLost(this);
             Collapse();
             // the sandbox keeps a burnt shell where it stood (BuildingRuin; the user, 2026-11-05)
             if (BuildingRuin.LeavesRuin(this))
@@ -456,6 +465,7 @@ namespace CityBuilder.Buildings
                 FreeCellsAndDestroy();
                 var ruin = BuildingRuin.LeaveOf(this, held);
                 if (ruin != null) ruin.IsBot = IsBot;
+                if (ruin != null && kept != null) ruin.HeldStock = kept;
                 return;
             }
             FreeCellsAndDestroy();
@@ -666,6 +676,9 @@ namespace CityBuilder.Buildings
         public void Demolish()
         {
             if (!CanDemolish) return;
+            // a sandbox store's goods move into the other stores where they fit; the rest is lost (the user,
+            // 2026-11-17) -- before the refund, so the refund lands only where there is room without this store
+            if (!IsBot) StoreLedger.OnStoreDemolished(this);
 
             var refund = GetDemolishRefund();
             if (refund != null && ResourceManager.Instance != null)

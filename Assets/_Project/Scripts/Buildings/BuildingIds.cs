@@ -57,6 +57,11 @@
         public const string CrystalMine = "CrystalMine";
         public const string Lighthouse = "Lighthouse";
 
+        /// <summary>The stores (the storage rework, the user 2026-11-17): the start chain gives the three ordinary ones.</summary>
+        public const string Warehouse = "Warehouse";
+        public const string Granary = "Granary";
+        public const string Treasury = "Treasury";
+
         /// <summary>Buildings a town may have only one of (the user, 2026-11-02: one Tax House; 2026-11-03: one Diplomacy Hall;
         /// 2026-11-14: one Crystal Mine a map).</summary>
         public static readonly System.Collections.Generic.HashSet<string> OnlyOne = new System.Collections.Generic.HashSet<string> { TaxHouse, DiplomacyHall, CrystalMine };
