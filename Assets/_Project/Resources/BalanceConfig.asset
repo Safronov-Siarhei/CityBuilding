@@ -8907,7 +8907,25 @@ MonoBehaviour:
   botRelationsStart: 0
   botTradeMinScore: 30
   botWarDeclareScoreLoss: 40
-  botRelationsDriftPerDay: 2
+  diplomacyRelationsFallPerDay: 1
+  diplomacyGiftCoins: 140000003200000078000000
+  diplomacyGiftRelations: 010000000300000005000000
+  diplomacyHelpEveryDays: 5
+  diplomacyHelpSendRelations: 5
+  diplomacyHelpRefuseRelations: 1
+  diplomacyBotGiftMinScore: 60
+  diplomacyBotGiftChanceAtMin: 0.1
+  diplomacyBotGiftChanceAtMax: 0.4
+  diplomacyBotGiftItems: 3
+  diplomacyBotGiftPerLevel: 0.25
+  diplomacyWarChanceAtMinus100: 0.25
+  diplomacyEdgeScore: -40
+  diplomacyTradeOffers: 10
+  diplomacyTradeDeals: 2
+  diplomacyTradeRefreshSeconds: 600
+  diplomacyTradeRefreshCrystals: 5
+  diplomacyTradeBonusPerLevel: 0.1
+  diplomacyHallRazedCrystals: 50
   botRebuildCalmSeconds: 60
   botRebuildEveryRaids: 3
   botCalmRadiusCells: 45
@@ -10044,6 +10062,304 @@ MonoBehaviour:
     unit: bot_archer
     count: 15
     level: 5
+  diplomacyRows:
+  - kind: help
+    id: walls
+    resource: Stone
+    get: 
+    amount: 120
+    getAmount: 0
+    minHall: 1
+    weight: 1
+    rare: 0
+  - kind: help
+    id: famine
+    resource: Food
+    get: 
+    amount: 100
+    getAmount: 0
+    minHall: 1
+    weight: 1
+    rare: 0
+  - kind: help
+    id: fleet
+    resource: Wood
+    get: 
+    amount: 150
+    getAmount: 0
+    minHall: 1
+    weight: 1
+    rare: 0
+  - kind: help
+    id: fire
+    resource: Wood
+    get: 
+    amount: 80
+    getAmount: 0
+    minHall: 1
+    weight: 1
+    rare: 0
+  - kind: help
+    id: tools
+    resource: Iron
+    get: 
+    amount: 40
+    getAmount: 0
+    minHall: 2
+    weight: 1
+    rare: 0
+  - kind: help
+    id: festival
+    resource: Coins
+    get: 
+    amount: 100
+    getAmount: 0
+    minHall: 1
+    weight: 1
+    rare: 0
+  - kind: botgift
+    id: wood
+    resource: Wood
+    get: 
+    amount: 40
+    getAmount: 0
+    minHall: 1
+    weight: 1
+    rare: 0
+  - kind: botgift
+    id: stone
+    resource: Stone
+    get: 
+    amount: 25
+    getAmount: 0
+    minHall: 1
+    weight: 1
+    rare: 0
+  - kind: botgift
+    id: food
+    resource: Food
+    get: 
+    amount: 40
+    getAmount: 0
+    minHall: 1
+    weight: 1
+    rare: 0
+  - kind: botgift
+    id: coins
+    resource: Coins
+    get: 
+    amount: 50
+    getAmount: 0
+    minHall: 1
+    weight: 1
+    rare: 0
+  - kind: botgift
+    id: iron
+    resource: Iron
+    get: 
+    amount: 15
+    getAmount: 0
+    minHall: 2
+    weight: 1
+    rare: 0
+  - kind: botgift
+    id: coal
+    resource: Coal
+    get: 
+    amount: 20
+    getAmount: 0
+    minHall: 2
+    weight: 1
+    rare: 0
+  - kind: botgift
+    id: goldbar
+    resource: GoldBar
+    get: 
+    amount: 3
+    getAmount: 0
+    minHall: 3
+    weight: 0.5
+    rare: 0
+  - kind: botgift
+    id: crystal1
+    resource: Crystals
+    get: 
+    amount: 1
+    getAmount: 0
+    minHall: 3
+    weight: 0.5
+    rare: 0
+  - kind: botgift
+    id: crystal2
+    resource: Crystals
+    get: 
+    amount: 2
+    getAmount: 0
+    minHall: 5
+    weight: 0.3
+    rare: 0
+  - kind: trade
+    id: wood_stone
+    resource: Wood
+    get: Stone
+    amount: 60
+    getAmount: 45
+    minHall: 1
+    weight: 1
+    rare: 0
+  - kind: trade
+    id: stone_wood
+    resource: Stone
+    get: Wood
+    amount: 50
+    getAmount: 60
+    minHall: 1
+    weight: 1
+    rare: 0
+  - kind: trade
+    id: food_coins
+    resource: Food
+    get: Coins
+    amount: 80
+    getAmount: 40
+    minHall: 1
+    weight: 1
+    rare: 0
+  - kind: trade
+    id: wood_food
+    resource: Wood
+    get: Food
+    amount: 50
+    getAmount: 60
+    minHall: 1
+    weight: 1
+    rare: 0
+  - kind: trade
+    id: stone_coins
+    resource: Stone
+    get: Coins
+    amount: 60
+    getAmount: 45
+    minHall: 1
+    weight: 1
+    rare: 0
+  - kind: trade
+    id: coins_wood
+    resource: Coins
+    get: Wood
+    amount: 40
+    getAmount: 70
+    minHall: 1
+    weight: 1
+    rare: 0
+  - kind: trade
+    id: coins_stone
+    resource: Coins
+    get: Stone
+    amount: 40
+    getAmount: 50
+    minHall: 1
+    weight: 1
+    rare: 0
+  - kind: trade
+    id: coins_food
+    resource: Coins
+    get: Food
+    amount: 30
+    getAmount: 60
+    minHall: 1
+    weight: 1
+    rare: 0
+  - kind: trade
+    id: food_wood
+    resource: Food
+    get: Wood
+    amount: 70
+    getAmount: 50
+    minHall: 1
+    weight: 1
+    rare: 0
+  - kind: trade
+    id: wood_iron
+    resource: Wood
+    get: Iron
+    amount: 100
+    getAmount: 20
+    minHall: 2
+    weight: 1
+    rare: 0
+  - kind: trade
+    id: stone_coal
+    resource: Stone
+    get: Coal
+    amount: 80
+    getAmount: 30
+    minHall: 2
+    weight: 1
+    rare: 0
+  - kind: trade
+    id: coins_iron
+    resource: Coins
+    get: Iron
+    amount: 60
+    getAmount: 25
+    minHall: 2
+    weight: 1
+    rare: 0
+  - kind: trade
+    id: iron_coins
+    resource: Iron
+    get: Coins
+    amount: 20
+    getAmount: 60
+    minHall: 2
+    weight: 1
+    rare: 0
+  - kind: trade
+    id: coal_coins
+    resource: Coal
+    get: Coins
+    amount: 30
+    getAmount: 40
+    minHall: 2
+    weight: 1
+    rare: 0
+  - kind: trade
+    id: rare_coins_crystals
+    resource: Coins
+    get: Crystals
+    amount: 300
+    getAmount: 2
+    minHall: 1
+    weight: 0.3
+    rare: 1
+  - kind: trade
+    id: rare_stone_crystals
+    resource: Stone
+    get: Crystals
+    amount: 250
+    getAmount: 2
+    minHall: 2
+    weight: 0.3
+    rare: 1
+  - kind: trade
+    id: rare_wood_goldbar
+    resource: Wood
+    get: GoldBar
+    amount: 200
+    getAmount: 3
+    minHall: 3
+    weight: 0.3
+    rare: 1
+  - kind: trade
+    id: rare_iron_goldbar
+    resource: Iron
+    get: GoldBar
+    amount: 60
+    getAmount: 4
+    minHall: 4
+    weight: 0.3
+    rare: 1
   m2Waves:
   - part: 1
     wave: 1
