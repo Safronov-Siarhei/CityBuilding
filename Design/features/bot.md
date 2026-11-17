@@ -304,3 +304,14 @@ from `ArchipelagoBotCell`; `TheBotKingdom_StandsOnItsIsland...` now checks each 
   three buttons. Changes: no «Здание» button (the two help lines sit where it was, panel shorter); instead of the hall
   icon and the crest -- TWO KINGS facing each other INSIDE round buttons (clipped to the face, not over the rim), «Вы» left, «Сосед» right (the neighbour's portrait
   mirrored, cape red). The game has one King portrait (PortraitKing); the neighbour's needs its own sprite when built.
+- Round 3 of the concepts (the user, 2026-11-17):
+  - GIFT window (Diplomacy_3/4) APPROVED. Prices were too dear: now in the sheet, tab «Бот-королевство» (economy keys
+    `diplomacy_gift_small|medium|large_coins` 20/50/120 and `_relations` 1/3/5), not read by code yet.
+  - TRADE window: a taken offer gets a red ink SEAL «КУПЛЕНО» over the whole card (`bought_stamp`), no label; the
+    window is taller so the refresh row (ad / crystals) sits below the offers, not over them.
+  - BANNERS (help, gift from the neighbour, relations on the edge, war declared) are built like the PLAGUE and FIRE
+    banners (wood window, themed picture, a figure at each side, ribbon, parchment): `Tools/ui/diplomacy_banner_art.py
+    <figures>` -> Design/ui/Diplomacy_7/8/9/10. Figures (renders, not in the game): VillagerCraftsman1 / HeroKing /
+    SoldierSpearman-lvl2 / SoldierKnight-lvl2. The neighbour's gift is a banner too, not a window. Notices go to the
+    usual notice panel like every other notice.
+  - «Ратуша соседа пала» window approved; the reward is +50 crystals (`diplomacy_hall_razed_crystals`).

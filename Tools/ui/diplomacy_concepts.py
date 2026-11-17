@@ -6,7 +6,9 @@ number on them is a placeholder for the sheet.
 
     python Tools/ui/diplomacy_concepts.py  ->  Design/ui/Diplomacy_*.png
 """
+import math
 import os
+import random
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -320,11 +322,52 @@ OFFERS = [  # give, give n, get, get n, state
 ]
 
 
-def trade_window():
+TRADE_PW, TRADE_PH, TRADE_PY = 1700, 960, 80  # taller than v1: the refresh row sat on the second row of offers
+
+
+def bought_stamp(size=250, angle=-14):
+    """A red ink seal «КУПЛЕНО» laid over a taken offer (the user, 2026-11-17: a stamp, not a label)."""
+    S = 2
+    n = size * S
+    im = Image.new("RGBA", (n, n))
+    d = ImageDraw.Draw(im)
+    ink = (196, 38, 34, 225)
+    d.ellipse([6 * S, 6 * S, n - 6 * S, n - 6 * S], outline=ink, width=9 * S)
+    d.ellipse([22 * S, 22 * S, n - 22 * S, n - 22 * S], outline=ink, width=4 * S)
+    for k in range(12):
+        a = k * math.tau / 12
+        r = n / 2 - 38 * S
+        x, y = n / 2 + math.cos(a) * r, n / 2 + math.sin(a) * r
+        if abs(math.sin(a)) > .5:
+            d.ellipse([x - 5 * S, y - 5 * S, x + 5 * S, y + 5 * S], fill=ink)
+    d.rectangle([14 * S, n / 2 - 30 * S, n - 14 * S, n / 2 + 30 * S], fill=ink)
+    # cut the word out of the band, so it reads as ink with the letters left blank
+    word = Image.new("L", (n, n))
+    ImageDraw.Draw(word).text((n / 2, n / 2 + 2 * S), "КУПЛЕНО", font=font(int(36 * S)), fill=255, anchor="mm")
+    a = im.split()[3]
+    a = Image.composite(Image.new("L", (n, n), 0), a, word)
+    # a worn stamp: a few speckles let the paper through
+    rnd = random.Random(4)
+    ad = ImageDraw.Draw(a)
+    for _ in range(160):
+        x, y, r = rnd.randint(0, n), rnd.randint(0, n), rnd.randint(2, 7) * S / 2
+        ad.ellipse([x - r, y - r, x + r, y + r], fill=0)
+    im.putalpha(a)
+    im = im.rotate(angle, resample=Image.BICUBIC, expand=True)
+    return im.resize((im.width // S, im.height // S), Image.LANCZOS)
+
+
+def taken_offer(c, cx, top, cw, ch, angle):
+    veil = Image.new("RGBA", (cw - 20, ch - 20), (240, 226, 190, 120))
+    c.alpha_composite(veil, (cx - cw // 2 + 10, top + 10))
+    put(c, bought_stamp(250, angle), cx, top + ch // 2 + 6)
+
+
+def trade_window(also_taken=()):
     c = ground()
     dim(c)
-    pw, ph = 1700, 900
-    px, py = (W - pw) // 2, 140
+    pw, ph = TRADE_PW, TRADE_PH
+    px, py = (W - pw) // 2, TRADE_PY
     c.alpha_composite(panel(pw, ph), (px, py))
     title_bar(c, W // 2, py + 4, "Торговля с соседом")
     close_btn(c, px + pw - 30, py + 30)
@@ -336,7 +379,8 @@ def trade_window():
     text(d, (px + pw - 210, py + 106), "7:12", 38, CREAM, stroke=3, stroke_fill=INK)
     text(d, (px + pw - 420, py + 108), "Новые через", 28, INK, "Bold", anchor="rm")
     cw, ch = 300, 300
-    for i, (g, gn, r, rn, state) in enumerate(OFFERS):
+    offers = [o[:4] + ("taken",) if i in also_taken else o for i, o in enumerate(OFFERS)]
+    for i, (g, gn, r, rn, state) in enumerate(offers):
         col, row = i % 5, i // 5
         cx = px + 170 + col * 340
         top = py + 180 + row * 330
@@ -352,14 +396,14 @@ def trade_window():
         text(d, (cx + 72, top + 152), f"{rn}", 32, GREEN)
         text(d, (cx - 72, top + 186), "отдать", 22, GREY, "Bold")
         text(d, (cx + 72, top + 186), "получить", 22, GREY, "Bold")
-        if state == "taken":
-            st = load(SHOP, "Stamp", (240, 62))
-            put(c, st.rotate(8, expand=True), cx, top + 240)
-            text(d, (cx, top + 238), "Куплено", 30, CREAM)
-        else:
+        if state != "taken":
             labelled_button(c, "green", cx, top + 244, 230, "Обменять", h=78)
-    # refresh row
-    y = py + ph - 80
+    for i, o in enumerate(offers):
+        if o[4] == "taken":
+            taken_offer(c, px + 170 + (i % 5) * 340, py + 180 + (i // 5) * 330, cw, ch, -14 if i % 2 == 0 else 10)
+            d = ImageDraw.Draw(c)
+    # refresh row: below the offers, not over them
+    y = py + ph - 64
     text(d, (W // 2 - 420, y), "Обновить предложения сейчас:", 30, INK, "Bold")
     labelled_button(c, "blue", W // 2, y, 260, "Реклама", load(SHOP, "Play", (56, 56)), h=84)
     labelled_button(c, "gold", W // 2 + 300, y, 260, "5", res("crystal", 56), h=84)
@@ -370,11 +414,11 @@ def trade_window_done():
     """Both deals taken: the other eight go grey and locked until the timer."""
     c = ground()
     dim(c)
-    base = trade_window()
+    base = trade_window(also_taken=(3,))
     c = base
     d = ImageDraw.Draw(c)
-    pw, ph = 1700, 900
-    px, py = (W - pw) // 2, 140
+    pw, ph = TRADE_PW, TRADE_PH
+    px, py = (W - pw) // 2, TRADE_PY
     put(c, card(330, 70, True), px + 230, py + 110)
     text(d, (px + 230, py + 107), "Сделок: 2 из 2", 32, RED)
     cw, ch = 300, 300
@@ -388,15 +432,6 @@ def trade_window_done():
         c.alpha_composite(veil, (cx - cw // 2 + 10, top + 10))
         put(c, load(GLYPHS, "Hud_Lock", (70, 70)), cx, top + 130)
         text(d, (cx, top + 210), "Недоступно", 28, GREY)
-    for i in (3,):
-        col, row = i % 5, i // 5
-        cx = px + 170 + col * 340
-        top = py + 180 + row * 330
-        veil = Image.new("RGBA", (260, 96), (240, 222, 182, 255))
-        c.alpha_composite(veil, (cx - 130, top + 196))
-        st = load(SHOP, "Stamp", (240, 62))
-        put(c, st.rotate(-6, expand=True), cx, top + 240)
-        text(d, (cx, top + 238), "Куплено", 30, CREAM)
     return c
 
 
@@ -506,7 +541,7 @@ def hall_razed():
     d = ImageDraw.Draw(c)
     put(c, load(SHOP, "Glow", (380, 380)), W // 2, py + 210)
     put(c, res("crystal", 200), W // 2, py + 210)
-    text(d, (W // 2, py + 350), "+10", 60, GREEN, stroke=3, stroke_fill=CREAM)
+    text(d, (W // 2, py + 350), "+50", 60, GREEN, stroke=3, stroke_fill=CREAM)
     text(d, (W // 2, py + 410), "Война окончена. Отношения вернулись к 0.", 30, INK, "Bold")
     labelled_button(c, "green", W // 2, py + ph - 60, 340, "Забрать", h=90)
     return c
@@ -533,14 +568,11 @@ def main():
         ("4 Подарок соседу: уже отправлен", gift_window_used(), "Diplomacy_4_Gift_Used.png"),
         ("5 Торговля: 10 предложений, 1 из 2", trade_window(), "Diplomacy_5_Trade.png"),
         ("6 Торговля: обе сделки взяты", trade_window_done(), "Diplomacy_6_Trade_Done.png"),
-        ("7 Баннер: сосед просит помощи", help_banner(), "Diplomacy_7_Help_Banner.png"),
-        ("8 Подарок от соседа + уведомление", neighbour_gift(), "Diplomacy_8_Neighbour_Gift.png"),
-        ("9 Баннер: отношения на грани", edge_banner(), "Diplomacy_9_Edge_Banner.png"),
-        ("10 Баннер: сосед объявил войну", war_banner(), "Diplomacy_10_War_Banner.png"),
         ("11 Награда: ратуша соседа пала", hall_razed(), "Diplomacy_11_Hall_Razed.png"),
     ]
     for _, im, name in shots:
         im.convert("RGB").save(os.path.join(OUT, name), quality=92)
+    # the four banners (7-10) moved to Tools/ui/diplomacy_banner_art.py (2026-11-17: the plague/fire build)
     sheet([s[1] for s in shots], 2, os.path.join(OUT, "Diplomacy_All.jpg"), [s[0] for s in shots])
     print("ok", len(shots))
 
