@@ -21,7 +21,8 @@ from menu_shop_mockup import W, H, R, INK, CREAM, GOLD, GOLD_D, text, put, cryst
 OUT = R + 'Design/ui/'
 SHOT = R + 'playtest_shots/inv_hall.png'
 PURPLE, PURPLE_D = (132, 58, 182), (44, 12, 70)
-LEFT, RIGHT = W / 2 - 340, W / 2 + 340
+LEFT, RIGHT = W / 2 - 400, W / 2 + 400
+FIGHT = (W / 2 - 200, H - 100, W / 2 + 200, H - 18)   # «В бой», narrower: the banners clear it
 
 
 def murk(img, box):
@@ -54,7 +55,20 @@ def medallion(img, cx):
     cy, r = a.BEAM_Y + 150, 92
     for x in (cx - 40, cx + 40):
         a.chain(d, x, a.BEAM_Y + 22, cy - r * 0.86)
-    glow(img, (cx, cy), int(r * 4.2), 0.55)
+    rays = c.layer()
+    rd = ImageDraw.Draw(rays)
+    import math
+    for k in range(16):
+        t0, t1 = math.radians(k * 22.5 - 5), math.radians(k * 22.5 + 5)
+        rd.polygon([(cx, cy), (cx + math.cos(t0) * r * 2.3, cy + math.sin(t0) * r * 2.3), (cx + math.cos(t1) * r * 2.3, cy + math.sin(t1) * r * 2.3)],
+                   fill=(255, 220, 120, 70 if k % 2 else 40))
+    m = Image.new('L', (W, H), 0)
+    ImageDraw.Draw(m).ellipse((cx - r * 2.3, cy - r * 2.3, cx + r * 2.3, cy + r * 2.3), fill=255)
+    fade = Image.new('L', (W, H), 0)
+    ImageDraw.Draw(fade).ellipse((cx - r * 2.1, cy - r * 2.1, cx + r * 2.1, cy + r * 2.1), fill=255)
+    rays.putalpha(Image.composite(rays.getchannel('A'), Image.new('L', (W, H), 0), fade.filter(ImageFilter.GaussianBlur(40))))
+    img.alpha_composite(rays.filter(ImageFilter.GaussianBlur(3)))
+    glow(img, (cx, cy), int(r * 4.2), 0.7)
     d = ImageDraw.Draw(img)
     d.ellipse((cx - r + 8, cy - r + 14, cx + r + 8, cy + r + 14), fill=(0, 0, 0, 110))
     d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=GOLD_D, outline=INK, width=5)
@@ -69,6 +83,14 @@ def medallion(img, cx):
             x = cx + side * abs(x - cx)
             d.ellipse((x - 9, y - 5, x + 9, y + 5), fill=(236, 186, 70), outline=(150, 100, 30))
     put(img, c.tinted(c.icon('Hud_Trophy', 78), (250, 210, 90)), (cx, cy - 4))
+    # the glint running round the rim, and sparkles about it
+    gl = c.layer()
+    ImageDraw.Draw(gl).arc((cx - r + 4, cy - r + 4, cx + r - 4, cy + r - 4), 200, 250, fill=(255, 252, 230, 255), width=7)
+    img.alpha_composite(gl.filter(ImageFilter.GaussianBlur(2)))
+    from menu_shop_mockup import sparkle
+    d = ImageDraw.Draw(img)
+    for sx, sy, sr in ((-118, -70, 13), (120, -40, 10), (-96, 74, 8), (104, 92, 12), (12, -128, 9)):
+        sparkle(d, cx + sx, cy + sy, sr)
     # the ribbon under it
     y0, y1, w = cy + r - 18, cy + r + 30, 220
     for side in (-1, 1):
@@ -82,9 +104,7 @@ def medallion(img, cx):
 
 def hall_mockup():
     img = Image.open(SHOT).convert('RGBA')
-    keep = img.crop((700, 966, 1220, 1080))
-    murk(img, (290, 528, 1630, 1010))
-    img.paste(keep, (700, 966))
+    murk(img, (290, 528, 1630, 1080))
     # the two banners, wider apart: the day picked (big), the week small
     for cx, col, big, title, pts in ((LEFT, (178, 44, 36), True, 'День', '4 120'), (RIGHT, (46, 84, 170), False, 'Неделя', '10 190')):
         size = a.BIG if big else a.SMALL
@@ -116,23 +136,39 @@ def hall_mockup():
         else:
             text(d, (cx, T + 140), 'нажми, чтобы открыть', 22, stroke=3, stroke_fill=dark, heavy=False)
     medallion(img, W / 2)
+    fight(img)
     img.convert('RGB').save(OUT + 'InvasionRating_Hall.png')
+
+
+def fight(img):
+    """The game's gold «В бой», 400 wide: swords at both ends, its glow behind."""
+    x0, y0, x1, y1 = FIGHT
+    glow(img, ((x0 + x1) / 2, (y0 + y1) / 2), 520, 0.6)
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle((x0, y0 + 8, x1, y1 + 8), 22, fill=(120, 70, 18))
+    d.rounded_rectangle(FIGHT, 22, fill=(226, 164, 58), outline=INK, width=5)
+    d.rounded_rectangle((x0 + 10, y0 + 8, x1 - 10, y0 + (y1 - y0) * .45), 16, fill=(240, 190, 90))
+    cy = (y0 + y1) / 2
+    sw = c.tinted(c.icon('Swords', 60), (84, 48, 18))
+    put(img, sw, (x0 + 56, cy))
+    put(img, sw.transpose(Image.FLIP_LEFT_RIGHT), (x1 - 56, cy))
+    text(ImageDraw.Draw(img), ((x0 + x1) / 2, cy - 2), 'В бой', 52, fill=(70, 40, 14), stroke=0)
 
 
 def window_mockup():
     img = Image.open(SHOT).convert('RGBA')
     img = Image.alpha_composite(img, Image.new('RGBA', (W, H), (8, 4, 2, 215)))
-    box = (250, 120, W - 250, H - 50)
+    box = (250, 96, W - 250, H - 40)
     img = c.wood_frame(img, box, 46)
-    inner = (box[0] + 30, box[1] + 92, box[2] - 30, box[3] - 30)
+    inner = (box[0] + 30, box[1] + 150, box[2] - 30, box[3] - 30)
     img = c.parchment(img, inner, 28)
     d = ImageDraw.Draw(img)
     # the title ribbon, the close cross
     rib = a.ribbon()
     rib = rib.crop(rib.getbbox())
-    put(img, rib, (W / 2, box[1] + 10))
+    put(img, rib, (W / 2, box[1] - 4))
     d = ImageDraw.Draw(img)
-    text(d, (W / 2, box[1] + 6), 'Доска славы', 50, stroke=5, stroke_fill=PURPLE_D)
+    text(d, (W / 2, box[1] - 10), 'Доска славы', 50, stroke=5, stroke_fill=PURPLE_D)
     c.round_button(img, (box[2] - 18, box[1] + 18), 40, '✕' if False else 'x')
     # the tabs and the timer
     tabs = (('День', False), ('Неделя', True))
@@ -146,7 +182,7 @@ def window_mockup():
     # the podium: the top three with their crowns, points and prizes
     ink = (90, 56, 24)
     lx0, lx1 = inner[0] + 30, inner[0] + 900
-    pod_cx, base = (lx0 + lx1) / 2, inner[1] + 300
+    pod_cx, base = (lx0 + lx1) / 2, inner[1] + 320
     places = ((2, 'Мира_Ветер', '18 940', '300', (190, 196, 206), 104), (1, 'КорольЛев', '21 360', '500', (236, 186, 70), 140),
               (3, 'Grimbold', '17 205', '300', (200, 130, 70), 80))
     for i, (place, name, pts, prize, col, h) in enumerate(places):
@@ -167,8 +203,7 @@ def window_mockup():
     # the list: places 4..9
     y = base + 100
     rows = (('4', 'Олаф', '16 880', '150'), ('5', 'Snowfox', '16 020', '150'), ('6', 'Ярослава', '15 760', '150'),
-            ('7', 'БарсукИгорь', '15 115', '150'), ('8', 'Kestrel', '14 990', '150'), ('9', 'Тихон', '14 410', '150'),
-            ('10', 'LadyMorgana', '14 002', '150'))
+            ('7', 'БарсукИгорь', '15 115', '150'), ('8', 'Kestrel', '14 990', '150'))
     for k, (pl, name, pts, prize) in enumerate(rows):
         yy = y + k * 46
         d.rounded_rectangle((lx0, yy - 20, lx1, yy + 20), 12, fill=(234, 210, 160) if k % 2 else (226, 198, 142))
