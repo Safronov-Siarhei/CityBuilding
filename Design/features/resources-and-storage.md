@@ -107,4 +107,5 @@ SANDBOX ONLY. Replaces the family pools with a cap PER RESOURCE.
 - PRE-RELEASE CHECK: prices above the caps (Tax House 150/200, Colosseum 90/80, Big Treasury 110 stone, Big
   Warehouse 80 / Big Granary 70 wood, Manor 55, Moat 25 of a 20-cap resource, research up to 800 coins) -- the user
   re-balances after the review of every building's logic.
-- Open: which store a new resource goes into and which one pays a price (fill / spend order).
+- Fill / spend order (agreed 2026-11-17): a new resource goes into the stores nearest to where it was made, one by
+  one; a price is paid from the FULLEST store first (stock stays even, losing one store hurts less).
