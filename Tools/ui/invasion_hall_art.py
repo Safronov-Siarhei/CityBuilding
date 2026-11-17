@@ -17,7 +17,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'store'))
 from PIL import Image, ImageDraw, ImageFilter  # noqa: E402
 import invasion_hub_concepts as c  # noqa: E402
-from menu_shop_mockup import W, H, R, INK, GOLD, GOLD_D, glow  # noqa: E402
+from menu_shop_mockup import W, H, R, INK, GOLD, GOLD_D, glow, put  # noqa: E402
 
 OUT = R + 'Assets/_Project/UI/MenuArt/'
 PW, PH = 1040, 236
@@ -27,15 +27,17 @@ BEAM_Y = 500                       # the beam's middle; it runs past both screen
 BEAM_W = 2600
 CHAIN = 40                         # the chains from the beam's iron eyes down to a banner's pole
 POLE = 24
-EXTRA_EYES = []                     # more chains' eyes on the beam (screen x), e.g. a medallion's
+EXTRA_EYES = [W / 2 - 40, W / 2 + 40]   # more chains' eyes on the beam (screen x): the rating medallion's
 HANG = 110                          # a chain's distance from its banner's middle (the same for big and small)
 BANNER_TOP = BEAM_Y + 20 + CHAIN + POLE + 14     # where the cloth's face begins (its hem wraps the pole above)
-BANNERS = [(W / 2 - 400, (178, 44, 36)), (W / 2, (46, 84, 170)), (W / 2 + 400, (54, 120, 60))]
+# day and week (the month removed with the move to Google Play Games, the user 2026-11-17), wide apart round the
+# rating medallion
+BANNERS = [(W / 2 - 400, (178, 44, 36)), (W / 2 + 400, (46, 84, 170))]
 BIG, SMALL = (330, 356), (290, 200)
 TIP = 34
 ROW0, ROW_STEP = 140, 34           # the picked banner's rows, from its top
 YOU_Y = ROW0 + 4 * ROW_STEP + 48
-BUTTON = (W / 2 - 240, H - 100, W / 2 + 240, H - 18)
+BUTTON = (W / 2 - 200, H - 100, W / 2 + 200, H - 18)   # 400 wide: the banners clear it
 IRON, IRON_L = (46, 40, 38), (98, 90, 84)
 WOOD, WOOD_L = (104, 62, 28), (138, 88, 44)
 
@@ -239,6 +241,172 @@ def vignette():
     out.save(OUT + 'InvHall_Vignette.png', optimize=True)
 
 
+# ================================================================== the rating (approved 2026-11-17)
+# Tools/ui/invasion_rating_mockup.py -> Design/ui/InvasionRating_*.png: the medallion between the two banners, the
+# «Доска славы» window. Turning pieces (rays, glint) are saved square round their centre: the game spins them.
+
+MED_CX, MED_R = W / 2, 92
+MED_CY = BEAM_Y + 150
+RATE_BOX = (250, 96, W - 250, H - 40)
+RATE_INNER = (RATE_BOX[0] + 30, RATE_BOX[1] + 150, RATE_BOX[2] - 30, RATE_BOX[3] - 30)
+RATE_LIST = (RATE_INNER[0] + 30, RATE_INNER[0] + 900)          # the list's x span
+RATE_BASE = RATE_INNER[1] + 336                                # the podium's floor
+RATE_ROW_H, RATE_ROW_STEP = 40, 46
+RATE_TIERS = 6
+PARCH = (247, 232, 196)
+BROWN = (90, 56, 24)
+
+
+def save_round(name, lay, cx, cy, half):
+    """A piece saved as the square round (cx, cy): its middle is the turning point."""
+    box = (round(cx - half), round(cy - half), round(cx + half), round(cy + half))
+    lay.crop(box).save(OUT + 'InvHall_%s.png' % name, optimize=True)
+    layout['pieces'].append({'name': name, 'rect': list(box)})
+
+
+def medallion_pieces():
+    from menu_shop_mockup import sparkle
+    cx, cy, r = MED_CX, MED_CY, MED_R
+    lay = c.layer()
+    d = ImageDraw.Draw(lay)
+    for x in (cx - 40, cx + 40):
+        chain(d, x, BEAM_Y + 22, cy - r * 0.86)
+    save('MedalChains', lay)
+    # the rays: 16 soft wedges fading out (turned slowly by the game)
+    rays = c.layer()
+    rd = ImageDraw.Draw(rays)
+    R2 = r * 2.3
+    for k in range(16):
+        t0, t1 = math.radians(k * 22.5 - 5), math.radians(k * 22.5 + 5)
+        rd.polygon([(cx, cy), (cx + math.cos(t0) * R2, cy + math.sin(t0) * R2), (cx + math.cos(t1) * R2, cy + math.sin(t1) * R2)],
+                   fill=(255, 220, 120, 90 if k % 2 else 55))
+    fade = Image.new('L', (W, H), 0)
+    ImageDraw.Draw(fade).ellipse((cx - r * 2.1, cy - r * 2.1, cx + r * 2.1, cy + r * 2.1), fill=255)
+    rays.putalpha(Image.composite(rays.getchannel('A'), Image.new('L', (W, H), 0), fade.filter(ImageFilter.GaussianBlur(40))))
+    save_round('MedalRays', rays.filter(ImageFilter.GaussianBlur(3)), cx, cy, R2)
+    g = c.layer()
+    glow(g, (cx, cy), int(r * 4.2), 0.7)
+    save_round('MedalGlow', g, cx, cy, r * 2.1)
+    # the medallion itself
+    lay = c.layer()
+    d = ImageDraw.Draw(lay)
+    d.ellipse((cx - r + 8, cy - r + 14, cx + r + 8, cy + r + 14), fill=(0, 0, 0, 110))
+    lay = lay.filter(ImageFilter.GaussianBlur(6))
+    d = ImageDraw.Draw(lay)
+    d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=GOLD_D, outline=INK, width=5)
+    d.ellipse((cx - r + 10, cy - r + 10, cx + r - 10, cy + r - 10), fill=GOLD)
+    d.ellipse((cx - r + 20, cy - r + 20, cx + r - 20, cy + r - 20), fill=(96, 36, 140), outline=INK, width=3)
+    for side in (-1, 1):
+        for k in range(7):
+            t = math.radians(-20 + k * 22)
+            x, y = cx + side * math.cos(t) * (r - 38), cy - math.sin(t) * (r - 38)
+            d.ellipse((x - 9, y - 5, x + 9, y + 5), fill=(236, 186, 70), outline=(150, 100, 30))
+    put(lay, c.tinted(c.icon('Hud_Trophy', 78), (250, 210, 90)), (cx, cy - 4))
+    save('Medal', lay)
+    # the glint on the rim (run round by the game)
+    gl = c.layer()
+    ImageDraw.Draw(gl).arc((cx - r + 4, cy - r + 4, cx + r - 4, cy + r - 4), 200, 250, fill=(255, 252, 230, 255), width=7)
+    save_round('MedalGlint', gl.filter(ImageFilter.GaussianBlur(2)), cx, cy, r + 4)
+    sp = c.layer()
+    d = ImageDraw.Draw(sp)
+    for sx, sy, sr in ((-118, -70, 13), (120, -40, 10), (-96, 74, 8), (104, 92, 12), (12, -128, 9)):
+        sparkle(d, cx + sx, cy + sy, sr)
+    save('MedalSparkles', sp)
+    # its ribbon (the word is the game's)
+    lay = c.layer()
+    d = ImageDraw.Draw(lay)
+    y0, y1, w = cy + r - 18, cy + r + 30, 220
+    purple, edge = (132, 58, 182), (44, 12, 70)
+    for side in (-1, 1):
+        bx = cx + side * w / 2
+        d.polygon([(bx - side * 16, y0 + 12), (bx + side * 44, y0 + 12), (bx + side * 26, (y0 + y1) / 2 + 12),
+                   (bx + side * 44, y1 + 12), (bx - side * 16, y1 + 12)], fill=(98, 38, 140), outline=edge)
+        d.polygon([(bx, y1 - 2), (bx - side * 16, y1 - 2), (bx - side * 16, y1 + 12)], fill=(54, 16, 84), outline=edge)
+    d.rounded_rectangle((cx - w / 2, y0, cx + w / 2, y1), 8, fill=purple, outline=edge, width=4, corners=(True, True, False, False))
+    save('MedalRibbon', lay)
+    box_text('MedalLabel', (cx - w / 2 + 10, y0 + 2, cx + w / 2 - 10, y1 - 2))
+    point('Medal', (cx, cy))
+    point('MedalPivot', (cx, BEAM_Y + 22))
+    box_text('MedalTap', (cx - r - 20, cy - r - 20, cx + r + 20, y1 + 14))
+
+
+def rating_pieces():
+    """The «Доска славы» window's pieces; every word and number on it is the game's."""
+    bx0, by0, bx1, by1 = RATE_BOX
+    ix0, iy0, ix1, iy1 = RATE_INNER
+    lay = c.layer()
+    lay = c.wood_frame(lay, RATE_BOX, 46)
+    lay = c.parchment(lay, RATE_INNER, 28)
+    save('RateFrame', lay)
+    # the period tabs: the picked one is the table's own parchment, joined to it; the other wood
+    for i in range(2):
+        x = ix0 + 150 + i * 250
+        ty = iy0 - 64
+        on = c.layer()
+        d = ImageDraw.Draw(on)
+        d.rounded_rectangle((x - 110, ty, x + 110, ty + 72), 18, fill=PARCH, outline=(150, 104, 40), width=4, corners=(True, True, False, False))
+        d.rectangle((x - 106, ty + 40, x + 106, ty + 80), fill=PARCH)
+        save('RateTab%dOn' % i, on)
+        off = c.layer()
+        ImageDraw.Draw(off).rounded_rectangle((x - 110, ty + 6, x + 110, ty + 66), 18, fill=(110, 66, 30), outline=INK, width=4,
+                                              corners=(True, True, False, False))
+        save('RateTab%dOff' % i, off)
+        box_text('RateTab%d' % i, (x - 104, ty + 8, x + 104, ty + 64))
+    box_text('RateTimer', (ix1 - 640, iy0 - 56, ix1 - 40, iy0 - 4))
+    point('RateRibbon', (W / 2, by0 - 4))
+    box_text('RateTitle', (W / 2 - 280, by0 - 48, W / 2 + 280, by0 + 22))
+    point('RateClose', (bx1 - 18, by0 + 18))
+    # the podium: blocks, rims for the faces, the first's crown
+    lx0, lx1 = RATE_LIST
+    pod_cx, base = (lx0 + lx1) / 2, RATE_BASE
+    lay = c.layer()
+    d = ImageDraw.Draw(lay)
+    for i, (place, col, h) in enumerate(((2, (190, 196, 206), 122), (1, (236, 186, 70), 156), (3, (200, 130, 70), 104))):
+        x = pod_cx + (i - 1) * 270
+        d.rounded_rectangle((x - 110, base - h, x + 110, base), 12, fill=col, outline=INK, width=4)
+        top = base - h - 12
+        d.ellipse((x - 46, top - 96, x + 46, top - 4), fill=(230, 214, 180), outline=col, width=6)
+        put(lay, c.tinted(c.icon('Hud_People', 58), (150, 104, 40)), (x, top - 50))
+        d = ImageDraw.Draw(lay)
+        if place == 1:
+            d.polygon([(x - 34, top - 100), (x - 40, top - 140), (x - 16, top - 118), (x, top - 150), (x + 16, top - 118), (x + 40, top - 140), (x + 34, top - 100)],
+                      fill=GOLD, outline=INK)
+        k = place - 1
+        box_text('RatePlace%dNumber' % k, (x - 100, base - h + 6, x + 100, base - h + 58))
+        point('RatePlace%dPrize' % k, (x, base - 28))
+        box_text('RatePlace%dName' % k, (x - 130, base + 8, x + 130, base + 44))
+        box_text('RatePlace%dPoints' % k, (x - 130, base + 40, x + 130, base + 72))
+    save('RatePodium', lay)
+    # the list's rows (two tones), its area, the player's own row pinned at the foot
+    for name, col in (('RateRowA', (226, 198, 142)), ('RateRowB', (234, 210, 160))):
+        lay = c.layer()
+        ImageDraw.Draw(lay).rounded_rectangle((lx0, H / 2 - RATE_ROW_H / 2, lx1, H / 2 + RATE_ROW_H / 2), 12, fill=col)
+        bb = lay.getbbox()
+        lay.crop(bb).save(OUT + 'InvHall_%s.png' % name, optimize=True)
+    box_text('RateList', (lx0, base + 80, lx1, iy1 - 86))
+    yy = iy1 - 46
+    lay = c.layer()
+    ImageDraw.Draw(lay).rounded_rectangle((lx0 - 8, yy - 28, lx1 + 8, yy + 28), 16, fill=(255, 238, 196), outline=(236, 186, 70), width=5)
+    save('RateYou', lay)
+    box_text('RateYouPlace', (lx0 + 4, yy - 22, lx0 + 90, yy + 22))
+    box_text('RateYouName', (lx0 + 100, yy - 22, lx0 + 420, yy + 22))
+    box_text('RateYouPoints', (lx1 - 330, yy - 22, lx1 - 160, yy + 22))
+    point('RateYouPrize', (lx1 - 20, yy))
+    # the rewards by place
+    rx0, rx1 = lx1 + 40, ix1 - 30
+    lay = c.layer()
+    d = ImageDraw.Draw(lay)
+    d.rounded_rectangle((rx0, iy0 + 24, rx1, iy1 - 24), 20, fill=(96, 58, 26), outline=INK, width=4)
+    for k in range(RATE_TIERS):
+        y = iy0 + 140 + k * 62
+        d.rounded_rectangle((rx0 + 20, y - 24, rx1 - 20, y + 24), 14, fill=(70, 40, 18))
+        box_text('RateTier%dWho' % k, (rx0 + 40, y - 22, rx0 + 220, y + 22))
+        point('RateTier%dPrize' % k, (rx1 - 36, y))
+    save('RateRewards', lay)
+    box_text('RateRewardsTitle', (rx0 + 10, iy0 + 44, rx1 - 10, iy0 + 96))
+    box_text('RateNote', (rx0 + 16, iy1 - 110, rx1 - 16, iy1 - 30))
+
+
 def main():
     # the hall behind is the game's 3D throne room (InvasionHallBackdrop); its dark edges
     vignette()
@@ -318,6 +486,8 @@ def main():
     bb = lay.getbbox()
     lay.crop(bb).save(OUT + 'InvHall_YouRow.png', optimize=True)
     box_text('Button', BUTTON)
+    medallion_pieces()
+    rating_pieces()
     # the soft gold glow behind «В бой» (ButtonPulse beats its alpha), white: the game tints it
     g = Image.new('RGBA', (640, 230), (255, 255, 255, 0))
     m = Image.new('L', (640, 230), 0)

@@ -11,9 +11,11 @@ namespace CityBuilder.UI
     /// records on the device (InvasionRecords):
     ///
     /// - the picked theme's picture in a gilt frame, its season on the brass plate, the seals under it;
-    /// - three period banners -- day, week, month -- each with its points (the sum of its best runs);
-    ///   the picked one big and lit with its 5 best runs and the player's line (place: soon, until the
-    ///   online board exists), the others small with «нажми, чтобы открыть»;
+    /// - two period banners -- day and week (the month went with the move to Google Play Games, 2026-11-17) --
+    ///   each with its points (the sum of its best runs); the picked one big and lit with its 5 best runs and
+    ///   the player's line (the place from <see cref="InvasionRating.Source"/>, «место — скоро» while unknown),
+    ///   the other small with «нажми, чтобы открыть»;
+    /// - the rating medallion between them opens «Доска славы» (<see cref="InvasionRatingWindow"/>);
     /// - the crystals the player holds.
     /// </summary>
     public class InvasionHubController : MonoBehaviour
@@ -33,6 +35,9 @@ namespace CityBuilder.UI
         [SerializeField] private GameObject[] bannerDetails = new GameObject[0];
         [SerializeField] private GameObject[] bannerHint = new GameObject[0];
         [SerializeField] private Text[] bannerPoints = new Text[0];
+        /// <summary>Per period: the place on the player's line.</summary>
+        [SerializeField] private Text[] bannerPlace = new Text[0];
+        [SerializeField] private InvasionRatingWindow ratingWindow;
         /// <summary>5 per period, period-major.</summary>
         [SerializeField] private Text[] runTexts = new Text[0];
         [SerializeField] private Text crystalsText;
@@ -49,7 +54,7 @@ namespace CityBuilder.UI
         /// <summary>A banner: 0 day, 1 week, 2 month.</summary>
         public void SelectPeriod(int period)
         {
-            _period = (InvasionRecords.Period)Mathf.Clamp(period, 0, 2);
+            _period = (InvasionRecords.Period)Mathf.Clamp(period, 0, Mathf.Max(0, bannerBig.Length - 1));
             Refresh();
         }
 
@@ -59,7 +64,7 @@ namespace CityBuilder.UI
             var counted = BalanceConfig.Instance.InvasionRunsCountedPerDay;
             var days = InvasionRecords.LoadDays();
             var now = DateTime.Now;
-            for (var p = 0; p < 3; p++)
+            for (var p = 0; p < bannerBig.Length; p++)
             {
                 var runs = InvasionRecords.TopRuns(days, now, (InvasionRecords.Period)p, counted);
                 var points = 0;
@@ -79,6 +84,27 @@ namespace CityBuilder.UI
                 }
             }
             if (crystalsText != null) crystalsText.text = Wallet.UpgradeCrystals.ToString();
+            ShowPlaces();
+        }
+
+        /// <summary>The medallion: the rating of the period picked.</summary>
+        public void OpenRating()
+        {
+            if (ratingWindow != null) ratingWindow.Open((int)_period);
+        }
+
+        private void ShowPlaces()
+        {
+            for (var p = 0; p < bannerPlace.Length; p++)
+            {
+                var label = bannerPlace[p];
+                if (label == null) continue;
+                label.text = Localization.Get("#invasion_place_soon");
+                InvasionRating.Source.Load((InvasionRecords.Period)p, 1, page =>
+                {
+                    if (label != null && page.playerRank > 0) label.text = string.Format(Localization.Get("#invasion_place"), page.playerRank);
+                });
+            }
         }
 
         private static void Set(GameObject[] list, int i, bool on)

@@ -108,10 +108,10 @@ def hall_mockup():
     murk(img, (290, 522, 1630, 1080))
     a.OUT, keep = SCRATCH, a.OUT
     a.BANNERS, old = [(LEFT, None), (RIGHT, None)], a.BANNERS
-    a.EXTRA_EYES = [W / 2 - 40, W / 2 + 40]      # the medallion's chains
+
     a.layout['pieces'] = []
     a.beam()
-    a.OUT, a.BANNERS, a.EXTRA_EYES = keep, old, []
+    a.OUT, a.BANNERS = keep, old
     r = a.layout['pieces'][-1]['rect']
     beam = Image.open(SCRATCH + 'InvHall_Beam.png').convert('RGBA')
     img.alpha_composite(beam.crop((max(0, -int(r[0])), 0, max(0, -int(r[0])) + W, beam.height)), (0, int(r[1])))

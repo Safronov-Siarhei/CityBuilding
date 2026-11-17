@@ -508,6 +508,261 @@ namespace CityBuilder.EditorTools
             return p == null ? Vector2.zero : new Vector2(p.at[0] - 960f, 540f - p.at[1]);
         }
 
+        /// <summary>A layer as big as the reference frame, centred: pieces placed by the layout land where drawn.</summary>
+        private static RectTransform HallFrame(Transform parent, string name)
+        {
+            var go = new GameObject(name, typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            var rect = (RectTransform)go.transform;
+            Anchor(rect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1920f, 1080f));
+            return rect;
+        }
+
+        private static void Outlined(Text text, Color colour, Color? outline, float distance = 2.5f)
+        {
+            text.color = colour;
+            if (outline == null) return;
+            var o = text.gameObject.AddComponent<Outline>();
+            o.effectColor = outline.Value;
+            o.effectDistance = new Vector2(distance, -distance);
+        }
+
+        /// <summary>A number with the crystal after it, the pair laid out by its width (the game's rule: the number
+        /// first), centred or right-aligned on `at`.</summary>
+        private static (GameObject group, Text number) HallGemAmount(Transform parent, Vector2 at, int size, TextAnchor align, Color colour, Color? outline)
+        {
+            var go = new GameObject("Prize", typeof(RectTransform));
+            go.transform.SetParent(parent, false);
+            var pivotX = align == TextAnchor.MiddleRight ? 1f : align == TextAnchor.MiddleLeft ? 0f : 0.5f;
+            Anchor((RectTransform)go.transform, new Vector2(0.5f, 0.5f), new Vector2(pivotX, 0.5f), at, new Vector2(260f, size * 1.6f));
+            var row = go.AddComponent<HorizontalLayoutGroup>();
+            row.childAlignment = align;
+            row.spacing = 6f;
+            row.childControlWidth = row.childControlHeight = true;
+            row.childForceExpandWidth = row.childForceExpandHeight = false;
+            var number = HallLabel(go.transform, "Number", null, size, true, TextAnchor.MiddleCenter);
+            number.horizontalOverflow = HorizontalWrapMode.Overflow;
+            Outlined(number, colour, outline);
+            var gem = CreateImage(go.transform, "Crystal", Color.white);
+            gem.sprite = IconSprite("Res_UpgradeCrystal");
+            gem.preserveAspect = true;
+            gem.raycastTarget = false;
+            var le = gem.gameObject.AddComponent<LayoutElement>();
+            le.preferredWidth = le.preferredHeight = size * 1.3f;
+            return (go, number);
+        }
+
+        /// <summary>The rating medallion between the banners (approved 2026-11-17): it hangs on two chains from the
+        /// beam and swings round their eyes; rays, glow, glint and sparkles alive (MedallionMotion); a tap opens the
+        /// rating.</summary>
+        private static void BuildMedallion(Transform screen, HallLayout layout, InvasionHubController hub)
+        {
+            var hang = HallFind(layout.points, "MedalPivot");
+            var px = hang != null ? hang.at[0] : 960f;
+            var py = hang != null ? hang.at[1] : 522f;
+            var swing = HallFrame(screen, "Medallion");
+            swing.pivot = new Vector2(px / 1920f, 1f - py / 1080f);
+            swing.anchoredPosition = new Vector2(px - 960f, 540f - py);
+            var glow = HallPiece(swing, layout, "MedalGlow");
+            var rays = HallPiece(swing, layout, "MedalRays");
+            HallPiece(swing, layout, "MedalChains");
+            HallPiece(swing, layout, "Medal");
+            var glint = HallPiece(swing, layout, "MedalGlint");
+            var sparkles = HallPiece(swing, layout, "MedalSparkles");
+            HallPiece(swing, layout, "MedalRibbon");
+            var label = HallText(swing, layout, "MedalLabel", "#invasion_rating", 30, new Color(1f, 0.94f, 0.78f), new Color(0.17f, 0.05f, 0.27f));
+            label.horizontalOverflow = HorizontalWrapMode.Overflow;
+            var tap = CreateImage(swing, "Tap", new Color(1f, 1f, 1f, 0f));
+            var tapBox = HallFind(layout.texts, "MedalTap");
+            if (tapBox != null) HallPlace(tap.rectTransform, tapBox.rect);
+            UnityEventTools.AddPersistentListener(tap.gameObject.AddComponent<Button>().onClick, hub.OpenRating);
+            var motion = swing.gameObject.AddComponent<MedallionMotion>();
+            var mso = new SerializedObject(motion);
+            mso.FindProperty("swing").objectReferenceValue = swing;
+            mso.FindProperty("rays").objectReferenceValue = rays.rectTransform;
+            mso.FindProperty("glint").objectReferenceValue = glint.rectTransform;
+            mso.FindProperty("glow").objectReferenceValue = glow;
+            mso.FindProperty("sparkles").objectReferenceValue = sparkles;
+            mso.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        /// <summary>«Доска славы» (approved 2026-11-17, Design/ui/InvasionRating_Window.png): its pieces from the layout,
+        /// its words and numbers the game's (InvasionRatingWindow).</summary>
+        private static InvasionRatingWindow BuildRatingWindow(Transform screen, HallLayout layout)
+        {
+            var cream = new Color(1f, 0.94f, 0.78f);
+            var ink = new Color(0.35f, 0.22f, 0.09f);
+            var soft = new Color(0.59f, 0.41f, 0.16f);
+            var wood = new Color(0.17f, 0.09f, 0.03f);
+            var root = new GameObject("RatingWindow", typeof(RectTransform));
+            root.transform.SetParent(screen, false);
+            StretchBleed((RectTransform)root.transform);
+            var dim = CreateImage(root.transform, "Dim", new Color(0.03f, 0.015f, 0.01f, 0.84f));
+            StretchBleed(dim.rectTransform);
+            dim.raycastTarget = true;
+            var w = HallFrame(root.transform, "Window");
+            var window = root.AddComponent<InvasionRatingWindow>();
+            HallPiece(w, layout, "RateFrame");
+
+            // the title's ribbon on the frame's top edge, its word in the band's middle
+            var ribbon = HallFind(layout.pieces, "Ribbon");
+            var at = HallPoint(layout, "RateRibbon");
+            if (ribbon != null)
+            {
+                var img = CreateImage(w, "Ribbon", Color.white);
+                img.sprite = MenuArt("InvHall_Ribbon");
+                img.raycastTarget = false;
+                var size = new Vector2(ribbon.rect[2] - ribbon.rect[0], ribbon.rect[3] - ribbon.rect[1]);
+                Anchor(img.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), at, size);
+                // the band is 22..106 of the drawing: its middle is (64 - the piece's middle) below the piece's
+                var bandOffset = (ribbon.rect[1] + ribbon.rect[3]) * 0.5f - 64f;
+                var title = HallLabel(w, "Title", "#rating_title", 50, true, TextAnchor.MiddleCenter);
+                Outlined(title, cream, new Color(0.17f, 0.05f, 0.27f));
+                Anchor(title.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), at + new Vector2(0f, bandOffset), new Vector2(560f, 70f));
+            }
+
+            // the tabs: the picked one parchment and joined to the table, the other wood
+            var tabsOn = new Object[2];
+            var tabsOff = new Object[2];
+            var tabKeys = new[] { "#invasion_day", "#invasion_week" };
+            for (var i = 0; i < 2; i++)
+            {
+                var on = HallPiece(w, layout, $"RateTab{i}On");
+                var off = HallPiece(w, layout, $"RateTab{i}Off");
+                var box = HallFind(layout.texts, $"RateTab{i}");
+                foreach (var (piece, picked) in new[] { (on, true), (off, false) })
+                {
+                    var t = HallLabel(w, "Label", tabKeys[i], picked ? 34 : 32, true, TextAnchor.MiddleCenter);
+                    Outlined(t, picked ? ink : cream, picked ? (Color?)null : wood);
+                    if (box != null) HallPlace(t.rectTransform, box.rect);
+                    t.transform.SetParent(piece.transform, true);
+                }
+                tabsOn[i] = on.gameObject;
+                tabsOff[i] = off.gameObject;
+                var tap = CreateImage(w, $"Tab{i}Tap", new Color(1f, 1f, 1f, 0f));
+                if (box != null) HallPlace(tap.rectTransform, box.rect);
+                UnityEventTools.AddIntPersistentListener(tap.gameObject.AddComponent<Button>().onClick, window.SelectTab, i);
+            }
+            var timer = HallText(w, layout, "RateTimer", null, 28, cream, wood, bold: false, align: TextAnchor.MiddleRight);
+
+            // the podium
+            HallPiece(w, layout, "RatePodium");
+            var podium = new List<(Text place, Text name, Text points, Text prize, GameObject group)>();
+            for (var k = 0; k < 3; k++)
+            {
+                var number = HallText(w, layout, $"RatePlace{k}Number", null, 46, cream, ink);
+                number.text = (k + 1).ToString();
+                var name = HallText(w, layout, $"RatePlace{k}Name", null, 26, ink, null);
+                var points = HallText(w, layout, $"RatePlace{k}Points", null, 24, soft, null, bold: false);
+                var (group, prize) = HallGemAmount(w, HallPoint(layout, $"RatePlace{k}Prize"), 26, TextAnchor.MiddleCenter, cream, ink);
+                podium.Add((number, name, points, prize, group));
+            }
+
+            // the list from the 4th place, scrolling, and the notice while there is no board
+            var listBox = HallFind(layout.texts, "RateList");
+            var viewport = new GameObject("List", typeof(RectTransform), typeof(RectMask2D), typeof(Image));
+            viewport.transform.SetParent(w, false);
+            var vimg = viewport.GetComponent<Image>();
+            vimg.color = new Color(1f, 1f, 1f, 0f);
+            if (listBox != null) HallPlace((RectTransform)viewport.transform, listBox.rect);
+            var content = new GameObject("Content", typeof(RectTransform));
+            content.transform.SetParent(viewport.transform, false);
+            var crect = (RectTransform)content.transform;
+            crect.anchorMin = new Vector2(0f, 1f);
+            crect.anchorMax = new Vector2(1f, 1f);
+            crect.pivot = new Vector2(0.5f, 1f);
+            crect.anchoredPosition = Vector2.zero;
+            crect.sizeDelta = Vector2.zero;
+            var column = content.AddComponent<VerticalLayoutGroup>();
+            column.spacing = 6f;
+            column.childControlWidth = column.childControlHeight = true;
+            column.childForceExpandWidth = true;
+            column.childForceExpandHeight = false;
+            content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            var scroll = viewport.AddComponent<ScrollRect>();
+            scroll.content = crect;
+            scroll.viewport = (RectTransform)viewport.transform;
+            scroll.horizontal = false;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            var rowA = MenuArt("InvHall_RateRowA");
+            var rowB = MenuArt("InvHall_RateRowB");
+            var template = CreateImage(content.transform, "RowTemplate", Color.white);
+            template.sprite = rowA;
+            template.raycastTarget = false;
+            template.gameObject.AddComponent<LayoutElement>().preferredHeight = 40f;
+            void RowText(string name, Vector2 anchor, Vector2 pivot, Vector2 pos, float width, TextAnchor align, Color colour, bool bold)
+            {
+                var t = HallLabel(template.transform, name, null, 26, bold, align);
+                t.color = colour;
+                Anchor(t.rectTransform, anchor, pivot, pos, new Vector2(width, 40f));
+            }
+            RowText("Place", new Vector2(0f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(40f, 0f), 70f, TextAnchor.MiddleCenter, ink, true);
+            RowText("Name", new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(90f, 0f), 420f, TextAnchor.MiddleLeft, ink, true);
+            RowText("Points", new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-190f, 0f), 200f, TextAnchor.MiddleRight, ink, true);
+            var (rowPrize, _) = HallGemAmount(template.transform, Vector2.zero, 26, TextAnchor.MiddleRight, cream, ink);
+            var rp = (RectTransform)rowPrize.transform;
+            rp.anchorMin = rp.anchorMax = new Vector2(1f, 0.5f);
+            rp.anchoredPosition = new Vector2(-20f, 0f);
+            template.gameObject.SetActive(false);
+            var empty = HallLabel(w, "Empty", null, 28, false, TextAnchor.MiddleCenter);
+            empty.color = soft;
+            if (listBox != null) HallPlace(empty.rectTransform, new[] { listBox.rect[0] + 40f, listBox.rect[1], listBox.rect[2] - 40f, listBox.rect[3] });
+
+            // the player's own line
+            HallPiece(w, layout, "RateYou");
+            var youPlace = HallText(w, layout, "RateYouPlace", null, 26, ink, null);
+            var youName = HallText(w, layout, "RateYouName", "#invasion_you", 28, ink, null, align: TextAnchor.MiddleLeft);
+            var youPoints = HallText(w, layout, "RateYouPoints", null, 26, ink, null, align: TextAnchor.MiddleRight);
+            var (youGroup, youPrize) = HallGemAmount(w, HallPoint(layout, "RateYouPrize"), 26, TextAnchor.MiddleRight, cream, ink);
+
+            // the rewards by place
+            HallPiece(w, layout, "RateRewards");
+            var rewardsTitle = HallText(w, layout, "RateRewardsTitle", null, 32, cream, wood);
+            var tierWho = new Object[6];
+            var tierPrize = new Object[6];
+            for (var k = 0; k < 6; k++)
+            {
+                var tier = HallFrame(w, $"Tier{k}");
+                tierWho[k] = HallText(tier, layout, $"RateTier{k}Who", null, 28, cream, wood, align: TextAnchor.MiddleLeft);
+                tierPrize[k] = HallGemAmount(tier, HallPoint(layout, $"RateTier{k}Prize"), 28, TextAnchor.MiddleRight, cream, wood).number;
+            }
+            var note = HallText(w, layout, "RateNote", null, 24, cream, wood, bold: false);
+
+            var close = MenuRoundButton(w, "Close", "round", "Cancel", HudInk.OnRound, 84f, 0.5f);
+            Anchor((RectTransform)close.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), HallPoint(layout, "RateClose"), new Vector2(84f, 84f));
+            UnityEventTools.AddPersistentListener(close.onClick, window.Close);
+
+            var so = new SerializedObject(window);
+            WriteArray(so.FindProperty("tabOn"), tabsOn);
+            WriteArray(so.FindProperty("tabOff"), tabsOff);
+            so.FindProperty("timerText").objectReferenceValue = timer;
+            var lines = so.FindProperty("podium");
+            lines.arraySize = podium.Count;
+            for (var k = 0; k < podium.Count; k++)
+                WriteLine(lines.GetArrayElementAtIndex(k), podium[k].place, podium[k].name, podium[k].points, podium[k].prize, podium[k].group);
+            so.FindProperty("listContent").objectReferenceValue = crect;
+            so.FindProperty("rowTemplate").objectReferenceValue = template.gameObject;
+            WriteArray(so.FindProperty("rowSprites"), new Object[] { rowA, rowB });
+            so.FindProperty("emptyText").objectReferenceValue = empty;
+            WriteLine(so.FindProperty("you"), youPlace, youName, youPoints, youPrize, youGroup);
+            so.FindProperty("rewardsTitle").objectReferenceValue = rewardsTitle;
+            WriteArray(so.FindProperty("tierWho"), tierWho);
+            WriteArray(so.FindProperty("tierPrize"), tierPrize);
+            so.FindProperty("noteText").objectReferenceValue = note;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            root.SetActive(false);
+            return window;
+        }
+
+        private static void WriteLine(SerializedProperty line, Text place, Text name, Text points, Text prize, GameObject group)
+        {
+            line.FindPropertyRelative("place").objectReferenceValue = place;
+            line.FindPropertyRelative("name").objectReferenceValue = name;
+            line.FindPropertyRelative("points").objectReferenceValue = points;
+            line.FindPropertyRelative("prize").objectReferenceValue = prize;
+            line.FindPropertyRelative("prizeGroup").objectReferenceValue = group;
+        }
+
         private static CanvasGroup BuildInvasionScreen(Transform canvas, MainMenuController controller, out Button settings)
         {
             var screen = StretchedChild(canvas, "InvasionScreen");
@@ -597,15 +852,18 @@ namespace CityBuilder.EditorTools
 
             // the three period banners, on chains from the beam
             var periods = new[] { "#invasion_day", "#invasion_week", "#invasion_month" };
-            var darks = new[] { new Color(0.35f, 0.06f, 0.04f), new Color(0.06f, 0.12f, 0.31f), new Color(0.06f, 0.2f, 0.08f) };
-            var bigs = new Object[3];
-            var smalls = new Object[3];
-            var glows = new Object[3];
-            var details = new Object[3];
-            var hints = new Object[3];
-            var points = new Object[3];
-            var runs = new Object[15];
-            for (var i = 0; i < 3; i++)
+            // day and week only: the month went with the move to Google Play Games (the user, 2026-11-17)
+            const int bannerCount = 2;
+            var darks = new[] { new Color(0.35f, 0.06f, 0.04f), new Color(0.06f, 0.12f, 0.31f) };
+            var bigs = new Object[bannerCount];
+            var smalls = new Object[bannerCount];
+            var glows = new Object[bannerCount];
+            var details = new Object[bannerCount];
+            var hints = new Object[bannerCount];
+            var points = new Object[bannerCount];
+            var places = new Object[bannerCount];
+            var runs = new Object[bannerCount * 5];
+            for (var i = 0; i < bannerCount; i++)
             {
                 var banner = new GameObject($"Banner{i}", typeof(RectTransform));
                 banner.transform.SetParent(screen, false);
@@ -638,9 +896,11 @@ namespace CityBuilder.EditorTools
                 if (youBox != null) HallPlace(you.rectTransform, new[] { youBox.rect[0] - 16f, youBox.rect[1] - 2f, youBox.rect[2] + 16f, youBox.rect[3] + 2f });
                 var ink = new Color(0.35f, 0.22f, 0.09f);
                 HallText(group.transform, layout, $"You{i}", "#invasion_you", 26, ink, null, align: TextAnchor.MiddleLeft);
-                var soon = HallLabel(group.transform, "Place", "#invasion_place_soon", 22, false, TextAnchor.MiddleRight);
+                // the place: the controller's, from the rating («место — скоро» while it is not known)
+                var soon = HallLabel(group.transform, "Place", null, 22, false, TextAnchor.MiddleRight);
                 soon.color = new Color(0.59f, 0.41f, 0.16f);
                 if (youBox != null) HallPlace(soon.rectTransform, youBox.rect);
+                places[i] = soon;
                 // the whole banner takes the tap: it picks its period
                 var tap = CreateImage(b, "Tap", new Color(1f, 1f, 1f, 0f));
                 var tapBox = HallFind(layout.texts, $"Tap{i}");
@@ -648,16 +908,19 @@ namespace CityBuilder.EditorTools
                 UnityEventTools.AddIntPersistentListener(tap.gameObject.AddComponent<Button>().onClick, hub.SelectPeriod, i);
             }
 
+            BuildMedallion(screen, layout, hub);
+
             // «В бой», the crystals, «?», the corners, the King and the Queen at the sides
             var buttonBox = HallFind(layout.texts, "Button");
+            var fightSize = buttonBox != null ? new Vector2(buttonBox.rect[2] - buttonBox.rect[0], buttonBox.rect[3] - buttonBox.rect[1]) : new Vector2(400f, 82f);
             var fightAt = buttonBox != null ? new Vector2((buttonBox.rect[0] + buttonBox.rect[2]) * 0.5f - 960f, 540f - (buttonBox.rect[1] + buttonBox.rect[3]) * 0.5f) : new Vector2(0f, -480f);
             // «В бой»: crossed swords at both ends, a glow behind, the whole of it beating (the user, 2026-11-17:
             // «добавь мечи + эффект пульсации, чтобы игроку хотелось нажать»)
             var fightGlow = CreateImage(screen, "RunGlow", new Color(1f, 0.82f, 0.4f, 0.4f));
             fightGlow.sprite = MenuArt("InvHall_ButtonGlow");
             fightGlow.raycastTarget = false;
-            Anchor(fightGlow.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), fightAt, new Vector2(640f, 230f));
-            var fight = MenuTextButton(screen, "RunButton", "button", "#invasion_fight", HudInk.OnButton, fightAt, new Vector2(480f, 96f), 52);
+            Anchor(fightGlow.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), fightAt, new Vector2(fightSize.x + 160f, 230f));
+            var fight = MenuTextButton(screen, "RunButton", "button", "#invasion_fight", HudInk.OnButton, fightAt, new Vector2(fightSize.x, 96f), 52);
             UnityEventTools.AddPersistentListener(fight.onClick, controller.StartInvasion);
             var swords = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/Swords.png");
             foreach (var side in new[] { -1f, 1f })
@@ -667,7 +930,7 @@ namespace CityBuilder.EditorTools
                 sword.sprite = swords;
                 sword.preserveAspect = true;
                 sword.raycastTarget = false;
-                Anchor(sword.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(side * 158f, 4f), new Vector2(66f, 66f));
+                Anchor(sword.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(side * (fightSize.x * 0.5f - 82f), 4f), new Vector2(66f, 66f));
                 sword.rectTransform.localScale = new Vector3(side, 1f, 1f);
             }
             var pulse = fight.gameObject.AddComponent<ButtonPulse>();
@@ -703,6 +966,7 @@ namespace CityBuilder.EditorTools
             var backButton = Corner(screen, "BackButton", "Back", new Vector2(0f, 1f), new Vector2(CornerInset, -CornerInset), CornerButton);
             settings = Corner(screen, "SettingsButton", "Settings", new Vector2(1f, 1f), new Vector2(-CornerInset, -CornerInset), CornerButton);
             UnityEventTools.AddPersistentListener(backButton.onClick, controller.Back);
+            var rating = BuildRatingWindow(screen, layout);
 
             var so = new SerializedObject(hub);
             so.FindProperty("themes").objectReferenceValue = themes;
@@ -720,6 +984,8 @@ namespace CityBuilder.EditorTools
             WriteArray(so.FindProperty("bannerHint"), hints);
             WriteArray(so.FindProperty("bannerPoints"), points);
             WriteArray(so.FindProperty("runTexts"), runs);
+            WriteArray(so.FindProperty("bannerPlace"), places);
+            so.FindProperty("ratingWindow").objectReferenceValue = rating;
             so.FindProperty("crystalsText").objectReferenceValue = crystalsText;
             so.ApplyModifiedPropertiesWithoutUndo();
 

@@ -1197,6 +1197,12 @@ namespace CityBuilder.Core
         [SerializeField] private int invasionScoreBoss = 50;
         [SerializeField] private int invasionScoreCampBuilding = 10;
         [SerializeField] private int invasionRunsCountedPerDay = 5;
+        // the online rating's rewards by place (the user, 2026-11-17): tier N covers places up to upto_N (0 = everyone
+        // else) and pays prize_N crystals; the sheet's inv_rating_{day|week}_upto_N / _prize_N
+        [SerializeField] private int[] invasionRatingDayUpTo = { 1, 3, 10, 100, 1000, 0 };
+        [SerializeField] private int[] invasionRatingDayPrize = { 100, 60, 30, 15, 8, 4 };
+        [SerializeField] private int[] invasionRatingWeekUpTo = { 1, 3, 10, 100, 1000, 0 };
+        [SerializeField] private int[] invasionRatingWeekPrize = { 500, 300, 150, 60, 30, 20 };
 
         /// <summary>What a new game opens with, before the Town Hall goes down.</summary>
         [SerializeField] private int startWood = 80;
@@ -2273,6 +2279,8 @@ namespace CityBuilder.Core
         public int InvasionScoreBoss => invasionScoreBoss;
         public int InvasionScoreCampBuilding => invasionScoreCampBuilding;
         public int InvasionRunsCountedPerDay => invasionRunsCountedPerDay;
+        public int[] InvasionRatingUpTo(bool week) => week ? invasionRatingWeekUpTo : invasionRatingDayUpTo;
+        public int[] InvasionRatingPrize(bool week) => week ? invasionRatingWeekPrize : invasionRatingDayPrize;
 
         /// <summary>A jungle monster (wolf, bear, troll, giant) as a unit row, built from its mon_ID_* keys like the King's.</summary>
         public UnitBalance MonsterUnit(string id)
@@ -3119,6 +3127,8 @@ namespace CityBuilder.Core
             invasionScoreBoss = (int)Read(economy, "inv_score_boss", invasionScoreBoss);
             invasionScoreCampBuilding = (int)Read(economy, "inv_score_camp_building", invasionScoreCampBuilding);
             invasionRunsCountedPerDay = (int)Read(economy, "inv_runs_per_day", invasionRunsCountedPerDay);
+            ReadTiers(economy, "inv_rating_day", invasionRatingDayUpTo, invasionRatingDayPrize);
+            ReadTiers(economy, "inv_rating_week", invasionRatingWeekUpTo, invasionRatingWeekPrize);
             startWood = (int)Read(economy, "start_wood", startWood);
             startStone = (int)Read(economy, "start_stone", startStone);
             startFood = (int)Read(economy, "start_food", startFood);
@@ -3183,6 +3193,15 @@ namespace CityBuilder.Core
                 });
             }
             return skills;
+        }
+
+        private static void ReadTiers(Dictionary<string, float> economy, string prefix, int[] upTo, int[] prize)
+        {
+            for (var i = 0; i < upTo.Length && i < prize.Length; i++)
+            {
+                upTo[i] = (int)Read(economy, $"{prefix}_upto_{i + 1}", upTo[i]);
+                prize[i] = (int)Read(economy, $"{prefix}_prize_{i + 1}", prize[i]);
+            }
         }
 
         private static float Read(Dictionary<string, float> economy, string key, float fallback)
