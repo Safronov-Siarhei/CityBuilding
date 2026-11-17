@@ -11,10 +11,10 @@ namespace CityBuilder.Diplomacy
     /// <summary>
     /// The town's relations with the bot kingdom (the user, 2026-11-03): a scale from -100 to 100 and
     /// one of three stances -- Мир, Торговля, Война -- all of it closed until the player has built a
-    /// Diplomacy Hall. The skeleton: the scale drifts back to 0 day by day, Trade needs
-    /// bot_trade_min_score, declaring war costs bot_war_declare_score_loss. A war ends by paying a
-    /// contribution (not designed yet) or by razing the bot's Town Hall (EndWar). Trade deals, the
-    /// bot's own declarations and its gifts come later.
+    /// Diplomacy Hall. The scale falls a little every day (DiplomacyRules); trade needs
+    /// bot_trade_min_score, declaring war costs bot_war_declare_score_loss. A war ends by paying the
+    /// ransom or by razing the bot's Town Hall (EndWar). Gifts, help requests, the bot's gifts, its own
+    /// declarations and the trade offers: DiplomacyRules (the user, 2026-11-17).
     /// </summary>
     public static class BotRelations
     {
@@ -66,6 +66,7 @@ namespace CityBuilder.Diplomacy
             WarSeconds = 0f;
             WarRazed = 0;
             WarsFought = 0;
+            DiplomacyRules.Reset();
             Changed?.Invoke();
         }
 
@@ -175,20 +176,37 @@ namespace CityBuilder.Diplomacy
         {
             if (Stance != BotStance.War) return;
             Stance = BotStance.Peace;
+            // a peace starts the relations afresh (the user, 2026-11-17)
+            Score = 0f;
             WarSeconds = 0f;
             WarRazed = 0;
             Changed?.Invoke();
         }
 
-        /// <summary>The scale creeps back towards 0, bot_relations_drift_per_day a day.</summary>
-        public static void Tick(float deltaSeconds)
+        /// <summary>
+        /// The diplomacy rework (the user, 2026-11-17): while a Diplomacy Hall stands the scale FALLS
+        /// diplomacy_relations_fall_per_day a day (not back to 0: the player keeps it up with gifts and help),
+        /// and the day's events come from DiplomacyRules.
+        /// </summary>
+        public static void Tick(float deltaSeconds) => DiplomacyRules.Tick(deltaSeconds);
+
+        /// <summary>The scale moves by `delta` (gifts, help, the daily fall); the window redraws on a whole step.</summary>
+        public static void AddScore(float delta)
         {
-            var config = BalanceConfig.Instance;
-            if (config == null || Score == 0f || config.DayLengthSeconds <= 0f) return;
-            var step = config.BotRelationsDriftPerDay * deltaSeconds / config.DayLengthSeconds;
             var before = Score;
-            Score = Score > 0f ? Mathf.Max(0f, Score - step) : Mathf.Min(0f, Score + step);
+            Score = Mathf.Clamp(Score + delta, Min, Max);
             if (Mathf.RoundToInt(before) != Mathf.RoundToInt(Score)) Changed?.Invoke();
+        }
+
+        /// <summary>The bot declares war itself (relations below 0, DiplomacyRules): no score lost, the player did not choose it.</summary>
+        public static void DeclaredByBot()
+        {
+            if (Stance == BotStance.War) return;
+            WarsFought++;
+            Stance = BotStance.War;
+            WarSeconds = 0f;
+            WarRazed = 0;
+            Changed?.Invoke();
         }
     }
 }

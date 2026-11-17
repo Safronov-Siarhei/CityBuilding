@@ -325,7 +325,7 @@ OFFERS = [  # give, give n, get, get n, state
 TRADE_PW, TRADE_PH, TRADE_PY = 1700, 960, 80  # taller than v1: the refresh row sat on the second row of offers
 
 
-def bought_stamp(size=250, angle=-14):
+def bought_stamp(size=250, angle=-14, word="КУПЛЕНО"):
     """A red ink seal «КУПЛЕНО» laid over a taken offer (the user, 2026-11-17: a stamp, not a label)."""
     S = 2
     n = size * S
@@ -342,10 +342,11 @@ def bought_stamp(size=250, angle=-14):
             d.ellipse([x - 5 * S, y - 5 * S, x + 5 * S, y + 5 * S], fill=ink)
     d.rectangle([14 * S, n / 2 - 30 * S, n - 14 * S, n / 2 + 30 * S], fill=ink)
     # cut the word out of the band, so it reads as ink with the letters left blank
-    word = Image.new("L", (n, n))
-    ImageDraw.Draw(word).text((n / 2, n / 2 + 2 * S), "КУПЛЕНО", font=font(int(36 * S)), fill=255, anchor="mm")
+    letters = Image.new("L", (n, n))
+    if word:   # the game draws its own (localized) word over a blank band: word=None
+        ImageDraw.Draw(letters).text((n / 2, n / 2 + 2 * S), word, font=font(int(36 * S)), fill=255, anchor="mm")
     a = im.split()[3]
-    a = Image.composite(Image.new("L", (n, n), 0), a, word)
+    a = Image.composite(Image.new("L", (n, n), 0), a, letters)
     # a worn stamp: a few speckles let the paper through
     rnd = random.Random(4)
     ad = ImageDraw.Draw(a)

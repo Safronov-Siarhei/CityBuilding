@@ -201,6 +201,9 @@ namespace CityBuilder.Saving
             {
                 gameCalendar.SetCurrentDay(data.currentDay);
                 if (data.botRelationsSaved) Diplomacy.BotRelations.Restore(data.botRelations, data.botStance, data.botWarSeconds, data.botWarRazed, data.botWarsFought);
+                if (data.diplomacySaved)
+                    Diplomacy.DiplomacyRules.Restore(data.diplomacyDayClock, data.diplomacyDaysSinceHelp, data.diplomacyGiftSent, data.diplomacyEdgeShown,
+                        data.diplomacyOffers, data.diplomacyTaken, data.diplomacyDeals, data.diplomacyRefreshLeft);
                 if (data.botCastleSaved && Bot.BotKingdom.Instance != null) Bot.BotKingdom.Instance.Restore(data.botHallRazed, data.botMissing, data.botRazedByTown);
             }
 
@@ -761,6 +764,15 @@ namespace CityBuilder.Saving
                 data.botWarSeconds = Diplomacy.BotRelations.WarSeconds;
                 data.botWarRazed = Diplomacy.BotRelations.WarRazed;
                 data.botWarsFought = Diplomacy.BotRelations.WarsFought;
+                data.diplomacySaved = true;
+                data.diplomacyDayClock = Diplomacy.DiplomacyRules.DayClock;
+                data.diplomacyDaysSinceHelp = Diplomacy.DiplomacyRules.DaysSinceHelp;
+                data.diplomacyGiftSent = Diplomacy.DiplomacyRules.GiftSentToday;
+                data.diplomacyEdgeShown = Diplomacy.DiplomacyRules.EdgeShown;
+                data.diplomacyOffers = Diplomacy.DiplomacyRules.SaveOffers();
+                data.diplomacyTaken = Diplomacy.DiplomacyRules.SaveTaken();
+                data.diplomacyDeals = Diplomacy.DiplomacyRules.DealsDone;
+                data.diplomacyRefreshLeft = Diplomacy.DiplomacyRules.RefreshLeft;
                 if (Bot.BotKingdom.Instance != null && Bot.BotKingdom.Instance.Placed)
                 {
                     data.botCastleSaved = true;

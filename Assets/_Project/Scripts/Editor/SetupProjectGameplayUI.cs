@@ -345,7 +345,7 @@ namespace CityBuilder.EditorTools
             BuildOfferShopHud(uiRoot, iconLibrary);
             BuildForeignBuildingCard(uiRoot, panelSprite);
             BuildRuinCard(uiRoot, panelSprite, iconLibrary);
-            BuildDiplomacyWindow(uiRoot, panelSprite, infoPanel);
+            BuildDiplomacy(uiRoot, iconLibrary);
             BuildDungeonEntranceCard(uiRoot, panelSprite);
             BuildDungeonShopCard(uiRoot, panelSprite);
             BuildArmyBar(uiRoot);

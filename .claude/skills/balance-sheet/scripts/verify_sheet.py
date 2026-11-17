@@ -56,6 +56,8 @@ TABS = {
     "m2waves": {"key": ["part", "wave"]},
     # the piggy bank's tasks (2026-11-16): a row per task
     "piggytasks": {"key": ["id"]},
+    # the Diplomacy Hall's lists (2026-11-17): help requests, the bot's gifts, trade offers
+    "diplomacy": {"key": ["kind", "id"]},
     # every number of the tutorial (2026-11-05): key/value like economy
     "tutorial": {"key": ["key"]},
 }

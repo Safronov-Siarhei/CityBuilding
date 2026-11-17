@@ -68,6 +68,17 @@ namespace CityBuilder.Saving
         public int botWarRazed;
         public int botWarsFought;
         public int botStance;
+        /// <summary>The Diplomacy Hall's rules (Diplomacy.DiplomacyRules, 2026-11-17): the diplomacy day, the help clock,
+        /// today's gift, the edge banner shown, the trade offers (row ids), which are taken, deals done, the offers' timer.</summary>
+        public bool diplomacySaved;
+        public float diplomacyDayClock;
+        public int diplomacyDaysSinceHelp;
+        public bool diplomacyGiftSent;
+        public bool diplomacyEdgeShown;
+        public string[] diplomacyOffers = new string[0];
+        public bool[] diplomacyTaken = new bool[0];
+        public int diplomacyDeals;
+        public float diplomacyRefreshLeft;
         /// <summary>The bot kingdom's castle (Bot.BotKingdom): its Town Hall razed, and which of its blueprint's buildings are down.</summary>
         public bool botCastleSaved;
         public bool botHallRazed;

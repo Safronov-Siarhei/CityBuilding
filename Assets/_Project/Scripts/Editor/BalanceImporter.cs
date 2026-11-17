@@ -47,6 +47,8 @@ namespace CityBuilder.EditorTools
         public const string M2WavesCsvPath = BalanceFolder + "/m2waves.csv";
         /// <summary>The sheet's tab «Копилка: задания» (the user, 2026-11-16): the piggy bank's tasks, a row each.</summary>
         public const string PiggyTasksCsvPath = BalanceFolder + "/piggytasks.csv";
+        /// <summary>The sheet's tab «Зал дипломатии: таблицы» (the user, 2026-11-17): help requests, the bot's gifts, trade offers.</summary>
+        public const string DiplomacyCsvPath = BalanceFolder + "/diplomacy.csv";
 
         /// <summary>The sheet's tutorial tab (the user, 2026-11-05): every number of the tutorial, key/value, laid over the economy keys.</summary>
         public const string TutorialCsvPath = BalanceFolder + "/tutorial.csv";
@@ -102,12 +104,14 @@ namespace CityBuilder.EditorTools
             config.EditorSetBotWaves(ReadBotWaves(BotWavesCsvPath));
             config.EditorSetM2Waves(ReadM2Waves(M2WavesCsvPath));
             config.EditorSetPiggyTasks(ReadPiggyTasks(PiggyTasksCsvPath, out var piggyNames));
+            config.EditorSetDiplomacyRows(ReadDiplomacy(DiplomacyCsvPath, out var diplomacyNames));
             var offers = ReadBundles(BundlesCsvPath);
             config.EditorSetOffers(offers.Bundles, offers.Levels);
             bundleNames = offers.Names;
             config.EditorSetBoosters(boosterTab.Boosters);
             foreach (var pair in boosterTab.Names) bundleNames[pair.Key] = pair.Value;
             foreach (var pair in piggyNames) bundleNames[pair.Key] = pair.Value;
+            foreach (var pair in diplomacyNames) bundleNames[pair.Key] = pair.Value;
             EditorUtility.SetDirty(config);
 
             // The run's config: the same tabs with the invasion tab's cells laid over them.
@@ -345,6 +349,49 @@ namespace CityBuilder.EditorTools
                     difficulty = Cell(Col("difficulty")), mode = string.IsNullOrEmpty(mode) ? "any" : mode,
                 });
                 names["#piggy_task_" + key] = new Dictionary<string, string> { ["ru"] = Cell(Col("name_ru")), ["en"] = Cell(Col("name_en")) };
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// The diplomacy tab: kind, id, resource, amount, get, get_amount, min_hall, weight, rare, text_ru, text_en, comment.
+        /// A help row's words become `#diplomacy_ask_&lt;id&gt;` in the localization asset (like the piggy tasks' names).
+        /// </summary>
+        private static List<BalanceConfig.DiplomacyRow> ReadDiplomacy(string path, out Dictionary<string, Dictionary<string, string>> names)
+        {
+            var result = new List<BalanceConfig.DiplomacyRow>();
+            names = new Dictionary<string, Dictionary<string, string>>();
+            if (!File.Exists(path)) return result;
+            var rows = ReadCsv(path);
+            if (rows.Count == 0) return result;
+            var header = rows[0];
+            int Col(string name) => header.FindIndex(h => h.Trim() == name);
+            int kind = Col("kind"), id = Col("id"), resource = Col("resource"), amount = Col("amount");
+            if (kind < 0 || id < 0 || resource < 0 || amount < 0)
+            {
+                Debug.LogError($"BalanceImporter: {path} needs the columns kind, id, resource, amount.");
+                return result;
+            }
+            var culture = System.Globalization.CultureInfo.InvariantCulture;
+            for (var i = 1; i < rows.Count; i++)
+            {
+                var row = rows[i];
+                string Cell(int c) => c >= 0 && c < row.Count ? row[c].Trim() : string.Empty;
+                var k = Cell(kind);
+                var key = Cell(id);
+                if (string.IsNullOrEmpty(k) || string.IsNullOrEmpty(key)) continue;
+                int.TryParse(Cell(amount), System.Globalization.NumberStyles.Integer, culture, out var n);
+                int.TryParse(Cell(Col("get_amount")), System.Globalization.NumberStyles.Integer, culture, out var gn);
+                var hall = int.TryParse(Cell(Col("min_hall")), System.Globalization.NumberStyles.Integer, culture, out var h) ? h : 1;
+                var weight = float.TryParse(Cell(Col("weight")).Replace(',', '.'), System.Globalization.NumberStyles.Float, culture, out var w) ? w : 1f;
+                var rare = Cell(Col("rare")).ToLowerInvariant();
+                result.Add(new BalanceConfig.DiplomacyRow
+                {
+                    kind = k, id = key, resource = Cell(resource), amount = Mathf.Max(0, n), get = Cell(Col("get")), getAmount = Mathf.Max(0, gn),
+                    minHall = Mathf.Max(1, hall), weight = Mathf.Max(0f, weight), rare = rare == "1" || rare == "да" || rare == "true",
+                });
+                if (k == "help")
+                    names["#diplomacy_ask_" + key] = new Dictionary<string, string> { ["ru"] = Cell(Col("text_ru")), ["en"] = Cell(Col("text_en")) };
             }
             return result;
         }
