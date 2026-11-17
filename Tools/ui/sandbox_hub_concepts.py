@@ -166,21 +166,21 @@ def code_field(img, x, y, w):
     d.polygon([(c[0] + 12, c[1] - 20), (c[0] + 24, c[1] - 4), (c[0] + 6, c[1] - 4)], fill=CREAM)
 
 
-def toggle_row(img, x, y, w, item, small=False):
+def toggle_row(img, x, y, w, item, small=False, k=None):
     """A setting: its glyph, its name, its options as a segmented wooden bar (the picked one gold)."""
     name, title, options, picked = item
     d = ImageDraw.Draw(img)
-    s = 0.86 if small else 1.0
+    s = k if k else (0.86 if small else 1.0)
     put(img, tinted(any_icon(name, int(46 * s)), INK), (x + 26, y + 30 * s))
     text(d, (x + 60, y + 30 * s), title, int(30 * s), fill=INK, stroke=0, anchor='lm')
-    bx0 = x + w * 0.45
+    bx0 = x + w * (0.27 if len(options) >= 5 else 0.45)
     seg = (x + w - bx0) / len(options)
     d.rounded_rectangle((bx0, y + 6 * s, x + w, y + 54 * s), int(24 * s), fill=(186, 140, 82), outline=WOOD_D, width=3)
     for i, o in enumerate(options):
         sx = bx0 + i * seg
         if i == picked:
             d.rounded_rectangle((sx + 3, y + 9 * s, sx + seg - 3, y + 51 * s), int(21 * s), fill=GOLD, outline=GOLD_D, width=3)
-        size = int((24 if len(options) <= 2 else 21 if len(options) == 3 else 17) * s)
+        size = int((24 if len(options) <= 2 else 21 if len(options) == 3 else 19) * s)
         text(d, (sx + seg / 2, y + 30 * s), o, size, fill=INK if i == picked else (90, 58, 30), stroke=0)
 
 
@@ -672,7 +672,49 @@ def start_layer(scale, angle):
     return piece.rotate(angle, resample=Image.BICUBIC, expand=True)
 
 
-def screen_a3(start_scale=1.0, start_angle=0.0):
+def pig_glyph(d, c, r):
+    """A small pink pig's head (the piggy bank's sign) for the warning plate."""
+    x, y = c
+    pink, dark = (246, 160, 180), (150, 70, 90)
+    for s in (-1, 1):
+        d.polygon([(x + s * r * .45, y - r * .55), (x + s * r * .95, y - r * 1.0), (x + s * r * .8, y - r * .25)], fill=pink, outline=dark)
+    d.ellipse((x - r, y - r * .8, x + r, y + r * .9), fill=pink, outline=dark, width=3)
+    d.ellipse((x - r * .45, y + r * .05, x + r * .45, y + r * .6), fill=(236, 130, 156), outline=dark, width=2)
+    for s in (-1, 1):
+        d.ellipse((x + s * r * .2 - 3, y + r * .25, x + s * r * .2 + 3, y + r * .4), fill=dark)
+        d.ellipse((x + s * r * .45 - 4, y - r * .35, x + s * r * .45 + 4, y - r * .2), fill=(40, 20, 20))
+
+
+def piggy_warning(img, box):
+    """The scroll's foot when the world is easier than the default: a rose plate with the pig struck through,
+    «Задания копилки в этом мире не засчитываются» (the user, 2026-11-17: «игроку нужно предупреждение»)."""
+    d = ImageDraw.Draw(img)
+    x0, y0, x1, y1 = box
+    d.rounded_rectangle(box, 18, fill=(250, 214, 214), outline=(176, 70, 70), width=3)
+    c = (x0 + 38, (y0 + y1) / 2)
+    pig_glyph(d, c, 18)
+    d.line((c[0] - 22, c[1] + 20, c[0] + 22, c[1] - 20), fill=(200, 40, 40), width=6)
+    text(d, (x0 + 72, (y0 + y1) / 2 - 12), 'Задания копилки здесь', 22, fill=(130, 30, 30), stroke=0, anchor='lm')
+    text(d, (x0 + 72, (y0 + y1) / 2 + 13), 'не засчитываются', 22, fill=(130, 30, 30), stroke=0, anchor='lm')
+
+
+# the list the user decided (2026-11-17, card sandbox-freedom.md)
+FINAL = [
+    ('Swords', 'Набеги', ['Выкл', 'Лёгкие', 'Обычные', 'Тяжёлые', 'Кошмар'], 2),
+    ('Hud_Diplomacy', 'Сосед', ['Всегда мир', 'Как обычно'], 1),
+    ('Hud_Shield', 'Тихое начало', ['0', '7 мин', '15', '30'], 1),
+    ('Fire', 'Пожары', ['Выкл', 'Вкл'], 1),
+    ('Water', 'Грозы', ['Выкл', 'Вкл'], 1),
+    ('Skull', 'Чума', ['Выкл', 'Вкл'], 1),
+    ('Res_Coins', 'Запасы', ['Мало', 'Обычно', 'Много'], 1),
+    ('Hammer', 'Стройка', ['×1', '×2', '×4'], 0),
+    ('Laboratory', 'Исследования', ['×1', '×2', '×4'], 0),
+    ('Hud_Radius', 'Туман войны', ['Нет', 'Есть'], 1),
+]
+EASY = {0: 1, 3: 0}      # the warning's example: raids «Лёгкие», fires «Выкл»
+
+
+def screen_a3(start_scale=1.0, start_angle=0.0, easy=False):
     img = background()
     frame = (60, 170, W - 60, H - 30)
     img = wood_frame(img, frame, 56)
@@ -688,12 +730,23 @@ def screen_a3(start_scale=1.0, start_angle=0.0):
     text(d, ((box[0] + box[2]) / 2, 310), 'Настройки мира', 44, fill=INK, stroke=0)
     d.line((box[0] + 80, 340, box[2] - 80, 340), fill=(190, 150, 90), width=3)
     rows = layer()
-    for i, item in enumerate(SETTINGS[:8]):
-        toggle_row(rows, box[0] + 40, 360 + i * 62, box[2] - box[0] - 80, item, small=True)
+    for i, item in enumerate(FINAL):
+        if easy and i in EASY:
+            item = item[:3] + (EASY[i],)
+        ry = 352 + i * 49
+        toggle_row(rows, box[0] + 40, ry, box[2] - box[0] - 110, item, small=True, k=0.78)
+        if easy and i in EASY:          # the easier choice marked with the struck pig, just left of its bar
+            dd = ImageDraw.Draw(rows)
+            c = (box[2] - 46, ry + 24)      # right of its bar
+            pig_glyph(dd, c, 9)
+            dd.line((c[0] - 11, c[1] + 10, c[0] + 11, c[1] - 10), fill=(200, 40, 40), width=3)
     img = Image.alpha_composite(img, rows)
     d = ImageDraw.Draw(img)
     y = 866
-    text(d, (box[0] + 50, y), 'Можно менять и в игре', 22, fill=(120, 84, 44), stroke=0, anchor='lm', heavy=False)
+    if easy:
+        piggy_warning(img, (box[0] + 36, y - 30, box[2] - 262, y + 30))
+    else:
+        text(d, (box[0] + 50, y), 'Можно менять и в игре', 22, fill=(120, 84, 44), stroke=0, anchor='lm', heavy=False)
     d.rounded_rectangle((box[2] - 250, y - 26, box[2] - 40, y + 26), 20, fill=(150, 92, 44), outline=WOOD_D, width=3)
     text(d, (box[2] - 145, y), 'По умолчанию', 22, stroke=3)
     saves_plaque(img, 1130, 962, 330)
@@ -707,6 +760,11 @@ def screen_a3(start_scale=1.0, start_angle=0.0):
 
 def concept_a3():
     return screen_a3()
+
+
+def concept_a3_piggy():
+    return screen_a3(easy=True)
+
 
 
 def concept_a3_pulse():
@@ -793,7 +851,8 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     for name, fn in (('A', concept_a), ('B', concept_b), ('C', concept_c), ('A2_Locked', concept_a2),
                      ('A2_Open', lambda: concept_a2('open')), ('A2_Saves', concept_a2_saves),
-                     ('A3', concept_a3), ('A3_Banner', concept_a3_banner)):
+                     ('A3', concept_a3), ('A3_Banner', concept_a3_banner),
+                     ('A3_PiggyWarning', concept_a3_piggy)):
         if len(sys.argv) > 1 and name not in sys.argv[1:]:
             continue
         fn().convert('RGB').save(OUT + 'SandboxHub_%s.png' % name, optimize=True)
