@@ -198,21 +198,43 @@ def scale(c, x0, y, w, value, war=False):
     d.line([(x, y), (x, y + h)], fill=CREAM, width=5)
 
 
+def king_badge(size, neighbour):
+    """A King portrait in the game's round frame; the neighbour's is mirrored (faces ours), cape recoloured red."""
+    frame = load(SKIN, "round", (size, int(size * 202 / 192)))
+    k = load(ICONS, "PortraitKing", (int(size * .78), int(size * .78)))
+    if neighbour:
+        k = k.transpose(Image.FLIP_LEFT_RIGHT)
+        r, g, b, a = k.split()
+        hsv = Image.merge("RGB", (r, g, b)).convert("HSV")
+        h, sat, v = hsv.split()
+        # the purple cape -> red; skin, beard and gold keep their hues
+        hp, sp = h.load(), sat.load()
+        for y in range(k.height):
+            for x in range(k.width):
+                if sp[x, y] > 70 and 170 <= hp[x, y] <= 215:
+                    hp[x, y] = 0
+        r2, g2, b2 = Image.merge("HSV", (h, sat, v)).convert("RGB").split()
+        k = Image.merge("RGBA", (r2, g2, b2, a))
+    frame.alpha_composite(k, ((frame.width - k.width) // 2, (frame.height - k.height) // 2 - 4))
+    return frame
+
+
 def main_window(war=False):
     c = ground()
     dim(c)
-    pw, ph = 1120, 860
-    px, py = (W - pw) // 2, 150
+    pw, ph = 1120, 770  # no «Здание» button: the two lines sit where it was
+    px, py = (W - pw) // 2, 180
     c.alpha_composite(panel(pw, ph), (px, py))
     title_bar(c, W // 2, py + 4, "Зал дипломатии")
     close_btn(c, px + pw - 30, py + 30)
     d = ImageDraw.Draw(c)
     cx = W // 2
     # who: our hall level and the neighbour
-    put(c, load(ICONS, "DiplomacyHall", (120, 120)), px + 140, py + 150)
-    text(d, (px + 140, py + 228), "Ур. 2", 30)
-    put(c, crest(120), px + pw - 140, py + 150)
-    text(d, (px + pw - 140, py + 228), "Сосед", 30)
+    # the two kings face each other (the user, 2026-11-17: kings instead of the hall and the crest)
+    put(c, king_badge(150, False), px + 140, py + 145)
+    text(d, (px + 140, py + 238), "Вы", 30)
+    put(c, king_badge(150, True), px + pw - 140, py + 145)
+    text(d, (px + pw - 140, py + 238), "Сосед", 30)
     value = -64 if war else -7
     text(d, (cx, py + 112), "Отношения с соседним королевством", 34, INK, "Bold")
     vcol = RED if value < 0 else GREEN
@@ -230,16 +252,15 @@ def main_window(war=False):
         labelled_button(c, "gold", cx - 340, y, 300, "Подарок", res("coins", 64), "1 раз в день")
         labelled_button(c, "blue", cx, y, 300, "Торговля", load(GLYPHS, "Hud_Lock", (60, 60)), "нужно +30", dimmed=True)
         labelled_button(c, "orange", cx + 340, y, 300, "Война", load(GLYPHS, "Swords", (60, 60)), "объявить самому")
-        text(d, (cx, py + 680), "Подарки соседу и помощь по его просьбам поднимают отношения.", 28, INK, "Medium")
-        text(d, (cx, py + 718), "Ниже нуля сосед может сам объявить войну.", 28, RED, "Medium")
+        text(d, (cx, py + ph - 100), "Подарки соседу и помощь по его просьбам поднимают отношения.", 28, INK, "Medium")
+        text(d, (cx, py + ph - 62), "Ниже нуля сосед может сам объявить войну.", 28, RED, "Medium")
     else:
         y = py + 540
         text(d, (cx, py + 470), "Набег с моря: волна 3 · следующая через 1:40", 30, RED, "Bold")
         labelled_button(c, "green", cx - 260, y, 440, "Мир за 450", res("coins", 64), "−10% за уровень зала")
         labelled_button(c, "blue", cx + 260, y, 440, "Мир за 5", res("crystal", 64), "кристаллами")
-        text(d, (cx, py + 680), "Снесённые здания соседа снижают цену мира.", 28, INK, "Medium")
-        text(d, (cx, py + 718), "Снесите его ратушу — война кончится, а вы получите кристаллы.", 28, INK, "Medium")
-    labelled_button(c, "blue", cx, py + ph - 70, 320, "Здание", h=84)
+        text(d, (cx, py + ph - 100), "Снесённые здания соседа снижают цену мира.", 28, INK, "Medium")
+        text(d, (cx, py + ph - 62), "Снесите его ратушу — война кончится, а вы получите кристаллы.", 28, INK, "Medium")
     return c
 
 
