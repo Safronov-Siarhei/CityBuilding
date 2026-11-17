@@ -38,7 +38,7 @@ S = fg.SET_SCALE
 
 HS = bd.HS
 DECK_TOP = (bd.DECK + 0.006) * HS
-CARP_AT = Vector((0.0, (bd.SCAF_Y[1] - 0.04) * HS, DECK_TOP))      # mid-bay, between the poles
+CARP_AT = Vector((0.0, -1.03, DECK_TOP))        # mid-bay, a hammer's reach from the front wall's top plate
 CARP_HEAD = math.pi                                  # facing +y, the wall
 NAIL = Vector((CARP_AT.x + 0.035, -bd.HY * HS - 0.04, bd.EAVE * HS))
 PILE_AT = Vector((2.35, -1.95, 0.0))
@@ -91,23 +91,26 @@ def carpenter_pose(t):
     hit_end = blows * 0.5
     rest = a2.env(t, hit_end, hit_end + 0.25) * (1 - a2.env(t, HAMMER - 0.35, HAMMER - 0.05))
     pouch = a2.env(t, hit_end + 1.0, hit_end + 1.35) * (1 - a2.env(t, hit_end + 1.8, hit_end + 2.15))
-    # the right arm: raised = the hand high over his shoulder, the forearm folded back; down = on the nail
+    # the right arm swings in the plane of his body's front: the elbow forward at shoulder height,
+    # the forearm up with the hammer cocked back (raised); the upper arm forward-down, the forearm
+    # following through, the handle level into the wall (the blow). Angles from hanging straight down.
     r = hammer_blow((t % 0.5) / 0.5) if t < hit_end else 0.0
-    up = sr + Vector((-0.02, 0.02, 0.17)) * CS
-    on = NAIL + Vector((0.0, -0.08, 0.06)) * CS
-    hand = on.lerp(up, r)
-    low = sr + Vector((-0.03, 0.06, -0.2)) * CS      # resting: the hammer down at his side
-    hand = hand.lerp(low, rest)
-    aim(q, "R", sr, hand)
-    q["forearm.R"] = [-30 - 85 * r - 10 * (1 - rest), 0, 0]
-    # the left hand holds the nail; at rest it goes to the pouch at the left hip for another
-    hold = NAIL + Vector((0.035, -0.04, -0.02)) * CS
+    fwd = Matrix.Rotation(CARP_HEAD, 3, 'Z') @ Vector((0, -1, 0))
+    out = Matrix.Rotation(CARP_HEAD, 3, 'Z') @ Vector((-1, 0, 0))
+    up = Vector((0, 0, 1))
+    swing = 52 + 48 * r
+    swing = swing * (1 - rest) + 18 * rest           # resting: the arm down, the hammer hanging
+    a = math.radians(swing)
+    aim(q, "R", sr, sr + (fwd * math.sin(a) - up * math.cos(a) + out * 0.15) * 0.1)
+    q["forearm.R"] = [(-8 - 72 * r) * (1 - rest) - 20 * rest, 0, 0]
+    # the left hand steadies the board by the nail; at rest it goes to the pouch at his left hip
+    hold = NAIL + Vector((-0.07, -0.06, 0.0))
     hip = CARP_AT + Matrix.Rotation(CARP_HEAD, 3, 'Z') @ Vector((0.09, -0.02, 0.2)) * CS
     lh = hold.lerp(hip, pouch)
     aim(q, "L", sl, lh)
-    q["forearm.L"] = [-35 * (1 - pouch) - 15 * pouch, 0, 0]
+    q["forearm.L"] = [-12 * (1 - pouch) - 15 * pouch, 0, 0]
     # the body leans into each blow, the head watches the nail, then looks the work over
-    q["chest"] = [6 + 6 * (1 - r) * (1 - rest), 0, -4 * r * (1 - rest)]
+    q["chest"] = [10 + 5 * (1 - r) * (1 - rest), 0, -4 * r * (1 - rest)]
     look = math.sin(TAU * (t - hit_end) / 1.2) * rest * (1 - pouch)
     q["head"] = [10 * (1 - rest) + 18 * pouch, 0, 18 * look]
     q["hips"] = [0, 0, 3 * r * (1 - rest)]

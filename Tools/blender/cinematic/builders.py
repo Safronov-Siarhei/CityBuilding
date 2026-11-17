@@ -25,6 +25,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import figure as fg  # noqa: E402
+from mathutils import Vector  # noqa: E402
 import townsfolk as tf  # noqa: E402
 from kit import Builder  # noqa: E402
 
@@ -163,16 +164,19 @@ def scaffold(b):
     for xa, xb in ((poles[0], poles[1]), (poles[2], poles[3])):
         b.rod((xa, y0 - 0.012, 0.02), (xb, y0 - 0.012, DECK - 0.04), 0.012, 'wood_light')
     b.rod((poles[2], y0 - 0.012, DECK + 0.01), (poles[3], y0 - 0.012, EAVE + 0.04), 0.012, 'wood_light')   # the end bay: the middle stays open on the carpenter
-    # the ladder at the left end, leaning on the deck
-    lx = poles[0] - 0.12
-    foot_y, top_y = y0 - 0.2, y0 + 0.01
-    for dx in (-0.04, 0.04):
-        b.rod((lx + dx, foot_y, 0.0), (lx + dx, top_y, DECK + 0.12), 0.014, 'wood_mid')
-    for k in range(1, 6):
-        f = k / 6.4
+    # the ladder in the left bay, its foot on the ground out front, its top against the deck's outer
+    # edge and a rung's height over it (the user, 2026-11-17: it stood beside the scaffold, touching nothing)
+    lx = (poles[0] + poles[1]) / 2
+    foot_y, top_y = y0 - 0.24, y0 - 0.022
+    top_z = DECK + 0.1
+    for dx in (-0.045, 0.045):
+        b.rod((lx + dx, foot_y, 0.0), (lx + dx, top_y, top_z), 0.014, 'wood_mid')
+    for k in range(1, 8):
+        f = k / 7.6
         y = foot_y + (top_y - foot_y) * f
-        z = (DECK + 0.12) * f
-        b.rod((lx - 0.045, y, z), (lx + 0.045, y, z), 0.01, 'wood_mid')
+        z = top_z * f
+        b.rod((lx - 0.05, y, z), (lx + 0.05, y, z), 0.01, 'wood_mid')
+
     # a pulley arm on the right pole with a rope and a bucket of nails hanging under it
     px = poles[-1]
     b.rod((px, y0, EAVE + 0.14), (px + 0.14, y0 - 0.02, EAVE + 0.14), 0.016, 'wood_light')
@@ -292,12 +296,20 @@ def carpenter():
         b.box(-0.04, 0.04, -0.075, -0.035, z_(0.07), z_(0.08), 'roof_blue_dark', bevel=0.004)
 
     def hammer(b, k, wr):
+        """Gripped in the right fist, the handle forward-and-down from it when the arm hangs: so with
+        the forearm cocked up the head is back over his shoulder, and at the blow (the forearm
+        forward-down) the handle runs level into the wall and the head meets the nail."""
         if k != -1:
             return
-        x, y, z = wr.x, wr.y, wr.z - 0.034
-        b.rod((x, y + 0.012, z), (x, y - 0.075, z + 0.004), 0.011, 'wood_light')     # the handle out of his fist
-        b.box(x - 0.012, x + 0.012, y - 0.088, y - 0.068, z - 0.02, z + 0.032, 'iron', bevel=0.003)
-        b.box(x - 0.009, x + 0.009, y - 0.085, y - 0.071, z + 0.032, z + 0.04, 'stone_mid')
+        fist = Vector((wr.x, wr.y, wr.z - 0.034))
+        h = Vector((0, -0.5, -0.866))
+        side = Vector((1, 0, 0))
+        across = side.cross(h)
+        b.rod(fist - h * 0.012, fist + h * 0.078, 0.011, 'wood_light')                  # the handle out of his fist
+        head = fist + h * 0.085
+        b.obox(head, side, h, across, 0.011, 0.012, 0.024, 'iron', bevel=0.003, skip=())
+        b.obox(head + across * 0.026, side, h, across, 0.013, 0.014, 0.004, 'stone_mid', bevel=0.002, skip=())   # the striking face
+        b.obox(head - across * 0.03, side, h, across, 0.006, 0.008, 0.008, 'iron', skip=())                     # the claw
 
     return tf.figure_parts(waist, chest, head, tf.leg_parts('roof_slate', 'wood_mid', cuff='roof_slate_dark'),
                            tf.arm_parts('plaster_white', forearm_colour=SKIN, cuff='plaster_white', hold=hammer))
