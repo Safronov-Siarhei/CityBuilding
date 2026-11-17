@@ -132,6 +132,13 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
   seals + season plate, the chart in a gilt frame with a name tag, quill + inkwell, the settings on a scroll with
   rollers -- dimmed + lock card «Открыть навсегда $0.99» before the purchase, live + «По умолчанию» after; the saves
   window with the per-map autosaves). Background = the real menu village shot `Design/ui/MainMenu_VillageShot.jpg`.
+  v3 after the user's notes (2026-11-17) `SandboxHub_A3.png` + `_A3_StartPulse.gif` + `_A3_Banner.png`: the title ribbon
+  joined as on the plague/fire banners (`ribbon_joined`: tails behind and lower, the fold triangle, top corners only
+  rounded) and RAISED off the theme seals; the brass corners ROUNDED with the frame (`brass_corners_round`); the scroll's
+  roller ends turned finials (`finial`); «Начать» PULSES (scale +-5 %, glow with it); the settings are SHOWN OPEN
+  (RULE, the user): a try to change one opens the purchase banner «Свобода песочницы», built like the plague/fire
+  banners (wood window, a sunny chart field with sparkles, the King and the Queen at the sides, parchment: «Сделай этот
+  мир своим!», the settings' glyphs, «Навсегда, для всех карт», gold «Открыть за $0.99», «Закрыть»; green ribbon).
   NOT approved yet, nothing built. Open after the look: the feature's list, crystals/piggy rules in a custom world.
 - saves dialog rows (2026-11-10, the user): the save's THEME glyph alone (no round under it, like the tabs) (season -> first
   theme of it; old saves summer), name + date, then «День N · Жителей N · Зданий N · Код карты v-seed»

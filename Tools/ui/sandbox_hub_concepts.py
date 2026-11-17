@@ -568,12 +568,227 @@ def concept_a2_saves():
     return img
 
 
+# ================================================================== A v3 (the user's notes on v2, 2026-11-17)
+# the ribbon joined as on the plague/fire banners and raised off the seals; the brass corners rounded like the
+# frame; the scroll's roller ends turned finials; «Начать» pulses; the settings shown OPEN, a change opens the
+# purchase banner (built like the plague/fire banners).
+
+def ribbon_joined(img, cx, y0, y1, w, band, tail, fold, edge, light, words, size=60):
+    """The plague/fire banners' ribbon (invasion_hall_art.ribbon): the tails lie behind and lower, each reaching
+    under the band; the fold is a dark triangle from the band's square bottom corner inward and down to the tail;
+    only the band's top corners are rounded."""
+    lay = layer()
+    d = ImageDraw.Draw(lay)
+    x0, x1 = cx - w / 2, cx + w / 2
+    drop, under, reach, notch = 30, 38, 130, 70
+    my = (y0 + y1) / 2 + drop
+    for side, bx in ((-1, x0), (1, x1)):
+        d.polygon([(bx + side * reach, y0 + drop), (bx - side * under, y0 + drop), (bx - side * under, y1 + drop),
+                   (bx + side * reach, y1 + drop), (bx + side * notch, my)], fill=tail, outline=edge)
+    for side, bx in ((-1, x0), (1, x1)):
+        d.polygon([(bx, y1 - 3), (bx - side * under, y1 - 3), (bx - side * under, y1 + drop)], fill=fold, outline=edge)
+    d.rounded_rectangle((x0, y0, x1, y1), 18, fill=band, outline=edge, width=5, corners=(True, True, False, False))
+    d.line((x0 + 22, y0 + 13, x1 - 22, y0 + 13), fill=light, width=4)
+    for x in (x0 + 26, x1 - 26):
+        d.ellipse((x - 7, (y0 + y1) / 2 - 7, x + 7, (y0 + y1) / 2 + 7), fill=(236, 186, 70), outline=edge)
+    sh = layer()
+    ImageDraw.Draw(sh).rounded_rectangle((x0 - 20, y0 + 16, x1 + 20, y1 + drop + 20), 24, fill=(0, 0, 0, 120))
+    img = Image.alpha_composite(img, sh.filter(ImageFilter.GaussianBlur(16)))
+    img = Image.alpha_composite(img, lay)
+    text(ImageDraw.Draw(img), (cx, (y0 + y1) / 2 + 2), words, size, fill=(255, 240, 200), stroke=6, stroke_fill=edge)
+    return img
+
+
+WOOD_RIBBON = ((128, 76, 32), (96, 54, 20), (58, 30, 10), (44, 22, 6), (170, 112, 56))
+
+
+def brass_corners_round(img, box, r, k=96, t=22):
+    """Brass corner pieces that follow the frame's rounded corner: an L band whose bend is an arc of the frame's
+    radius, its arms ending square; rivets on the arms and on the bend."""
+    x0, y0, x1, y1 = [int(v) for v in box]
+    full = Image.new('L', (W, H), 0)
+    ImageDraw.Draw(full).rounded_rectangle((x0, y0, x1, y1), r, fill=255)
+    ImageDraw.Draw(full).rounded_rectangle((x0 + t, y0 + t, x1 - t, y1 - t), max(4, r - t), fill=0)
+    keep = Image.new('L', (W, H), 0)
+    kd = ImageDraw.Draw(keep)
+    for cx, cy, sx, sy in ((x0, y0, 1, 1), (x1, y0, -1, 1), (x0, y1, 1, -1), (x1, y1, -1, -1)):
+        kd.rectangle((min(cx, cx + sx * k), min(cy, cy + sy * k), max(cx, cx + sx * k), max(cy, cy + sy * k)), fill=255)
+    mask = Image.composite(full, Image.new('L', (W, H), 0), keep)
+    brass = Image.new('RGBA', (W, H), (214, 168, 72, 255))
+    edge = mask.filter(ImageFilter.FIND_EDGES).point(lambda v: 255 if v > 30 else 0)
+    sh = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+    sh.putalpha(mask.filter(ImageFilter.GaussianBlur(5)).point(lambda v: v * 0.6))
+    img.alpha_composite(sh, (3, 5))
+    img.alpha_composite(Image.composite(brass, Image.new('RGBA', (W, H), 0), mask))
+    img.alpha_composite(Image.composite(Image.new('RGBA', (W, H), (110, 72, 20, 255)), Image.new('RGBA', (W, H), 0), edge))
+    d = ImageDraw.Draw(img)
+    rr = r - t / 2
+    for cx, cy, sx, sy in ((x0, y0, 1, 1), (x1, y0, -1, 1), (x0, y1, 1, -1), (x1, y1, -1, -1)):
+        ccx, ccy = cx + sx * r, cy + sy * r
+        pts = [(cx + sx * (k - 14), cy + sy * t / 2), (cx + sx * t / 2, cy + sy * (k - 14)),
+               (ccx - sx * rr * 0.7071, ccy - sy * rr * 0.7071)]
+        for px, py in pts:
+            d.ellipse((px - 6, py - 6, px + 6, py + 6), fill=(120, 80, 24), outline=(250, 214, 130), width=2)
+        # a light line along the band's outer arc
+        d.arc((ccx - r + 4, ccy - r + 4, ccx + r - 4, ccy + r - 4),
+              {(1, 1): 180, (-1, 1): 270, (1, -1): 90, (-1, -1): 0}[(sx, sy)],
+              {(1, 1): 270, (-1, 1): 360, (1, -1): 180, (-1, -1): 90}[(sx, sy)], fill=(250, 214, 130), width=3)
+
+
+def finial(d, c, side, h=46):
+    """A turned wooden-and-brass roller end: a dark collar, a brass ring, a pear-shaped knob with a highlight,
+    a little tip; `side` -1 left, +1 right."""
+    x, y = c
+    s = side
+    d.rounded_rectangle((min(x, x + s * 10), y - h * 0.42, max(x, x + s * 10), y + h * 0.42), 4, fill=(70, 40, 14))
+    d.ellipse((x + s * 10 - 7, y - h * 0.5, x + s * 10 + 7, y + h * 0.5), fill=(214, 168, 72), outline=(110, 72, 20), width=3)
+    kx = x + s * 34
+    d.ellipse((kx - 22, y - h * 0.46, kx + 22, y + h * 0.46), fill=(150, 92, 44), outline=WOOD_D, width=4)
+    d.ellipse((kx - 12 + s * -4, y - h * 0.34, kx + 4 + s * -4, y - h * 0.08), fill=(196, 140, 84))
+    d.ellipse((kx + s * 22 - 8, y - 8, kx + s * 22 + 8, y + 8), fill=(214, 168, 72), outline=(110, 72, 20), width=3)
+
+
+def scroll_v3(img, box):
+    x0, y0, x1, y1 = box
+    img = shadowed(img, box, 20, blur=20, alpha=160, off=(8, 18))
+    img = parchment(img, (x0 + 14, y0 + 20, x1 - 14, y1 - 20), 10)
+    d = ImageDraw.Draw(img)
+    for yy in (y0, y1 - 40):
+        d.rounded_rectangle((x0 - 8, yy, x1 + 8, yy + 40), 20, fill=(140, 86, 40), outline=WOOD_D, width=5)
+        d.line((x0 + 12, yy + 12, x1 - 12, yy + 12), fill=(176, 118, 60), width=4)
+        finial(d, (x0 - 8, yy + 20), -1)
+        finial(d, (x1 + 8, yy + 20), 1)
+    return img
+
+
+def screen_a3(start_scale=1.0, start_glow=0.6):
+    img = background()
+    frame = (60, 170, W - 60, H - 30)
+    img = wood_frame(img, frame, 56)
+    brass_corners_round(img, (frame[0] + 14, frame[1] + 14, frame[2] - 14, frame[3] - 14), 46, t=26)
+    seals_row(img, 580, 278, 36, 104)
+    season_plate(img, (476, 342), SEASON_NAMES[PICKED])
+    img = gilt_chart(img, (170, 396, 990, 806))
+    code_field(img, 150, 898, 860)
+    img = quill_and_ink(img, (1050, 876))
+    box = (1130, 246, 1800, 936)
+    img = scroll_v3(img, box)
+    d = ImageDraw.Draw(img)
+    text(d, ((box[0] + box[2]) / 2, 310), 'Настройки мира', 44, fill=INK, stroke=0)
+    d.line((box[0] + 80, 340, box[2] - 80, 340), fill=(190, 150, 90), width=3)
+    rows = layer()
+    for i, item in enumerate(SETTINGS[:8]):
+        toggle_row(rows, box[0] + 40, 360 + i * 62, box[2] - box[0] - 80, item, small=True)
+    img = Image.alpha_composite(img, rows)
+    d = ImageDraw.Draw(img)
+    y = 866
+    text(d, (box[0] + 50, y), 'Можно менять и в игре', 22, fill=(120, 84, 44), stroke=0, anchor='lm', heavy=False)
+    d.rounded_rectangle((box[2] - 250, y - 26, box[2] - 40, y + 26), 20, fill=(150, 92, 44), outline=WOOD_D, width=3)
+    text(d, (box[2] - 145, y), 'По умолчанию', 22, stroke=3)
+    saves_plaque(img, 1130, 962, 330)
+    # «Начать» drawn at its pulse's scale, round its centre
+    sc = (1615, 1000)
+    glow(img, sc, int(520 * (0.9 + 0.3 * start_glow)), start_glow)
+    bw, bh = 290 * start_scale, 86 * start_scale
+    start_button(img, (sc[0] - bw / 2, sc[1] - bh / 2, sc[0] + bw / 2, sc[1] + bh / 2), int(54 * start_scale))
+    img = ribbon_joined(img, W / 2, 40, 132, 600, *WOOD_RIBBON, 'Песочница', 60)
+    corner_buttons(img)
+    return img
+
+
+def concept_a3():
+    return screen_a3()
+
+
+def concept_a3_pulse():
+    """«Начать» breathing (scale +-5 %, the glow with it): a GIF of the screen's corner."""
+    frames = []
+    for i in range(14):
+        t = math.sin(2 * math.pi * i / 14)
+        img = screen_a3(1.0 + 0.05 * t, 0.55 + 0.35 * t)
+        frames.append(img.crop((1100, 880, 1920, 1080)).convert('RGB'))
+    frames[0].save(OUT + 'SandboxHub_A3_StartPulse.gif', save_all=True, append_images=frames[1:], duration=80, loop=0)
+    return None
+
+
+# ------------------------------------------------------------------ the purchase banner, as the plague/fire ones
+
+def bright_field(w, h, seed=7):
+    """The banner's picture: the painted chart's sea and islands, sunny, with gold sparkles and soft light rays."""
+    img = chart(w, h, seed=seed + 48000)
+    light = Image.new('RGBA', (w, h), (255, 236, 170, 22))
+    img = Image.alpha_composite(img, light)
+    lay = Image.new('RGBA', (w, h), 0)
+    d = ImageDraw.Draw(lay)
+    cx, cy = w / 2, -h * 0.2
+    for i in range(16):
+        a = math.pi * (0.15 + 0.7 * i / 15)
+        d.polygon([(cx, cy), (cx + math.cos(a - 0.04) * w * 1.6, cy + math.sin(a - 0.04) * w * 1.6),
+                   (cx + math.cos(a + 0.04) * w * 1.6, cy + math.sin(a + 0.04) * w * 1.6)], fill=(255, 240, 190, 40))
+    img = Image.alpha_composite(img, lay.filter(ImageFilter.GaussianBlur(6)))
+    rnd = random.Random(seed)
+    d = ImageDraw.Draw(img)
+    for _ in range(70):
+        sparkle(d, rnd.randrange(w), rnd.randrange(h), rnd.randint(3, 9))
+    return img
+
+
+def concept_a3_banner():
+    img = screen_a3()
+    img = Image.alpha_composite(img, Image.new('RGBA', (W, H), (10, 6, 2, 180)))
+    X0, Y0, X1, Y1 = 60, 230, 1860, 1050
+    # the window: wood frame, the bright chart field inside
+    img = shadowed(img, (X0, Y0, X1, Y1), 50, blur=30, alpha=200, off=(0, 24))
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle((X0, Y0, X1, Y1), 50, fill=(92, 54, 26), outline=(44, 24, 8), width=8)
+    field = bright_field(X1 - X0 - 68, Y1 - Y0 - 68)
+    m = Image.new('L', field.size, 0)
+    ImageDraw.Draw(m).rounded_rectangle((0, 0, field.width - 1, field.height - 1), 30, fill=255)
+    img.paste(field, (X0 + 34, Y0 + 34), m)
+    # the figures: the King and the Queen at the sides
+    from invasion_hub_concepts import figure
+    img = figure(img, 'King', 640, 330, Y1 - 30)
+    img = figure(img, 'Queen', 620, W - 330, Y1 - 30, flip=True)
+    # the parchment column
+    pw0, pw1 = W / 2 - 330, W / 2 + 330
+    img = parchment(img, (pw0, 330, pw1, 1010), 36)
+    d = ImageDraw.Draw(img)
+    text(d, (W / 2, 420), 'Сделай этот мир своим!', 38, fill=INK, stroke=0)
+    lines = ['Набеги, лагеря и порталы орков,', 'сосед, бедствия, запасы и скорость', 'стройки — как тебе нравится.']
+    for i, ln in enumerate(lines):
+        text(d, (W / 2, 470 + i * 40), ln, 28, fill=INK, stroke=0, heavy=False)
+    # the settings' glyphs in a row: what is opened
+    glyphs = ['Swords', 'Hud_Shield', 'Portal', 'Hud_Diplomacy', 'Fire', 'Skull', 'Water', 'Hammer']
+    for i, g in enumerate(glyphs):
+        c = (W / 2 + (i - 3.5) * 72, 612)
+        d.ellipse((c[0] - 30, c[1] - 30, c[0] + 30, c[1] + 30), fill=(150, 92, 44), outline=WOOD_D, width=3)
+        put(img, tinted(any_icon(g, 36), CREAM), c)
+    d = ImageDraw.Draw(img)
+    text(d, (W / 2, 680), 'Навсегда, для всех карт', 28, fill=(150, 100, 30), stroke=0)
+    # the buy button (gold), «Закрыть» under it
+    b = (W / 2 - 280, 740, W / 2 + 280, 852)
+    d.rounded_rectangle((b[0], b[1] + 11, b[2], b[3] + 11), 40, fill=(130, 80, 16))
+    d.rounded_rectangle(b, 40, fill=(232, 168, 44), outline=(130, 80, 16), width=7)
+    d.rounded_rectangle((b[0] + 11, b[1] + 10, b[2] - 11, (b[1] + b[3]) / 2), 30, fill=(250, 206, 100))
+    text(d, (W / 2, (b[1] + b[3]) / 2 + 2), 'Открыть за ' + PRICE, 50, stroke=6, stroke_fill=(110, 60, 10))
+    text(d, (W / 2, 920), 'Закрыть', 40, fill=(140, 110, 70), stroke=0)
+    img = ribbon_joined(img, W / 2, 150, 330, 1000, (60, 140, 64), (40, 104, 46), (20, 60, 24), (14, 44, 18),
+                        (110, 190, 100), 'Свобода песочницы', 84)
+    return img
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     for name, fn in (('A', concept_a), ('B', concept_b), ('C', concept_c), ('A2_Locked', concept_a2),
-                     ('A2_Open', lambda: concept_a2('open')), ('A2_Saves', concept_a2_saves)):
+                     ('A2_Open', lambda: concept_a2('open')), ('A2_Saves', concept_a2_saves),
+                     ('A3', concept_a3), ('A3_Banner', concept_a3_banner)):
+        if len(sys.argv) > 1 and name not in sys.argv[1:]:
+            continue
         fn().convert('RGB').save(OUT + 'SandboxHub_%s.png' % name, optimize=True)
         print('written SandboxHub_%s.png' % name)
+    if len(sys.argv) == 1 or 'pulse' in sys.argv[1:]:
+        concept_a3_pulse()
+        print('written SandboxHub_A3_StartPulse.gif')
 
 
 if __name__ == '__main__':
