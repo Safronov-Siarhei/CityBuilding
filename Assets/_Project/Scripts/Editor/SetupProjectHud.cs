@@ -102,7 +102,7 @@ namespace CityBuilder.EditorTools
             Anchor(closeButton.GetComponent<RectTransform>(), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(HudMargin, MenuButtonTop), new Vector2(RoundButton, RoundButton));
 
             // «Настройки мира» under «Сохранить» (the user, 2026-11-17; a sandbox world only -- GameMenuController.LayEntries)
-            var entries = new[] { ("SaveEntry", "Save"), ("WorldEntry", "Theme_summer"), ("SettingsEntry", "Settings"), ("MainMenuEntry", "Home") };
+            var entries = new[] { ("SaveEntry", "Save"), ("WorldEntry", "World"), ("SettingsEntry", "Settings"), ("MainMenuEntry", "Home") };
             var buttons = new Button[entries.Length];
             for (var i = 0; i < entries.Length; i++)
             {

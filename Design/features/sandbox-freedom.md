@@ -60,7 +60,7 @@ In the game the settings that cannot change show their value greyed with a small
   Builders: `Editor/SetupProjectSandboxHub.cs` (BuildSandboxScreen, BuildWorldScroll, BuildFreedomBanner, BuildWorldPanel).
   Art: `Tools/ui/sandbox_hub_art.py` -> `MenuArt/SandHub_*`, `Freedom_*`, `SandHub_layout.json`, row glyphs
   `SandHub_RowGlyph0..9` (silhouettes baked from the icons), piggy line `UI/Shop/Resources/Shop/Piggy/EasyWarn.png`.
-- In game: game menu entry «WorldEntry» (glyph Theme_summer -- no scroll glyph yet) under «Сохранить», sandbox only
+- In game: game menu entry «WorldEntry» (glyph `Hud_World`) under «Сохранить», sandbox only
   (`GameMenuController.worldEntry`), opens `WorldPanel` (the scroll centred + round ✕) and the banner over it.
 - Piggy window: the rose line `#world_warn_piggy` over the tasks in an easier sandbox world.
 - The chart is rectangular now (the user, mid-build): `InkMapPainter.Paint(map, tex, aspect)` pads open sea at the
@@ -72,3 +72,5 @@ In the game the settings that cannot change show their value greyed with a small
 - Option labels like «×2», «7 мин» are text keys, not formatted from the factors: change both when the sheet changes.
 - Real billing for `sandbox_freedom` is not wired (the stand-in Store grants at once), like the other products.
 - Not checked on a phone; the in-game panel and the banner were not photographed.
+- The WorldEntry glyph `Hud_World` (island + small gear, `make_hud_glyphs.py world()`): the user picked B of
+  `Design/ui/WorldSettingsIcon_Concepts.png` (2026-11-17); in SetupProjectHud.BuildGameMenu, waits for the next setup, not seen.

@@ -390,9 +390,40 @@ def radius():
     return img
 
 
+def world():
+    """The sandbox's world settings (the user picked concept B, 2026-11-17, Design/ui/WorldSettingsIcon_Concepts.png):
+    an island with its mountains cut out, a small gear on its corner -- small, so it never reads as the Settings gear."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+
+    def p(pts):
+        return [(u(x), u(y)) for x, y in pts]
+
+    cx, cy, r = 0.42, 0.42, 0.36
+    pts = []
+    for k in range(64):
+        a = math.pi * 2 * k / 64
+        rr = r * (1 + 0.10 * math.sin(3 * a + 0.4) + 0.06 * math.sin(5 * a + 1.3) + 0.08 * math.sin(2 * a + 2.2))
+        pts.append((cx + rr * math.cos(a), cy + rr * math.sin(a) * 0.82))
+    d.polygon(p(pts), fill=WHITE)
+    d.polygon(p([(0.24, 0.50), (0.37, 0.26), (0.46, 0.40), (0.52, 0.32), (0.62, 0.50)]), fill=0)
+    d.ellipse(box(0.46, 0.46, 1.00, 1.00), fill=0)
+    gx, gy, gr = 0.73, 0.73, 0.165
+    for k in range(8):
+        a = math.pi * 2 * k / 8
+        dx, dy, px, py = math.cos(a), math.sin(a), -math.sin(a), math.cos(a)
+        w, r0, r1 = gr * 0.30, gr * 0.6, gr * 1.22
+        d.polygon(p([(gx + dx * r0 + px * w, gy + dy * r0 + py * w), (gx + dx * r1 + px * w * 0.8, gy + dy * r1 + py * w * 0.8),
+                     (gx + dx * r1 - px * w * 0.8, gy + dy * r1 - py * w * 0.8), (gx + dx * r0 - px * w, gy + dy * r0 - py * w)]), fill=WHITE)
+    d.ellipse(box(gx - gr, gy - gr, gx + gr, gy + gr), fill=WHITE)
+    h = gr * 0.42
+    d.ellipse(box(gx - h, gy - h, gx + h, gy + h), fill=0)
+    return img
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
-    for name, fn in (("Menu", menu), ("Settings", settings), ("Save", save_disk), ("Home", home),
+    for name, fn in (("Menu", menu), ("Settings", settings), ("Save", save_disk), ("World", world), ("Home", home),
                      ("People", people), ("Rotate", rotate), ("Check", check), ("Cancel", cancel), ("Plus", plus),
                      ("Play", play), ("Shop", shop), ("Bag", bag), ("Back", back), ("Resume", resume), ("Lock", lock),
                      ("Info", info), ("Trophy", trophy), ("Radius", radius), ("Discord", discord), ("YouTube", youtube), ("Heart", heart), ("Shield", shield),
