@@ -448,105 +448,240 @@ namespace CityBuilder.EditorTools
 
         // ---------------------------------------------------------------- the invasion
 
+        // The user's pick «Зал знамён» (concept B2, approved 2026-11-16): a castle hall; the theme's picture in a gilt
+        // frame with its season on a brass plate and the seasons as wax seals on a shelf under it; three period
+        // banners hang from a beam -- the picked one big and lit with its 5 best runs and the player's line, the
+        // others their points only; the gold «В бой». The pieces and their places: Tools/ui/invasion_hall_art.py
+        // (MenuArt/InvHall_*.png + InvHall_layout.json, a 1920 x 1080 frame, y down).
+        [System.Serializable] private class HallRect { public string name; public float[] rect; public float[] at; }
+        [System.Serializable] private class HallLayout { public HallRect[] pieces = new HallRect[0], texts = new HallRect[0], points = new HallRect[0]; }
+
+        private static HallRect HallFind(HallRect[] list, string name) => System.Array.Find(list, r => r.name == name);
+
+        private static void HallPlace(RectTransform rect, float[] r)
+        {
+            Anchor(rect, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                new Vector2((r[0] + r[2]) * 0.5f - 960f, 540f - (r[1] + r[3]) * 0.5f), new Vector2(r[2] - r[0], r[3] - r[1]));
+        }
+
+        private static Image HallPiece(Transform parent, HallLayout layout, string name)
+        {
+            var image = CreateImage(parent, name, Color.white);
+            image.sprite = MenuArt("InvHall_" + name);
+            image.raycastTarget = false;
+            var r = HallFind(layout.pieces, name);
+            if (r != null) HallPlace(image.rectTransform, r.rect);
+            return image;
+        }
+
+        private static Text HallText(Transform parent, HallLayout layout, string name, string key, int size, Color colour, Color? outline, bool bold = true, TextAnchor align = TextAnchor.MiddleCenter)
+        {
+            var text = HallLabel(parent, name, key, size, bold, align);
+            text.color = colour;
+            var r = HallFind(layout.texts, name);
+            if (r != null) HallPlace(text.rectTransform, r.rect);
+            if (outline != null)
+            {
+                var o = text.gameObject.AddComponent<Outline>();
+                o.effectColor = outline.Value;
+                o.effectDistance = new Vector2(2.5f, -2.5f);
+            }
+            return text;
+        }
+
+        // the hall's own words: not the skin's labels (the skin repaints those in its ink, dark on the banners)
+        private static Text HallLabel(Transform parent, string name, string key, int size, bool bold, TextAnchor align)
+        {
+            var text = CreateText(parent, name, string.Empty, size, Vector2.zero, new Vector2(100f, 40f));
+            if (key != null) Localize(text, key);
+            text.font = bold ? UiTheme.Bold : UiTheme.Regular;
+            text.alignment = align;
+            text.horizontalOverflow = HorizontalWrapMode.Wrap;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+            text.raycastTarget = false;
+            return text;
+        }
+
+        private static Vector2 HallPoint(HallLayout layout, string name)
+        {
+            var p = HallFind(layout.points, name);
+            return p == null ? Vector2.zero : new Vector2(p.at[0] - 960f, 540f - p.at[1]);
+        }
+
         private static CanvasGroup BuildInvasionScreen(Transform canvas, MainMenuController controller, out Button settings)
         {
             var screen = StretchedChild(canvas, "InvasionScreen");
-            var window = MenuWindow(screen, "#mode_invasion");
-            var back = Corner(screen, "BackButton", "Back", new Vector2(0f, 1f), new Vector2(CornerInset, -CornerInset), CornerButton);
-            settings = Corner(screen, "SettingsButton", "Settings", new Vector2(1f, 1f), new Vector2(-CornerInset, -CornerInset), CornerButton);
-            UnityEventTools.AddPersistentListener(back.onClick, controller.Back);
-            var hub = screen.gameObject.AddComponent<InvasionHubController>();
+            var json = AssetDatabase.LoadAssetAtPath<TextAsset>($"{UiTextureImport.MenuArtFolder}/InvHall_layout.json");
+            var layout = json != null ? JsonUtility.FromJson<HallLayout>(json.text) : new HallLayout();
+            if (json == null) Debug.LogWarning("[MainMenu] no InvHall_layout.json -- run Tools/ui/invasion_hall_art.py");
 
-            // the theme's picture across the top, the heroes leaning in at its sides
-            // under the title plate, which hangs over the window's top edge
-            var frameSize = new Vector2(MenuWindowSize.x - 48f, 300f);
-            var frame = new GameObject("Picture", typeof(RectTransform), typeof(RectMask2D));
-            frame.transform.SetParent(window, false);
-            Anchor((RectTransform)frame.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 196f), frameSize);
-            var picture = CreateImage(frame.transform, "Image", new Color(0.3f, 0.45f, 0.25f));
-            // baked at 1512x340 (MenuArtBake): shown whole across, its top and bottom trimmed by the frame
-            Anchor(picture.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(frameSize.x, 340f));
+            // the hall fills the screen whatever its shape (its edges trimmed, never bared)
+            var back = CreateImage(screen, "Hall", Color.white);
+            back.sprite = MenuArt("InvHall_Back");
+            back.raycastTarget = true;     // nothing behind takes a tap
+            Anchor(back.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1920f, 1080f));
+            var fit = back.gameObject.AddComponent<AspectRatioFitter>();
+            fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
+            fit.aspectRatio = 1920f / 1080f;
+
+            var hub = screen.gameObject.AddComponent<InvasionHubController>();
+            var cream = new Color(1f, 0.94f, 0.78f);
+
+            // the theme: the picture under the gilt frame, the season's plate, the seals' shelf and the seals
+            var picture = CreateImage(screen, "Picture", new Color(0.3f, 0.45f, 0.25f));
             picture.raycastTarget = false;
+            var hole = HallFind(layout.texts, "Picture");
+            if (hole != null) HallPlace(picture.rectTransform, hole.rect);
             var firstPicture = MenuArt("Inv_summer");
             if (firstPicture != null) { picture.sprite = firstPicture; picture.color = Color.white; }
-            Peek(frame.transform, "King", new Vector2(-frameSize.x * 0.5f - 20f, -frameSize.y * 0.5f), new Vector2(0f, 0f));
-            Peek(frame.transform, "Queen", new Vector2(frameSize.x * 0.5f + 20f, -frameSize.y * 0.5f), new Vector2(1f, 0f));
+            HallPiece(screen, layout, "Frame");
+            HallPiece(screen, layout, "Plate");
+            var season = HallText(screen, layout, "Season", null, 32, new Color(0.27f, 0.16f, 0.04f), null);
+            HallPiece(screen, layout, "Shelf");
+            HallPiece(screen, layout, "Ribbon");
+            HallText(screen, layout, "Title", "#mode_invasion", 58, cream, new Color(0.19f, 0.05f, 0.29f));
 
-            // the points and the crystals as the game's resource chips (the user's pick «А», 2026-10-25):
-            // a parchment capsule, a disc with its sign on the left, the number
-            var pointsText = Counter(frame.transform, "Points", new Vector2(-frameSize.x * 0.5f + 330f, 80f), new Color(0.88f, 0.66f, 0.23f), "Trophy", null);
-            var crystalsText = Counter(frame.transform, "Crystals", new Vector2(frameSize.x * 0.5f - 400f, 80f), new Color(0.5f, 0.77f, 0.94f), null, IconSprite("Res_UpgradeCrystal"), discRight: true);
-            var info = MenuRoundButton(frame.transform, "InfoButton", "round", "Info", HudInk.OnRound, 96f, 0.5f);
-            Anchor((RectTransform)info.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(frameSize.x * 0.5f - 230f, 80f), new Vector2(96f, 96f));
-            UnityEventTools.AddIntPersistentListener(info.onClick, controller.ShowInfo, (int)GameMode.Invasion);
-
-            var themes = BuildThemes(frame.transform, new Vector2(0f, -86f), 96f, 128f, invasion: true);
-
-            // the period's best runs
-            var heading = MenuLabel(window, "TopHeading", null, 34, new Vector2(0f, 6f), new Vector2(1000f, 50f), HudInk.OnPanel, bold: true);
-            var dot = SkinSprite("circle_mask");
-            var runs = new Object[5];
-            for (var i = 0; i < runs.Length; i++)
+            var row = new GameObject("Themes", typeof(RectTransform));
+            row.transform.SetParent(screen, false);
+            Anchor((RectTransform)row.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1920f, 1080f));
+            var themes = row.AddComponent<ThemePicker>();
+            var seal = HallFind(layout.pieces, "Seal");
+            var sealPicked = HallFind(layout.pieces, "SealPicked");
+            var buttons = new Object[MapThemes.All.Length];
+            var picked = new Object[MapThemes.All.Length];
+            for (var i = 0; i < MapThemes.All.Length; i++)
             {
-                var x = (i - 2) * 250f;
-                var pip = CreateImage(window, $"Run{i + 1}Pip", Color.white);
-                pip.sprite = dot;
-                pip.raycastTarget = false;
-                Anchor(pip.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(x - 60f, -50f), new Vector2(26f, 26f));
-                SkinInk(pip, HudInk.OnPanel);
-                pip.color = new Color(pip.color.r, pip.color.g, pip.color.b, 0.35f);
-                runs[i] = MenuLabel(window, $"Run{i + 1}", null, 36, new Vector2(x + 25f, -50f), new Vector2(120f, 50f), HudInk.OnPanel, bold: true, align: TextAnchor.MiddleLeft);
+                var id = MapThemes.Id(MapThemes.All[i]);
+                var at = HallPoint(layout, $"Seal{i}");
+                var wax = CreateImage(row.transform, $"Theme_{id}", Color.white);
+                wax.sprite = MenuArt("InvHall_Seal");
+                if (seal != null)
+                    Anchor(wax.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                        at + new Vector2((seal.rect[0] + seal.rect[2]) * 0.5f, -(seal.rect[1] + seal.rect[3]) * 0.5f),
+                        new Vector2(seal.rect[2] - seal.rect[0], seal.rect[3] - seal.rect[1]));
+                buttons[i] = wax.gameObject.AddComponent<Button>();
+                var sign = MenuGlyph(wax.transform, $"Theme_{id}", HudInk.Keep, 62f);
+                sign.color = new Color(0.93f, 0.67f, 0.55f);
+                sign.rectTransform.anchoredPosition = Vector2.zero;
+                var lit = CreateImage(wax.transform, "Picked", Color.white);
+                lit.sprite = MenuArt("InvHall_SealPicked");
+                lit.raycastTarget = false;
+                if (sealPicked != null && seal != null)
+                    Anchor(lit.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                        new Vector2((sealPicked.rect[0] + sealPicked.rect[2]) * 0.5f - (seal.rect[0] + seal.rect[2]) * 0.5f,
+                            -((sealPicked.rect[1] + sealPicked.rect[3]) * 0.5f - (seal.rect[1] + seal.rect[3]) * 0.5f)),
+                        new Vector2(sealPicked.rect[2] - sealPicked.rect[0], sealPicked.rect[3] - sealPicked.rect[1]));
+                var litSign = MenuGlyph(lit.transform, $"Theme_{id}", HudInk.Keep, 74f);
+                litSign.color = new Color(1f, 0.96f, 0.84f);
+                litSign.rectTransform.anchoredPosition = Vector2.zero;
+                lit.gameObject.SetActive(false);
+                picked[i] = lit.gameObject;
             }
-            var divider = MenuImage(window, "Divider", "divider", new Vector2(0f, -100f), new Vector2(1100f, 8f), Image.Type.Sliced);
-            divider.raycastTarget = false;
+            var tso = new SerializedObject(themes);
+            tso.FindProperty("invasion").boolValue = true;
+            WriteArray(tso.FindProperty("buttons"), buttons);
+            WriteArray(tso.FindProperty("picked"), picked);
+            tso.ApplyModifiedPropertiesWithoutUndo();
 
-            // the leaderboard: the player's own row, lit, until the online one exists
-            var row = MenuImage(window, "PlayerRow", "row_selected", new Vector2(0f, -162f), new Vector2(1100f, 80f));
-            row.raycastTarget = false;
-            var place = MenuLabel(row.transform, "Place", null, 32, new Vector2(-480f, 2f), new Vector2(80f, 50f), HudInk.OnPanel, bold: true);
-            var name = MenuLabel(row.transform, "Name", null, 32, new Vector2(-170f, 2f), new Vector2(460f, 50f), HudInk.OnPanel, align: TextAnchor.MiddleLeft);
-            var score = MenuLabel(row.transform, "Points", null, 32, new Vector2(220f, 2f), new Vector2(200f, 50f), HudInk.OnPanel, bold: true, align: TextAnchor.MiddleRight);
-            // the reward: the number LEFT, the crystal RIGHT (the user, 2026-11-11: the rule for the whole game)
-            var reward = MenuLabel(row.transform, "Reward", null, 32, new Vector2(410f, 2f), new Vector2(110f, 50f), HudInk.OnPanel, bold: true, align: TextAnchor.MiddleRight);
-            Gem(row.transform, new Vector2(495f, 2f), 44f);
-            MenuLabel(window, "Soon", "#invasion_board_soon", 24, new Vector2(0f, -226f), new Vector2(1100f, 40f), HudInk.OnPanel);
-
-            var run = MenuTextButton(window, "RunButton", "button", "#invasion_run", HudInk.OnButton, new Vector2(0f, -330f), new Vector2(420f, 110f), 46);
-            UnityEventTools.AddPersistentListener(run.onClick, controller.StartInvasion);
-
-            // the periods, under the window
+            // the beam and the three period banners
+            HallPiece(screen, layout, "Beam");
             var periods = new[] { "#invasion_day", "#invasion_week", "#invasion_month" };
-            var selected = new Object[periods.Length];
-            for (var i = 0; i < periods.Length; i++)
+            var darks = new[] { new Color(0.35f, 0.06f, 0.04f), new Color(0.06f, 0.12f, 0.31f), new Color(0.06f, 0.2f, 0.08f) };
+            var bigs = new Object[3];
+            var smalls = new Object[3];
+            var glows = new Object[3];
+            var details = new Object[3];
+            var hints = new Object[3];
+            var points = new Object[3];
+            var runs = new Object[15];
+            for (var i = 0; i < 3; i++)
             {
-                var tab = MenuTab(screen, $"Tab_{i}", periods[i], new Vector2((i - 1) * 480f, PeriodTabsY), new Vector2(300f, 72f));
-                tab.selected.SetActive(i == 0);
-                selected[i] = tab.selected;
-                UnityEventTools.AddIntPersistentListener(tab.button.onClick, hub.SelectPeriod, i);
+                var banner = new GameObject($"Banner{i}", typeof(RectTransform));
+                banner.transform.SetParent(screen, false);
+                Anchor((RectTransform)banner.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1920f, 1080f));
+                var b = banner.transform;
+                glows[i] = HallPiece(b, layout, $"Banner{i}_Glow").gameObject;
+                bigs[i] = HallPiece(b, layout, $"Banner{i}_Big").gameObject;
+                smalls[i] = HallPiece(b, layout, $"Banner{i}_Small").gameObject;
+                HallText(b, layout, $"Title{i}", periods[i], 40, cream, darks[i]);
+                var trophy = MenuGlyph(b, "Trophy", HudInk.Keep, 56f);
+                trophy.color = new Color(0.98f, 0.81f, 0.31f);
+                trophy.rectTransform.anchoredPosition = HallPoint(layout, $"Trophy{i}");
+                points[i] = HallText(b, layout, $"Points{i}", null, 50, cream, darks[i], align: TextAnchor.MiddleLeft);
+                hints[i] = HallText(b, layout, $"Hint{i}", "#invasion_banner_open", 22, cream, darks[i], bold: false).gameObject;
+                var group = new GameObject("Details", typeof(RectTransform));
+                group.transform.SetParent(b, false);
+                Anchor((RectTransform)group.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1920f, 1080f));
+                details[i] = group;
+                HallPiece(group.transform, layout, $"Banner{i}_Rows");
+                for (var k = 0; k < 5; k++)
+                {
+                    var rank = HallText(group.transform, layout, $"Rank{i}_{k}", null, 24, cream, darks[i]);
+                    rank.text = (k + 1).ToString();
+                    runs[i * 5 + k] = HallText(group.transform, layout, $"Run{i}_{k}", null, 26, cream, darks[i], align: TextAnchor.MiddleRight);
+                }
+                var you = CreateImage(group.transform, "YouRow", Color.white);
+                you.sprite = MenuArt("InvHall_YouRow");
+                you.raycastTarget = false;
+                var youBox = HallFind(layout.texts, $"You{i}");
+                if (youBox != null) HallPlace(you.rectTransform, new[] { youBox.rect[0] - 16f, youBox.rect[1] - 2f, youBox.rect[2] + 16f, youBox.rect[3] + 2f });
+                var ink = new Color(0.35f, 0.22f, 0.09f);
+                HallText(group.transform, layout, $"You{i}", "#invasion_you", 26, ink, null, align: TextAnchor.MiddleLeft);
+                var soon = HallLabel(group.transform, "Place", "#invasion_place_soon", 22, false, TextAnchor.MiddleRight);
+                soon.color = new Color(0.59f, 0.41f, 0.16f);
+                if (youBox != null) HallPlace(soon.rectTransform, youBox.rect);
+                // the whole banner takes the tap: it picks its period
+                var tap = CreateImage(b, "Tap", new Color(1f, 1f, 1f, 0f));
+                var tapBox = HallFind(layout.texts, $"Tap{i}");
+                if (tapBox != null) HallPlace(tap.rectTransform, tapBox.rect);
+                UnityEventTools.AddIntPersistentListener(tap.gameObject.AddComponent<Button>().onClick, hub.SelectPeriod, i);
             }
+
+            // «В бой», the crystals, «?», the corners, the King and the Queen at the sides
+            var buttonBox = HallFind(layout.texts, "Button");
+            var fightAt = buttonBox != null ? new Vector2((buttonBox.rect[0] + buttonBox.rect[2]) * 0.5f - 960f, 540f - (buttonBox.rect[1] + buttonBox.rect[3]) * 0.5f) : new Vector2(0f, -480f);
+            var fight = MenuTextButton(screen, "RunButton", "button", "#invasion_fight", HudInk.OnButton, fightAt, new Vector2(480f, 96f), 52);
+            UnityEventTools.AddPersistentListener(fight.onClick, controller.StartInvasion);
+            foreach (var (hero, anchor, x) in new[] { ("King", 0f, 185f), ("Queen", 1f, -185f) })
+            {
+                var art = MenuArt($"Peek_{hero}");
+                if (art == null) continue;
+                var figure = CreateImage(screen, hero, Color.white);
+                figure.sprite = art;
+                figure.preserveAspect = true;
+                figure.raycastTarget = false;
+                Anchor(figure.rectTransform, new Vector2(anchor, 0f), new Vector2(0.5f, 0f), new Vector2(x, -20f), new Vector2(560f * art.rect.width / art.rect.height, 560f));
+            }
+            var crystalsText = Counter(screen, "Crystals", new Vector2(640f, 470f), new Color(0.5f, 0.77f, 0.94f), null, IconSprite("Res_UpgradeCrystal"), discRight: true);
+            var info = MenuRoundButton(screen, "InfoButton", "round", "Info", HudInk.OnRound, 92f, 0.5f);
+            Anchor((RectTransform)info.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(470f, 470f), new Vector2(92f, 92f));
+            UnityEventTools.AddIntPersistentListener(info.onClick, controller.ShowInfo, (int)GameMode.Invasion);
+            var backButton = Corner(screen, "BackButton", "Back", new Vector2(0f, 1f), new Vector2(CornerInset, -CornerInset), CornerButton);
+            settings = Corner(screen, "SettingsButton", "Settings", new Vector2(1f, 1f), new Vector2(-CornerInset, -CornerInset), CornerButton);
+            UnityEventTools.AddPersistentListener(backButton.onClick, controller.Back);
 
             var so = new SerializedObject(hub);
             so.FindProperty("themes").objectReferenceValue = themes;
             so.FindProperty("picture").objectReferenceValue = picture;
+            so.FindProperty("seasonText").objectReferenceValue = season;
             var themeIds = new List<string>();
             var sprites = new List<Object>();
             foreach (var theme in MapThemes.All) AddArt(themeIds, sprites, MapThemes.Id(theme), $"Inv_{MapThemes.Id(theme)}");
             WriteStrings(so.FindProperty("pictureThemes"), themeIds);
             WriteArray(so.FindProperty("pictureSprites"), sprites.ToArray());
-            so.FindProperty("pointsText").objectReferenceValue = pointsText;
-            so.FindProperty("topHeading").objectReferenceValue = heading;
-            WriteArray(so.FindProperty("topRuns"), runs);
-            WriteArray(so.FindProperty("tabSelected"), selected);
-            so.FindProperty("playerRowPlace").objectReferenceValue = place;
-            so.FindProperty("playerRowName").objectReferenceValue = name;
-            so.FindProperty("playerRowPoints").objectReferenceValue = score;
-            so.FindProperty("playerRowReward").objectReferenceValue = reward;
+            WriteArray(so.FindProperty("bannerBig"), bigs);
+            WriteArray(so.FindProperty("bannerSmall"), smalls);
+            WriteArray(so.FindProperty("bannerGlow"), glows);
+            WriteArray(so.FindProperty("bannerDetails"), details);
+            WriteArray(so.FindProperty("bannerHint"), hints);
+            WriteArray(so.FindProperty("bannerPoints"), points);
+            WriteArray(so.FindProperty("runTexts"), runs);
             so.FindProperty("crystalsText").objectReferenceValue = crystalsText;
             so.ApplyModifiedPropertiesWithoutUndo();
 
-            var group = Group(screen.gameObject);
-            group.alpha = 0f;
-            return group;
+            var group2 = Group(screen.gameObject);
+            group2.alpha = 0f;
+            return group2;
         }
 
         /// <summary>
