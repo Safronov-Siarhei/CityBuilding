@@ -48,7 +48,7 @@ see the map at the bottom.
   `-Filter X`, `-Graphics`) and read its short report; open `RunLogs/` only with grep.
 - **Fewer checks than edits** (strict since 2026-11-04): a small edit gets no build and no test; build
   (`-Steps setup`) after a batch of edits or when a task is done; `setup` TWICE only when Editor code
-  changed (`Scripts/Editor/`). One general test run after a substantial body of work, in the background.
+  changed (`Scripts/Editor/`). One general test run after a substantial body of work, in the background: `setup` + EditMode only; PlayMode only when the user asks (2026-11-17).
   No tests for models/colours/sizes/texts/UI layout/balance numbers, no photo tests, no re-run after a
   green, no re-run of a known flaky test. A new test only for a new game rule or a fixed bug.
 - A test that never failed proves nothing: for a bug's regression test, break the fix once, see it go

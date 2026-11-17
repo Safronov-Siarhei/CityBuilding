@@ -170,7 +170,7 @@ namespace CityBuilder.Tests.EditMode
         [TestCase("Fence", false)]
         [TestCase("Barracks", false)]
         [TestCase("Smelter", true)]
-        [TestCase("Treasury", true)]
+        [TestCase("Treasury", false)]   // open from the start since the storage rework (the user, 2026-11-17)
         [TestCase("Bridge", true)]
         [TestCase("Colosseum", true)]
         public void TheStartingRoster_IsWhatTheDesignSays(string buildingId, bool needsUnlock)

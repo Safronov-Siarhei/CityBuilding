@@ -46,8 +46,6 @@ namespace CityBuilder.Resources
         /// </summary>
         public int LifetimeProduced { get; private set; }
 
-        // a save put the totals back (SetAmount): the sandbox's empty start must not wipe them
-        private bool _loaded;
         // where the gain being added was made (AddProduced with a point): the stores nearest it take it
         private Vector3? _origin;
 
@@ -55,15 +53,6 @@ namespace CityBuilder.Resources
         {
             // the tutorial shows gathering and building, it never waits on them (the user, 2026-11-05)
             if (Tutorial.TutorialMode.IsActive) SetInfiniteResources(true);
-            // the sandbox opens with nothing: there is no store to keep it in until the start chain stands, and the
-            // chain lays its own reward in (BuildingPlacer; the user, 2026-11-17 -- start_* are for the other modes)
-            if (StoreLedger.Active && !_loaded)
-            {
-                Write(ResourceType.Wood, 0);
-                Write(ResourceType.Stone, 0);
-                Write(ResourceType.Food, 0);
-                Write(ResourceType.Gold, 0);
-            }
         }
 
         /// <summary>The one place a total changes: the sandbox's stores are told where it lies (StoreLedger).</summary>
@@ -279,7 +268,6 @@ namespace CityBuilder.Resources
 
         public void SetAmount(ResourceType type, int amount)
         {
-            _loaded = true;
             Write(type, amount);
         }
 

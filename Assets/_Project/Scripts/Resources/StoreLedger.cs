@@ -39,10 +39,19 @@ namespace CityBuilder.Resources
         private static BalanceConfig _capsFrom;
         private static readonly bool[] Tracked = new bool[Types];
 
-        /// <summary>The sandbox (not a run, the campaign, the tutorial or a dungeon): the stores hold the goods.</summary>
-        public static bool Active =>
+        /// <summary>The sandbox (not a run, the campaign, the tutorial or a dungeon).</summary>
+        public static bool Sandbox =>
             PiggyTasks.InSandbox && !Dungeon.DungeonMode.IsActive
             && (ResourceManager.Instance == null || !ResourceManager.Instance.UnlimitedStorage);
+
+        /// <summary>
+        /// The stores hold the goods: the sandbox, once the town has had a store (the start chain gives the first one
+        /// at once). Before that -- and in a scene that never gets one, as the tests' -- the old family pools stand.
+        /// Losing every store later does not switch it off.
+        /// </summary>
+        public static bool Active => _everHadStore && Sandbox;
+
+        private static bool _everHadStore;
 
         /// <summary>A new scene: nothing stands yet.</summary>
         public static void Reset()
@@ -52,6 +61,7 @@ namespace CityBuilder.Resources
             _overflow = new int[Types];
             _capacityDirty = true;
             _caps = null;
+            _everHadStore = false;
         }
 
         // ---------------------------------------------------------------- caps
@@ -140,6 +150,13 @@ namespace CityBuilder.Resources
             Stores.Add(store);
             Stock[store] = new int[Types];
             _capacityDirty = true;
+            if (_everHadStore) return;
+            // the first store: from now on the stores hold everything -- what the town has is laid into it (the rest
+            // lies in the Town Hall); a load then puts each store's own goods back over this (Load, Restored)
+            _everHadStore = true;
+            var resources = ResourceManager.Instance;
+            if (resources == null || !Sandbox) return;
+            for (var t = 0; t < Types; t++) Sync((ResourceType)t, resources.GetAmount((ResourceType)t), null);
         }
 
         /// <summary>
@@ -323,6 +340,7 @@ namespace CityBuilder.Resources
         public static void Load(BuildingInstance store, List<ResourceAmount> stock)
         {
             if (store == null || stock == null || !Stock.TryGetValue(store, out var into)) return;
+            Array.Clear(into, 0, into.Length);
             foreach (var a in stock)
                 if (a != null && (int)a.type >= 0 && (int)a.type < Types) into[(int)a.type] = Mathf.Max(0, a.amount);
         }

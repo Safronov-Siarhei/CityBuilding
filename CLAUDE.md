@@ -15,7 +15,7 @@
   or a task is done. A CSV/sheet change never gets a build of its own: it rides along with the
   next code build (one setup reads it). `setup` twice only when Editor code changed
   (`Scripts/Editor/`: SetupProject*, BalanceImporter) -- Unity's first pass compiles it but runs the old. Run tests once, after a substantial body of
-  changes (a whole feature or several tasks), as one general run in the background -- not per edit,
+  changes (a whole feature or several tasks), as one general run in the background -- `setup` + EditMode only; PlayMode only when the user asks (the user, 2026-11-17: the long runs feel pointless) -- not per edit,
   not per small task. Never: tests for models/colours/sizes/texts/UI layout/balance numbers
   (verify_sheet covers the sheet), photo tests, a re-run after a green, tests after a `git pull`,
   re-running a known flaky test. A new test only for a new game rule or a fixed bug, preferably as

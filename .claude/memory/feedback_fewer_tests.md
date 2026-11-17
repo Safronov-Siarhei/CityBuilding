@@ -32,3 +32,5 @@ Proposed rule (proposed, waiting for their yes; follow it in the meantime):
 
 
 **2026-11-15, corrected again:** I started setup x2 after ONE small button edit (main-menu shop plaque) and the user stopped it: «зачем ждать сборку … тесты и сборки потом сделаем общими по результатам изменений для предложений». A whole multi-step series (the offers places) gets ONE build + test run at its end.
+
+**2026-11-17, the user (tired of a 16-min PlayMode run):** «я устал от таких долгих тестов, они как будто не имеют смысла». The general run is now `setup` + EditMode only (~4 min); PlayMode (16 min, 40+ old failures that make it noise) only when the user asks for it or a change is about scenes/units moving. A general run that fails on the 5 known EditMode balance checks is "green" for the task.

@@ -230,7 +230,7 @@ namespace CityBuilder.Buildings
             _chainChecked = true;
             _chainLink = null;
             _freeNow = null;
-            if (!StoreLedger.Active || BuildingInstance.TownHall == null) return;
+            if (!StoreLedger.Sandbox || BuildingInstance.TownHall == null) return;
             var map = Maps.MeshMapApplier.Instance;
             var archipelago = map != null && Maps.Archipelago.ArchipelagoMapId.IsArchipelago(map.CurrentMapId);
             foreach (var id in ChainIds)
@@ -1030,6 +1030,16 @@ namespace CityBuilder.Buildings
                 if (placedData == mandatoryFirstBuilding)
                 {
                     GiveStartingParty();
+                    // a new sandbox game opens with nothing: no store holds anything until the chain stands, and the
+                    // chain lays its own reward in (the user, 2026-11-17; start_* stay for the other modes)
+                    if (StoreLedger.Sandbox && ResourceManager.Instance != null)
+                    {
+                        ResourceManager.Instance.SetAmount(ResourceType.Wood, 0);
+                        ResourceManager.Instance.SetAmount(ResourceType.Stone, 0);
+                        ResourceManager.Instance.SetAmount(ResourceType.Food, 0);
+                        ResourceManager.Instance.SetAmount(ResourceType.Gold, 0);
+                        ResourceManager.Instance.SetAmount(ResourceType.Coins, 0);
+                    }
                     _chainFresh = true;
                     TryBeginChain();
                 }
