@@ -164,14 +164,17 @@ namespace CityBuilder.UI
             Anchor(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -72f));
             Label(title.transform, Localization.Get("#menu_offers"), 60, Ink, new Vector2(0f, 4f), new Vector2(580f, 100f), heavy: true);
 
-            var plaque = Sliced(_shopView, "Balance", Skin + "plaque", new Vector2(300f, 90f));
-            // top left: the piggy bank stands top right (2026-11-16)
-            Anchor(plaque.rectTransform, new Vector2(0f, 1f), new Vector2(230f, -72f));
+            // top left (the piggy bank stands top right, 2026-11-16), drawn as the piggy window's wallet:
+            // the crystal and a stroked cream number on the picture, no plaque (the user, 2026-11-17)
+            var wallet = Child(_shopView, "Balance");
+            wallet.anchorMin = wallet.anchorMax = new Vector2(0f, 1f);
+            wallet.sizeDelta = new Vector2(72f, 72f);
+            wallet.anchoredPosition = new Vector2(72f, -60f);
             PiggyButton.Create(_shopView, new Vector2(1f, 1f), new Vector2(-20f, -10f), 170f);
             _shownBalance = _targetBalance = Wallet.UpgradeCrystals;
-            _balance = Label(plaque.transform, _shownBalance.ToString(), 42, Ink, new Vector2(-30f, 3f), new Vector2(190f, 70f), heavy: true);
-            _balance.alignment = TextAnchor.MiddleRight;
-            Icon(plaque.transform, "Crystal", new Vector2(92f, 2f), 58f);
+            PiggyUi.Pic(wallet, PiggyUi.Crystal, Vector2.zero, new Vector2(72f, 72f));
+            _balance = PiggyUi.Stroke(PiggyUi.Label(wallet, _shownBalance.ToString(), 44, PiggyUi.Cream, new Vector2(44f + 200f, 0f), new Vector2(400f, 60f)), 3f, PiggyUi.Ink);
+            _balance.alignment = TextAnchor.MiddleLeft;
 
             // the list: a viewport with a mask, the content scrolls up
             var view = Child(_shopView, "List");

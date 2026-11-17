@@ -40,6 +40,7 @@ the prices, 40 tasks reset every 8 h. Earlier history: rules DISCUSSED 2026-11-1
   (Button/ButtonGrey, sliced 420x96 by piggy_art.py --pieces), no glow -- the button breathes (scale +-4.5 %) while
   breakable, the column's rays/shine fade out for the burst and come back. «Полна!» is a capsule (two dots + box).
 - Playtest 2 (the user, 2026-11-16) DONE: no dark top strip in the bar troughs; the «+N%» badge is a child of the break button so it breathes with it; the button has Transition.None (Unity's disabled tint made the grey one see-through). Trap: a Button left on ColorTint fades its sprite to 50 % alpha when not interactable.
+- 2026-11-17 (the user): the main-menu shop's crystal balance lost its beige plaque -- drawn as the piggy window's wallet (crystal 72 at (72,-60) top left, cream 44 number with an ink stroke; MenuShopWindow, not built/seen yet). The user asked why the piggy does not fill in the main menu: by the rule (2026-11-15) only ACTIVE play in the sandbox scene counts, menus never.
 - Traps: BalanceConfig has a CLASS PiggyTask, so the lookup is `FindPiggyTask` (a same-named method broke compile).
   The stand-in Store grants at once; real billing must answer through Store.Grant so Broken plays the shatter.
   Campaign Win kills every orc -- those count toward orc_kill (accepted). Not checked on a phone.
