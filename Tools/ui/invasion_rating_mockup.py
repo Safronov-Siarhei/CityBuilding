@@ -56,6 +56,10 @@ def medallion(img, cx):
     cy, r = a.BEAM_Y + 150, 92
     for x in (cx - 40, cx + 40):
         a.chain(d, x, a.BEAM_Y + 22, cy - r * 0.86)
+        # its iron eye on the beam's underside, as the banners' chains have (the user, 2026-11-17)
+        y1 = a.BEAM_Y + 22
+        d.rectangle((x - 10, y1 - 14, x + 10, y1 + 2), fill=a.IRON, outline=INK, width=2)
+        d.ellipse((x - 3, y1 - 10, x + 3, y1 - 4), fill=a.IRON_L)
     rays = c.layer()
     rd = ImageDraw.Draw(rays)
     import math
