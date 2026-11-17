@@ -14,8 +14,10 @@ the prices, 40 tasks reset every 8 h. Earlier history: rules DISCUSSED 2026-11-1
   sandbox/archipelago tasks count only in the sandbox (not a run, campaign, tutorial). Dungeon tasks drop after the
   first dungeon entry (`piggy.seen.dungeon`), archipelago after a minute on an archipelago map, campaign_record once
   `m1_best` exists. Islands visited per map in `piggy.isl.<mapId>` (the shipyard's island counts as visited).
-- `Core/PiggyRunner.cs` -- made at start, DontDestroyOnLoad: 1 crystal per piggy_minute_seconds of ACTIVE play (scene
-  CityBuilder, timeScale>0, no ModalGate, input within piggy_idle_seconds); the sandbox-minute task; orc deaths
+- `Core/PiggyRunner.cs` -- made at start, DontDestroyOnLoad: 1 crystal per piggy_minute_seconds IN THE GAME, any screen,
+  menus and pause included, while there was input within piggy_idle_seconds (the user, 2026-11-17: «копится просто при
+  нахождении в игре, но если игрок не трогал экран последние 2 минуты, то перестаёт»; was the sandbox scene only); the
+  sandbox-minute task keeps its own clock (scene CityBuilder, timeScale>0, no ModalGate, not idle); orc deaths
   (orc_kill = not a monster; dungeon_monster/boss inside a dungeon; king_kill per run; raid = the last raiding orc fell).
 - Where each kind is reported: BuildingPlacer (road; building with no timer), ConstructionSite.Finish (build /
   upgrade / building_level, not the bot's), ResourceManager.Add (coins) / AddProduced (wood, stone, food, bars),
@@ -40,7 +42,7 @@ the prices, 40 tasks reset every 8 h. Earlier history: rules DISCUSSED 2026-11-1
   (Button/ButtonGrey, sliced 420x96 by piggy_art.py --pieces), no glow -- the button breathes (scale +-4.5 %) while
   breakable, the column's rays/shine fade out for the burst and come back. «Полна!» is a capsule (two dots + box).
 - Playtest 2 (the user, 2026-11-16) DONE: no dark top strip in the bar troughs; the «+N%» badge is a child of the break button so it breathes with it; the button has Transition.None (Unity's disabled tint made the grey one see-through). Trap: a Button left on ColorTint fades its sprite to 50 % alpha when not interactable.
-- 2026-11-17 (the user): the main-menu shop's crystal balance lost its beige plaque -- drawn as the piggy window's wallet (crystal 72 at (72,-60) top left, cream 44 number with an ink stroke; MenuShopWindow, not built/seen yet). The user asked why the piggy does not fill in the main menu: by the rule (2026-11-15) only ACTIVE play in the sandbox scene counts, menus never.
+- 2026-11-17 (the user): the main-menu shop's crystal balance lost its beige plaque -- drawn as the piggy window's wallet (crystal 72 at (72,-60) top left, cream 44 number with an ink stroke; MenuShopWindow, not built/seen yet). The user asked why the piggy does not fill in the main menu: then the rule was the sandbox scene only -- CHANGED the same day: anywhere in the game, idle 2 min stops it.
 - Traps: BalanceConfig has a CLASS PiggyTask, so the lookup is `FindPiggyTask` (a same-named method broke compile).
   The stand-in Store grants at once; real billing must answer through Store.Grant so Broken plays the shatter.
   Campaign Win kills every orc -- those count toward orc_kill (accepted). Not checked on a phone.

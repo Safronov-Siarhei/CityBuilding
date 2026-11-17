@@ -7,8 +7,10 @@ namespace CityBuilder.Core
 {
     /// <summary>
     /// Keeps the piggy bank filling (card Design/features/piggy-bank.md): a crystal (piggy_minute_crystals) for every
-    /// piggy_minute_seconds of ACTIVE play -- the game scene, not paused, no window over it, a touch/click/key within
-    /// piggy_idle_seconds -- and the play-minute task; listens for fallen orcs for the tasks that count them. Lives
+    /// piggy_minute_seconds IN THE GAME -- any screen, menus included, as long as there was a touch/click/key within
+    /// piggy_idle_seconds (the user, 2026-11-17: «копится просто при нахождении в игре, но если игрок не трогал экран
+    /// последние 2 минуты, то перестаёт»; was: the sandbox scene only, unpaused, no window) -- and the sandbox's
+    /// play-minute task, which still counts only the sandbox, unpaused, no window over it; listens for fallen orcs for the tasks that count them. Lives
     /// across scenes, made once at start.
     /// </summary>
     public class PiggyRunner : MonoBehaviour
@@ -16,6 +18,7 @@ namespace CityBuilder.Core
         private const string GameScene = "CityBuilder";
 
         private float _played;
+        private float _sandboxPlayed;
         private float _idle;
         private float _flushIn = 5f;
         private Invasion.InvasionMode _run;
@@ -57,13 +60,19 @@ namespace CityBuilder.Core
                 PiggyTasks.Flush();
             }
             if (Touched()) _idle = 0f; else _idle += dt;
-            if (!Active()) return;
-            _played += dt;
             var config = BalanceConfig.Sandbox;
+            if (_idle > (config != null ? config.PiggyIdleSeconds : 120f)) return;
             var minute = config != null ? Mathf.Max(1f, config.PiggyMinuteSeconds) : 60f;
-            if (_played < minute) return;
-            _played -= minute;
-            PiggyBank.Add(config != null ? config.PiggyMinuteCrystals : 1);
+            _played += dt;
+            if (_played >= minute)
+            {
+                _played -= minute;
+                PiggyBank.Add(config != null ? config.PiggyMinuteCrystals : 1);
+            }
+            if (!InSandboxPlay()) return;
+            _sandboxPlayed += dt;
+            if (_sandboxPlayed < minute) return;
+            _sandboxPlayed -= minute;
             if (PiggyTasks.InSandbox && !Dungeon.DungeonMode.IsActive)
             {
                 PiggyTasks.Report(PiggyTasks.SandboxMinute);
@@ -72,13 +81,9 @@ namespace CityBuilder.Core
             }
         }
 
-        private bool Active()
-        {
-            if (Time.timeScale <= 0f || ModalGate.IsBlocked) return false;
-            var config = BalanceConfig.Sandbox;
-            if (_idle > (config != null ? config.PiggyIdleSeconds : 120f)) return false;
-            return SceneManager.GetActiveScene().name == GameScene;
-        }
+        /// <summary>The play-minute task's clock: the game scene, not paused, no window over it.</summary>
+        private static bool InSandboxPlay() =>
+            Time.timeScale > 0f && !ModalGate.IsBlocked && SceneManager.GetActiveScene().name == GameScene;
 
         private static bool Touched()
         {
