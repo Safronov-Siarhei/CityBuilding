@@ -2,66 +2,93 @@ using CityBuilder.Buildings;
 using CityBuilder.Core;
 using CityBuilder.Diplomacy;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace CityBuilder.UI
 {
     /// <summary>
-    /// The Diplomacy Hall's window (the user, 2026-11-03): the relations scale with the bot kingdom
-    /// (-100..100), the stance, and the three stances to move to -- Мир, Торговля, Война -- each
-    /// greyed with the reason when it cannot be taken (BotRelations.CanSwitch). «Здание» opens the
-    /// Hall's ordinary card for its upgrade and repair. Trade deals come later.
+    /// The Diplomacy Hall's window (redone after the user's approved concept, 2026-11-17; art from
+    /// Tools/ui/diplomacy_game_art.py, folder UI/Diplomacy/Window): the two kings, the relations number and
+    /// how much it falls a day, the scale (danger / trade / gifts) with its needle, then at peace «Подарок»,
+    /// «Торговля» (locked below bot_trade_min_score) and «Война» (a second tap declares it), at war the wave
+    /// and the ransom in coins or crystals. Opened by the round «Дипломатия» button beside the «!»
+    /// (DiplomacyBar); the «!» itself opens the hall's ordinary card.
     /// </summary>
     public class DiplomacyWindow : MonoBehaviour
     {
-        [SerializeField] private GameObject panelRoot;
-        [SerializeField] private Text title;
-        [SerializeField] private Image scaleFill;
-        [SerializeField] private Text scaleText;
-        [SerializeField] private Text stanceText;
-        [SerializeField] private Button[] stanceButtons = new Button[3];
-        [SerializeField] private Text note;
-        // the ransom at war (the user, 2026-11-04): in coins, or in crystals for a town short of coins
-        [SerializeField] private Button payCoinsButton;
-        [SerializeField] private Button payCrystalsButton;
-        [SerializeField] private BuildingInfoPanelController infoPanel;
+        private const float RefreshSeconds = 0.25f;
+        private const float WarConfirmSeconds = 3f;
+
+        [SerializeField] private BakedUi ui;
 
         public static DiplomacyWindow Instance { get; private set; }
-        public bool IsOpen => panelRoot != null && panelRoot.activeSelf;
+        public bool IsOpen => ui != null && ui.IsOpen;
 
-        private BuildingInstance _hall;
+        private bool _bound;
+        private float _refreshIn;
+        private float _warConfirm;
+        private float _noteLeft;
 
-        private void Awake() => Instance = this;
-
-        private void OnEnable() => BotRelations.Changed += Refresh;
-
-        private void OnDisable() => BotRelations.Changed -= Refresh;
+        private void Awake()
+        {
+            Instance = this;
+            Bind();
+        }
 
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
         }
 
+        private void Bind()
+        {
+            if (_bound || ui == null) return;
+            _bound = true;
+            ui.OnTap("Close", Close);
+            ui.OnTap("Gift", () => { if (DiplomacyGiftWindow.Instance != null) DiplomacyGiftWindow.Instance.Show(); });
+            ui.OnTap("Trade", () => { if (DiplomacyTradeWindow.Instance != null) DiplomacyTradeWindow.Instance.Show(); });
+            ui.OnTap("TradeLocked", () => Note(Localization.Format("#diplomacy_trade_needs", Mathf.RoundToInt(BalanceConfig.Instance.BotTradeMinScore))));
+            ui.OnTap("War", War);
+            ui.OnTap("PeaceCoins", PayCoins);
+            ui.OnTap("PeaceCrystals", PayCrystals);
+        }
+
+        /// <summary>The window (the hall is not needed: there is one neighbour).</summary>
         public void Show(BuildingInstance hall)
         {
-            if (panelRoot == null) return;
-            _hall = hall;
-            panelRoot.SetActive(true);
-            if (note != null) note.text = string.Empty;
+            if (ui == null) return;
+            Bind();
+            _warConfirm = 0f;
+            Note(string.Empty);
+            ui.Open();
             Refresh();
         }
 
         public void Close()
         {
-            _hall = null;
-            if (panelRoot != null) panelRoot.SetActive(false);
+            if (ui != null) ui.Hide();
         }
 
-        public void ChoosePeace() => Choose(BotStance.Peace);
-        public void ChooseTrade() => Choose(BotStance.Trade);
-        public void ChooseWar() => Choose(BotStance.War);
+        private void Note(string text)
+        {
+            if (ui == null) return;
+            ui.SetText("Note", text);
+            _noteLeft = string.IsNullOrEmpty(text) ? 0f : 4f;
+        }
 
-        /// <summary>«Здание»: the Hall's own card, for its upgrade and repair.</summary>
+        private void War()
+        {
+            if (_warConfirm <= 0f)
+            {
+                _warConfirm = WarConfirmSeconds;
+                Note(Localization.Get("#diplomacy_war_sure"));
+                return;
+            }
+            _warConfirm = 0f;
+            if (BotRelations.CanSwitch(BotStance.War, out var why)) BotRelations.SwitchTo(BotStance.War);
+            else if (why != null) Note(Localization.Get(why));
+            Refresh();
+        }
+
         /// <summary>The war ends for the ransom in coins.</summary>
         public void PayCoins()
         {
@@ -71,11 +98,11 @@ namespace CityBuilder.UI
             var cost = new[] { new CityBuilder.Resources.ResourceAmount { type = CityBuilder.Resources.ResourceType.Coins, amount = price } };
             if (resources == null || !resources.TrySpend(cost))
             {
-                if (note != null) note.text = Localization.Get("#diplomacy_pay_short");
+                Note(Localization.Get("#diplomacy_pay_short"));
                 return;
             }
             BotRelations.EndWar();
-            if (note != null) note.text = Localization.Get("#diplomacy_paid");
+            Note(Localization.Get("#diplomacy_paid"));
         }
 
         /// <summary>The war ends for the ransom in crystals (the upgrade crystals' purse).</summary>
@@ -85,72 +112,73 @@ namespace CityBuilder.UI
             var price = BotRelations.RansomCrystals(BotRelations.HallLevel());
             if (Wallet.UpgradeCrystals < price)
             {
-                if (note != null) note.text = Localization.Get("#diplomacy_pay_short");
+                Note(Localization.Get("#diplomacy_pay_short"));
                 return;
             }
             Wallet.UpgradeCrystals -= price;
             BotRelations.EndWar();
-            if (note != null) note.text = Localization.Get("#diplomacy_paid");
+            Note(Localization.Get("#diplomacy_paid"));
         }
 
-        public void OpenBuildingCard()
+        private void Update()
         {
-            var hall = _hall;
-            Close();
-            if (infoPanel != null && hall != null) infoPanel.Show(hall);
-        }
-
-        private void Choose(BotStance stance)
-        {
-            if (BotRelations.CanSwitch(stance, out var why))
+            if (!IsOpen) return;
+            var dt = Time.unscaledDeltaTime;
+            if (_warConfirm > 0f) _warConfirm -= dt;
+            if (_noteLeft > 0f)
             {
-                BotRelations.SwitchTo(stance);
-                if (note != null) note.text = stance == BotStance.Trade ? Localization.Get("#diplomacy_trade_later") : string.Empty;
-                return;
+                _noteLeft -= dt;
+                if (_noteLeft <= 0f) ui.SetText("Note", string.Empty);
             }
-            if (note != null && why != null) note.text = Reason(why);
+            _refreshIn -= dt;
+            if (_refreshIn > 0f) return;
+            _refreshIn = RefreshSeconds;
+            Refresh();
         }
-
-        private static string Reason(string key) =>
-            key == "#diplomacy_trade_needs" && BalanceConfig.Instance != null
-                ? Localization.Format(key, Mathf.RoundToInt(BalanceConfig.Instance.BotTradeMinScore))
-                : Localization.Get(key);
 
         private void Refresh()
         {
             if (!IsOpen) return;
-            if (title != null) title.text = Localization.Get("#building_diplomacyhall");
+            var config = BalanceConfig.Instance;
             var score = BotRelations.Score;
-            if (scaleFill != null)
-            {
-                scaleFill.fillAmount = Mathf.InverseLerp(BotRelations.Min, BotRelations.Max, score);
-                scaleFill.color = Color.Lerp(new Color(0.8f, 0.2f, 0.15f), new Color(0.25f, 0.65f, 0.25f), scaleFill.fillAmount);
-            }
-            if (scaleText != null) scaleText.text = Localization.Format("#diplomacy_relations", Mathf.RoundToInt(score).ToString("+0;-0;0"));
-            if (stanceText != null) stanceText.text = Localization.Format("#diplomacy_stance", Localization.Get(StanceKey(BotRelations.Stance)));
+            ui.SetText("Value", Mathf.RoundToInt(score).ToString("+0;-0;0"));
+            var fall = config != null ? config.DiplomacyRelationsFallPerDay : 1f;
+            ui.SetText("PerDay", Localization.Format("#diplomacy_per_day", (-fall).ToString("+0.#;-0.#;0")));
+            PlaceNeedle(ui, score);
+            ui.SetText("State", Localization.Format("#diplomacy_stance", Localization.Get(StanceKey(BotRelations.Stance))));
+
             var war = BotRelations.Stance == BotStance.War;
-            var hallLevel = war ? BotRelations.HallLevel() : 1;
-            if (payCoinsButton != null)
+            ui.Show("AtPeace", !war);
+            ui.Show("AtWar", war);
+            if (!war)
             {
-                payCoinsButton.gameObject.SetActive(war);
-                var label = payCoinsButton.GetComponentInChildren<Text>();
-                if (war && label != null) label.text = Localization.Format("#diplomacy_pay_coins", BotRelations.RansomCoins(hallLevel));
+                var tradeOpen = DiplomacyRules.TradeOpen;
+                ui.Show("Trade", tradeOpen);
+                ui.Show("TradeLocked", !tradeOpen);
+                ui.SetText("TradeSub", tradeOpen
+                    ? Localization.Format("#diplomacy_trade_sub", config != null ? config.DiplomacyTradeDeals : 2)
+                    : Localization.Format("#diplomacy_trade_needs", Mathf.RoundToInt(config != null ? config.BotTradeMinScore : 30f)));
+                return;
             }
-            if (payCrystalsButton != null)
-            {
-                payCrystalsButton.gameObject.SetActive(war);
-                var label = payCrystalsButton.GetComponentInChildren<Text>();
-                if (war && label != null) label.text = Localization.Format("#diplomacy_pay_crystals", BotRelations.RansomCrystals(hallLevel));
-            }
-            for (var i = 0; i < stanceButtons.Length; i++)
-            {
-                var button = stanceButtons[i];
-                if (button == null) continue;
-                var stance = (BotStance)i;
-                var current = stance == BotRelations.Stance;
-                var image = button.GetComponent<Image>();
-                if (image != null) image.color = current ? new Color(1f, 0.85f, 0.45f) : BotRelations.CanSwitch(stance, out _) ? Color.white : new Color(1f, 1f, 1f, 0.45f);
-            }
+            var hallLevel = BotRelations.HallLevel();
+            var clock = Mathf.FloorToInt(BotRelations.WarSeconds);
+            ui.SetText("Wave", Localization.Format("#diplomacy_war_wave", BotRelations.WavesSent(), $"{clock / 60}:{clock % 60:00}"));
+            ui.SetText("PeaceCoinsLabel", BotRelations.RansomCoins(hallLevel).ToString());
+            ui.SetText("PeaceCrystalsLabel", BotRelations.RansomCrystals(hallLevel).ToString());
+            var discount = config != null ? Mathf.RoundToInt(Mathf.Clamp01(config.BotWarContributionHallDiscount * Mathf.Max(0, hallLevel - 1)) * 100f) : 0;
+            ui.SetText("PeaceCoinsSub", Localization.Format("#diplomacy_peace_coins_sub", discount));
+        }
+
+        /// <summary>The needle over the scale's span (-100 at the left end, 100 at the right).</summary>
+        public static void PlaceNeedle(BakedUi baked, float score)
+        {
+            var span = baked.Get("ScaleSpan");
+            var needle = baked.Get("Needle");
+            if (span == null || needle == null) return;
+            var s = (RectTransform)span.transform;
+            var n = (RectTransform)needle.transform;
+            var t = Mathf.InverseLerp(BotRelations.Min, BotRelations.Max, score);
+            n.anchoredPosition = new Vector2(s.anchoredPosition.x + (t - 0.5f) * s.sizeDelta.x, n.anchoredPosition.y);
         }
 
         public static string StanceKey(BotStance stance) => stance switch

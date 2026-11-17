@@ -334,6 +334,8 @@ namespace CityBuilder.Bot
         {
             if (building == null || !building.IsBot || building != Hall) return;
             HallRazed = true;
+            // razed at war: the Diplomacy Hall's reward and its window (the user, 2026-11-17: +50 crystals)
+            if (BotRelations.Stance == BotStance.War) DiplomacyRules.HallRazed();
             BotRelations.EndWar();
         }
 

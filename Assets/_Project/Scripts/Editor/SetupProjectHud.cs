@@ -200,6 +200,7 @@ namespace CityBuilder.EditorTools
 
             BuildLighthouseButton(row.transform, iconLibrary);
             BuildInstantBuildButton(row.transform);
+            BuildDiplomacyButton(row.transform);
 
             var button = CreateGlyphButton(row.transform, "BuildingDetailsButton", "round", HudInk.OnRound, null, null, 128f);
             var icon = button.transform.Find("Icon");
@@ -705,6 +706,20 @@ namespace CityBuilder.EditorTools
             var so = new SerializedObject(bar);
             so.FindProperty("button").objectReferenceValue = button.gameObject;
             so.FindProperty("price").objectReferenceValue = amount;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            UnityEventTools.AddPersistentListener(button.onClick, bar.Tap);
+            button.gameObject.SetActive(false);
+        }
+
+        /// <summary>«Дипломатия» (the user, 2026-11-17): the treaty with the seal in a round button left of the «!», on a held Diplomacy Hall.</summary>
+        private static void BuildDiplomacyButton(Transform row)
+        {
+            var button = CreateGlyphButton(row, "DiplomacyButton", "round", HudInk.Keep, "Diplomacy", null, 128f, 0.7f);
+            var go = new GameObject("DiplomacyBar");
+            go.transform.SetParent(row.parent, false);
+            var bar = go.AddComponent<DiplomacyBar>();
+            var so = new SerializedObject(bar);
+            so.FindProperty("button").objectReferenceValue = button.gameObject;
             so.ApplyModifiedPropertiesWithoutUndo();
             UnityEventTools.AddPersistentListener(button.onClick, bar.Tap);
             button.gameObject.SetActive(false);

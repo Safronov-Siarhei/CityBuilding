@@ -115,3 +115,4 @@ The next steps are in the card `Design/features/bot.md`, section «Next».
   - the ransom falls per level.
   - Not seen in game. The bot test numbers may need adjusting in the general run.
 2026-11-06: bot buildings leave ruins; bot rebuilds them (construction timer) only after every 3rd orc raid (bot_rebuild_every_raids, sheet synced). Camera smoother+slower (follow 10, fling cap 22). Built, not seen.
+2026-11-17: DIPLOMACY REWORK built into the code (all concepts approved; card bot.md section «Diplomacy rework -- BUILT»): DiplomacyRules (fall/day, daily gift, help every 5 days, bot gifts, bot declares war below 0, edge banner, trade shop), baked-art windows+banners (SetupProjectDiplomacy.BuildBaked + BakedUi), round «Дипломатия» button left of «!», sheet tabs «Зал дипломатии» (2000013) + «Зал дипломатии: таблицы» (2000069 -> diplomacy.csv). The user said no builds/tests now: needs setup,setup in the general build; not seen.

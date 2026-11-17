@@ -1,7 +1,7 @@
 # Bot kingdom (Бот)
 
 > **2026-11-10 (the user):** no event-feed line when a bot garrison soldier dies (`BotGarrison.Owns` in ArmyManager). Under the fog the bot's town and soldiers are not drawn, and its orc raids, rebuilding and garrison stand still until the player sees the castle (FogCulling, see performance-mobile).
-Status: BUILT up to WAR (2026-11-04; ransom-by-razing + harder later wars + 20 waves 2026-11-05): castle, garrison, Diplomacy Hall, orc raids, rebuild, and the war (guards, sea raids from the botwaves tab, ransom). Not seen in game.
+Status: DIPLOMACY REWORK IN THE CODE 2026-11-17 (see its section; needs `setup,setup`, not seen). Before: BUILT up to WAR (2026-11-04; ransom-by-razing + harder later wars + 20 waves 2026-11-05): castle, garrison, Diplomacy Hall, orc raids, rebuild, and the war (guards, sea raids from the botwaves tab, ransom). Not seen in game.
 
 The user's decisions are marked "user"; the rest are my proposals.
 
@@ -274,7 +274,7 @@ from `ArchipelagoBotCell`; `TheBotKingdom_StandsOnItsIsland...` now checks each 
   the first rebuild after peace (still every 3rd orc raid + calm) raises them and clears the flag.
 - Compiled only; untested, not seen.
 
-## Diplomacy rework -- DECIDED by the user 2026-11-17, NOT BUILT (concepts drawn: Design/ui/Diplomacy_*.png, Tools/ui/diplomacy_concepts.py)
+## Diplomacy rework -- DECIDED by the user 2026-11-17, IN THE CODE 2026-11-17 (no setup run yet, not seen; concepts drawn: Design/ui/Diplomacy_*.png, Tools/ui/diplomacy_concepts.py)
 - Relations start when the Diplomacy Hall is built: 0, then FALL -1 per game day (replaces drift-to-0).
 - Gifts to the bot: three fixed coin gifts Малый / Средний / Большой = +1 / +3 / +5; ONE gift per game day.
   Prices and everything about the hall in its OWN sheet tab («Зал дипломатии»).
@@ -320,3 +320,30 @@ from `ArchipelagoBotCell`; `TheBotKingdom_StandsOnItsIsland...` now checks each 
   same offset); the neighbour's King on the gift banner recoloured red (purple = the player's); «Отношения на грани»
   centre v2: the two kings across a red crack with «−52», the scale with the needle at the swords mark, one line
   «Сосед собирает войско!», «Подарок», «Позже». Next: build it all into the game.
+
+## Diplomacy rework -- BUILT 2026-11-17 (the user: «добавляй в игру»; NO setup/test run yet by the user's rule, not seen)
+- Rules: `Scripts/Diplomacy/DiplomacyRules.cs` (static, ticked by BotRelations.Tick from GameCalendar; the hall check once a
+  second). While a finished player Diplomacy Hall stands: relations fall `diplomacy_relations_fall_per_day` (not at war);
+  a diplomacy day of its own (DayClock); the gift to the bot once a day; a help request every `diplomacy_help_every_days`;
+  a bot gift above `diplomacy_bot_gift_min_score` (chance min..max over 60..100); below 0 the bot may declare war
+  (`BotRelations.DeclaredByBot`, no score loss); the edge banner once per crossing of `diplomacy_edge_score` (resets 5 above);
+  trade from `bot_trade_min_score`: offers drawn by weight and hall level, `diplomacy_trade_deals` deals, timer, refresh for
+  an ad (stub) or crystals; hall-level bonuses. `BotRelations.EndWar` sets the score to 0; the bot's hall razed AT WAR ->
+  `DiplomacyRules.HallRazed` (BotKingdom.HandleDestroyed) -> the Razed window gives the crystals on «Забрать».
+  The Trade STANCE is no longer used (trade = the window); `drift_per_day` deleted everywhere.
+- Saved: SaveData `diplomacy*` fields (GameSaveController next to botRelations).
+- Sheet: tab «Зал дипломатии» (gid 2000013, economy: the 7 old diplomacy_* keys moved from «Бот-королевство» + 16 new) and
+  «Зал дипломатии: таблицы» (gid 2000069 -> Balance/diplomacy.csv: kind help/botgift/trade, id, resource, amount, get,
+  get_amount, min_hall, weight, rare, text_ru/en). A help row's words become `#diplomacy_ask_<id>` (BalanceImporter.ReadDiplomacy,
+  injected like the piggy tasks). Texts: 53 `#diplomacy_*` in «Тексты: армия и война», 5 `#log_diplomacy_*` in the journal tab.
+- UI: art `Tools/ui/diplomacy_game_art.py <figures folder>` -> `Assets/_Project/UI/Diplomacy/<Screen>/*.png + layout.json`
+  (Window, Gift, Trade, Razed, Banner{Help,Gift,Edge,War}); Hud_Diplomacy.png (glyph), Icons/PortraitKingNeighbour.png.
+  `Editor/SetupProjectDiplomacy.cs`: generic `BuildBaked` (every layout item by name: p picture/slot, t text with its sheet
+  key, g group; windows x1.0, banners x0.6) -> `UI/BakedUi.cs` (pieces by name). Controllers: `UI/DiplomacyWindow.cs`
+  (rewritten; «Война» needs a second tap), `DiplomacyGiftWindow`, `DiplomacyTradeWindow`, `DiplomacyBanners` (pause the game,
+  queue, log every one in the notice panel). `UI/DiplomacyBar.cs` + SetupProjectHud.BuildDiplomacyButton: the round button
+  left of the «!» on a held finished hall; the «!» opens the hall's ordinary card now.
+- Traps: layout names must be unique per screen (the War BUTTON vs the war GROUP clashed -> groups AtPeace / AtWar). Texts
+  the code fills switch off their LocalizedText (BakedUi.SetText). A slot is a clear Image until SetIcon.
+- Open: the first `setup,setup` (Editor code changed), then the user's look; old keys #diplomacy_relations/_building/
+  _trade_later/_pay_coins/_pay_crystals are unused now (left in the sheet).

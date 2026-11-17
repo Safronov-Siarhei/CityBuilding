@@ -241,11 +241,6 @@ namespace CityBuilder.UI
                 researchPanel.Show(Current);
                 return;
             }
-            if (Current.Data.buildingName == BuildingIds.DiplomacyHall && Current.IsOperational && DiplomacyWindow.Instance != null)
-            {
-                DiplomacyWindow.Instance.Show(Current);
-                return;
-            }
             if (infoPanel != null) infoPanel.Show(Current);
         }
 
@@ -269,6 +264,8 @@ namespace CityBuilder.UI
             var cardUp = (infoPanel != null && infoPanel.IsOpen) || (researchPanel != null && researchPanel.IsOpen)
                 || (ForeignBuildingCard.Instance != null && ForeignBuildingCard.Instance.IsOpen)
                 || (DiplomacyWindow.Instance != null && DiplomacyWindow.Instance.IsOpen)
+                || (DiplomacyGiftWindow.Instance != null && DiplomacyGiftWindow.Instance.IsOpen)
+                || (DiplomacyTradeWindow.Instance != null && DiplomacyTradeWindow.Instance.IsOpen)
                 || Dungeon.DungeonEntrance.AnyCardOpen;
             // (and never on the hire camp, which has no card -- it used to come back here)
             var wanted = !cardUp && !NoDetails && (Entrance == null || Entrance.Kind != Dungeon.DungeonEntrance.Place.HireCamp);

@@ -593,7 +593,27 @@ namespace CityBuilder.Core
         [SerializeField] private float botRelationsStart = 0f;
         [SerializeField] private float botTradeMinScore = 30f;
         [SerializeField] private float botWarDeclareScoreLoss = 40f;
-        [SerializeField] private float botRelationsDriftPerDay = 2f;
+        // the diplomacy rework (the user, 2026-11-17; card bot.md): keys in the sheet tab «Зал дипломатии»,
+        // the help requests, the bot's gifts and the trade offers in «Зал дипломатии: таблицы» (diplomacy.csv)
+        [SerializeField] private float diplomacyRelationsFallPerDay = 1f;
+        [SerializeField] private int[] diplomacyGiftCoins = { 20, 50, 120 };
+        [SerializeField] private int[] diplomacyGiftRelations = { 1, 3, 5 };
+        [SerializeField] private float diplomacyHelpEveryDays = 5f;
+        [SerializeField] private int diplomacyHelpSendRelations = 5;
+        [SerializeField] private int diplomacyHelpRefuseRelations = 1;
+        [SerializeField] private float diplomacyBotGiftMinScore = 60f;
+        [SerializeField] private float diplomacyBotGiftChanceAtMin = 0.1f;
+        [SerializeField] private float diplomacyBotGiftChanceAtMax = 0.4f;
+        [SerializeField] private int diplomacyBotGiftItems = 3;
+        [SerializeField] private float diplomacyBotGiftPerLevel = 0.25f;
+        [SerializeField] private float diplomacyWarChanceAtMinus100 = 0.25f;
+        [SerializeField] private float diplomacyEdgeScore = -40f;
+        [SerializeField] private int diplomacyTradeOffers = 10;
+        [SerializeField] private int diplomacyTradeDeals = 2;
+        [SerializeField] private float diplomacyTradeRefreshSeconds = 600f;
+        [SerializeField] private int diplomacyTradeRefreshCrystals = 5;
+        [SerializeField] private float diplomacyTradeBonusPerLevel = 0.1f;
+        [SerializeField] private int diplomacyHallRazedCrystals = 50;
         [SerializeField] private float botRebuildCalmSeconds = 60f;
         [SerializeField] private int botRebuildEveryRaids = 3;
         [SerializeField] private float botCalmRadiusCells = 45f;
@@ -1564,7 +1584,26 @@ namespace CityBuilder.Core
         /// <summary>What declaring war costs on the scale.</summary>
         public float BotWarDeclareScoreLoss => botWarDeclareScoreLoss;
         /// <summary>How far the scale creeps back towards 0 in a day.</summary>
-        public float BotRelationsDriftPerDay => botRelationsDriftPerDay;
+        public float DiplomacyRelationsFallPerDay => diplomacyRelationsFallPerDay;
+        /// <summary>The gift to the neighbour: 0 small, 1 medium, 2 large.</summary>
+        public int DiplomacyGiftCoins(int size) => diplomacyGiftCoins[Mathf.Clamp(size, 0, 2)];
+        public int DiplomacyGiftRelations(int size) => diplomacyGiftRelations[Mathf.Clamp(size, 0, 2)];
+        public float DiplomacyHelpEveryDays => diplomacyHelpEveryDays;
+        public int DiplomacyHelpSendRelations => diplomacyHelpSendRelations;
+        public int DiplomacyHelpRefuseRelations => diplomacyHelpRefuseRelations;
+        public float DiplomacyBotGiftMinScore => diplomacyBotGiftMinScore;
+        public float DiplomacyBotGiftChanceAtMin => diplomacyBotGiftChanceAtMin;
+        public float DiplomacyBotGiftChanceAtMax => diplomacyBotGiftChanceAtMax;
+        public int DiplomacyBotGiftItems => diplomacyBotGiftItems;
+        public float DiplomacyBotGiftPerLevel => diplomacyBotGiftPerLevel;
+        public float DiplomacyWarChanceAtMinus100 => diplomacyWarChanceAtMinus100;
+        public float DiplomacyEdgeScore => diplomacyEdgeScore;
+        public int DiplomacyTradeOffers => diplomacyTradeOffers;
+        public int DiplomacyTradeDeals => diplomacyTradeDeals;
+        public float DiplomacyTradeRefreshSeconds => diplomacyTradeRefreshSeconds;
+        public int DiplomacyTradeRefreshCrystals => diplomacyTradeRefreshCrystals;
+        public float DiplomacyTradeBonusPerLevel => diplomacyTradeBonusPerLevel;
+        public int DiplomacyHallRazedCrystals => diplomacyHallRazedCrystals;
         /// <summary>How long the bot's castle must be clear of orcs before it rebuilds what a raid destroyed (the user, 2026-11-03).</summary>
         public float BotRebuildCalmSeconds => botRebuildCalmSeconds;
         /// <summary>The bot raises its ruins after every this many orc raids on it (the user, 2026-11-06: every third).</summary>
@@ -1600,6 +1639,26 @@ namespace CityBuilder.Core
         }
 
         [SerializeField] private List<BotWaveRow> botWaves = new List<BotWaveRow>();
+
+        /// <summary>One row of the diplomacy tables (the sheet tab «Зал дипломатии: таблицы», the user 2026-11-17):
+        /// kind help (the neighbour asks `amount` of `resource`; its words are #diplomacy_ask_&lt;id&gt;), botgift (the
+        /// neighbour gives `amount` of `resource`) or trade (the player gives `amount` of `resource` for `getAmount`
+        /// of `get`). minHall = from which Diplomacy Hall level it can come up; weight = how often; rare = «РЕДКОЕ».
+        /// A resource is a ResourceType name or Crystals.</summary>
+        [System.Serializable]
+        public class DiplomacyRow
+        {
+            public string kind, id, resource, get;
+            public int amount, getAmount, minHall = 1;
+            public float weight = 1f;
+            public bool rare;
+        }
+
+        [SerializeField] private List<DiplomacyRow> diplomacyRows = new List<DiplomacyRow>();
+
+        public IReadOnlyList<DiplomacyRow> DiplomacyRows => diplomacyRows;
+
+        public void EditorSetDiplomacyRows(List<DiplomacyRow> rows) => diplomacyRows = rows ?? new List<DiplomacyRow>();
 
         /// <summary>One wave of campaign mission 2 (the m2waves tab, the user 2026-11-12): who comes, at what level,
         /// and the pause after the wave before it is beaten. Each kind's count is set PER ROAD (the user, 2026-11-13):
@@ -2741,7 +2800,29 @@ namespace CityBuilder.Core
             botRelationsStart = Read(economy, "bot_relations_start", botRelationsStart);
             botTradeMinScore = Read(economy, "bot_trade_min_score", botTradeMinScore);
             botWarDeclareScoreLoss = Read(economy, "bot_war_declare_score_loss", botWarDeclareScoreLoss);
-            botRelationsDriftPerDay = Read(economy, "bot_relations_drift_per_day", botRelationsDriftPerDay);
+            diplomacyRelationsFallPerDay = Read(economy, "diplomacy_relations_fall_per_day", diplomacyRelationsFallPerDay);
+            var giftSizes = new[] { "small", "medium", "large" };
+            for (var g = 0; g < 3; g++)
+            {
+                diplomacyGiftCoins[g] = Mathf.Max(0, Mathf.RoundToInt(Read(economy, "diplomacy_gift_" + giftSizes[g] + "_coins", diplomacyGiftCoins[g])));
+                diplomacyGiftRelations[g] = Mathf.RoundToInt(Read(economy, "diplomacy_gift_" + giftSizes[g] + "_relations", diplomacyGiftRelations[g]));
+            }
+            diplomacyHelpEveryDays = Mathf.Max(1f, Read(economy, "diplomacy_help_every_days", diplomacyHelpEveryDays));
+            diplomacyHelpSendRelations = Mathf.RoundToInt(Read(economy, "diplomacy_help_send_relations", diplomacyHelpSendRelations));
+            diplomacyHelpRefuseRelations = Mathf.RoundToInt(Read(economy, "diplomacy_help_refuse_relations", diplomacyHelpRefuseRelations));
+            diplomacyBotGiftMinScore = Read(economy, "diplomacy_bot_gift_min_score", diplomacyBotGiftMinScore);
+            diplomacyBotGiftChanceAtMin = Read(economy, "diplomacy_bot_gift_chance_at_min", diplomacyBotGiftChanceAtMin);
+            diplomacyBotGiftChanceAtMax = Read(economy, "diplomacy_bot_gift_chance_at_max", diplomacyBotGiftChanceAtMax);
+            diplomacyBotGiftItems = Mathf.Clamp(Mathf.RoundToInt(Read(economy, "diplomacy_bot_gift_items", diplomacyBotGiftItems)), 1, 3);
+            diplomacyBotGiftPerLevel = Read(economy, "diplomacy_bot_gift_per_level", diplomacyBotGiftPerLevel);
+            diplomacyWarChanceAtMinus100 = Read(economy, "diplomacy_war_chance_at_minus100", diplomacyWarChanceAtMinus100);
+            diplomacyEdgeScore = Read(economy, "diplomacy_edge_score", diplomacyEdgeScore);
+            diplomacyTradeOffers = Mathf.Clamp(Mathf.RoundToInt(Read(economy, "diplomacy_trade_offers", diplomacyTradeOffers)), 1, 10);
+            diplomacyTradeDeals = Mathf.Max(1, Mathf.RoundToInt(Read(economy, "diplomacy_trade_deals", diplomacyTradeDeals)));
+            diplomacyTradeRefreshSeconds = Mathf.Max(30f, Read(economy, "diplomacy_trade_refresh_sec", diplomacyTradeRefreshSeconds));
+            diplomacyTradeRefreshCrystals = Mathf.Max(0, Mathf.RoundToInt(Read(economy, "diplomacy_trade_refresh_crystals", diplomacyTradeRefreshCrystals)));
+            diplomacyTradeBonusPerLevel = Read(economy, "diplomacy_trade_bonus_per_level", diplomacyTradeBonusPerLevel);
+            diplomacyHallRazedCrystals = Mathf.Max(0, Mathf.RoundToInt(Read(economy, "diplomacy_hall_razed_crystals", diplomacyHallRazedCrystals)));
             botRebuildCalmSeconds = Read(economy, "bot_rebuild_calm_sec", botRebuildCalmSeconds);
             botRebuildEveryRaids = Mathf.RoundToInt(Read(economy, "bot_rebuild_every_raids", botRebuildEveryRaids));
             botCalmRadiusCells = Read(economy, "bot_calm_radius_cells", botCalmRadiusCells);
