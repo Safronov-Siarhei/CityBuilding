@@ -1,6 +1,10 @@
 # Research and the Laboratory
 
-> **Status (2026-10-29):** window v2 after the user's final mockup: rows of level pictures, tabs
+> **Status (2026-11-17):** SPLIT BUILT (not seen): round «Прокачка» button LEFT of the held lab's «!» opens
+> the research window with CATEGORIES on the left (concept A «Полки», green counts); the «!» opens the lab's own
+> card v2 (title «Лаборатория, ур. N», health bar, scientists -/+, busy line, «Улучшить», round hammer, red round
+> bin, «Закрыть»; hammer + bin open a confirm). Section «Split + categories» below.
+> **Earlier (2026-10-29):** window v2 after the user's final mockup: rows of level pictures, tabs
 > Здания/Армия, coins + crystals top centre, PARALLEL research (one per scientist), bubbles, own
 > upgrade/repair windows; levels 3-5 cost an UPGRADE CRYSTAL; the Barracks opens soldier tiers.
 > **Read with:** [building-levels-and-decay](building-levels-and-decay.md), [army-and-soldiers](army-and-soldiers.md).
@@ -70,7 +74,7 @@ list them). Ships go into the Армия tab later (3 levels, see archipelago me
   «Не хватает ресурсов» offer (`OfferShop.ShortageFor` -> `OfferShopWindow.ShowShortage`: crystals or an ad), like a
   building's upgrade. `ResearchManager.CoinCostOf(topic)`.
 
-## Split + categories -- CONCEPTS 2026-11-17, waiting for the user's pick
+## Split + categories -- BUILT 2026-11-17 (concepts first, then the user's pick)
 The user: the lab's upgrades and its own info window are to be SEPARATE: a second round button left of the held lab's
 «!» opens «Прокачка зданий»; the «!» opens the lab itself (level, health, scientists, upgrade, repair). The upgrades
 are split by building category (Город, Склады, Развлечения, Оборона, Производство, Еда, Водные + Армия) so the player
@@ -82,3 +86,13 @@ does not scroll through everything. Concepts (`Tools/ui/lab_concepts.py`): Desig
   becomes a round HAMMER, «Снести» a round BIN (red), both between «Улучшить» and «Закрыть», both open a small
   confirm card (repair: health before -> after + price; demolish: the refund + «изученное не пропадёт»). Waiting for
   approval; once approved it becomes the model for EVERY building's info panel (the user's next task).
+- APPROVED and BUILT 2026-11-17. Code: `ResearchPanelController` (Show = research, ShowInfo = the «!» card,
+  SelectCategory(0..6 = BuildingCategory, 7 = ArmyCategory, kept between openings), RefreshCategories counts topics
+  not done, not running, prerequisite done, lab level enough, `DescribeBlocker == null`; DialogKind Upgrade/Repair/
+  Demolish, the dialog now sits on the panel root over both cards); builder `SetupProjectPanels.BuildResearchPanel`
+  (left column x -718, list at (150,-8) 1420x720, InfoCard 1200x780); `BuildingFocus.researchButton` +
+  `OpenResearch` (built in `SetupProjectHud` right before the «!», glyph Upgrade.png). The research card's foot has
+  only scientists, «Закрыть» and the hint «!». Texts `#lab_*` (localization tab, 2026-11-17).
+- TRAP: the font has no «→» (the concept's repair line showed a box) -- never use arrows in game texts.
+- Test: `ResearchGateTests` walks every category (>20 rows in all, >=4 categories filled) and checks ShowInfo vs Show.
+- NEXT (the user): the same v2 card for EVERY building, each shown for approval first.

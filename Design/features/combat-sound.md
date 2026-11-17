@@ -53,3 +53,13 @@
 - Round 2 (2026-11-17): the user disliked the knock -> «place» is variant C (a deep thud + dust puff), the user's pick; NEW «built» (dust whoosh +
   ding-dong) when a new building finishes on its timer with BuildFinishEffect (ConstructionSite.Finish, !IsUpgrade).
   Variants to choose from: Design/audio/*.wav (`python Tools/audio/build_sounds.py variants`); the user to pick.
+- Round 3 (2026-11-17): «place» = Kenney Impact Sounds `drop_003` (CC0; the user's pick place_10 of
+  Design/audio/kenney/), `Audio/Resources/Build/place.ogg` (place.wav gone; build_sounds.py writes only built/upgraded now
+  -- do NOT re-run its default mode without dropping place). Credits: Audio/Campaign/CREDITS.md.
+
+## Music (2026-11-17)
+- Six CC0 tracks in `Assets/_Project/Audio/Music/` (mus_exploration, mus_the_bards_tale, mus_harvest_season,
+  mus_market_day, mus_minstrel_dance, mus_kings_feast), NOT in Resources: only a referenced track ships.
+- Main menu: `UI/MenuMusic.cs` (loop, fade-in `menu_music_fade_sec`, volume `menu_music_volume`), object «MenuMusic»
+  made by `SetupProjectMainMenuScreens` with mus_exploration (medieval-exploration, the user's pick).
+- OPEN: what plays in the tutorial, the sandbox and the invasion -- proposed to the user 2026-11-17, not decided.

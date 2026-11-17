@@ -1070,8 +1070,59 @@ namespace CityBuilder.EditorTools
             var title = CreateText(plaque.transform, "Title", string.Empty, 34, Vector2.zero, new Vector2(540f, 70f));
             title.fontStyle = FontStyle.Bold;
 
-            var buildingsTab = CreateButton(card.transform, panelSprite, "BuildingsTab", "#research_tab_buildings", new Vector2(-560f, 452f), new Vector2(400f, 68f));
-            var unitsTab = CreateButton(card.transform, panelSprite, "UnitsTab", "#research_tab_units", new Vector2(560f, 452f), new Vector2(400f, 68f));
+            // concept A «Полки» (the user, 2026-11-17): the build menu's categories down the left, then «Армия»;
+            // a green count on each of what can be researched right now
+            var parchment = SkinSprite("pill_parchment") ?? panelSprite;
+            var knob = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
+            var categoryKeys = new[] { "#category_city", "#category_storage", "#category_entertainment", "#category_defence",
+                "#category_production", "#category_food", "#category_water", "#research_tab_units" };
+            var catButtons = new Object[categoryKeys.Length];
+            var catFaces = new Object[categoryKeys.Length];
+            var catLabels = new Object[categoryKeys.Length];
+            var catBadges = new Object[categoryKeys.Length];
+            var catCounts = new Object[categoryKeys.Length];
+            for (var i = 0; i < categoryKeys.Length; i++)
+            {
+                var face = CreateImage(card.transform, $"Category{i}", Color.white);
+                face.sprite = parchment;
+                face.type = Image.Type.Sliced;
+                face.rectTransform.anchorMin = face.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                face.rectTransform.anchoredPosition = new Vector2(-718f, 330f - i * 92f);
+                face.rectTransform.sizeDelta = new Vector2(290f, 82f);
+                var catButton = face.gameObject.AddComponent<Button>();
+                catButton.targetGraphic = face;
+                var picture = CreateImage(face.transform, "Icon", Color.white);
+                picture.sprite = i < ResearchPanelController.ArmyCategory ? CreateCategoryIcon((BuildingCategory)i) : IconSprite("Barracks");
+                picture.preserveAspect = true;
+                picture.raycastTarget = false;
+                picture.rectTransform.anchorMin = picture.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                picture.rectTransform.anchoredPosition = new Vector2(-104f, 0f);
+                picture.rectTransform.sizeDelta = new Vector2(66f, 66f);
+                var catName = CreateText(face.transform, "Name", string.Empty, 24, new Vector2(36f, 0f), new Vector2(200f, 70f));
+                catName.gameObject.AddComponent<LocalizedText>().SetKey(categoryKeys[i]);
+                catName.alignment = TextAnchor.MiddleLeft;
+                catName.fontStyle = FontStyle.Bold;
+                catName.color = UiTheme.Ink;
+                catName.resizeTextForBestFit = true;
+                catName.resizeTextMinSize = 14;
+                catName.resizeTextMaxSize = 24;
+                catName.raycastTarget = false;
+                var badge = CreateImage(face.transform, "Badge", new Color(0.24f, 0.62f, 0.2f));
+                badge.sprite = knob;
+                badge.raycastTarget = false;
+                badge.rectTransform.anchorMin = badge.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                badge.rectTransform.anchoredPosition = new Vector2(136f, 30f);
+                badge.rectTransform.sizeDelta = new Vector2(44f, 44f);
+                var count = CreateText(badge.transform, "Count", "0", 24, Vector2.zero, new Vector2(44f, 44f));
+                count.fontStyle = FontStyle.Bold;
+                count.raycastTarget = false;
+                badge.gameObject.SetActive(false);
+                catButtons[i] = catButton;
+                catFaces[i] = face;
+                catLabels[i] = catName;
+                catBadges[i] = badge.gameObject;
+                catCounts[i] = count;
+            }
 
 
             // the player's coins and upgrade crystals, top centre -- nothing else (the user's mockup)
@@ -1094,7 +1145,7 @@ namespace CityBuilder.EditorTools
             var coins = Counter("Coins", iconLibrary != null ? iconLibrary.GetIcon(ResourceType.Coins) : null, -150f);
             var crystals = Counter("Crystals", crystalIcon, 40f, iconRight: true);
 
-            BuildScrollList(card.transform, new Vector2(0f, -8f), new Vector2(1700f, 720f),
+            BuildScrollList(card.transform, new Vector2(150f, -8f), new Vector2(1420f, 720f),
                 "#research_empty", out var content, out var emptyLabelGO);
 
             // the foot: scientists, the Laboratory's own upgrade and repair, close, the hint
@@ -1103,16 +1154,7 @@ namespace CityBuilder.EditorTools
             var scientists = CreateText(card.transform, "Scientists", string.Empty, 22, new Vector2(-575f, footY), new Vector2(390f, 60f), new Color(1f, 1f, 1f, 0.9f), addShadow: false);
             var addScientist = CreateButton(card.transform, panelSprite, "AddScientistButton", "+", new Vector2(-340f, footY), new Vector2(68f, 68f));
 
-            var upgradeControls = new GameObject("UpgradeControls", typeof(RectTransform));
-            upgradeControls.transform.SetParent(card.transform, false);
-            StretchFull(upgradeControls.GetComponent<RectTransform>());
-            var upgradeButton = CreateButton(upgradeControls.transform, panelSprite, "UpgradeButton", "#research_upgrade_lab", new Vector2(-20f, footY), new Vector2(380f, 70f));
-
-            var repairControls = new GameObject("RepairControls", typeof(RectTransform));
-            repairControls.transform.SetParent(card.transform, false);
-            StretchFull(repairControls.GetComponent<RectTransform>());
-            var repairButton = CreateButton(repairControls.transform, panelSprite, "RepairButton", "#building_repair", new Vector2(345f, footY), new Vector2(330f, 70f));
-
+            // (the Laboratory's own upgrade and repair moved to its «!» card, the user 2026-11-17)
             var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(640f, footY), new Vector2(230f, 70f));
             var hintButton = CreateButton(card.transform, panelSprite, "HintButton", string.Empty, new Vector2(815f, footY), new Vector2(72f, 72f));
             var hintGlyph = hintButton.GetComponentInChildren<Text>();
@@ -1142,8 +1184,70 @@ namespace CityBuilder.EditorTools
             bubble.rectTransform.sizeDelta = new Vector2(440f, 110f);
             var bubbleText = CreateText(bubble.transform, "Text", string.Empty, 22, Vector2.zero, new Vector2(410f, 96f), addShadow: false);
 
-            // the small window «Улучшить лабораторию» / «Отремонтировать» opens: picture, what it gives, price, confirm
-            var dialog = CreateImage(card.transform, "Dialog", new Color(0f, 0f, 0f, 0.55f));
+            // the «!» card v2 (the user's concept Lab_Info2, approved 2026-11-17): level in the title, picture, health,
+            // scientists, the busy line; at the foot «Улучшить», a round hammer (repair), a red round bin (demolish), «Закрыть»
+            var info = CreateImage(panelRoot.transform, "InfoCard", new Color(0.16f, 0.18f, 0.15f, 0.98f));
+            info.sprite = panelSprite;
+            info.type = Image.Type.Sliced;
+            info.rectTransform.anchorMin = info.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            info.rectTransform.sizeDelta = new Vector2(1200f, 780f);
+            var infoPlaque = CreateImage(info.transform, "TitlePlaque", Color.white);
+            infoPlaque.sprite = wood;
+            infoPlaque.type = Image.Type.Sliced;
+            infoPlaque.rectTransform.anchorMin = infoPlaque.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            infoPlaque.rectTransform.anchoredPosition = new Vector2(0f, 345f);
+            infoPlaque.rectTransform.sizeDelta = new Vector2(660f, 76f);
+            var infoTitle = CreateText(infoPlaque.transform, "Title", string.Empty, 34, Vector2.zero, new Vector2(640f, 70f));
+            infoTitle.fontStyle = FontStyle.Bold;
+            var infoIcon = CreateImage(info.transform, "Icon", Color.white);
+            infoIcon.preserveAspect = true;
+            infoIcon.raycastTarget = false;
+            infoIcon.rectTransform.anchorMin = infoIcon.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            infoIcon.rectTransform.anchoredPosition = new Vector2(-320f, 60f);
+            infoIcon.rectTransform.sizeDelta = new Vector2(340f, 340f);
+            Text InfoLabel(string name, string key, float y)
+            {
+                var label = CreateText(info.transform, name, string.Empty, 26, new Vector2(200f, y), new Vector2(600f, 44f));
+                label.gameObject.AddComponent<LocalizedText>().SetKey(key);
+                label.alignment = TextAnchor.MiddleLeft;
+                label.fontStyle = FontStyle.Bold;
+                return label;
+            }
+            InfoLabel("HealthLabel", "#lab_info_health", 225f);
+            var barBack = CreateImage(info.transform, "HealthBar", new Color(0.12f, 0.08f, 0.05f, 0.9f));
+            barBack.rectTransform.anchorMin = barBack.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            barBack.rectTransform.anchoredPosition = new Vector2(200f, 172f);
+            barBack.rectTransform.sizeDelta = new Vector2(600f, 44f);
+            var barFill = CreateImage(barBack.transform, "Fill", new Color(0.36f, 0.7f, 0.26f));
+            StretchFull(barFill.rectTransform);
+            barFill.rectTransform.offsetMin = new Vector2(4f, 4f);
+            barFill.rectTransform.offsetMax = new Vector2(-4f, -4f);
+            barFill.sprite = knob;
+            barFill.type = Image.Type.Filled;
+            barFill.fillMethod = Image.FillMethod.Horizontal;
+            var barText = CreateText(barBack.transform, "Text", string.Empty, 24, Vector2.zero, new Vector2(600f, 44f));
+            barText.fontStyle = FontStyle.Bold;
+            InfoLabel("ScientistsLabel", "#lab_info_scientists", 90f);
+            var infoRemove = CreateButton(info.transform, panelSprite, "RemoveScientist", "-", new Vector2(-40f, 30f), new Vector2(68f, 68f));
+            var infoScientists = CreateText(info.transform, "Scientists", string.Empty, 30, new Vector2(110f, 30f), new Vector2(200f, 60f));
+            infoScientists.fontStyle = FontStyle.Bold;
+            var infoAdd = CreateButton(info.transform, panelSprite, "AddScientist", "+", new Vector2(260f, 30f), new Vector2(68f, 68f));
+            var infoBusy = CreateText(info.transform, "Busy", string.Empty, 24, new Vector2(200f, -80f), new Vector2(600f, 90f));
+            infoBusy.alignment = TextAnchor.MiddleLeft;
+            const float infoFootY = -300f;
+            var infoUpgrade = CreateButton(info.transform, panelSprite, "UpgradeButton", "#building_upgrade", new Vector2(-330f, infoFootY), new Vector2(340f, 84f));
+            var infoRepair = CreateGlyphButton(info.transform, "RepairButton", "round", HudInk.OnRound, "Hammer",
+                AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/Hammer.png"), 104f, 0.62f);
+            infoRepair.GetComponent<RectTransform>().anchoredPosition = new Vector2(-90f, infoFootY);
+            var infoDemolish = CreateGlyphButton(info.transform, "DemolishButton", "round", HudInk.OnRound, "Trash", null, 104f, 0.62f);
+            infoDemolish.GetComponent<RectTransform>().anchoredPosition = new Vector2(40f, infoFootY);
+            var binIcon = infoDemolish.transform.Find("Icon");
+            if (binIcon != null) binIcon.GetComponent<Image>().color = new Color(0.78f, 0.16f, 0.12f);
+            var infoClose = CreateButton(info.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(300f, infoFootY), new Vector2(260f, 84f));
+
+            // the small window the upgrade / the hammer / the bin open: picture, what it does, price or refund, confirm --
+            // over whichever card is up
+            var dialog = CreateImage(panelRoot.transform, "Dialog", new Color(0f, 0f, 0f, 0.55f));
             StretchFull(dialog.rectTransform);
             var dialogDismiss = dialog.gameObject.AddComponent<Button>();
             dialogDismiss.targetGraphic = dialog;
@@ -1192,10 +1296,26 @@ namespace CityBuilder.EditorTools
             so.FindProperty("scientistsLabel").objectReferenceValue = scientists;
             so.FindProperty("addScientistButton").objectReferenceValue = addScientist;
             so.FindProperty("removeScientistButton").objectReferenceValue = removeScientist;
-            so.FindProperty("upgradeControls").objectReferenceValue = upgradeControls;
-            so.FindProperty("repairControls").objectReferenceValue = repairControls;
-            so.FindProperty("buildingsTab").objectReferenceValue = buildingsTab.transform;
-            so.FindProperty("unitsTab").objectReferenceValue = unitsTab.transform;
+            so.FindProperty("researchCard").objectReferenceValue = card.gameObject;
+            so.FindProperty("infoCard").objectReferenceValue = info.gameObject;
+            WriteObjects(so.FindProperty("categoryButtons"), catButtons);
+            WriteObjects(so.FindProperty("categoryFaces"), catFaces);
+            WriteObjects(so.FindProperty("categoryLabels"), catLabels);
+            WriteObjects(so.FindProperty("categoryBadges"), catBadges);
+            WriteObjects(so.FindProperty("categoryCounts"), catCounts);
+            so.FindProperty("categoryPicked").objectReferenceValue = wood;
+            so.FindProperty("categoryIdle").objectReferenceValue = parchment;
+            so.FindProperty("infoTitle").objectReferenceValue = infoTitle;
+            so.FindProperty("infoIcon").objectReferenceValue = infoIcon;
+            so.FindProperty("infoHealthFill").objectReferenceValue = barFill;
+            so.FindProperty("infoHealthText").objectReferenceValue = barText;
+            so.FindProperty("infoScientists").objectReferenceValue = infoScientists;
+            so.FindProperty("infoBusy").objectReferenceValue = infoBusy;
+            so.FindProperty("infoAddScientist").objectReferenceValue = infoAdd;
+            so.FindProperty("infoRemoveScientist").objectReferenceValue = infoRemove;
+            so.FindProperty("infoUpgrade").objectReferenceValue = infoUpgrade;
+            so.FindProperty("infoRepair").objectReferenceValue = infoRepair;
+            so.FindProperty("infoDemolish").objectReferenceValue = infoDemolish;
             so.FindProperty("listContent").objectReferenceValue = content;
             so.FindProperty("emptyLabel").objectReferenceValue = emptyLabelGO;
             so.FindProperty("hintPanel").objectReferenceValue = hint.gameObject;
@@ -1214,13 +1334,17 @@ namespace CityBuilder.EditorTools
 
             UnityEventTools.AddPersistentListener(addScientist.onClick, controller.AddScientist);
             UnityEventTools.AddPersistentListener(removeScientist.onClick, controller.RemoveScientist);
-            UnityEventTools.AddPersistentListener(upgradeButton.onClick, controller.OpenUpgradeDialog);
-            UnityEventTools.AddPersistentListener(repairButton.onClick, controller.OpenRepairDialog);
+            UnityEventTools.AddPersistentListener(infoUpgrade.onClick, controller.OpenUpgradeDialog);
+            UnityEventTools.AddPersistentListener(infoRepair.onClick, controller.OpenRepairDialog);
+            UnityEventTools.AddPersistentListener(infoDemolish.onClick, controller.OpenDemolishDialog);
+            UnityEventTools.AddPersistentListener(infoAdd.onClick, controller.AddScientist);
+            UnityEventTools.AddPersistentListener(infoRemove.onClick, controller.RemoveScientist);
+            UnityEventTools.AddPersistentListener(infoClose.onClick, controller.Close);
+            for (var i = 0; i < catButtons.Length; i++)
+                UnityEventTools.AddIntPersistentListener(((Button)catButtons[i]).onClick, controller.SelectCategory, i);
             UnityEventTools.AddPersistentListener(dialogConfirm.onClick, controller.ConfirmDialog);
             UnityEventTools.AddPersistentListener(dialogClose.onClick, controller.CloseDialog);
             UnityEventTools.AddPersistentListener(dialogDismiss.onClick, controller.CloseDialog);
-            UnityEventTools.AddPersistentListener(buildingsTab.onClick, controller.SelectBuildingsTab);
-            UnityEventTools.AddPersistentListener(unitsTab.onClick, controller.SelectUnitsTab);
             UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
             UnityEventTools.AddPersistentListener(hintButton.onClick, controller.ToggleHint);
             UnityEventTools.AddPersistentListener(hintClose.onClick, controller.ToggleHint);
@@ -1228,6 +1352,7 @@ namespace CityBuilder.EditorTools
             hint.gameObject.SetActive(false);
             bubble.gameObject.SetActive(false);
             dialog.gameObject.SetActive(false);
+            info.gameObject.SetActive(false);
             panelRoot.SetActive(false);
             return controller;
         }

@@ -29,3 +29,6 @@ here as a courtesy. Cut, faded and re-encoded to OGG by `Tools/audio/cut.py`.
 | Resources/Combat skill_1 | https://kenney.nl/assets/rpg-audio (drawKnife1) | Kenney |
 | Resources/Combat wood_, stone_ | https://kenney.nl/assets/impact-sounds (impactWood_heavy, impactPlank_medium, impactMining) | Kenney |
 | Resources/Ui click_1 | https://kenney.nl/assets/ui-audio (click1) | Kenney |
+| Music/mus_exploration (main menu) | https://opengameart.org/content/medieval-exploration | RandomMind |
+| Music/mus_the_bards_tale, mus_harvest_season, mus_market_day, mus_minstrel_dance, mus_kings_feast (kept for later) | https://opengameart.org/content/medieval-the-bards-tale , /medieval-harvest-season , /medieval-market-day , /medieval-minstrel-dance , /medieval-kings-feast | RandomMind |
+| Resources/Build place (building put down) | https://kenney.nl/assets/interface-sounds (drop_003) | Kenney |

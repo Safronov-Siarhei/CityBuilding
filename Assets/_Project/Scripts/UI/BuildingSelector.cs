@@ -105,7 +105,7 @@ namespace CityBuilder.UI
             if (researchPanel != null && nearest.Data != null
                 && nearest.Data.buildingName == Research.ResearchManager.LaboratoryBuildingId)
             {
-                researchPanel.Show(nearest);
+                researchPanel.ShowInfo(nearest);
                 return;
             }
 

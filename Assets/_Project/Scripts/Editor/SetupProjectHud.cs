@@ -206,6 +206,11 @@ namespace CityBuilder.EditorTools
             BuildInstantBuildButton(row.transform);
             BuildDiplomacyButton(row.transform);
 
+            // «Прокачка зданий», LEFT of the «!» on a held Laboratory (the user, 2026-11-17): the research window
+            var labResearch = CreateGlyphButton(row.transform, "LabResearchButton", "round", HudInk.OnRound, "Research",
+                AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/Upgrade.png"), 128f, 0.62f);
+            labResearch.gameObject.SetActive(false);
+
             var button = CreateGlyphButton(row.transform, "BuildingDetailsButton", "round", HudInk.OnRound, null, null, 128f);
             var icon = button.transform.Find("Icon");
             if (icon != null) Object.DestroyImmediate(icon.gameObject);
@@ -227,8 +232,10 @@ namespace CityBuilder.EditorTools
             so.FindProperty("citizenSelector").objectReferenceValue = citizenSelector;
             so.FindProperty("buildingPlacer").objectReferenceValue = placer;
             so.FindProperty("detailsButton").objectReferenceValue = button.gameObject;
+            so.FindProperty("researchButton").objectReferenceValue = labResearch.gameObject;
             so.ApplyModifiedPropertiesWithoutUndo();
             UnityEventTools.AddPersistentListener(button.onClick, focus.OpenDetails);
+            UnityEventTools.AddPersistentListener(labResearch.onClick, focus.OpenResearch);
 
             var selectorSO = new SerializedObject(selector);
             selectorSO.FindProperty("focus").objectReferenceValue = focus;

@@ -136,6 +136,12 @@ namespace CityBuilder.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
 
             BuildMenuSkinApplier(canvas);
+
+            // the menu's music (the user, 2026-11-17: «medieval-exploration» for the menu and its screens)
+            var music = new GameObject("MenuMusic").AddComponent<MenuMusic>();
+            var mso = new SerializedObject(music);
+            mso.FindProperty("track").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Music/mus_exploration.mp3");
+            mso.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static void WriteArray(SerializedProperty property, Object[] values)

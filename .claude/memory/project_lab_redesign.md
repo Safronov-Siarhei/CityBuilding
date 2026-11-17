@@ -1,6 +1,6 @@
 ---
 name: project_lab_redesign
-description: "Laboratory window redesign from the user's sketch (v1 2026-10-28, v2 2026-10-29, BOTH BUILT; awaiting the user's feedback on v2) — rows of 5 level icons per building, tabs Здания/Армия (soldiers+ships), price coins + upgrade crystals."
+description: "Laboratory window redesign (v1 10-28, v2 10-29; v3 SPLIT 2026-11-17 BUILT, not seen: «Прокачка» button left of «!» + categories column, «!» = lab card v2 with hammer/bin -- the model for ALL building cards next) — rows of 5 level icons per building, tabs Здания/Армия (soldiers+ships), price coins + upgrade crystals."
 metadata:
   node_type: memory
   type: project
@@ -32,3 +32,11 @@ Related: [[project_archipelago_map]] (ships in the Армия tab, shipyard leve
 - No status line: tapping a picture shows what the level gives in a small bubble over that picture; a blocker like "not enough coins" flashes the coin/crystal counter red (and shakes the button).
 - «Улучшить лабораторию» and «Отремонтировать» open their OWN small windows: the building's icon (next level's for upgrade), the price and a final confirm button; the upgrade window also says what the next level gives.
 - Principle (user): the player must not hit a wall on upgrades — the game is about developing the settlement, not grinding resources.
+
+## v3 (2026-11-17) -- BUILT, not seen
+- The user picked concept A «Полки» and approved info card v2. Built: round «Прокачка» button LEFT of the held lab's «!»
+  opens research with categories on the left (7 build-menu categories + Армия, green counts); «!» opens the lab's own
+  card (title, health, scientists, «Улучшить», round hammer, red round bin, «Закрыть»; hammer and bin ask first).
+- NEXT: the same v2 card for EVERY building, each shown to the user for approval (their words: «после правок
+  лаборатории начинаем делать такие окна для каждого здания с утверждением»).
+- The font has no «→»: never use arrows in game texts. Card: Design/features/research-laboratory.md.

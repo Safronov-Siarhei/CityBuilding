@@ -40,6 +40,30 @@ namespace CityBuilder.UI
         private const float SelectedTabScale = 1.12f;
 
         [SerializeField] private GameObject panelRoot;
+        // the user's split (2026-11-17, concept A «Полки» + the «!» window v2): the research card and the Laboratory's own
+        [SerializeField] private GameObject researchCard;
+        [SerializeField] private GameObject infoCard;
+        /// <summary>The categories down the left: the build menu's seven, then «Армия» (the soldiers). Per category its
+        /// button, its face (lit when picked), its name and the green count of what can be researched now.</summary>
+        [SerializeField] private Button[] categoryButtons = new Button[0];
+        [SerializeField] private Image[] categoryFaces = new Image[0];
+        [SerializeField] private Text[] categoryLabels = new Text[0];
+        [SerializeField] private GameObject[] categoryBadges = new GameObject[0];
+        [SerializeField] private Text[] categoryCounts = new Text[0];
+        [SerializeField] private Sprite categoryPicked;
+        [SerializeField] private Sprite categoryIdle;
+        // the «!» window: title, picture, health, scientists, the busy line; «Улучшить», the hammer, the bin
+        [SerializeField] private Text infoTitle;
+        [SerializeField] private Image infoIcon;
+        [SerializeField] private Image infoHealthFill;
+        [SerializeField] private Text infoHealthText;
+        [SerializeField] private Text infoScientists;
+        [SerializeField] private Text infoBusy;
+        [SerializeField] private Button infoAddScientist;
+        [SerializeField] private Button infoRemoveScientist;
+        [SerializeField] private Button infoUpgrade;
+        [SerializeField] private Button infoRepair;
+        [SerializeField] private Button infoDemolish;
         [SerializeField] private Text titleLabel;
         [SerializeField] private Text coinsLabel;
         [SerializeField] private Text crystalsLabel;
@@ -112,7 +136,12 @@ namespace CityBuilder.UI
         private BuildingInstance _lab;
         private ProductionBuilding _labWorkplace;
         private bool _unitsTab;
-        private bool _dialogIsRepair;
+        private enum DialogKind { Upgrade, Repair, Demolish }
+        private DialogKind _dialogKind;
+        /// <summary>The category picked on the left (BuildingCategory, or ArmyCategory), kept between openings.</summary>
+        private int _category;
+        public const int ArmyCategory = 7;
+        private bool _infoMode;
         private float _refreshTimer;
         private int _bubbleFrame;
         private Text _flashing;
@@ -155,8 +184,8 @@ namespace CityBuilder.UI
         {
             if (topic == null) return null;
             var units = topic.Kind != ResearchKind.UnlockBuilding && topic.Kind != ResearchKind.BuildingLevel;
-            if (units) SelectUnitsTab();
-            else SelectBuildingsTab();
+            var wanted = units ? ArmyCategory : CategoryOf(topic.TargetId);
+            if (wanted != _category || CellOf(topic) == null) SelectCategory(wanted);
             var cell = CellOf(topic);
             return cell != null && cell.Action != null ? (RectTransform)cell.Action.transform : null;
         }
@@ -167,14 +196,25 @@ namespace CityBuilder.UI
         /// <summary>The confirm window is up, for the tests.</summary>
         public bool IsDialogOpen => dialog != null && dialog.activeSelf;
 
-        /// <summary>Opens the window on a particular Laboratory (the one that was tapped).</summary>
-        public void Show(BuildingInstance laboratory)
+        /// <summary>«Прокачка»: the research window on a particular Laboratory, on the category picked last.</summary>
+        public void Show(BuildingInstance laboratory) => Open(laboratory, false);
+
+        /// <summary>The «!»: the Laboratory's own window -- level, health, scientists, upgrade, repair, demolish.</summary>
+        public void ShowInfo(BuildingInstance laboratory) => Open(laboratory, true);
+
+        /// <summary>The info window is the one up (the tests).</summary>
+        public bool IsInfoOpen => IsOpen && _infoMode;
+
+        public int Category => _category;
+
+        private void Open(BuildingInstance laboratory, bool info)
         {
             _lab = laboratory;
             _labWorkplace = laboratory != null ? laboratory.GetComponent<ProductionBuilding>() : null;
-
-            // Always opens on the buildings tab: that is where almost all of the list lives.
-            _unitsTab = false;
+            _infoMode = info;
+            if (researchCard != null) researchCard.SetActive(!info);
+            if (infoCard != null) infoCard.SetActive(info);
+            _unitsTab = _category == ArmyCategory;
 
             if (panelRoot != null)
             {
@@ -214,18 +254,25 @@ namespace CityBuilder.UI
             ModalGate.SetBlocked(false);
         }
 
+        /// <summary>A category on the left (a persistent listener with its index; ArmyCategory = the soldiers).</summary>
+        public void SelectCategory(int category)
+        {
+            _category = Mathf.Clamp(category, 0, ArmyCategory);
+            _unitsTab = _category == ArmyCategory;
+            Populate();
+        }
+
+        /// <summary>The buildings again (the first category), for the tests and hints.</summary>
         public void SelectBuildingsTab()
         {
-            if (!_unitsTab) return;
-            _unitsTab = false;
-            Populate();
+            if (_category == 0) return;
+            SelectCategory(0);
         }
 
         public void SelectUnitsTab()
         {
             if (_unitsTab) return;
-            _unitsTab = true;
-            Populate();
+            SelectCategory(ArmyCategory);
         }
 
         public void AddScientist()
@@ -244,7 +291,7 @@ namespace CityBuilder.UI
         public void OpenUpgradeDialog()
         {
             if (_lab == null || _lab.GetUpgradeCost() == null) return;
-            _dialogIsRepair = false;
+            _dialogKind = DialogKind.Upgrade;
             var next = _lab.Level + 1;
             dialogTitle.text = Localization.Format("#research_level", _lab.Data.LocalizedName, next);
             dialogIcon.sprite = IconFor(_lab.Data.buildingName, next, isUnit: false);
@@ -258,21 +305,42 @@ namespace CityBuilder.UI
         public void OpenRepairDialog()
         {
             if (_lab == null || _lab.GetRepairCost() == null) return;
-            _dialogIsRepair = true;
-            dialogTitle.text = _lab.Data.LocalizedName;
+            _dialogKind = DialogKind.Repair;
+            dialogTitle.text = Localization.Get("#lab_repair_question");
             dialogIcon.sprite = IconFor(_lab.Data.buildingName, _lab.Level, isUnit: false);
-            dialogGain.text = $"{_lab.CurrentHealth}/{_lab.MaxHealth}";
+            dialogGain.text = Localization.Format("#lab_repair_gain", _lab.CurrentHealth, _lab.MaxHealth);
             dialogConfirmLabel.text = Localization.Get("#building_repair");
             CostRowBuilder.Build(dialogCostRow, _lab.GetRepairCost(), iconLibrary);
             dialog.SetActive(true);
         }
 
-        /// <summary>The confirm window's own button: the upgrade or the repair it was opened for.</summary>
+        /// <summary>The bin: asks first, with what comes back (the user, 2026-11-17: both round buttons ask).</summary>
+        public void OpenDemolishDialog()
+        {
+            if (_lab == null || !_lab.CanDemolish) return;
+            _dialogKind = DialogKind.Demolish;
+            dialogTitle.text = Localization.Get("#lab_demolish_question");
+            dialogIcon.sprite = IconFor(_lab.Data.buildingName, _lab.Level, isUnit: false);
+            dialogGain.text = Localization.Get("#lab_demolish_note");
+            dialogConfirmLabel.text = Localization.Get("#lab_demolish_confirm");
+            CostRowBuilder.Build(dialogCostRow, _lab.GetDemolishRefund(), iconLibrary);
+            dialog.SetActive(true);
+        }
+
+        /// <summary>The confirm window's own button: the upgrade, the repair or the demolition it was opened for.</summary>
         public void ConfirmDialog()
         {
+            if (_lab != null && _dialogKind == DialogKind.Demolish)
+            {
+                var lab = _lab;
+                if (dialog != null) dialog.SetActive(false);
+                Close();
+                lab.Demolish();
+                return;
+            }
             if (_lab != null)
             {
-                if (_dialogIsRepair) _lab.TryRepair();
+                if (_dialogKind == DialogKind.Repair) _lab.TryRepair();
                 else if (!_lab.TryUpgrade() && _lab.NextLevelResearched && _lab.IsOperational && _lab.Site == null
                          && Shop.OfferShop.Instance != null)
                 {
@@ -432,6 +500,7 @@ namespace CityBuilder.UI
 
             foreach (var data in BuildMenuOrder())
             {
+                if ((int)data.category != _category) continue;
                 if (!topicsByBuilding.TryGetValue(data.buildingName, out var topics)) continue;
                 var levels = new ResearchTopic[BuildingInstance.MaxLevel + 1];
                 foreach (var topic in topics) levels[topic.Kind == ResearchKind.UnlockBuilding ? 1 : topic.Level] = topic;
@@ -750,11 +819,81 @@ namespace CityBuilder.UI
             var research = ResearchManager.Instance;
 
             RefreshHeader();
+            RefreshInfo();
+            RefreshCategories(research);
 
             SetTab(buildingsTab, !_unitsTab);
             SetTab(unitsTab, _unitsTab);
 
             foreach (var cell in _cells) RefreshCell(cell, research);
+        }
+
+        private readonly int[] _ready = new int[ArmyCategory + 1];
+
+        /// <summary>The left column: the picked one lit, each with the green count of what can start now.</summary>
+        private void RefreshCategories(ResearchManager research)
+        {
+            System.Array.Clear(_ready, 0, _ready.Length);
+            if (research != null)
+            {
+                foreach (var topic in ResearchCatalog.BuildingTopics)
+                    if (CanStartNow(topic, research)) _ready[CategoryOf(topic.TargetId)]++;
+                foreach (var topic in ResearchCatalog.UnitTopics)
+                    if (CanStartNow(topic, research)) _ready[ArmyCategory]++;
+            }
+            for (var i = 0; i < categoryButtons.Length && i <= ArmyCategory; i++)
+            {
+                var picked = i == _category;
+                if (i < categoryFaces.Length && categoryFaces[i] != null && categoryPicked != null)
+                    categoryFaces[i].sprite = picked ? categoryPicked : categoryIdle;
+                if (i < categoryLabels.Length && categoryLabels[i] != null) categoryLabels[i].color = picked ? UiTheme.OnWood : UiTheme.Ink;
+                if (categoryButtons[i] != null) categoryButtons[i].transform.localScale = Vector3.one * (picked ? 1.05f : 1f);
+                if (i < categoryBadges.Length && categoryBadges[i] != null) categoryBadges[i].SetActive(_ready[i] > 0);
+                if (i < categoryCounts.Length && categoryCounts[i] != null) categoryCounts[i].text = _ready[i].ToString();
+            }
+        }
+
+        private static bool CanStartNow(ResearchTopic topic, ResearchManager research) =>
+            topic != null && !research.IsCompleted(topic.Id) && !research.IsRunning(topic)
+            && (topic.PrerequisiteTopicId == null || research.IsCompleted(topic.PrerequisiteTopicId))
+            && research.LabLevel >= topic.RequiredLabLevel && research.DescribeBlocker(topic) == null;
+
+        private Dictionary<string, int> _categoryById;
+
+        /// <summary>A building's category in the build menu (0 when it is not in the menu).</summary>
+        private int CategoryOf(string buildingId)
+        {
+            if (_categoryById == null)
+            {
+                _categoryById = new Dictionary<string, int>();
+                var placer = FindAnyObjectByType<BuildingPlacer>();
+                if (placer != null)
+                    foreach (var data in placer.AvailableBuildings)
+                        if (data != null) _categoryById[data.buildingName] = (int)data.category;
+            }
+            return buildingId != null && _categoryById.TryGetValue(buildingId, out var c) ? c : 0;
+        }
+
+        /// <summary>The «!» window's numbers.</summary>
+        private void RefreshInfo()
+        {
+            if (!_infoMode || _lab == null || _lab.Data == null) return;
+            if (infoTitle != null) infoTitle.text = Localization.Format("#lab_info_title", _lab.Data.LocalizedName, _lab.Level);
+            if (infoIcon != null) infoIcon.sprite = IconFor(_lab.Data.buildingName, _lab.Level, isUnit: false);
+            var max = Mathf.Max(1, _lab.MaxHealth);
+            if (infoHealthFill != null) infoHealthFill.fillAmount = Mathf.Clamp01(_lab.CurrentHealth / (float)max);
+            if (infoHealthText != null) infoHealthText.text = $"{_lab.CurrentHealth} / {_lab.MaxHealth}";
+            var assigned = _labWorkplace != null ? _labWorkplace.AssignedWorkers : 0;
+            var most = _labWorkplace != null ? _labWorkplace.MaxWorkers : 0;
+            var idle = CitizenManager.Instance != null ? CitizenManager.Instance.IdlePopulation : 0;
+            if (infoScientists != null) infoScientists.text = $"{assigned} / {most}";
+            if (infoAddScientist != null) infoAddScientist.interactable = assigned < most && idle > 0;
+            if (infoRemoveScientist != null) infoRemoveScientist.interactable = assigned > 0;
+            var research = ResearchManager.Instance;
+            if (infoBusy != null) infoBusy.text = Localization.Format("#lab_info_busy", research != null ? research.UnderWay.Count : 0);
+            if (infoUpgrade != null) infoUpgrade.gameObject.SetActive(_lab.GetUpgradeCost() != null);
+            if (infoRepair != null) infoRepair.interactable = _lab.GetRepairCost() != null;
+            if (infoDemolish != null) infoDemolish.interactable = _lab.CanDemolish;
         }
 
         private static void SetTab(RectTransform tab, bool selected)
@@ -821,7 +960,7 @@ namespace CityBuilder.UI
             if (crystalsLabel != null) crystalsLabel.text = Wallet.UpgradeCrystals.ToString();
             if (_lab == null || _lab.Data == null) return;
 
-            if (titleLabel != null) titleLabel.text = Localization.Format("#research_title", _lab.Data.LocalizedName, _lab.Level);
+            if (titleLabel != null) titleLabel.text = Localization.Get("#lab_research_title");
 
             var assigned = _labWorkplace != null ? _labWorkplace.AssignedWorkers : 0;
             var max = _labWorkplace != null ? _labWorkplace.MaxWorkers : 0;

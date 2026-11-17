@@ -803,6 +803,7 @@ namespace CityBuilder.Core
         [SerializeField] private float menuFarClip = 85f;
         [SerializeField] private float menuFogStart = 30f;
         [SerializeField] private float menuFogEnd = 80f;
+        [SerializeField] private float menuMusicVolume = 0.4f, menuMusicFadeSeconds = 2f;
         [SerializeField] private float menuLowFolkShare = 0.5f;
         // «Свобода песочницы» (Core/WorldSettings, the user 2026-11-17): what each level of a world setting means
         [SerializeField] private float[] freedomRaidSize = { 0f, 0.5f, 1f, 1.5f, 2f };
@@ -1331,6 +1332,9 @@ namespace CityBuilder.Core
         public float MenuFarClip => menuFarClip;
         public float MenuFogStart => menuFogStart;
         public float MenuFogEnd => menuFogEnd;
+        /// <summary>The main menu's music: its loudness and its fade in (menu_music_volume, menu_music_fade_sec).</summary>
+        public float MenuMusicVolume => menuMusicVolume;
+        public float MenuMusicFadeSeconds => menuMusicFadeSeconds;
         /// <summary>The main menu on the Low graphics tier: this share of the village's strolling folk.</summary>
         public float MenuLowFolkShare => menuLowFolkShare;
         /// <summary>«Свобода песочницы»: the raid wave's size x this at raid level 0..4 (0 = no raids).</summary>
@@ -2616,6 +2620,8 @@ namespace CityBuilder.Core
             menuFarClip = Read(economy, "menu_far_clip", menuFarClip);
             menuFogStart = Read(economy, "menu_fog_start", menuFogStart);
             menuFogEnd = Read(economy, "menu_fog_end", menuFogEnd);
+            menuMusicVolume = Read(economy, "menu_music_volume", menuMusicVolume);
+            menuMusicFadeSeconds = Read(economy, "menu_music_fade_sec", menuMusicFadeSeconds);
             menuLowFolkShare = Read(economy, "menu_low_folk_share", menuLowFolkShare);
             for (var i = 0; i < freedomRaidSize.Length; i++)
             {

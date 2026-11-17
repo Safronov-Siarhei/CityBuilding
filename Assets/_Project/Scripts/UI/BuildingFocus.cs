@@ -34,6 +34,9 @@ namespace CityBuilder.UI
         [SerializeField] private BuildingPlacer buildingPlacer;
         /// <summary>The «!» button at the bottom: shown while a building is held.</summary>
         [SerializeField] private GameObject detailsButton;
+        /// <summary>«Прокачка зданий»: the round button left of the «!» on a held Laboratory (the user, 2026-11-17) --
+        /// the research window; the «!» itself opens the Laboratory's own card.</summary>
+        [SerializeField] private GameObject researchButton;
 
         public static BuildingFocus Instance { get; private set; }
 
@@ -209,6 +212,7 @@ namespace CityBuilder.UI
             _rippleClock = -1f;
             HarvestRadiusOverlay.HideIfShown();
             if (detailsButton != null) detailsButton.SetActive(false);
+            if (researchButton != null) researchButton.SetActive(false);
         }
 
         /// <summary>The «!» is up: a building held and its card closed -- when a run's hiring buttons stand beside it (FocusHireBar).</summary>
@@ -238,10 +242,20 @@ namespace CityBuilder.UI
             if (Current == null) return;
             if (researchPanel != null && Current.Data.buildingName == Research.ResearchManager.LaboratoryBuildingId)
             {
-                researchPanel.Show(Current);
+                researchPanel.ShowInfo(Current);
                 return;
             }
             if (infoPanel != null) infoPanel.Show(Current);
+        }
+
+        private bool LabHeld => Current != null && Current.Data != null
+            && Current.Data.buildingName == Research.ResearchManager.LaboratoryBuildingId;
+
+        /// <summary>The «Прокачка» button: the held Laboratory's research window.</summary>
+        public void OpenResearch()
+        {
+            if (NoDetails || !LabHeld || researchPanel == null) return;
+            researchPanel.Show(Current);
         }
 
         private void Update()
@@ -271,6 +285,8 @@ namespace CityBuilder.UI
             // (and never on the hire camp, which has no card -- it used to come back here)
             var wanted = !cardUp && !NoDetails && (Entrance == null || Entrance.Kind != Dungeon.DungeonEntrance.Place.HireCamp);
             if (detailsButton != null && detailsButton.activeSelf != wanted) detailsButton.SetActive(wanted);
+            var research = wanted && LabHeld;
+            if (researchButton != null && researchButton.activeSelf != research) researchButton.SetActive(research);
             // the camera taken away till the building is off the screen lets it go
             if (!cardUp && OffScreen(Held))
             {

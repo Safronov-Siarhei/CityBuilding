@@ -140,6 +140,6 @@ if __name__ == '__main__':
         write('built_poof', built_poof())
         write('upgraded_chime', upgraded())
     else:
-        write('place', place_thud())     # the user's pick of the four, 2026-11-17 (C)
+        # «place» is Kenney drop_003 (place.ogg) since 2026-11-17, round 3 -- not written here any more
         write('built', built_poof())
         write('upgraded', upgraded())

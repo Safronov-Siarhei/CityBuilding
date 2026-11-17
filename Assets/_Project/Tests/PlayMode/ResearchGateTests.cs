@@ -226,6 +226,7 @@ namespace CityBuilder.Tests.PlayMode
             Assert.IsNotNull(panel, "The scene has no research window.");
 
             panel.Show(lab);
+            panel.SelectBuildingsTab();
             Assert.Greater(panel.RowCount, 0, "A level-1 Laboratory offers nothing to research at all.");
 
             foreach (var topic in ResearchCatalog.BuildingTopics)
@@ -364,7 +365,23 @@ namespace CityBuilder.Tests.PlayMode
 
             var panel = Object.FindFirstObjectByType<ResearchPanelController>(FindObjectsInactive.Include);
             panel.Show(lab);
-            Assert.Greater(panel.RowCount, 20, "The buildings tab has hardly any rows.");
+            // concept A «Полки» (the user, 2026-11-17): the buildings split by the build menu's categories
+            var buildingRows = 0;
+            var filled = 0;
+            for (var category = 0; category < ResearchPanelController.ArmyCategory; category++)
+            {
+                panel.SelectCategory(category);
+                Assert.IsFalse(panel.IsUnitsTab, $"Category {category} shows the army.");
+                buildingRows += panel.RowCount;
+                if (panel.RowCount > 0) filled++;
+            }
+            Assert.Greater(buildingRows, 20, "The building categories have hardly any rows between them.");
+            Assert.GreaterOrEqual(filled, 4, "The buildings are not split by category: almost all categories are empty.");
+            panel.SelectBuildingsTab();
+            panel.ShowInfo(lab);
+            Assert.IsTrue(panel.IsInfoOpen, "The «!» did not open the Laboratory's own card.");
+            panel.Show(lab);
+            Assert.IsFalse(panel.IsInfoOpen, "«Прокачка» opened the card instead of the research.");
             yield return PlaytestCapture.ShootWithUi("lab-window-buildings", lab.transform.position);
             panel.SelectUnitsTab();
             var shipRows = 0;
