@@ -245,7 +245,7 @@ def main_window(war=False):
     put(c, king_badge(150, True), px + pw - 140, py + 145)
     text(d, (px + pw - 140, py + 238), "Сосед", 30)
     value = -64 if war else -7
-    text(d, (cx, py + 112), "Отношения с соседним королевством", 34, INK, "Bold")
+    text(d, (cx, py + 90), "Отношения с соседним королевством", 34, INK, "Bold")
     vcol = RED if value < 0 else GREEN
     text(d, (cx, py + 168), f"{value:+d}", 64, vcol, stroke=3, stroke_fill=CREAM)
     text(d, (cx, py + 222), "−1 в день", 26, GREY, "Bold")
