@@ -100,7 +100,7 @@
 - [Main menu village (2026-11-17)](project_main_menu_village.md) — concept 1 stages 1-2 BUILT (village loop + logo, house going up with 2 builders); stage 3 phone check left.
 - [Sandbox menu redesign (2026-11-17)](project_sandbox_menu_redesign.md) — concept A «Стол картографа» + «Свобода песочницы» BUILT 2026-11-17 (not seen); per-map autosave built.
 - [Music by mode (2026-11-17)](project_music.md) — menu/tutorial/sandbox/invasion tracks, quiet + fades + pauses, Музыка/Эффекты sliders; BUILT, not heard.
-- [Playtest list 2026-11-17](project_pending_2026_11_17.md) — 13 items (piggy timer, hall people, invasion staff/notices/King/music, chopping, load camera, lab bar, season palette) BUILT; defeat window = concept for approval.
+- [Playtest list 2026-11-17](project_pending_2026_11_17.md) — 13 items (piggy timer, hall people, invasion staff/notices/King/music, chopping, load camera, lab bar, season palette) BUILT; defeat window approved + built.
 - [Storage rework (2026-11-17)](project_storage_rework.md) — BUILT IN CODE 2026-11-17 (needs setup,setup, not seen): StoreLedger per-store stock, caps tab, start chain into the hand, HUD blink/notices, store card; demolish warning built (approved).
 - [Building relocation (2026-11-17)](project_building_relocation.md) — «Перенести здание» BUILT, not seen: button right of «!», 1 crystal, same island, sandbox only; card building-relocation.md.
 - [News in the main menu (2026-11-17)](project_news.md) — rules decided (auto-open from 3rd entry, boosters+crystals), concepts A/B/C drawn, user to pick; not built.

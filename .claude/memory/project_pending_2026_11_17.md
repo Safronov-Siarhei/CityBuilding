@@ -15,7 +15,7 @@ The user's playtest of 2026-11-17 (13 items). Status after the round (all code b
 4. Invasion: battle music stays from the first wave on -- DONE (MusicPlayer).
 5. Invasion: notices hung low -- DONE: EventFeedController follows the lowest SHOWN left-column button (MenuButton/WorkforceButton/InventoryButton/ShopButton).
 6. King ignores a retreat order in a fight -- DONE: a PLAYER's move order (ArmyOrderInput -> OrderMoveTo(dest, breakOff: true)) makes every member Disengage (Retreat to the spot, striking nobody); bots/campaign untouched.
-7. Defeat window too plain -- CONCEPT Design/ui/InvasionDefeat_A.png (Tools/ui/invasion_defeat_concept.py), sent for approval; «Новый забег» button is new (the game had only «В главное меню»).
+7. Defeat window -- APPROVED and BUILT 2026-11-17 (invasion-mode.md; «Новый забег» added).
 8. Chopping/mining animation in sandbox + tutorial -- DONE: a man sent BY HAND who stopped within reach (CitizenAgent.Update Gathering branch) never called Waddle.Work; test SandboxRulesTests.ASawmillsMan_SwingsHisAxe_AtHisTree.
 9. Tutorial: more people because of the hall -- same fix as 2.
 10. Tutorial: warlike music from the orcs' boarding -- DONE (TutorialDirector.RaidStarted -> MusicPlayer battle track).

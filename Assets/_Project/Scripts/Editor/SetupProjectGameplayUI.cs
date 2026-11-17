@@ -926,6 +926,139 @@ namespace CityBuilder.EditorTools
             UnityEventTools.AddPersistentListener(continueButton.onClick, controller.ContinuePlaying);
 
             panelRoot.SetActive(false);
+            BuildRunEndWindow(canvasParent, controller);
+        }
+
+        /// <summary>
+        /// The invasion's defeat window (the user approved the concept 2026-11-17, «Утверждаю»): the burning castle in a
+        /// wood frame, the ribbon «Замок пал», the run's points big in gold, three rows (waves, the giant, the camps),
+        /// today's points and five seals for today's counted runs, «Новый забег» and «В главное меню». Pieces and their
+        /// places: Tools/ui/invasion_defeat_art.py (UI/InvasionDefeat/*.png + layout.json, 1920 x 1080, y down), scaled by
+        /// BannerScale like every banner. GameOverController.ShowRunEnd fills it.
+        /// </summary>
+        private static void BuildRunEndWindow(Transform canvasParent, GameOverController controller)
+        {
+            var folder = UiTextureImport.InvasionDefeatFolder;
+            var layoutPath = $"{folder}/layout.json";
+            if (!File.Exists(layoutPath))
+            {
+                Debug.LogWarning("BuildRunEndWindow: no UI/InvasionDefeat/layout.json -- run Tools/ui/invasion_defeat_art.py.");
+                return;
+            }
+            var layout = JsonUtility.FromJson<RateUsLayout>(File.ReadAllText(layoutPath));
+            foreach (var file in new[] { "Window", "Band", "NewRunButton", "MenuButton", "SealOn", "SealOff" })
+            {
+                var path = $"{folder}/{file}.png";
+                if (AssetImporter.GetAtPath(path) is TextureImporter ti && ti.textureType != TextureImporterType.Sprite)
+                    AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+            }
+            var refW = layout.reference[0];
+            var refH = layout.reference[1];
+
+            var root = new GameObject("RunEndWindow", typeof(RectTransform));
+            root.AddComponent<HudOverlay>();
+            root.transform.SetParent(canvasParent, false);
+            StretchFull(root.GetComponent<RectTransform>());
+            var backdrop = CreateImage(root.transform, "Backdrop", new Color(0.06f, 0.01f, 0.02f, 0.82f));
+            StretchBleed(backdrop.GetComponent<RectTransform>());
+            var window = new GameObject("Frame", typeof(RectTransform)).GetComponent<RectTransform>();
+            window.SetParent(root.transform, false);
+            window.anchorMin = window.anchorMax = window.pivot = new Vector2(0.5f, 0.5f);
+            window.sizeDelta = new Vector2(refW, refH);
+            window.localScale = Vector3.one * BannerScale;
+
+            void Place(RectTransform rect, float[] r)
+            {
+                rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.anchoredPosition = new Vector2((r[0] + r[2]) / 2f - refW / 2f, refH / 2f - (r[1] + r[3]) / 2f);
+                rect.sizeDelta = new Vector2(r[2] - r[0], r[3] - r[1]);
+            }
+            float[] TextRect(string name) => System.Array.Find(layout.texts, t => t.name == name).rect;
+
+            var images = new Dictionary<string, Image>();
+            foreach (var piece in layout.pieces)
+            {
+                var image = CreateImage(window, piece.name, Color.white);
+                image.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{folder}/{piece.name}.png");
+                image.raycastTarget = piece.name == "Window" || piece.name.EndsWith("Button");
+                Place(image.rectTransform, piece.rect);
+                images[piece.name] = image;
+            }
+
+            var ink = UiTheme.Rgb(0x462c16);
+            var soft = UiTheme.Rgb(0x805c38);
+            var title = Words(window, "Title", "#over_inv_defeat", 78, UiTheme.Heavy, new Color(1f, 0.93f, 0.78f));
+            Place(title.rectTransform, TextRect("Title"));
+            Rim(title, UiTheme.Rgb(0x3c060a), 4f);
+            var caption = Words(window, "PointsCaption", "#over_inv_points_caption", 32, UiTheme.Bold, soft);
+            Place(caption.rectTransform, TextRect("PointsCaption"));
+            var points = Words(window, "Points", "#over_inv_points_caption", 104, UiTheme.Heavy, UiTheme.Rgb(0xffce46));
+            Object.DestroyImmediate(points.GetComponent<LocalizedText>());   // a number
+            Place(points.rectTransform, TextRect("Points"));
+            Rim(points, UiTheme.Rgb(0x783e0a), 6f);
+
+            var rowKeys = new[] { "#over_inv_row_waves", "#over_inv_row_giant", "#over_inv_row_camps" };
+            var rowGlyphs = new[] { "Swords", "Skull", "Portal" };
+            var values = new Object[3];
+            for (var i = 0; i < 3; i++)
+            {
+                var icon = CreateImage(window, $"Row{i}Icon", ink);
+                icon.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/{rowGlyphs[i]}.png");
+                icon.preserveAspect = true;
+                icon.raycastTarget = false;
+                Place(icon.rectTransform, TextRect($"Row{i}Icon"));
+                var label = Words(window, $"Row{i}Label", rowKeys[i], 34, UiTheme.Regular, ink);
+                label.alignment = TextAnchor.MiddleLeft;
+                Place(label.rectTransform, TextRect($"Row{i}Label"));
+                var value = Words(window, $"Row{i}Value", rowKeys[i], 40, UiTheme.Heavy, ink);
+                Object.DestroyImmediate(value.GetComponent<LocalizedText>());
+                value.alignment = TextAnchor.MiddleRight;
+                Place(value.rectTransform, TextRect($"Row{i}Value"));
+                values[i] = value;
+            }
+            var today = Words(window, "Today", "#over_inv_today_short", 28, UiTheme.Regular, soft);
+            Object.DestroyImmediate(today.GetComponent<LocalizedText>());   // formatted by the controller
+            Place(today.rectTransform, TextRect("Today"));
+            var sealOn = AssetDatabase.LoadAssetAtPath<Sprite>($"{folder}/SealOn.png");
+            var sealOff = AssetDatabase.LoadAssetAtPath<Sprite>($"{folder}/SealOff.png");
+            var seals = new Object[5];
+            for (var i = 0; i < 5; i++)
+            {
+                var seal = CreateImage(window, $"Seal{i}", Color.white);
+                seal.sprite = sealOff;
+                seal.raycastTarget = false;
+                Place(seal.rectTransform, TextRect($"Seal{i}"));
+                seals[i] = seal;
+            }
+
+            Button MakeButton(Image image, string labelName, string key, int size, Color rim)
+            {
+                var button = image.gameObject.AddComponent<Button>();
+                button.targetGraphic = image;
+                var label = Words(image.transform, labelName, key, size, UiTheme.Heavy, Color.white);
+                Place(label.rectTransform, TextRect(labelName));
+                label.rectTransform.anchoredPosition -= image.rectTransform.anchoredPosition;
+                Rim(label, rim, 4f);
+                label.resizeTextForBestFit = true;
+                label.resizeTextMinSize = 20;
+                label.resizeTextMaxSize = size;
+                return button;
+            }
+            var newRun = MakeButton(images["NewRunButton"], "NewRunLabel", "#over_inv_new_run", 34, UiTheme.Rgb(0x1c5412));
+            var toMenu = MakeButton(images["MenuButton"], "MenuLabel", "#over_to_menu", 30, UiTheme.Rgb(0x462810));
+
+            var so = new SerializedObject(controller);
+            so.FindProperty("runEndRoot").objectReferenceValue = root;
+            so.FindProperty("runPoints").objectReferenceValue = points;
+            WriteObjects(so.FindProperty("runRowValues"), values);
+            so.FindProperty("runToday").objectReferenceValue = today;
+            WriteObjects(so.FindProperty("runSeals"), seals);
+            so.FindProperty("sealOn").objectReferenceValue = sealOn;
+            so.FindProperty("sealOff").objectReferenceValue = sealOff;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            UnityEventTools.AddPersistentListener(newRun.onClick, controller.NewRun);
+            UnityEventTools.AddPersistentListener(toMenu.onClick, controller.ReturnToMenu);
+            root.SetActive(false);
         }
 
         /// <summary>The save dialog, opened from the in-game menu (BuildGameMenu); the autosave runs on its own.</summary>

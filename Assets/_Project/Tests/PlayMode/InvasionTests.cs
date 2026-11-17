@@ -88,14 +88,20 @@ namespace CityBuilder.Tests.PlayMode
             Assert.AreEqual(expected, score.Total);
             Assert.IsFalse(System.IO.File.Exists(InvasionRecords.FilePathOverride), "The run was written down before it ended.");
 
+            var castleAt = mode.Castle.transform.position;
             mode.Castle.TryDamage(mode.Castle.MaxHealth);
             yield return null;
             Assert.IsTrue(GameOverManager.Instance.IsGameOver, "The castle fell and the run went on.");
             Assert.IsTrue(score.Finished);
             var days = InvasionRecords.LoadDays();
             Assert.AreEqual(expected, InvasionRecords.DayPoints(days, System.DateTime.Now, config.InvasionRunsCountedPerDay), "The run's points are not in today's records.");
-            var reason = GameObject.Find("GameOverPanel/Card/Reason").GetComponent<UnityEngine.UI.Text>().text;
-            StringAssert.Contains(expected.ToString(), reason, "The end panel does not show the run's points.");
+            // the run's own defeat window (the user approved it 2026-11-17): the points big, the old card hidden
+            var window = GameObject.Find("RunEndWindow");
+            Assert.IsNotNull(window, "The run's defeat window did not open.");
+            var points = window.transform.Find("Frame/Points").GetComponent<UnityEngine.UI.Text>().text;
+            Assert.AreEqual(expected.ToString(), points, "The defeat window does not show the run's points.");
+            Assert.IsNull(GameObject.Find("GameOverPanel"), "The old end card opened under the run's window.");
+            yield return PlaytestCapture.ShootWithUi("invasion-defeat-window", castleAt);
             Time.timeScale = 1f;
         }
 

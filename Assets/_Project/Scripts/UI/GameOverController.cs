@@ -1,4 +1,5 @@
 ﻿using CityBuilder.Core;
+using CityBuilder.Saving;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -25,6 +26,14 @@ namespace CityBuilder.UI
         [SerializeField] private GameObject continueButton;
         // the tutorial's reward, shown as the crystal and its number (the user, 2026-11-06)
         [SerializeField] private Sprite crystalIcon;
+        // the invasion's own defeat window (the user approved its concept 2026-11-17; built by BuildRunEndWindow)
+        [SerializeField] private GameObject runEndRoot;
+        [SerializeField] private Text runPoints;
+        [SerializeField] private Text[] runRowValues = new Text[0];   // waves, the giant, the camps
+        [SerializeField] private Text runToday;
+        [SerializeField] private Image[] runSeals = new Image[0];
+        [SerializeField] private Sprite sealOn;
+        [SerializeField] private Sprite sealOff;
 
         private void Start()
         {
@@ -109,6 +118,30 @@ namespace CityBuilder.UI
         private void ShowRunEnd()
         {
             var score = Invasion.InvasionMode.Instance.Score;
+            if (runEndRoot != null && score != null)
+            {
+                score.Finish();
+                var perDay = BalanceConfig.Instance.InvasionRunsCountedPerDay;
+                var days = Invasion.InvasionRecords.LoadDays();
+                var now = System.DateTime.Now;
+                var counted = Invasion.InvasionRecords.RunsCounted(days, now, perDay);
+                if (runPoints != null) runPoints.text = score.Total.ToString();
+                var values = new[] { score.WavesSurvived, score.BossPoints, score.CampPoints };
+                for (var i = 0; i < runRowValues.Length && i < values.Length; i++)
+                    if (runRowValues[i] != null) runRowValues[i].text = values[i].ToString();
+                if (runToday != null)
+                    runToday.text = Localization.Format("#over_inv_today_short", Invasion.InvasionRecords.DayPoints(days, now, perDay));
+                for (var i = 0; i < runSeals.Length; i++)
+                {
+                    if (runSeals[i] == null) continue;
+                    runSeals[i].gameObject.SetActive(i < perDay);
+                    runSeals[i].sprite = i < counted ? sealOn : sealOff;
+                }
+                runEndRoot.SetActive(true);
+                ModalGate.SetBlocked(true);
+                Time.timeScale = 0f;
+                return;
+            }
             if (titleLabel != null)
             {
                 titleLabel.text = Localization.Get("#over_inv_defeat");
@@ -138,6 +171,17 @@ namespace CityBuilder.UI
             if (panelRoot != null) panelRoot.SetActive(false);
             ModalGate.SetBlocked(false);
             Time.timeScale = 1f;
+        }
+
+        /// <summary>«Новый забег»: the same theme's run again, straight from the defeat window (the user, 2026-11-17).</summary>
+        public void NewRun()
+        {
+            Time.timeScale = 1f;
+            GameSessionIntent.SaveNameToLoad = null;
+            GameSessionIntent.NewGameMapId = Invasion.InvasionMode.RunMapId;
+            GameSessionIntent.NewGameSeason = MapThemes.SeasonOf(GameSettings.InvasionTheme);
+            GameSessionIntent.NewGameIsInvasion = true;
+            LoadingScreen.IntoGame(SceneManager.GetActiveScene().name);
         }
 
         public void ReturnToMenu()

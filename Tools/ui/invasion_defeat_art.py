@@ -7,8 +7,13 @@ The picture: the castle burning at night -- a black keep and walls against a red
 orc spears and a torn banner at the sides. The parchment: the run's numbers as rows with icons, the points big in
 gold, today's runs as five seals (counted ones lit). Buttons: «Новый забег» (green), «В главное меню» (wood).
 
-    python Tools/ui/invasion_defeat_concept.py   ->  Design/ui/InvasionDefeat_A.png
+APPROVED (2026-11-17, «Утверждаю») and cut into the game pieces:
+    python Tools/ui/invasion_defeat_art.py
+        -> Assets/_Project/UI/InvasionDefeat/{Window,Band,NewRunButton,MenuButton,SealOn,SealOff}.png + layout.json
+           (rects in the 1920 x 1080 reference, y down) for SetupProjectGameplayUI.BuildRunEndWindow
+        -> Design/ui/InvasionDefeat_A.png, the mock-up. Words and numbers are the game's (#over_inv_*), row icons the glyphs.
 """
+import json
 import math
 import os
 import random
@@ -20,6 +25,7 @@ F = R + 'Assets/_Project/Resources/Fonts/'
 ICONS = R + 'Assets/_Project/UI/Icons/'
 GLYPHS = R + 'Assets/_Project/UI/Glyphs/'
 OUT = R + 'Design/ui/InvasionDefeat_A.png'
+ART = R + 'Assets/_Project/UI/InvasionDefeat/'
 W, H = 1920, 1080
 X0, Y0, X1, Y1 = 60, 230, 1860, 1050
 IX0, IY0, IX1, IY1 = X0 + 34, Y0 + 34, X1 - 34, Y1 - 34
@@ -129,6 +135,8 @@ def burning_field(w, h):
     return Image.composite(img, Image.alpha_composite(img, dark), v)
 
 
+
+# ---------------------------------------------------------------- the window: frame, burning picture, parchment, row plates
 win = layer()
 sh = layer()
 ImageDraw.Draw(sh).rounded_rectangle((X0 + 8, Y0 + 24, X1 + 8, Y1 + 24), 60, fill=(0, 0, 0, 170))
@@ -145,7 +153,6 @@ win.paste(field, (IX0, IY0), mask)
 d = ImageDraw.Draw(win)
 d.rounded_rectangle((IX0, IY0, IX1, IY1), 36, outline=(60, 34, 12), width=5)
 
-# the parchment column, singed at its edge
 pw0, pw1, pt, pb = 610, 1310, IY0 + 60, IY1 - 30
 parch = layer()
 ImageDraw.Draw(parch).rounded_rectangle((pw0, pt, pw1, pb), 40, fill=(247, 232, 196, 255))
@@ -157,71 +164,107 @@ parch = Image.composite(parch, Image.composite(edge, parch, parch.split()[3]), p
 win = Image.alpha_composite(win, parch)
 d = ImageDraw.Draw(win)
 d.rounded_rectangle((pw0, pt, pw1, pb), 40, outline=(120, 66, 30), width=4)
-
-# the ribbon: the dark red of a lost battle
-rx0, rx1, ry0, ry1 = 455, 1465, Y0 - 82, IY0 + 66
-my = (ry0 + ry1) / 2 + 42
-RIB, RIB_D, RIB_L, RIB_O = (150, 26, 30), (72, 8, 12), (196, 70, 64), (60, 6, 10)
-for side, bx in ((-1, rx0), (1, rx1)):
-    d.polygon([(bx + side * 130, ry0 + 42), (bx - side * 50, ry0 + 42), (bx - side * 50, ry1 + 42),
-               (bx + side * 130, ry1 + 42), (bx + side * 70, my)], fill=(110, 18, 22), outline=(50, 6, 8))
-for side, bx in ((-1, rx0), (1, rx1)):
-    d.polygon([(bx, ry1 - 3), (bx - side * 50, ry1 - 3), (bx - side * 50, ry1 + 42)], fill=RIB_D, outline=(50, 6, 8))
-d.rounded_rectangle((rx0, ry0, rx1, ry1), 24, fill=RIB, outline=RIB_O, width=6, corners=(True, True, False, False))
-d.line((rx0 + 26, ry0 + 18, rx1 - 26, ry0 + 18), fill=RIB_L, width=5)
 CX = (pw0 + pw1) / 2
-d.text((CX, (ry0 + ry1) / 2 + 6), 'Замок пал', font=font(78), fill=(255, 236, 200), anchor='mm', stroke_width=5, stroke_fill=RIB_O)
-
-# the points, big in gold, under a broken crown
-INK, SOFT = (70, 44, 22), (128, 92, 56)
-d.text((CX, 405), 'Очки за забег', font=font(32, 'Rubik-Bold.ttf'), fill=SOFT, anchor='mm')
-d.text((CX, 470), '36', font=font(104), fill=(255, 206, 70), anchor='mm', stroke_width=7, stroke_fill=(120, 62, 10))
-
-# the rows: an icon, a label, a number
+texts = {}
 rows = [('Swords.png', 'Отбито волн', '6'), ('Skull.png', 'Великан', '0'), ('Portal.png', 'Лагеря орков', '0')]
 y = 560
-for icon, label, value in rows:
+for i in range(len(rows)):
     d.rounded_rectangle((pw0 + 70, y - 34, pw1 - 70, y + 34), 22, fill=(236, 214, 170), outline=(196, 160, 110), width=3)
-    path = GLYPHS + icon
-    if os.path.exists(path):
-        pic = picture(path, 46)
-        tint = Image.new('RGBA', pic.size, INK + (255,))
-        tint.putalpha(pic.split()[3])
-        win.alpha_composite(tint, (pw0 + 100, y - 23))
-        d = ImageDraw.Draw(win)
-    d.text((pw0 + 170, y), label, font=font(34, 'Rubik-Medium.ttf'), fill=INK, anchor='lm')
-    d.text((pw1 - 100, y), value, font=font(40), fill=INK, anchor='rm')
+    texts['Row%dIcon' % i] = (pw0 + 100, y - 23, pw0 + 146, y + 23)
+    texts['Row%dLabel' % i] = (pw0 + 170, y - 30, pw1 - 200, y + 30)
+    texts['Row%dValue' % i] = (pw1 - 260, y - 30, pw1 - 100, y + 30)
     y += 80
-
-# today's runs: five wax seals, the counted ones lit
-d.text((CX, y + 10), 'Сегодня: 36 очков, засчитано забегов', font=font(28, 'Rubik-Medium.ttf'), fill=SOFT, anchor='mm')
+texts['PointsCaption'] = (pw0 + 60, 385, pw1 - 60, 425)
+texts['Points'] = (pw0 + 60, 420, pw1 - 60, 520)
+texts['Today'] = (pw0 + 40, y - 12, pw1 - 40, y + 32)
 sy = y + 66
 for i in range(5):
     sx = CX + (i - 2) * 76
-    lit = i < 1
-    d.ellipse((sx - 28, sy - 28, sx + 28, sy + 28), fill=(184, 34, 34) if lit else (206, 186, 150),
-              outline=(110, 14, 14) if lit else (170, 146, 108), width=4)
-    d.ellipse((sx - 14, sy - 14, sx + 14, sy + 14), outline=(230, 120, 110) if lit else (186, 164, 126), width=3)
+    texts['Seal%d' % i] = (sx - 30, sy - 30, sx + 30, sy + 30)
+
+# ---------------------------------------------------------------- the ribbon: the dark red of a lost battle
+rx0, rx1, ry0, ry1 = 455, 1465, Y0 - 82, IY0 + 66
+my = (ry0 + ry1) / 2 + 42
+RIB, RIB_D, RIB_L, RIB_O = (150, 26, 30), (72, 8, 12), (196, 70, 64), (60, 6, 10)
+band = layer()
+db = ImageDraw.Draw(band)
+for side, bx in ((-1, rx0), (1, rx1)):
+    db.polygon([(bx + side * 130, ry0 + 42), (bx - side * 50, ry0 + 42), (bx - side * 50, ry1 + 42),
+                (bx + side * 130, ry1 + 42), (bx + side * 70, my)], fill=(110, 18, 22), outline=(50, 6, 8))
+for side, bx in ((-1, rx0), (1, rx1)):
+    db.polygon([(bx, ry1 - 3), (bx - side * 50, ry1 - 3), (bx - side * 50, ry1 + 42)], fill=RIB_D, outline=(50, 6, 8))
+db.rounded_rectangle((rx0, ry0, rx1, ry1), 24, fill=RIB, outline=RIB_O, width=6, corners=(True, True, False, False))
+db.line((rx0 + 26, ry0 + 18, rx1 - 26, ry0 + 18), fill=RIB_L, width=5)
+texts['Title'] = (rx0 + 40, ry0 + 24, rx1 - 40, ry1 - 10)
 
 
-# the buttons
+# ---------------------------------------------------------------- the seals and the buttons
+def seal(lit):
+    img = Image.new('RGBA', (64, 64), 0)
+    sd = ImageDraw.Draw(img)
+    sd.ellipse((3, 3, 61, 61), fill=(184, 34, 34) if lit else (206, 186, 150), outline=(110, 14, 14) if lit else (170, 146, 108), width=4)
+    sd.ellipse((18, 18, 46, 46), outline=(230, 120, 110) if lit else (186, 164, 126), width=3)
+    return img
+
+
 def button(box, colour, light, out):
+    lay = layer()
+    bd = ImageDraw.Draw(lay)
     x0, y0, x1, y1 = box
-    d.rounded_rectangle((x0, y0 + 11, x1, y1 + 11), 40, fill=out)
-    d.rounded_rectangle((x0, y0, x1, y1), 40, fill=colour, outline=out, width=7)
-    d.rounded_rectangle((x0 + 11, y0 + 10, x1 - 11, (y0 + y1) / 2), 30, fill=light)
+    bd.rounded_rectangle((x0, y0 + 11, x1, y1 + 11), 40, fill=out)
+    bd.rounded_rectangle((x0, y0, x1, y1), 40, fill=colour, outline=out, width=7)
+    bd.rounded_rectangle((x0 + 11, y0 + 10, x1 - 11, (y0 + y1) / 2), 30, fill=light)
+    return lay
 
 
 b1 = (pw0 + 50, 905, CX - 15, 985)
 b2 = (CX + 15, 905, pw1 - 50, 985)
-button(b1, (70, 170, 44), (118, 214, 72), (28, 84, 18))
-button(b2, (150, 96, 50), (186, 130, 76), (70, 40, 16))
+new_run = button(b1, (70, 170, 44), (118, 214, 72), (28, 84, 18))
+to_menu = button(b2, (150, 96, 50), (186, 130, 76), (70, 40, 16))
+texts['NewRunLabel'] = (b1[0] + 20, b1[1] + 6, b1[2] - 20, b1[3] - 4)
+texts['MenuLabel'] = (b2[0] + 20, b2[1] + 6, b2[2] - 20, b2[3] - 4)
+
+pieces = [('Window', win), ('Band', band), ('NewRunButton', new_run), ('MenuButton', to_menu)]
+os.makedirs(ART, exist_ok=True)
+layout = {'reference': [W, H], 'frame': [X0, Y0, X1, Y1], 'pieces': [], 'texts': []}
+for name, lay in pieces:
+    bb = lay.getbbox()
+    lay.crop(bb).save(ART + name + '.png')
+    layout['pieces'].append({'name': name, 'rect': list(bb)})
+seal(True).save(ART + 'SealOn.png')
+seal(False).save(ART + 'SealOff.png')
+for name, rect in texts.items():
+    layout['texts'].append({'name': name, 'rect': [round(v) for v in rect]})
+with open(ART + 'layout.json', 'w', encoding='utf-8') as f:
+    json.dump(layout, f, indent=1)
+
+# ---------------------------------------------------------------- the mock-up with Russian words
+back = Image.open(R + 'Design/store/RateWindow_Mockup.png').convert('RGBA').resize((W, H))
+img = Image.alpha_composite(back.filter(ImageFilter.GaussianBlur(6)), Image.new('RGBA', (W, H), (16, 4, 6, 200)))
+for _, lay in pieces:
+    img = Image.alpha_composite(img, lay)
+d = ImageDraw.Draw(img)
+INK, SOFT = (70, 44, 22), (128, 92, 56)
+d.text((CX, (ry0 + ry1) / 2 + 6), 'Замок пал', font=font(78), fill=(255, 236, 200), anchor='mm', stroke_width=5, stroke_fill=RIB_O)
+d.text((CX, 405), 'Очки за забег', font=font(32, 'Rubik-Bold.ttf'), fill=SOFT, anchor='mm')
+d.text((CX, 470), '36', font=font(104), fill=(255, 206, 70), anchor='mm', stroke_width=7, stroke_fill=(120, 62, 10))
+for i, (icon, label, value) in enumerate(rows):
+    x0, y0, x1, y1 = texts['Row%dIcon' % i]
+    pic = picture(GLYPHS + icon, 46)
+    tint = Image.new('RGBA', pic.size, INK + (255,))
+    tint.putalpha(pic.split()[3])
+    img.alpha_composite(tint, (x0, y0))
+    d = ImageDraw.Draw(img)
+    cy = (y0 + y1) / 2
+    d.text((texts['Row%dLabel' % i][0], cy), label, font=font(34, 'Rubik-Medium.ttf'), fill=INK, anchor='lm')
+    d.text((texts['Row%dValue' % i][2], cy), value, font=font(40), fill=INK, anchor='rm')
+t = texts['Today']
+d.text((CX, (t[1] + t[3]) / 2), 'Сегодня: 36 очков, засчитано забегов', font=font(28, 'Rubik-Medium.ttf'), fill=SOFT, anchor='mm')
+for i in range(5):
+    x0, y0, _, _ = texts['Seal%d' % i]
+    img.alpha_composite(seal(i < 1).resize((60, 60), Image.LANCZOS), (round(x0), round(y0)))
+d = ImageDraw.Draw(img)
 d.text(((b1[0] + b1[2]) / 2, (b1[1] + b1[3]) / 2), 'Новый забег', font=font(32), fill=(255, 255, 255), anchor='mm', stroke_width=4, stroke_fill=(28, 84, 18))
 d.text(((b2[0] + b2[2]) / 2, (b2[1] + b2[3]) / 2), 'В главное меню', font=font(28), fill=(255, 244, 220), anchor='mm', stroke_width=4, stroke_fill=(70, 40, 16))
-
-# over the dimmed game
-back = Image.open(R + 'Design/store/RateWindow_Mockup.png').convert('RGBA').resize((W, H))
-back = Image.alpha_composite(back.filter(ImageFilter.GaussianBlur(6)), Image.new('RGBA', (W, H), (16, 4, 6, 200)))
-img = Image.alpha_composite(back, win)
 img.convert('RGB').save(OUT, optimize=True)
 print(OUT)
