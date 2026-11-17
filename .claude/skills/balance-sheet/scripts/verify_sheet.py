@@ -59,6 +59,8 @@ TABS = {
     # the Diplomacy Hall's lists (2026-11-17): help requests, the bot's gifts, trade offers
     "diplomacy": {"key": ["kind", "id"]},
     "storage": {"key": ["building", "resources"]},
+    # the main menu's news (2026-11-17): a row per item
+    "news": {"key": ["number"]},
     # every number of the tutorial (2026-11-05): key/value like economy
     "tutorial": {"key": ["key"]},
 }

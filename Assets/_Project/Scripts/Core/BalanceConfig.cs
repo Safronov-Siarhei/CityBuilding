@@ -1761,6 +1761,38 @@ namespace CityBuilder.Core
         /// <summary>The piggy bank's tasks as the sheet has them.</summary>
         public IReadOnlyList<PiggyTask> PiggyTasks => piggyTasks;
 
+        /// <summary>
+        /// One item of the main menu's «Новости» (the sheet's tab «Новости», the user 2026-11-17): its number (bigger =
+        /// newer, and the key the device remembers it by), the building/resource pictures under its text and its
+        /// reward. Its title and text are localization keys `#news_&lt;number&gt;_title` / `_text`.
+        /// </summary>
+        [System.Serializable]
+        public class NewsItem
+        {
+            public int number;
+            public List<Sprite> icons = new List<Sprite>();
+            public List<NewsReward> rewards = new List<NewsReward>();
+        }
+
+        /// <summary>A news reward: `crystal` (id empty) or `booster` with the booster's id; how many.</summary>
+        [System.Serializable]
+        public class NewsReward
+        {
+            public string kind, id;
+            public int amount;
+        }
+
+        [SerializeField] private List<NewsItem> news = new List<NewsItem>();
+        // how many of the newest the window lists; the play time after which it opens by itself (news_*)
+        [SerializeField] private int newsShownCount = 10;
+        [SerializeField] private float newsAutoOpenHours = 6f;
+
+        /// <summary>The news, newest (biggest number) first.</summary>
+        public IReadOnlyList<NewsItem> News => news;
+        public int NewsShownCount => newsShownCount;
+        public float NewsAutoOpenHours => newsAutoOpenHours;
+        public void EditorSetNews(List<NewsItem> rows) => news = rows ?? new List<NewsItem>();
+
         public PiggyTask FindPiggyTask(string id)
         {
             foreach (var t in piggyTasks) if (t.id == id) return t;
@@ -2793,6 +2825,8 @@ namespace CityBuilder.Core
             piggyMinuteSeconds = Read(economy, "piggy_minute_seconds", piggyMinuteSeconds);
             piggyIdleSeconds = Read(economy, "piggy_idle_seconds", piggyIdleSeconds);
             piggyTasksResetHours = Read(economy, "piggy_tasks_reset_hours", piggyTasksResetHours);
+            newsShownCount = Mathf.Max(1, Mathf.RoundToInt(Read(economy, "news_shown_count", newsShownCount)));
+            newsAutoOpenHours = Mathf.Max(0f, Read(economy, "news_auto_open_hours", newsAutoOpenHours));
             piggyTasksPerSlot = (int)Read(economy, "piggy_tasks_per_slot", piggyTasksPerSlot);
             piggyFullBannerHours = Read(economy, "piggy_full_banner_hours", piggyFullBannerHours);
             menuShopExitMineChance = Read(economy, "menu_shop_exit_mine_chance", menuShopExitMineChance);

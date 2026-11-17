@@ -1,11 +1,14 @@
 ---
 name: project-news
-description: Main-menu «Новости» (2026-11-17) -- rules decided, 3 window concepts drawn (A scroll / B board / C book), not built
+description: Main-menu «Новости» BUILT 2026-11-17 (stage A, ships with the build), not seen -- sheet tab «Новости», numbers not dates, letter button, scroll window with seals
 metadata:
   type: project
 ---
-The user wants news in the main menu fed by a config tab, no setup per item. Decided: the window opens by itself
-from the player's 3rd entry (before that a red dot only); rewards = sandbox boosters + crystals; button icon = 4 «Письмо с печатью»; picture per item
-undecided. Concepts in Design/ui/News_*.png (Tools/ui/news_concepts.py); card Design/features/news.md.
-**Why:** players returning after an update should see what changed without the dev shipping UI per news.
-**How to apply:** wait for the user's pick of A/B/C before building; keep the news.csv format the card proposes.
+The user's rules (2026-11-17): letter-with-seal button; window A «Свиток» + wax seals (whole = unread, broken = read);
+items NUMBERED not dated (review may delay a build); 10 newest; opens by itself only after 6 h total play and only
+with unread news, a new player sees just the red dot; dot stays while a reward is unclaimed; rewards = sandbox
+boosters + crystals; no pictures; rich-text tags from the sheet, text scrolls; texts are the LAST columns, more
+languages added to the right. Card Design/features/news.md has the tab format and code.
+**Why:** returning players should see what changed without code per news item.
+**How to apply:** a new news item = a row in the sheet tab «Новости» (+ news.csv), never renumber shipped items;
+stage B (fetch over the internet) only when the user asks.

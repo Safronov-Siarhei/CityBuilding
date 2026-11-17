@@ -50,6 +50,8 @@ namespace CityBuilder.EditorTools
         /// <summary>The sheet's tab «Зал дипломатии: таблицы» (the user, 2026-11-17): help requests, the bot's gifts, trade offers.</summary>
         public const string DiplomacyCsvPath = BalanceFolder + "/diplomacy.csv";
         public const string StorageCsvPath = BalanceFolder + "/storage.csv";
+        /// <summary>The sheet's tab «Новости» (the user, 2026-11-17): the main menu's news, a row each.</summary>
+        public const string NewsCsvPath = BalanceFolder + "/news.csv";
 
         /// <summary>The sheet's tutorial tab (the user, 2026-11-05): every number of the tutorial, key/value, laid over the economy keys.</summary>
         public const string TutorialCsvPath = BalanceFolder + "/tutorial.csv";
@@ -107,6 +109,7 @@ namespace CityBuilder.EditorTools
             config.EditorSetPiggyTasks(ReadPiggyTasks(PiggyTasksCsvPath, out var piggyNames));
             config.EditorSetDiplomacyRows(ReadDiplomacy(DiplomacyCsvPath, out var diplomacyNames));
             config.EditorSetStoreCapRows(ReadStoreCaps(StorageCsvPath));
+            config.EditorSetNews(ReadNews(NewsCsvPath, out var newsTexts));
             var offers = ReadBundles(BundlesCsvPath);
             config.EditorSetOffers(offers.Bundles, offers.Levels);
             bundleNames = offers.Names;
@@ -114,6 +117,7 @@ namespace CityBuilder.EditorTools
             foreach (var pair in boosterTab.Names) bundleNames[pair.Key] = pair.Value;
             foreach (var pair in piggyNames) bundleNames[pair.Key] = pair.Value;
             foreach (var pair in diplomacyNames) bundleNames[pair.Key] = pair.Value;
+            foreach (var pair in newsTexts) bundleNames[pair.Key] = pair.Value;
             EditorUtility.SetDirty(config);
 
             // The run's config: the same tabs with the invasion tab's cells laid over them.
@@ -352,6 +356,76 @@ namespace CityBuilder.EditorTools
                 });
                 names["#piggy_task_" + key] = new Dictionary<string, string> { ["ru"] = Cell(Col("name_ru")), ["en"] = Cell(Col("name_en")) };
             }
+            return result;
+        }
+
+        /// <summary>
+        /// The news tab: number, icons, reward, comment, then title_&lt;lang&gt; / text_&lt;lang&gt; for every language (the
+        /// user, 2026-11-17: the texts last, more languages added to the right). The words become
+        /// `#news_&lt;number&gt;_title` / `_text` in the localization asset; `\n` in a cell is a new line, Unity's rich-text
+        /// tags (b, i, color, size) pass through. icons: building ids (or res:&lt;Name&gt;) -> pictures from UI/Icons.
+        /// reward: `crystal:5; booster:architect:1`. Sorted newest (biggest number) first.
+        /// </summary>
+        private static List<BalanceConfig.NewsItem> ReadNews(string path, out Dictionary<string, Dictionary<string, string>> texts)
+        {
+            var result = new List<BalanceConfig.NewsItem>();
+            texts = new Dictionary<string, Dictionary<string, string>>();
+            if (!File.Exists(path)) return result;
+            var rows = ReadCsv(path);
+            if (rows.Count == 0) return result;
+            var header = rows[0];
+            int Col(string name) => header.FindIndex(h => h.Trim() == name);
+            int number = Col("number"), icons = Col("icons"), reward = Col("reward");
+            if (number < 0)
+            {
+                Debug.LogError($"BalanceImporter: {path} needs the column number.");
+                return result;
+            }
+            var seen = new HashSet<int>();
+            for (var i = 1; i < rows.Count; i++)
+            {
+                var row = rows[i];
+                string Cell(int c) => c >= 0 && c < row.Count ? row[c].Trim() : string.Empty;
+                if (!int.TryParse(Cell(number), out var n)) continue;
+                if (!seen.Add(n))
+                {
+                    Debug.LogError($"BalanceImporter: {path} has news number {n} twice; the second is skipped.");
+                    continue;
+                }
+                var item = new BalanceConfig.NewsItem { number = n };
+                foreach (var token in Cell(icons).Split(new[] { ' ', ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var file = token.StartsWith("res:") ? "Res_" + token.Substring(4) : token;
+                    var sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.IconsFolder}/{file}.png");
+                    if (sprite != null) item.icons.Add(sprite);
+                    else Debug.LogError($"BalanceImporter: news {n}: no picture {UiTextureImport.IconsFolder}/{file}.png for '{token}'.");
+                }
+                foreach (var token in Cell(reward).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var parts = token.Trim().Split(':');
+                    var kind = parts[0].Trim().ToLowerInvariant();
+                    var id = kind == "booster" && parts.Length > 1 ? parts[1].Trim() : string.Empty;
+                    int.TryParse(parts[parts.Length - 1].Trim(), out var amount);
+                    if ((kind != "crystal" && kind != "booster") || amount <= 0 || (kind == "booster" && parts.Length < 3))
+                    {
+                        Debug.LogError($"BalanceImporter: news {n}: reward '{token}' is not crystal:N or booster:id:N.");
+                        continue;
+                    }
+                    item.rewards.Add(new BalanceConfig.NewsReward { kind = kind, id = id, amount = amount });
+                }
+                var title = new Dictionary<string, string>();
+                var text = new Dictionary<string, string>();
+                for (var c = 0; c < header.Count; c++)
+                {
+                    var h = header[c].Trim();
+                    if (h.StartsWith("title_")) title[h.Substring(6)] = Cell(c).Replace("\\n", "\n");
+                    else if (h.StartsWith("text_")) text[h.Substring(5)] = Cell(c).Replace("\\n", "\n");
+                }
+                texts[$"#news_{n}_title"] = title;
+                texts[$"#news_{n}_text"] = text;
+                result.Add(item);
+            }
+            result.Sort((a, b) => b.number.CompareTo(a.number));
             return result;
         }
 
