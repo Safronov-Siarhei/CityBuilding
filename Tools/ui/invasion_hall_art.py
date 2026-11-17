@@ -347,11 +347,12 @@ def rating_pieces():
         d = ImageDraw.Draw(on)
         # the colour of the table's own edge right under it (the parchment darkens to its rim), so the two join
         # without a seam (the user, 2026-11-17: «не совпадает по цвету»)
-        d.rounded_rectangle((x - 110, ty, x + 110, ty + 72), 18, fill=PARCH_EDGE, outline=(150, 104, 40), width=4, corners=(True, True, False, False))
-        d.rectangle((x - 106, ty + 40, x + 106, ty + 75), fill=PARCH_EDGE)
+        # its sides end ON the table's rim line (iy0..iy0+4), the rim under it covered: clean corners
+        d.rounded_rectangle((x - 110, ty, x + 110, iy0 + 4), 18, fill=PARCH_EDGE, outline=(150, 104, 40), width=4, corners=(True, True, False, False))
+        d.rectangle((x - 106, ty + 40, x + 106, iy0 + 5), fill=PARCH_EDGE)
         save('RateTab%dOn' % i, on)
         off = c.layer()
-        ImageDraw.Draw(off).rounded_rectangle((x - 110, ty + 6, x + 110, ty + 66), 18, fill=(110, 66, 30), outline=INK, width=4,
+        ImageDraw.Draw(off).rounded_rectangle((x - 110, ty + 6, x + 110, iy0), 18, fill=(110, 66, 30), outline=INK, width=4,
                                               corners=(True, True, False, False))
         save('RateTab%dOff' % i, off)
         box_text('RateTab%d' % i, (x - 104, ty + 8, x + 104, ty + 64))
