@@ -25,5 +25,7 @@
 - `News_B_Board.png` B «Доска объявлений»: cork board with a pinned note per item; a tap opens it.
 - `News_C_Book.png` C «Летопись»: an open leather book, contents left, the item right.
 
+- `News_Icons.png` -- 8 glyph variants for the button (Tools/ui/news_icon_concepts.py): scroll, scroll with «!», newspaper, sealed letter, herald horn, bell, chronicle book, notice board.
+
 ## Open
-- Which concept; a picture per item or not; whether the in-game Reference/notes feed the news text.
+- Which concept; which button icon (1-8); a picture per item or not; whether the in-game Reference/notes feed the news text.
