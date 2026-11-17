@@ -271,11 +271,12 @@ namespace CityBuilder.Citizens
                 if (instance.Data.buildingName == WellBuildingName)
                 {
                     var radius = instance.ServiceRadius;
-                    if (radius > 0) wells.Add((instance.transform.position, radius * (float)radius));
+                    // the well's one circle, from footprint centre to footprint centre (WellReach)
+                    if (radius > 0) wells.Add((WellReach.CentreOf(instance), radius * (float)radius));
                 }
 
                 var capacity = instance.Data.LevelStats(instance.Level).housingCapacity;
-                if (capacity > 0) houses.Add((instance.transform.position, capacity));
+                if (capacity > 0) houses.Add((WellReach.CentreOf(instance), capacity));
             }
 
             var total = 0;
@@ -306,13 +307,13 @@ namespace CityBuilder.Citizens
                 if (instance.IsBot) continue;   // the bot kingdom's, not the town's
                 if (instance.Data == null || instance.Data.buildingName != WellBuildingName) continue;
                 var radius = instance.ServiceRadius;
-                if (radius > 0) wells.Add((instance.transform.position, radius * (float)radius));
+                if (radius > 0) wells.Add((WellReach.CentreOf(instance), radius * (float)radius));
             }
 
             foreach (var instance in all)
             {
                 if (instance.Data == null || instance.Data.LevelStats(instance.Level).housingCapacity <= 0) continue;
-                if (IsWatered(instance.transform.position, wells)) continue;
+                if (instance.IsBot || IsWatered(WellReach.CentreOf(instance), wells)) continue;
 
                 return GameEvent.At(text, EventSeverity.Warning, EventGlyph.Water, WellBuildingName, instance.transform.position, instance.transform);
             }
