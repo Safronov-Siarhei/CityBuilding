@@ -72,6 +72,8 @@ namespace CityBuilder.Saving
         public bool botCastleSaved;
         public bool botHallRazed;
         public List<int> botMissing = new List<int>();
+        /// <summary>Of botMissing, the slots the town's army razed: never rebuilt (2026-11-17).</summary>
+        public List<int> botRazedByTown = new List<int>();
 
         /// <summary>The orcs' shipyard (phase 4b): written = true from then on; its health (0 = broken) and the wait until it is raised again.</summary>
         public bool orcShipyardSaved;

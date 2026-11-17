@@ -68,6 +68,8 @@ namespace CityBuilder.Bot
             public int steps;
             public int level;
             public BuildingInstance instance;
+            /// <summary>Razed by the town's army: never rebuilt (the user, 2026-11-17: only what the orcs broke comes back).</summary>
+            public bool byTown;
         }
 
         private readonly List<Slot> _slots = new List<Slot>();
@@ -84,6 +86,7 @@ namespace CityBuilder.Bot
         private bool _pendingRestore;
         private bool _pendingRazed;
         private List<int> _pendingMissing;
+        private List<int> _pendingByTown;
 
         private void Awake() => Instance = this;
 
@@ -107,7 +110,7 @@ namespace CityBuilder.Bot
             var map = MeshMapApplier.Instance;
             if (map == null || !map.ArchipelagoBotCell.HasValue || blueprints == null || blueprints.Length == 0) yield break;
             Place(map.ArchipelagoBotCell.Value, map);
-            if (_pendingRestore) ApplyRestore(_pendingRazed, _pendingMissing);
+            if (_pendingRestore) ApplyRestore(_pendingRazed, _pendingMissing, _pendingByTown);
         }
 
         private void Place(Vector2Int centre, MeshMapApplier map)
@@ -427,7 +430,7 @@ namespace CityBuilder.Bot
             var share = BalanceConfig.Instance != null ? BalanceConfig.Instance.RuinRestoreTimeFraction : 0.5f;
             foreach (var slot in _slots)
             {
-                if (slot.instance != null) continue;
+                if (slot.instance != null || slot.byTown) continue;
                 BuildingRuin.BotRuinAt(slot.data, slot.origin)?.Remove();
                 Raise(slot, map);
                 if (slot.instance == null || slot.data.isRoad) continue;
@@ -437,31 +440,48 @@ namespace CityBuilder.Bot
             }
         }
 
-        /// <summary>For the save: the hall's fate and which of the blueprint's buildings are down.</summary>
-        public void Capture(out bool razed, List<int> missing)
+        /// <summary>
+        /// The town's army has razed the bot's building of `data` standing at `origin`: its slot is
+        /// never rebuilt (the user, 2026-11-17). Only the orcs' damage is put back.
+        /// </summary>
+        public void NoteRazedByTown(BuildingData data, Vector2Int origin)
+        {
+            foreach (var slot in _slots)
+                if (slot.data == data && slot.origin == origin) { slot.byTown = true; return; }
+        }
+
+        /// <summary>For the save: the hall's fate, which of the blueprint's buildings are down, and which of those the town razed.</summary>
+        public void Capture(out bool razed, List<int> missing, List<int> byTown = null)
         {
             razed = HallRazed;
             for (var i = 0; i < _slots.Count; i++)
+            {
                 if (_slots[i].instance == null) missing.Add(i);
+                if (_slots[i].byTown && byTown != null) byTown.Add(i);
+            }
         }
 
         /// <summary>A save's state: applied once the castle stands (now, or when it is placed).</summary>
-        public void Restore(bool razed, List<int> missing)
+        public void Restore(bool razed, List<int> missing, List<int> byTown = null)
         {
             if (!Placed)
             {
                 _pendingRestore = true;
                 _pendingRazed = razed;
                 _pendingMissing = missing != null ? new List<int>(missing) : new List<int>();
+                _pendingByTown = byTown != null ? new List<int>(byTown) : new List<int>();
                 return;
             }
-            ApplyRestore(razed, missing);
+            ApplyRestore(razed, missing, byTown);
         }
 
-        private void ApplyRestore(bool razed, List<int> missing)
+        private void ApplyRestore(bool razed, List<int> missing, List<int> byTown = null)
         {
             _pendingRestore = false;
             HallRazed = razed;
+            if (byTown != null)
+                foreach (var i in byTown)
+                    if (i >= 0 && i < _slots.Count) _slots[i].byTown = true;
             if (missing == null) return;
             var grid = GridManager.Instance;
             foreach (var i in missing)

@@ -117,6 +117,14 @@ foreach ($step in $Steps) {
             Write-Output "=== campaign$i exit $code ($([int]((Get-Date) - $started).TotalSeconds) s)"
             Write-LogProblems $log
         }
+        'uishot' {
+            # a game window rendered for the user (Editor/UiPhotos) into RunLogs/ui/ -- needs graphics
+            $log = "$logs/uishot_run.log"
+            $code = Invoke-Unity "uishot$i" @('-batchmode', '-quit', '-projectPath', $project,
+                '-executeMethod', 'CityBuilder.EditorTools.UiPhotos.Diplomacy', '-logFile', $log)
+            Write-Output "=== uishot$i exit $code ($([int]((Get-Date) - $started).TotalSeconds) s)"
+            Write-LogProblems $log
+        }
         { $_ -in 'editmode', 'playmode' } {
             $platform = if ($step -eq 'editmode') { 'EditMode' } else { 'PlayMode' }
             $suffix = if ($step -eq 'editmode') { '' } else { '_playmode' }

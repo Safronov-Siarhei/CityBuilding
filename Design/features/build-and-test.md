@@ -75,6 +75,7 @@ replaced by CRLF" warnings (`core.autocrlf` is true and half the repo is LF). Se
   wedge on helper processes — use `$p.WaitForExit()`.
 - Every SetupProject run rewrites ~200 assets with new fileIDs (pure churn — commit it; never revert partially).
 - Half the repo is CRLF, half LF — detect before patching. EditMode never calls `OnEnable`.
+- UI window picture: `run.ps1 -Steps setup,uishot` -> RunLogs/ui/diplomacy.png (Editor/UiPhotos: opens the scene unsaved, canvas through a camera; add a method per window).
 - Photos: PlayMode WITHOUT `-nographics` writes `playtest_shots/` (`PlaytestCapture`, `PlaytestWorld`);
   first graphics run re-imports shaders (~10 min). Scene loading helper `PlayModeScene`.
 - Runtime shaders must be in Always Included (`IncludeRuntimeShadersInBuilds`, guarded by

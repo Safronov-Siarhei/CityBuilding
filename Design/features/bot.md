@@ -266,3 +266,9 @@ from `ArchipelagoBotCell`; `TheBotKingdom_StandsOnItsIsland...` now checks each 
 - `Rebuild()` removes the slot's ruin (`BotRuinAt(...).Remove()`), raises the building and puts it under construction: `BuildOnTimer(sum of build_sec to its level x ruin_restore_time_fraction)`; roads at once. `ChangeStoredCapacity` ignores bot buildings (BuildOnTimer used to touch the town's capacity).
 - The raid counter and the due flag are not saved (a load starts counting afresh). Untested, not seen.
 
+## Rebuild only the orcs' damage (2026-11-17, the user: «всё что снёс игрок будет восстановлено» -- wrong)
+- Was: `Rebuild()` raised EVERY missing slot, so what the player's army razed came back too.
+- Now: `BotWarTarget.TakeDamage` -> `BotKingdom.NoteRazedByTown(data, origin)` marks the slot `byTown`;
+  `Rebuild()` skips such slots. Saved as `SaveData.botRazedByTown` (slot indices; Capture/Restore).
+- Razed-by-town slots stay ruins forever (also after the war ends) -- ask the user if peace should let the bot rebuild.
+- Compiled only; untested, not seen.
