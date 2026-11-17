@@ -224,6 +224,27 @@ namespace CityBuilder.Campaign
             _fade = 0f;
         }
 
+        /// <summary>Starts a clip from its beginning even when it is the one playing (a performance played
+        /// again, the main menu's loop), faded over `fade` seconds from where it was.</summary>
+        public void Restart(string clipName, float fade = 0.3f)
+        {
+            if (clips == null) return;
+            var next = clips.Find(clipName);
+            if (next == null) return;
+            if (next != _clip)
+            {
+                Play(clipName, fade);
+                return;
+            }
+            _from = _clip;
+            _fromTime = _time;
+            _fromRate = _rate;
+            _time = 0f;
+            _rate = 1f;
+            _fadeSeconds = fade;
+            _fade = 0f;
+        }
+
         public void Tick(float dt)
         {
             if (_torch != null && !Application.isPlaying) _torch.Simulate(dt, true, false, false);

@@ -41,41 +41,14 @@ namespace CityBuilder.EditorTools
 
             var cameraGO = new GameObject("Menu Camera", typeof(Camera));
             var menuCamera = cameraGO.GetComponent<Camera>();
-            menuCamera.clearFlags = CameraClearFlags.SolidColor;
-            menuCamera.backgroundColor = new Color(0.55f, 0.75f, 0.92f);
+            menuCamera.clearFlags = CameraClearFlags.Skybox;
             menuCamera.cullingMask = ~0;
             menuCamera.orthographic = false;
-            menuCamera.nearClipPlane = 0.3f;
-            menuCamera.farClipPlane = 500f;
+            menuCamera.nearClipPlane = 0.25f;               // the village's flat ground layers far off
+            menuCamera.farClipPlane = 400f;
             menuCamera.fieldOfView = 40f;
-            menuCamera.backgroundColor = new Color(0.62f, 0.78f, 0.92f);
-
-            // The game's sun, as the city scene has it (the default scene's directional light), with
-            // soft shadows: the menu draws one small scene, so it can afford them.
-            var sunGO = new GameObject("Sun", typeof(Light));
-            var sun = sunGO.GetComponent<Light>();
-            sun.type = LightType.Directional;
-            sun.color = new Color(1f, 0.957f, 0.839f);
-            sun.intensity = 1f;
-            sun.shadows = LightShadows.Soft;
-            sunGO.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
-            RenderSettings.sun = sun;
-
-            // A live scene of people at work on one of the maps, a different one each time the menu
-            // loads (the user's sketch, 2026-10-20) -- see MainMenuBackground.
-            var background = new GameObject("MenuBackground").AddComponent<MainMenuBackground>();
-            var backgroundSO = new SerializedObject(background);
-            backgroundSO.FindProperty("menuCamera").objectReferenceValue = menuCamera;
-            var props = backgroundSO.FindProperty("buildings");
-            var ids = new[] { "Sawmill", "Quarry", "Farm", "Windmill", "Hovel", "Well", "Cottage" };
-            props.arraySize = ids.Length;
-            for (var i = 0; i < ids.Length; i++)
-            {
-                props.GetArrayElementAtIndex(i).FindPropertyRelative("id").stringValue = ids[i];
-                props.GetArrayElementAtIndex(i).FindPropertyRelative("prefab").objectReferenceValue =
-                    AssetDatabase.LoadAssetAtPath<GameObject>($"{BuildingPrefabsFolder}/{ids[i]}.prefab");
-            }
-            backgroundSO.ApplyModifiedPropertiesWithoutUndo();
+            cameraGO.transform.SetPositionAndRotation(new Vector3(2.8f, 2.3f, -9.5f), Quaternion.LookRotation(new Vector3(-6f, -0.9f, 11f)));
+            BuildMenuVillage(menuCamera);
 
             new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
 
@@ -95,6 +68,51 @@ namespace CityBuilder.EditorTools
             DeleteIfExists($"{ScenesFolder}/MainMenu.unity");
             EditorSceneManager.SaveScene(scene, $"{ScenesFolder}/MainMenu.unity");
         }
+
+        /// <summary>
+        /// Main menu concept 1 «День в деревне Ардана» (the user, 2026-11-17: the menu «красивее и сочнее»,
+        /// the empty scene was its fault): the campaign's opening village behind the menu, by day, alive --
+        /// the folk strolling and chatting, the market's trade, the kids on the stones, chimney smoke,
+        /// Ардан walking through once a loop. The film's own village, folk, effects and director play
+        /// Campaign/MenuVillage.json, a script that loops (OpeningDirector.loopFrom). Replaces the
+        /// four random work scenes (MainMenuBackground, 2026-10-20).
+        /// </summary>
+        private static void BuildMenuVillage(Camera cam)
+        {
+            // a day sun, higher and whiter than the film's morning
+            var sunGO = new GameObject("Sun", typeof(Light));
+            var sun = sunGO.GetComponent<Light>();
+            sun.type = LightType.Directional;
+            sun.color = new Color(1f, 0.95f, 0.86f);
+            sun.intensity = 1.2f;
+            sun.shadows = LightShadows.Soft;
+            sunGO.transform.rotation = Quaternion.Euler(48f, 35f, 0f);
+            RenderSettings.sun = sun;
+            RenderSettings.skybox = CampaignSky();
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
+            RenderSettings.ambientSkyColor = new Color(0.64f, 0.74f, 0.88f);
+            RenderSettings.ambientEquatorColor = new Color(0.6f, 0.64f, 0.6f);
+            RenderSettings.ambientGroundColor = new Color(0.38f, 0.42f, 0.3f);
+            RenderSettings.fog = true;
+            RenderSettings.fogMode = FogMode.Linear;
+            RenderSettings.fogColor = new Color(0.76f, 0.84f, 0.92f);
+            RenderSettings.fogStartDistance = 45f;
+            RenderSettings.fogEndDistance = 140f;
+
+            var (village, life) = CreateOpeningVillage(BakeCastClips());
+            cam.GetUniversalAdditionalCameraData().renderPostProcessing = true;
+            var volume = new GameObject("MenuVolume", typeof(UnityEngine.Rendering.Volume)).GetComponent<UnityEngine.Rendering.Volume>();
+            volume.isGlobal = true;
+            volume.sharedProfile = OpeningVolume();
+            var fx = CreateOpeningFx(village, MenuVillagePath, volume, null);
+            // no storm over the menu's day, ever
+            var fso = new SerializedObject(fx);
+            fso.FindProperty("stormMaterial").objectReferenceValue = null;
+            fso.ApplyModifiedPropertiesWithoutUndo();
+            CreateOpeningDirector(village, life, MenuVillagePath, cam, null, fx, null);
+        }
+
+        private const string MenuVillagePath = "Assets/_Project/Campaign/MenuVillage.json";
 
         /// <summary>
         /// The settings card, on the main menu. The language buttons inside are built at play time

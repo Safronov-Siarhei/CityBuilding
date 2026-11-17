@@ -3,7 +3,7 @@ behind the menu, by day, the menu's own buttons as they are, the game's name «C
 
     python Tools/ui/main_menu_village_mockup.py <village shot> <menu UI with alpha>
 
-Writes Design/ui/Logo_CityCraft.png (the logo; into the game's MenuArt once approved) and Design/ui/MainMenu_Village.png (the
+Writes Design/ui/Logo_CityCraft.png and Assets/_Project/UI/MenuArt/Logo_CityCraft.png (the logo, in the game since 2026-11-17) and Design/ui/MainMenu_Village.png (the
 mock-up: the village shot from the game, Editor/CampaignPhotos, the menu UI over it).
 """
 import os
@@ -57,6 +57,7 @@ def main():
     lg = logo()
     os.makedirs(R + 'Design/ui', exist_ok=True)
     lg.save(R + 'Design/ui/Logo_CityCraft.png', optimize=True)
+    lg.save(R + 'Assets/_Project/UI/MenuArt/Logo_CityCraft.png', optimize=True)
     img = Image.open(village).convert('RGBA')
     # a light warm grade and soft edges: the day, not a flat render
     warm = Image.new('RGBA', img.size, (255, 214, 150, 26))

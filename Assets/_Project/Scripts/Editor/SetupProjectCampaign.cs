@@ -120,6 +120,134 @@ namespace CityBuilder.EditorTools
             RenderSettings.fogStartDistance = 45f;
             RenderSettings.fogEndDistance = 140f;
 
+            var clips = BakeCastClips();
+            var (village, life) = CreateOpeningVillage(clips);
+
+            // the director: the film itself, with its subtitles drawn by the cutscene camera
+            var canvasGO = new GameObject("Subtitles", typeof(Canvas), typeof(CanvasScaler));
+            var canvas = canvasGO.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = cam;
+            canvas.planeDistance = 0.5f;
+            var scaler = canvasGO.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1280f, 720f);
+            scaler.matchWidthOrHeight = 1f;
+            // the line at the bottom middle, white with a soft shadow, kept to the middle half of the
+            // screen so a long line wraps instead of running edge to edge (the user, 2026-11-11)
+            var textGO = new GameObject("Line", typeof(RectTransform), typeof(Text), typeof(Outline), typeof(Shadow));
+            textGO.transform.SetParent(canvasGO.transform, false);
+            var rect = (RectTransform)textGO.transform;
+            rect.anchorMin = new Vector2(0.22f, 0f);
+            rect.anchorMax = new Vector2(0.78f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchoredPosition = new Vector2(0f, 46f);
+            rect.sizeDelta = new Vector2(0f, 80f);
+            var line = textGO.GetComponent<Text>();
+            line.font = CityBuilder.UI.UiTheme.Regular;
+            line.fontSize = 34;
+            line.alignment = TextAnchor.LowerCenter;
+            line.color = Color.white;
+            line.supportRichText = true;
+            line.horizontalOverflow = HorizontalWrapMode.Wrap;
+            line.raycastTarget = false;
+            var outline = textGO.GetComponent<Outline>();
+            outline.effectColor = new Color(0f, 0f, 0f, 0.55f);
+            outline.effectDistance = new Vector2(1.5f, -1.5f);
+            var shadow = textGO.GetComponent<Shadow>();
+            shadow.effectColor = new Color(0f, 0f, 0f, 0.7f);
+            shadow.effectDistance = new Vector2(3f, -4f);
+
+            // the title over the first wide shot
+            var titleGO = new GameObject("Title", typeof(RectTransform), typeof(Text), typeof(Outline));
+            titleGO.transform.SetParent(canvasGO.transform, false);
+            var trect = (RectTransform)titleGO.transform;
+            trect.anchorMin = new Vector2(0.05f, 0.5f);
+            trect.anchorMax = new Vector2(0.95f, 0.5f);
+            trect.pivot = new Vector2(0.5f, 0.5f);
+            trect.anchoredPosition = new Vector2(0f, 90f);
+            trect.sizeDelta = new Vector2(0f, 120f);
+            var title = titleGO.GetComponent<Text>();
+            title.font = CityBuilder.UI.UiTheme.Regular;
+            title.fontSize = 56;
+            title.alignment = TextAnchor.MiddleCenter;
+            title.color = new Color(0.98f, 0.9f, 0.68f);
+            title.horizontalOverflow = HorizontalWrapMode.Wrap;
+            title.raycastTarget = false;
+            var toutline = titleGO.GetComponent<Outline>();
+            toutline.effectColor = new Color(0.1f, 0.06f, 0.02f, 0.9f);
+            toutline.effectDistance = new Vector2(3f, -3f);
+
+            // the film's effects: the portal, the sky turning, the post, the chimney smoke
+            cam.GetUniversalAdditionalCameraData().renderPostProcessing = true;
+            var volume = new GameObject("FilmVolume", typeof(Volume)).GetComponent<Volume>();
+            volume.isGlobal = true;
+            volume.sharedProfile = OpeningVolume();
+            var fx = CreateOpeningFx(village, OpeningScriptPath, volume, title);
+
+            // the film's sound: every clip of Audio/Campaign, played by the cue sheet in OpeningScript.json
+            var sound = new GameObject("FilmSound").AddComponent<OpeningSound>();
+            var sso = new SerializedObject(sound);
+            sso.FindProperty("scriptFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(OpeningScriptPath);
+            var audio = new List<AudioClip>();
+            if (Directory.Exists(CampaignAudioFolder))
+            {
+                foreach (var file in Directory.GetFiles(CampaignAudioFolder, "*.ogg"))
+                {
+                    var a = AssetDatabase.LoadAssetAtPath<AudioClip>(file.Replace('\\', '/'));
+                    if (a != null) audio.Add(a);
+                }
+            }
+            var clipsProp = sso.FindProperty("clips");
+            clipsProp.arraySize = audio.Count;
+            for (var i = 0; i < audio.Count; i++) clipsProp.GetArrayElementAtIndex(i).objectReferenceValue = audio[i];
+            sso.ApplyModifiedPropertiesWithoutUndo();
+            cameraGO.AddComponent<AudioListener>();
+
+            var director = CreateOpeningDirector(village, life, OpeningScriptPath, cam, line, fx, sound);
+
+            // mission 1 takes over where the film ends: the game's camera over Ардан and the floating stick
+            var mission = new GameObject("MissionOne").AddComponent<MissionOne>();
+            var mso = new SerializedObject(mission);
+            mso.FindProperty("director").objectReferenceValue = director;
+            mso.FindProperty("village").objectReferenceValue = village;
+            mso.FindProperty("cam").objectReferenceValue = cam;
+            mso.FindProperty("configFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(Mission1Path);
+            mso.FindProperty("darkMaterial").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>("Assets/_Project/Materials/DungeonDark.mat");
+            mso.FindProperty("music").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_mission1.ogg");
+            mso.FindProperty("roar").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/sfx_roar.ogg");
+            var art = mso.FindProperty("hudArt");
+            void ArtSprite(string field, string path)
+            {
+                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                if (sprite == null) Debug.LogError($"[Campaign] HUD sprite {path} not found");
+                art.FindPropertyRelative(field).objectReferenceValue = sprite;
+            }
+            ArtSprite("disc", UiTextureImport.SkinFolder + "/event_disc.png");
+            ArtSprite("rim", UiTextureImport.SkinFolder + "/event_rim.png");
+            ArtSprite("mask", UiTextureImport.SkinFolder + "/circle_mask.png");
+            ArtSprite("panel", UiTextureImport.SkinFolder + "/panel.png");
+            ArtSprite("pillParchment", UiTextureImport.SkinFolder + "/pill_parchment.png");
+            ArtSprite("pillWood", UiTextureImport.SkinFolder + "/pill_wood.png");
+            ArtSprite("menuGlyph", UiTextureImport.GlyphsFolder + "/Hud_Menu.png");
+            ArtSprite("closeGlyph", UiTextureImport.GlyphsFolder + "/Hud_Cancel.png");
+            ArtSprite("portrait", UiTextureImport.IconsFolder + "/PortraitArdan.png");
+            ArtSprite("playGlyph", UiTextureImport.GlyphsFolder + "/Hud_Play.png");
+            ArtSprite("restartGlyph", UiTextureImport.GlyphsFolder + "/Hud_Rotate.png");
+            ArtSprite("homeGlyph", UiTextureImport.GlyphsFolder + "/Hud_Home.png");
+            mso.FindProperty("guardModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Soldiers/SoldierSpearman-lvl3.fbx");
+            mso.FindProperty("fx").objectReferenceValue = fx;
+            mso.ApplyModifiedPropertiesWithoutUndo();
+
+            Directory.CreateDirectory(ScenesFolder);
+            DeleteIfExists(CampaignOpeningScenePath);
+            EditorSceneManager.SaveScene(scene, CampaignOpeningScenePath);
+        }
+
+        /// <summary>The campaign's opening village and its living folk (the film's, and the main menu's
+        /// backdrop since 2026-11-17).</summary>
+        private static (OpeningVillage village, OpeningLife life) CreateOpeningVillage(Dictionary<string, CineClips> clips)
+        {
             var village = new GameObject("OpeningVillage").AddComponent<OpeningVillage>();
             var so = new SerializedObject(village);
             var props = so.FindProperty("buildings");
@@ -189,7 +317,6 @@ namespace CityBuilder.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
 
             // the living background: villagers, their flight, the orcs and the fires
-            var clips = BakeCastClips();
             var life = village.gameObject.AddComponent<OpeningLife>();
             var lso = new SerializedObject(life);
             lso.FindProperty("village").objectReferenceValue = village;
@@ -210,107 +337,38 @@ namespace CityBuilder.EditorTools
             lso.FindProperty("smokeMaterial").objectReferenceValue = ParticleMaterial("CampaignSmoke", dot, false);
             lso.FindProperty("autoBegin").boolValue = false;            // the director starts it on its clock
             lso.ApplyModifiedPropertiesWithoutUndo();
+            return (village, life);
+        }
 
-            // the director: the film itself, with its subtitles drawn by the cutscene camera
-            var canvasGO = new GameObject("Subtitles", typeof(Canvas), typeof(CanvasScaler));
-            var canvas = canvasGO.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceCamera;
-            canvas.worldCamera = cam;
-            canvas.planeDistance = 0.5f;
-            var scaler = canvasGO.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1280f, 720f);
-            scaler.matchWidthOrHeight = 1f;
-            // the line at the bottom middle, white with a soft shadow, kept to the middle half of the
-            // screen so a long line wraps instead of running edge to edge (the user, 2026-11-11)
-            var textGO = new GameObject("Line", typeof(RectTransform), typeof(Text), typeof(Outline), typeof(Shadow));
-            textGO.transform.SetParent(canvasGO.transform, false);
-            var rect = (RectTransform)textGO.transform;
-            rect.anchorMin = new Vector2(0.22f, 0f);
-            rect.anchorMax = new Vector2(0.78f, 0f);
-            rect.pivot = new Vector2(0.5f, 0f);
-            rect.anchoredPosition = new Vector2(0f, 46f);
-            rect.sizeDelta = new Vector2(0f, 80f);
-            var line = textGO.GetComponent<Text>();
-            line.font = CityBuilder.UI.UiTheme.Regular;
-            line.fontSize = 34;
-            line.alignment = TextAnchor.LowerCenter;
-            line.color = Color.white;
-            line.supportRichText = true;
-            line.horizontalOverflow = HorizontalWrapMode.Wrap;
-            line.raycastTarget = false;
-            var outline = textGO.GetComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.55f);
-            outline.effectDistance = new Vector2(1.5f, -1.5f);
-            var shadow = textGO.GetComponent<Shadow>();
-            shadow.effectColor = new Color(0f, 0f, 0f, 0.7f);
-            shadow.effectDistance = new Vector2(3f, -4f);
-
-            // the title over the first wide shot
-            var titleGO = new GameObject("Title", typeof(RectTransform), typeof(Text), typeof(Outline));
-            titleGO.transform.SetParent(canvasGO.transform, false);
-            var trect = (RectTransform)titleGO.transform;
-            trect.anchorMin = new Vector2(0.05f, 0.5f);
-            trect.anchorMax = new Vector2(0.95f, 0.5f);
-            trect.pivot = new Vector2(0.5f, 0.5f);
-            trect.anchoredPosition = new Vector2(0f, 90f);
-            trect.sizeDelta = new Vector2(0f, 120f);
-            var title = titleGO.GetComponent<Text>();
-            title.font = CityBuilder.UI.UiTheme.Regular;
-            title.fontSize = 56;
-            title.alignment = TextAnchor.MiddleCenter;
-            title.color = new Color(0.98f, 0.9f, 0.68f);
-            title.horizontalOverflow = HorizontalWrapMode.Wrap;
-            title.raycastTarget = false;
-            var toutline = titleGO.GetComponent<Outline>();
-            toutline.effectColor = new Color(0.1f, 0.06f, 0.02f, 0.9f);
-            toutline.effectDistance = new Vector2(3f, -3f);
-
-            // the film's effects: the portal, the sky turning, the post, the chimney smoke
-            cam.GetUniversalAdditionalCameraData().renderPostProcessing = true;
-            var volume = new GameObject("FilmVolume", typeof(Volume)).GetComponent<Volume>();
-            volume.isGlobal = true;
-            volume.sharedProfile = OpeningVolume();
+        /// <summary>The film's effects on the village, read from `scriptPath`'s "fx" block.</summary>
+        private static OpeningFx CreateOpeningFx(OpeningVillage village, string scriptPath, Volume volume, Text title)
+        {
             var fx = village.gameObject.AddComponent<OpeningFx>();
             var fso = new SerializedObject(fx);
             fso.FindProperty("village").objectReferenceValue = village;
-            fso.FindProperty("scriptFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(OpeningScriptPath);
+            fso.FindProperty("scriptFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(scriptPath);
             fso.FindProperty("tracksFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(OpeningTracksPath);
             fso.FindProperty("chimneysFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(ChimneysPath);
             fso.FindProperty("vortexMaterial").objectReferenceValue = ShaderMaterial("CampaignVortex", "CityBuilder/CineVortex");
             fso.FindProperty("groundMaterial").objectReferenceValue = ShaderMaterial("CampaignGroundFx", "CityBuilder/CineGroundFx");
-            fso.FindProperty("sparkMaterial").objectReferenceValue = ParticleMaterial("CampaignSpark", dot, true);
-            fso.FindProperty("dustMaterial").objectReferenceValue = ParticleMaterial("CampaignDust", dot, false);
+            fso.FindProperty("sparkMaterial").objectReferenceValue = ParticleMaterial("CampaignSpark", SoftDot(), true);
+            fso.FindProperty("dustMaterial").objectReferenceValue = ParticleMaterial("CampaignDust", SoftDot(), false);
             fso.FindProperty("debrisMaterial").objectReferenceValue = Matte("CampaignDebris", new Color(0.55f, 0.53f, 0.5f));
             fso.FindProperty("stormMaterial").objectReferenceValue = ShaderMaterial("CampaignStormSky", "CityBuilder/CineStormSky");
             fso.FindProperty("volume").objectReferenceValue = volume;
             fso.FindProperty("title").objectReferenceValue = title;
             fso.ApplyModifiedPropertiesWithoutUndo();
+            return fx;
+        }
 
-            // the film's sound: every clip of Audio/Campaign, played by the cue sheet in OpeningScript.json
-            var sound = new GameObject("FilmSound").AddComponent<OpeningSound>();
-            var sso = new SerializedObject(sound);
-            sso.FindProperty("scriptFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(OpeningScriptPath);
-            var audio = new List<AudioClip>();
-            if (Directory.Exists(CampaignAudioFolder))
-            {
-                foreach (var file in Directory.GetFiles(CampaignAudioFolder, "*.ogg"))
-                {
-                    var a = AssetDatabase.LoadAssetAtPath<AudioClip>(file.Replace('\\', '/'));
-                    if (a != null) audio.Add(a);
-                }
-            }
-            var clipsProp = sso.FindProperty("clips");
-            clipsProp.arraySize = audio.Count;
-            for (var i = 0; i < audio.Count; i++) clipsProp.GetArrayElementAtIndex(i).objectReferenceValue = audio[i];
-            sso.ApplyModifiedPropertiesWithoutUndo();
-            cameraGO.AddComponent<AudioListener>();
-
+        /// <summary>The director playing `scriptPath` in the village, with the folk's cast.</summary>
+        private static OpeningDirector CreateOpeningDirector(OpeningVillage village, OpeningLife life, string scriptPath, Camera cam, Text line, OpeningFx fx, OpeningSound sound)
+        {
             var director = new GameObject("OpeningDirector").AddComponent<OpeningDirector>();
             var dso = new SerializedObject(director);
             dso.FindProperty("village").objectReferenceValue = village;
             dso.FindProperty("life").objectReferenceValue = life;
-            dso.FindProperty("scriptFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(OpeningScriptPath);
+            dso.FindProperty("scriptFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(scriptPath);
             dso.FindProperty("tracksFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(OpeningTracksPath);
             dso.FindProperty("cam").objectReferenceValue = cam;
             dso.FindProperty("subtitle").objectReferenceValue = line;
@@ -318,6 +376,7 @@ namespace CityBuilder.EditorTools
             dso.FindProperty("sound").objectReferenceValue = sound;
             dso.FindProperty("ropeMaterial").objectReferenceValue = Matte("CampaignRope", new Color(0.55f, 0.42f, 0.26f));
             var dcast = dso.FindProperty("cast");
+            var castProp = new SerializedObject(life).FindProperty("cast");
             dcast.arraySize = castProp.arraySize;
             for (var i = 0; i < castProp.arraySize; i++)
             {
@@ -328,43 +387,7 @@ namespace CityBuilder.EditorTools
                 dst.FindPropertyRelative("clips").objectReferenceValue = src.FindPropertyRelative("clips").objectReferenceValue;
             }
             dso.ApplyModifiedPropertiesWithoutUndo();
-
-            // mission 1 takes over where the film ends: the game's camera over Ардан and the floating stick
-            var mission = new GameObject("MissionOne").AddComponent<MissionOne>();
-            var mso = new SerializedObject(mission);
-            mso.FindProperty("director").objectReferenceValue = director;
-            mso.FindProperty("village").objectReferenceValue = village;
-            mso.FindProperty("cam").objectReferenceValue = cam;
-            mso.FindProperty("configFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(Mission1Path);
-            mso.FindProperty("darkMaterial").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Material>("Assets/_Project/Materials/DungeonDark.mat");
-            mso.FindProperty("music").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_mission1.ogg");
-            mso.FindProperty("roar").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/sfx_roar.ogg");
-            var art = mso.FindProperty("hudArt");
-            void ArtSprite(string field, string path)
-            {
-                var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-                if (sprite == null) Debug.LogError($"[Campaign] HUD sprite {path} not found");
-                art.FindPropertyRelative(field).objectReferenceValue = sprite;
-            }
-            ArtSprite("disc", UiTextureImport.SkinFolder + "/event_disc.png");
-            ArtSprite("rim", UiTextureImport.SkinFolder + "/event_rim.png");
-            ArtSprite("mask", UiTextureImport.SkinFolder + "/circle_mask.png");
-            ArtSprite("panel", UiTextureImport.SkinFolder + "/panel.png");
-            ArtSprite("pillParchment", UiTextureImport.SkinFolder + "/pill_parchment.png");
-            ArtSprite("pillWood", UiTextureImport.SkinFolder + "/pill_wood.png");
-            ArtSprite("menuGlyph", UiTextureImport.GlyphsFolder + "/Hud_Menu.png");
-            ArtSprite("closeGlyph", UiTextureImport.GlyphsFolder + "/Hud_Cancel.png");
-            ArtSprite("portrait", UiTextureImport.IconsFolder + "/PortraitArdan.png");
-            ArtSprite("playGlyph", UiTextureImport.GlyphsFolder + "/Hud_Play.png");
-            ArtSprite("restartGlyph", UiTextureImport.GlyphsFolder + "/Hud_Rotate.png");
-            ArtSprite("homeGlyph", UiTextureImport.GlyphsFolder + "/Hud_Home.png");
-            mso.FindProperty("guardModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Soldiers/SoldierSpearman-lvl3.fbx");
-            mso.FindProperty("fx").objectReferenceValue = fx;
-            mso.ApplyModifiedPropertiesWithoutUndo();
-
-            Directory.CreateDirectory(ScenesFolder);
-            DeleteIfExists(CampaignOpeningScenePath);
-            EditorSceneManager.SaveScene(scene, CampaignOpeningScenePath);
+            return director;
         }
 
         // ------------------------------------------------------------ the cast's clips
@@ -389,6 +412,9 @@ namespace CityBuilder.EditorTools
         /// hand: an imported clip poses nothing in the editor, and no Animator is needed in play).</summary>
         private static Dictionary<string, CineClips> BakeCastClips()
         {
+            // once a run: the main menu's village and the film share the clips (a second bake would
+            // delete the first one's assets under the scene saved with them)
+            if (_castClipsThisRun != null && _castClipsThisRun.Count > 0 && !_castClipsThisRun.ContainsValue(null)) return _castClipsThisRun;
             var result = new Dictionary<string, CineClips>();
             var folder = ModelImportDefaults.CinematicCastFolder.TrimEnd('/');
             if (!Directory.Exists(folder)) return result;
@@ -484,7 +510,21 @@ namespace CityBuilder.EditorTools
                 result[name] = set;
             }
             AssetDatabase.SaveAssets();
+            _castClipsThisRun = result;
             return result;
+        }
+
+        private static Dictionary<string, CineClips> _castClipsThisRun;
+
+        /// <summary>The film's assets made in this setup run, by path: the main menu's village (built
+        /// first) and the film use the same ones, and making one again deletes the asset the scene
+        /// already saved points at (a new GUID, a missing material).</summary>
+        private static readonly Dictionary<string, Object> _madeThisRun = new Dictionary<string, Object>();
+
+        private static bool MadeThisRun<T>(string path, out T made) where T : Object
+        {
+            made = _madeThisRun.TryGetValue(path, out var o) ? o as T : null;
+            return made != null;
         }
 
         /// <summary>A soft round dot for the fire's and smoke's particles (white, alpha falling to the rim).</summary>
@@ -520,6 +560,7 @@ namespace CityBuilder.EditorTools
         private static Material ParticleMaterial(string name, Texture2D dot, bool additive)
         {
             var path = $"{MaterialsFolder}/{name}.mat";
+            if (MadeThisRun(path, out Material made)) return made;
             DeleteIfExists(path);
             var m = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
             m.SetTexture("_BaseMap", dot);
@@ -533,6 +574,7 @@ namespace CityBuilder.EditorTools
             m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
             m.renderQueue = (int)RenderQueue.Transparent;
             AssetDatabase.CreateAsset(m, path);
+            _madeThisRun[path] = m;
             return m;
         }
 
@@ -548,9 +590,11 @@ namespace CityBuilder.EditorTools
         private static Material ShaderMaterial(string name, string shader)
         {
             var path = $"{MaterialsFolder}/{name}.mat";
+            if (MadeThisRun(path, out Material made)) return made;
             DeleteIfExists(path);
             var m = new Material(Shader.Find(shader));
             AssetDatabase.CreateAsset(m, path);
+            _madeThisRun[path] = m;
             return m;
         }
 
@@ -558,6 +602,7 @@ namespace CityBuilder.EditorTools
         /// a close shot asks for it). The numbers are set from OpeningScript.json's fx block at play.</summary>
         private static VolumeProfile OpeningVolume()
         {
+            if (MadeThisRun(OpeningVolumePath, out VolumeProfile made)) return made;
             DeleteIfExists(OpeningVolumePath);
             var profile = ScriptableObject.CreateInstance<VolumeProfile>();
             AssetDatabase.CreateAsset(profile, OpeningVolumePath);
@@ -573,6 +618,7 @@ namespace CityBuilder.EditorTools
             Add<DepthOfField>();
             EditorUtility.SetDirty(profile);
             AssetDatabase.SaveAssets();
+            _madeThisRun[OpeningVolumePath] = profile;
             return profile;
         }
 
@@ -592,6 +638,7 @@ namespace CityBuilder.EditorTools
         private static Material CampaignSky()
         {
             var path = $"{MaterialsFolder}/CampaignSky.mat";
+            if (MadeThisRun(path, out Material made)) return made;
             Directory.CreateDirectory(MaterialsFolder);
             DeleteIfExists(path);
             var sky = new Material(Shader.Find("Skybox/Procedural"));
@@ -603,6 +650,7 @@ namespace CityBuilder.EditorTools
             sky.SetColor("_GroundColor", new Color(0.42f, 0.5f, 0.38f));
             sky.SetFloat("_Exposure", 1.25f);
             AssetDatabase.CreateAsset(sky, path);
+            _madeThisRun[path] = sky;
             return sky;
         }
     }

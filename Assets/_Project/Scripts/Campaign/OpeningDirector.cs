@@ -26,6 +26,11 @@ namespace CityBuilder.Campaign
         [Serializable] private class Script
         {
             public float end;
+            /// <summary>The main menu's village (Campaign/MenuVillage.json): at `end` the clock goes back to
+            /// here and the cues from here on play again, for ever; below 0 the film ends as a film.</summary>
+            public float loopFrom = -1f;
+            /// <summary>Seconds a looping performance takes to turn its root back to its first frame.</summary>
+            public float loopTurn = 0.4f;
             public LensInfo lens;
             public LightInfo lights;
             public SackInfo sack;
@@ -92,6 +97,8 @@ namespace CityBuilder.Campaign
             public string who;
             public string key;
             public float seconds;
+            /// <summary>A performance that starts again each time it ends (the menu's kids on the stones).</summary>
+            public bool loop;
         }
 
         [Serializable] private class Tracks
@@ -142,6 +149,10 @@ namespace CityBuilder.Campaign
             public float s;
             public float speed;
             public bool hideAtEnd;
+            public string perfName;
+            public bool loop;
+            public Quaternion turnFrom;
+            public float turnLeft;
         }
 
         private class Playing_
@@ -168,6 +179,7 @@ namespace CityBuilder.Campaign
         private bool _finished;
         private Vector3 _camFrom, _camAt;
         private bool _shallow;
+        private bool _lifeBegun;
 
         private System.Collections.IEnumerator Start()
         {
@@ -241,6 +253,7 @@ namespace CityBuilder.Campaign
             _values.Clear();
             _next = 0;
             _finished = false;
+            _lifeBegun = false;
             _ropeT0 = -1f;
             _subT0 = -1f;
             _sack = null;
@@ -298,6 +311,18 @@ namespace CityBuilder.Campaign
             StepSubtitle();
             if (fx != null) fx.Step(Time, dt, _camFrom, _camAt, cam.focalLength, _shallow);
             if (sound != null) sound.Step(Time);
+            if (_s.loopFrom >= 0f && Time >= _s.end && _s.end > _s.loopFrom)
+            {
+                // the menu's village: back to the loop's start, its cues to come again
+                var over = Time - _s.end;
+                foreach (var a in _actors.Values) a.t0 -= _s.end - _s.loopFrom;
+                foreach (var o in _objects) o.t0 -= _s.end - _s.loopFrom;
+                foreach (var v in _values) v.t0 -= _s.end - _s.loopFrom;
+                Time = _s.loopFrom + over;
+                _next = 0;
+                while (_next < _s.cues.Length && _s.cues[_next].t < _s.loopFrom - 1e-4f) _next++;
+                return;
+            }
             if (!_finished && Time >= _s.end)
             {
                 _finished = true;
@@ -321,7 +346,10 @@ namespace CityBuilder.Campaign
                 {
                     a.perf = Array.Find(_k.figures, f => f.name == a.figure + "/" + c.perf);
                     a.t0 = c.t;
-                    a.fig.Play(c.perf, 0.12f);
+                    a.perfName = c.perf;
+                    a.loop = c.loop;
+                    a.turnLeft = 0f;
+                    a.fig.Restart(c.perf, 0.12f);
                     PlaceOnTrack(a, 0f);
                 }
                 else if (c.path != null && c.path.Length >= 6)
@@ -348,7 +376,9 @@ namespace CityBuilder.Campaign
             switch (c.evt)
             {
                 case "life":
-                    if (life != null) life.Begin();
+                    // once: the menu's loop comes back over its cues, the folk stay out
+                    if (life != null && !_lifeBegun) life.Begin();
+                    _lifeBegun = true;
                     break;
                 case "panic":
                     if (life != null) life.Panic(V(c.at));
@@ -392,7 +422,21 @@ namespace CityBuilder.Campaign
         private void StepActor(Actor a, float dt)
         {
             if (!a.t.gameObject.activeSelf) return;
+            if (a.perf != null && a.loop && a.perf.frames > 1 && Time - a.t0 >= (a.perf.frames - 1) / _k.fps)
+            {
+                // the performance again, its root easing back to its first frame's turn
+                a.t0 += (a.perf.frames - 1) / _k.fps;
+                a.turnFrom = a.t.rotation;
+                a.turnLeft = _s.loopTurn;
+                a.fig.Restart(a.perfName, _s.loopTurn);
+            }
             if (a.perf != null) PlaceOnTrack(a, Time - a.t0);
+            if (a.perf != null && a.turnLeft > 0f)
+            {
+                a.turnLeft -= dt;
+                var k = 1f - Mathf.Clamp01(a.turnLeft / Mathf.Max(0.01f, _s.loopTurn));
+                a.t.rotation = Quaternion.Slerp(a.turnFrom, a.t.rotation, k * k * (3f - 2f * k));
+            }
             else if (a.path != null)
             {
                 a.s += a.speed * dt;

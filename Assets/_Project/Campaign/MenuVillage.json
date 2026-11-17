@@ -1,0 +1,477 @@
+{
+ "_about": "Main menu concept 1 «День в деревне Ардана» (the user, 2026-11-17): the campaign's village behind the main menu by day. OpeningDirector plays it: the cues before loopFrom once (the folk come out, the cart rolls up to the market), then loopFrom..end for ever -- the market's trade, Ардан walking through once a loop (end - loopFrom seconds), the kids hopping on the stones (their performance loops by itself), the camera drifting and back.",
+ "end": 70.0,
+ "loopFrom": 10.0,
+ "loopTurn": 0.5,
+ "lens": {
+  "sensorWidth": 36.0,
+  "sensorHeight": 20.25
+ },
+ "lights": {
+  "amuletScale": 1.2,
+  "amuletRange": 0.35,
+  "amuletColor": [
+   0.35,
+   0.8,
+   1.0
+  ],
+  "runesScale": 4.0,
+  "runesRange": 4.0,
+  "runesColor": [
+   0.3,
+   0.85,
+   1.0
+  ],
+  "runesAt": [
+   0.0,
+   0.6,
+   0.0
+  ],
+  "flashScale": 0.03,
+  "flashRange": 7.0,
+  "flashColor": [
+   0.6,
+   0.9,
+   1.0
+  ],
+  "flashAt": [
+   0.0,
+   1.6,
+   -0.4
+  ],
+  "swirlScale": 0.012,
+  "swirlRange": 6.0,
+  "swirlColor": [
+   0.7,
+   0.35,
+   1.0
+  ]
+ },
+ "sack": {
+  "vx": -0.27,
+  "vy": 0.27,
+  "vz": 0.37,
+  "gravity": 3.5,
+  "spinX": 140.0,
+  "spinZ": 50.0
+ },
+ "rope": {
+  "width": 0.012
+ },
+ "subtitle": {
+  "fadeIn": 0.18,
+  "fadeOut": 0.3
+ },
+ "fx": {
+  "runesStart": 1000000.0,
+  "runesStep": 0.1,
+  "runesRamp": 0.25,
+  "runesBrightness": 2.2,
+  "runeColor": [
+   0.3,
+   0.85,
+   1.0
+  ],
+  "cracksStart": 1000000.0,
+  "cracksSeconds": 6.5,
+  "cracksRadius": 1.55,
+  "cracksInner": 0.2,
+  "cracksHeight": 0.085,
+  "cracksColor": [
+   0.25,
+   0.75,
+   1.0
+  ],
+  "assemblyStart": 1000000.0,
+  "assemblySeconds": 6.0,
+  "arcCount": 3,
+  "arcRefresh": 0.07,
+  "arcWidth": 0.012,
+  "arcJitter": 0.05,
+  "dustPerStone": 6,
+  "swirlStart": 1000000.0,
+  "openDelay": 0.15,
+  "openSeconds": 1.3,
+  "swirlSpeed": 1.0,
+  "doorCentre": [
+   0.0,
+   0.89,
+   0.0
+  ],
+  "doorSize": [
+   1.04,
+   1.58
+  ],
+  "vortexA": [
+   0.42,
+   0.16,
+   0.85
+  ],
+  "vortexB": [
+   0.86,
+   0.66,
+   1.0
+  ],
+  "blastFlash": 0.35,
+  "blastLight": 30.0,
+  "blastLightRange": 6.0,
+  "ringSeconds": 0.9,
+  "ringRadius": 4.0,
+  "debris": 40,
+  "debrisSpeed": 3.0,
+  "debrisSize": 0.06,
+  "sparksRate": 40.0,
+  "sparksRadius": 1.2,
+  "sparksLife": 1.2,
+  "sparksSize": 0.04,
+  "moodStart": 1000000.0,
+  "moodSeconds": 6.0,
+  "sunIntensity": 0.55,
+  "sunColor": [
+   1.0,
+   0.55,
+   0.62
+  ],
+  "skyTint": [
+   0.62,
+   0.26,
+   0.5
+  ],
+  "skyExposure": 0.75,
+  "skyAtmosphere": 1.6,
+  "fogColor": [
+   0.36,
+   0.31,
+   0.38
+  ],
+  "fogEnd": 30.0,
+  "fogStart": 3.0,
+  "stormStart": 1000000.0,
+  "stormSeconds": 7.0,
+  "stormScale": 1.6,
+  "stormSpeed": 0.05,
+  "stormDark": [
+   0.2,
+   0.16,
+   0.23
+  ],
+  "stormLight": [
+   0.46,
+   0.4,
+   0.5
+  ],
+  "ambientSky": [
+   0.46,
+   0.36,
+   0.56
+  ],
+  "ambientEquator": [
+   0.45,
+   0.35,
+   0.42
+  ],
+  "ambientGround": [
+   0.25,
+   0.2,
+   0.22
+  ],
+  "bloomThreshold": 0.9,
+  "bloomIntensity": 0.8,
+  "vignette": 0.12,
+  "saturation": 8.0,
+  "contrast": 10.0,
+  "dofAperture": 2.8,
+  "smokeRate": 6.0,
+  "smokeLife": 4.0,
+  "smokeSize": 0.18,
+  "smokeSpeed": 0.25,
+  "smokeStop": 1000000.0,
+  "chimneySigns": [
+   1.0,
+   1.0
+  ],
+  "amuletGlowSize": 0.07,
+  "titleKey": "",
+  "titleStart": 1000000.0,
+  "titleSeconds": 4.2,
+  "titleFade": 0.8
+ },
+ "actors": [
+  {
+   "id": "ardan",
+   "figure": "CineArdan",
+   "hidden": true
+  },
+  {
+   "id": "elder",
+   "figure": "CineElder"
+  },
+  {
+   "id": "priest",
+   "figure": "CinePriest"
+  },
+  {
+   "id": "boy",
+   "figure": "CineBoy"
+  },
+  {
+   "id": "girl",
+   "figure": "CineGirl"
+  },
+  {
+   "id": "merchant",
+   "figure": "CineMerchant"
+  },
+  {
+   "id": "marketWoman",
+   "figure": "CinePeasantWoman"
+  },
+  {
+   "id": "peasant",
+   "figure": "CinePeasant"
+  }
+ ],
+ "shots": [
+  {
+   "name": "menu",
+   "start": 0.0,
+   "ease": true,
+   "keys": [
+    {
+     "t": 0,
+     "from": [
+      2.8,
+      2.3,
+      -9.5
+     ],
+     "at": [
+      -3.2,
+      1.4,
+      1.5
+     ],
+     "lens": 21.7
+    },
+    {
+     "t": 10,
+     "from": [
+      2.8,
+      2.3,
+      -9.5
+     ],
+     "at": [
+      -3.2,
+      1.4,
+      1.5
+     ],
+     "lens": 21.7
+    },
+    {
+     "t": 40,
+     "from": [
+      2.1,
+      2.45,
+      -9.7
+     ],
+     "at": [
+      -3.5,
+      1.35,
+      1.3
+     ],
+     "lens": 21.7
+    },
+    {
+     "t": 70,
+     "from": [
+      2.8,
+      2.3,
+      -9.5
+     ],
+     "at": [
+      -3.2,
+      1.4,
+      1.5
+     ],
+     "lens": 21.7
+    }
+   ]
+  }
+ ],
+ "cues": [
+  {
+   "t": 0.0,
+   "evt": "life"
+  },
+  {
+   "t": 0.0,
+   "actor": "boy",
+   "perf": "P_Play",
+   "loop": true
+  },
+  {
+   "t": 0.0,
+   "actor": "girl",
+   "perf": "P_Play",
+   "loop": true
+  },
+  {
+   "t": 0.0,
+   "actor": "elder",
+   "clip": "Idle",
+   "at": [
+    -0.36,
+    0.0,
+    -2.1
+   ],
+   "face": [
+    0.2,
+    0.0,
+    -0.3
+   ]
+  },
+  {
+   "t": 0.0,
+   "actor": "merchant",
+   "clip": "Idle",
+   "at": [
+    1.0,
+    0.0,
+    -5.06
+   ],
+   "yaw": 180.0
+  },
+  {
+   "t": 0.0,
+   "actor": "marketWoman",
+   "clip": "Idle",
+   "at": [
+    0.62,
+    0.0,
+    -5.82
+   ],
+   "yaw": 0.0
+  },
+  {
+   "t": 0.0,
+   "actor": "peasant",
+   "clip": "Idle",
+   "at": [
+    3.0,
+    0.0,
+    -6.6
+   ],
+   "yaw": 270.0
+  },
+  {
+   "t": 0.0,
+   "actor": "priest",
+   "clip": "Idle",
+   "at": [
+    0.03,
+    3.104,
+    5.632
+   ],
+   "yaw": 0.0
+  },
+  {
+   "t": 0.0,
+   "evt": "objects",
+   "track": "market",
+   "hold": true
+  },
+  {
+   "t": 2.0,
+   "evt": "objects",
+   "track": "market"
+  },
+  {
+   "t": 2.0,
+   "actor": "merchant",
+   "perf": "P_Market"
+  },
+  {
+   "t": 2.0,
+   "actor": "marketWoman",
+   "perf": "P_Market"
+  },
+  {
+   "t": 2.0,
+   "actor": "peasant",
+   "perf": "P_Market"
+  },
+  {
+   "t": 8.2,
+   "actor": "peasant",
+   "clip": "Talk",
+   "at": [
+    1.35,
+    0.0,
+    -6.6
+   ],
+   "face": [
+    1.0,
+    0.0,
+    -5.06
+   ]
+  },
+  {
+   "t": 14.0,
+   "actor": "merchant",
+   "perf": "P_Market"
+  },
+  {
+   "t": 14.0,
+   "actor": "marketWoman",
+   "perf": "P_Market"
+  },
+  {
+   "t": 20.0,
+   "actor": "ardan",
+   "clip": "Walk",
+   "speed": 1.0,
+   "hideAtEnd": true,
+   "path": [
+    9.0,
+    0.0,
+    1.4,
+    4.4,
+    0.0,
+    0.7,
+    2.6,
+    0.0,
+    -2.6,
+    -2.6,
+    0.0,
+    -2.8,
+    -4.4,
+    0.0,
+    -0.6,
+    -14.0,
+    0.0,
+    -2.0,
+    -20.0,
+    0.0,
+    -1.5
+   ]
+  },
+  {
+   "t": 34.0,
+   "actor": "merchant",
+   "perf": "P_Market"
+  },
+  {
+   "t": 34.0,
+   "actor": "marketWoman",
+   "perf": "P_Market"
+  },
+  {
+   "t": 54.0,
+   "actor": "merchant",
+   "perf": "P_Market"
+  },
+  {
+   "t": 54.0,
+   "actor": "marketWoman",
+   "perf": "P_Market"
+  }
+ ]
+}

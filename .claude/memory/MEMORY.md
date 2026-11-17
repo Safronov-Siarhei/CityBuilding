@@ -98,3 +98,4 @@
 - [Campaign support banner rule](feedback_campaign_support_banner.md) — every new campaign level calls SupportOfferWindow.ShowAfterWin on its win (from level 2).
 - [Piggy bank (2026-11-16)](project_piggy_bank.md) — «Копилка» BUILT 2026-11-16 (not seen): button, window, shatter, 40 tasks/8 h; card piggy-bank.md.
 - [Pending 2026-11-17](project_pending_2026_11_17.md) — 4 queued, not built: crystal fly-to-bar, Lab staffing bug, Lab coin offer, instant build 1 crystal.
+- [Main menu village (2026-11-17)](project_main_menu_village.md) — concept 1 stage 1 BUILT (village loop + logo); stage 2 house = renders first; stage 3 phone.

@@ -105,6 +105,7 @@
   autoBegin starts it in play until the director takes over.
   - Figures play through `CineFigure` + `CineClips` (no Animator): setup bakes each cast FBX's takes
     into `Campaign/Cast/<Figure>Clips.asset` at 15 fps (bone rotations, positions of bones that move).
+- **The main menu plays the village too (2026-11-17):** the same village/folk/fx/director in the MainMenu scene on a looping script `Campaign/MenuVillage.json` (`loopFrom`, cue `loop`, see hud-and-ui.md «Main menu concept 1»); the scene build is shared (`CreateOpeningVillage/Fx/Director`) and the film's assets are made once per setup run -- do not add a DeleteIfExists-recreate for a film asset without the `MadeThisRun` guard.
 - **Unity part 4 (2026-11-10): the director.** `Scripts/Campaign/OpeningDirector.cs` plays
   `Campaign/OpeningScript.json` (the film: shots with camera keys in Unity coords + lens in mm on a
   physical 36x20.25 camera, the actors, the cues on ONE clock -- one world, so a shot's background is

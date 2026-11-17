@@ -59,6 +59,13 @@ namespace CityBuilder.EditorTools
             discordBadges.Add(Badge(discord.transform));
             var youTube = BrandCorner(main, "YouTubeButton", "YouTube", new Vector2(0.5f, 0f), new Vector2(340f, 120f), CornerButton, YouTubeColour);
             youTubeBadges.Add(Badge(youTube.transform));
+            // the game's name over the village (concept 1, the user 2026-11-17: gold letters, a dark rim, a soft
+            // shadow; Tools/ui/main_menu_village_mockup.py draws it), at the mock-up's place and size
+            var logo = CreateImage(main, "Logo", Color.white);
+            logo.sprite = MenuArt("Logo_CityCraft");
+            logo.preserveAspect = true;
+            logo.raycastTarget = false;
+            Anchor(logo.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -110f), new Vector2(638f, 170f));
             BuildLanguagePicker(main);   // right of the settings button; last, so its open list lies over the rest
 
             // ---- the modes

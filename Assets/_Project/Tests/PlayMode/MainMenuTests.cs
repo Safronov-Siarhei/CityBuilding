@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using CityBuilder.Campaign;
 using CityBuilder.Core;
 using CityBuilder.UI;
 using NUnit.Framework;
@@ -152,25 +153,25 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         /// <summary>
-        /// The live scene behind the menu (the user's sketch): each of the four, staged on a map,
-        /// with people at work in it -- photographed through the menu's own camera.
+        /// The village behind the menu (concept 1, 2026-11-17): built, its folk out, the film's director
+        /// playing the menu's script -- and the script loops: past its end the clock comes back to the
+        /// loop's start and goes on, Ардан's walk among the cues to come again.
         /// </summary>
         [UnityTest]
-        public IEnumerator EveryBackgroundScene_IsStagedWithPeopleAtWork()
+        public IEnumerator VillageBehindTheMenu_LivesAndLoops()
         {
-            foreach (MainMenuBackground.Vignette vignette in System.Enum.GetValues(typeof(MainMenuBackground.Vignette)))
-            {
-                MainMenuBackground.ForcedVignette = vignette;
-                SceneManager.LoadScene("MainMenu", LoadSceneMode.Single);
-                yield return null;
-                yield return null;
-                var background = Object.FindAnyObjectByType<MainMenuBackground>();
-                Assert.IsNotNull(background, "The menu has no background.");
-                Assert.AreEqual(vignette, background.Current);
-                Assert.Greater(Object.FindObjectsByType<MenuWorker>(FindObjectsSortMode.None).Length, 1, $"No one is at work in the {vignette} scene.");
-                yield return new WaitForSeconds(2.5f);
-                yield return Shoot($"menu-scene-{vignette}");
-            }
+            var director = Object.FindAnyObjectByType<OpeningDirector>();
+            Assert.IsNotNull(director, "The menu has no village director.");
+            for (var i = 0; i < 300 && !director.Playing; i++) yield return null;
+            Assert.IsTrue(director.Playing, "The menu's village never started.");
+            Assert.Greater(Object.FindAnyObjectByType<OpeningVillage>().BuildingCount, 10, "The village was not built.");
+            Assert.Greater(Object.FindObjectsByType<CineFigure>(FindObjectsSortMode.None).Length, 6, "No one lives in the village.");
+
+            var length = director.Length;
+            director.Step(length - director.Time + 1f);
+            Assert.IsTrue(director.Playing, "The menu's village stopped at the end of its script.");
+            Assert.Less(director.Time, length, "The clock did not come back to the loop's start.");
+            Assert.Greater(director.Time, 1f, "The loop went back to the very start (the folk would come out again).");
         }
 
         private static IEnumerator Shoot(string name)
