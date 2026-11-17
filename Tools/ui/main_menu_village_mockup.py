@@ -19,8 +19,8 @@ BROWN = (58, 30, 12)
 
 
 def logo():
-    """«CityCraft»: chunky gold letters, a thick dark-brown rim, a light inner edge, a soft shadow; a small castle
-    crowning the middle and a hammer crossed with a sword behind it."""
+    """«CityCraft»: chunky gold letters, a thick dark-brown rim, a light band on their upper half. No crest and no
+    shadow (the user, 2026-11-17)."""
     W, H = 1100, 380
     img = Image.new('RGBA', (W, H), 0)
     f = font(150)
@@ -28,10 +28,7 @@ def logo():
     d = ImageDraw.Draw(img)
     tw = d.textlength(words, font=f)
     x, y = (W - tw) / 2, 150
-    # the shadow and the rim
-    sh = Image.new('RGBA', (W, H), 0)
-    ImageDraw.Draw(sh).text((x + 8, y + 14), words, font=f, fill=(0, 0, 0, 150), stroke_width=16, stroke_fill=(0, 0, 0, 150))
-    img = Image.alpha_composite(img, sh.filter(ImageFilter.GaussianBlur(8)))
+    # the rim (no shadow: the user, 2026-11-17)
     d = ImageDraw.Draw(img)
     d.text((x, y), words, font=f, fill=BROWN, stroke_width=16, stroke_fill=BROWN)
     d.text((x, y), words, font=f, fill=(140, 84, 20), stroke_width=7, stroke_fill=(140, 84, 20))
@@ -56,22 +53,6 @@ def logo():
     hm = Image.composite(hm, Image.new('L', (W, H), 0), m)
     hl.paste(Image.new('RGBA', (W, H), (255, 255, 235, 255)), (0, 0), hm)
     img = Image.alpha_composite(img, hl)
-    # the crest over the middle: a hammer and a sword crossed behind a little gold castle
-    cx, cy = W / 2, bb[1] - 26
-    d = ImageDraw.Draw(img)
-    for sign in (-1, 1):
-        x0, y0, x1, y1 = cx - sign * 70, cy + 34, cx + sign * 70, cy - 70
-        d.line((x0, y0, x1, y1), fill=BROWN, width=16)
-        d.line((x0, y0, x1, y1), fill=(176, 120, 56) if sign < 0 else (210, 214, 222), width=8)
-    d.polygon([(cx - 70 - 14, cy - 70 - 4), (cx - 70 + 22, cy - 70 - 22), (cx - 70 + 34, cy - 70 + 4), (cx - 70, cy - 70 + 20)], fill=(150, 150, 160), outline=BROWN)
-    d.polygon([(cx + 70 - 6, cy - 70 - 12), (cx + 70 + 10, cy - 70 - 12), (cx + 70 + 2, cy - 70 - 30)], fill=(230, 234, 240), outline=BROWN)
-    castle = [(cx - 52, cy + 40), (cx - 52, cy - 8), (cx - 40, cy - 8), (cx - 40, cy - 22), (cx - 28, cy - 22), (cx - 28, cy - 8), (cx - 14, cy - 8),
-              (cx - 14, cy - 40), (cx - 4, cy - 40), (cx - 4, cy - 52), (cx + 4, cy - 52), (cx + 4, cy - 40), (cx + 14, cy - 40), (cx + 14, cy - 8),
-              (cx + 28, cy - 8), (cx + 28, cy - 22), (cx + 40, cy - 22), (cx + 40, cy - 8), (cx + 52, cy - 8), (cx + 52, cy + 40)]
-    d.polygon(castle, fill=(236, 186, 70), outline=BROWN)
-    d.line(castle + [castle[0]], fill=BROWN, width=5)
-    d.rounded_rectangle((cx - 9, cy + 12, cx + 9, cy + 40), 8, fill=BROWN)
-    d.polygon([(cx - 1, cy - 52), (cx - 1, cy - 78), (cx + 22, cy - 70), (cx - 1, cy - 62)], fill=(178, 44, 36), outline=BROWN)
     return img.crop(img.getbbox())
 
 
