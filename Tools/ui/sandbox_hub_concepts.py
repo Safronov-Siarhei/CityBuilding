@@ -700,7 +700,7 @@ def screen_a3(start_scale=1.0, start_angle=0.0):
     # «Начать» drawn at its pulse's scale, round its centre
     sc = (1615, 1007)
     put(img, start_layer(start_scale, start_angle), sc)
-    img = ribbon_joined(img, W / 2, 74, 166, 600, *WOOD_RIBBON, 'Песочница', 60)
+    img = ribbon_joined(img, W / 2, 92, 184, 600, *WOOD_RIBBON, 'Песочница', 60)
     corner_buttons(img)
     return img
 
