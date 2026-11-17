@@ -817,6 +817,7 @@ namespace CityBuilder.EditorTools
             UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
 
             BuildRunBuildingCard(panelRoot.transform, panelSprite, controller);
+            BuildBuildingInfoCard(panelRoot.transform, panelSprite, controller, iconLibrary);
 
             panelRoot.SetActive(false);
             return controller;
@@ -987,6 +988,215 @@ namespace CityBuilder.EditorTools
 
             var panelSO = new SerializedObject(controller);
             panelSO.FindProperty("runCard").objectReferenceValue = runCard;
+            panelSO.ApplyModifiedPropertiesWithoutUndo();
+            card.gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// The sandbox's building card v2 (the user approved the concepts 2026-11-17, Design/ui/Info_*.png) -- see
+        /// BuildingInfoCard. Built like the Laboratory's «!» card: a wood plaque with «Name, ур. N», the level's picture
+        /// on a tile, the line of what it is for, «Прочность» with its bar, the body the card fills with its blocks,
+        /// and at the foot «Улучшить», a round hammer, a red round bin, «Закрыть»; over it, the confirm window.
+        /// </summary>
+        private static void BuildBuildingInfoCard(Transform panelRoot, Sprite panelSprite, BuildingInfoPanelController controller, ResourceIconLibrary iconLibrary)
+        {
+            var wood = SkinSprite("pill_wood") ?? panelSprite;
+            var parchment = SkinSprite("pill_parchment") ?? panelSprite;
+            var plainBar = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+
+            var card = CreateImage(panelRoot, "InfoCardV2", new Color(0.16f, 0.18f, 0.15f, 0.98f));
+            card.sprite = panelSprite;
+            card.type = Image.Type.Sliced;
+            SetRect(card.rectTransform, Vector2.zero, new Vector2(1200f, 820f));
+            card.transform.SetSiblingIndex(1);
+            var component = card.gameObject.AddComponent<BuildingInfoCard>();
+
+            var plaque = CreateImage(card.transform, "TitlePlaque", Color.white);
+            plaque.sprite = wood;
+            plaque.type = Image.Type.Sliced;
+            SetRect(plaque.rectTransform, new Vector2(0f, 385f), new Vector2(680f, 76f));
+            var title = CreateText(plaque.transform, "Title", string.Empty, 34, Vector2.zero, new Vector2(660f, 70f));
+            title.fontStyle = FontStyle.Bold;
+
+            var tile = CreateImage(card.transform, "Tile", new Color(0f, 0f, 0f, 0.3f));
+            tile.sprite = panelSprite;
+            tile.type = Image.Type.Sliced;
+            tile.raycastTarget = false;
+            SetRect(tile.rectTransform, new Vector2(-400f, 120f), new Vector2(320f, 320f));
+            var picture = CreateImage(tile.transform, "Picture", Color.white);
+            picture.preserveAspect = true;
+            picture.raycastTarget = false;
+            SetRect(picture.rectTransform, Vector2.zero, new Vector2(290f, 290f));
+
+            const float colX = 200f;
+            const float colW = 740f;
+            var what = CreateText(card.transform, "What", string.Empty, 25, new Vector2(colX, 300f), new Vector2(colW, 44f));
+            what.alignment = TextAnchor.MiddleLeft;
+            var healthLabel = CreateText(card.transform, "HealthLabel", string.Empty, 24, new Vector2(colX, 252f), new Vector2(colW, 36f));
+            healthLabel.gameObject.AddComponent<LocalizedText>().SetKey("#lab_info_health");
+            healthLabel.alignment = TextAnchor.MiddleLeft;
+            healthLabel.fontStyle = FontStyle.Bold;
+            var barBack = CreateImage(card.transform, "HealthBar", new Color(0.12f, 0.08f, 0.05f, 0.9f));
+            barBack.sprite = plainBar;
+            barBack.type = Image.Type.Sliced;
+            SetRect(barBack.rectTransform, new Vector2(colX, 214f), new Vector2(colW, 38f));
+            var barFill = CreateImage(barBack.transform, "Fill", new Color(0.36f, 0.7f, 0.26f));
+            StretchFull(barFill.rectTransform);
+            barFill.rectTransform.offsetMin = new Vector2(4f, 4f);
+            barFill.rectTransform.offsetMax = new Vector2(-4f, -4f);
+            barFill.sprite = plainBar;
+            barFill.type = Image.Type.Filled;
+            barFill.fillMethod = Image.FillMethod.Horizontal;
+            var barText = CreateText(barBack.transform, "Text", string.Empty, 22, Vector2.zero, new Vector2(colW, 38f));
+            barText.fontStyle = FontStyle.Bold;
+
+            // the body: the card stacks its blocks here, from the top down
+            var body = new GameObject("Body", typeof(RectTransform), typeof(VerticalLayoutGroup)).GetComponent<RectTransform>();
+            body.SetParent(card.transform, false);
+            body.anchorMin = body.anchorMax = new Vector2(0.5f, 0.5f);
+            body.pivot = new Vector2(0.5f, 1f);
+            body.anchoredPosition = new Vector2(colX, 178f);
+            body.sizeDelta = new Vector2(colW, 440f);
+            var stack = body.GetComponent<VerticalLayoutGroup>();
+            stack.spacing = 8f;
+            stack.childAlignment = TextAnchor.UpperLeft;
+            stack.childControlWidth = stack.childControlHeight = true;
+            stack.childForceExpandWidth = true;
+            stack.childForceExpandHeight = false;
+
+            const float footY = -335f;
+            var upgrade = CreateButton(card.transform, panelSprite, "UpgradeButton", "#building_upgrade", new Vector2(-400f, footY), new Vector2(320f, 84f));
+            upgrade.GetComponent<Image>().color = new Color(0.3f, 0.55f, 0.22f, 0.97f);
+            var upgradeLock = CreateText(card.transform, "UpgradeLock", string.Empty, 21, new Vector2(-400f, footY), new Vector2(340f, 84f), new Color(0.72f, 0.3f, 0.08f));
+            upgradeLock.horizontalOverflow = HorizontalWrapMode.Wrap;
+            upgradeLock.raycastTarget = true;
+            var lockButton = upgradeLock.gameObject.AddComponent<Button>();
+            lockButton.transition = Selectable.Transition.None;
+            var repair = CreateGlyphButton(card.transform, "RepairButton", "round", HudInk.OnRound, "Hammer",
+                AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/Hammer.png"), 104f, 0.62f);
+            repair.GetComponent<RectTransform>().anchoredPosition = new Vector2(-150f, footY);
+            var demolish = CreateGlyphButton(card.transform, "DemolishButton", "round", HudInk.OnRound, "Trash", null, 104f, 0.62f);
+            demolish.GetComponent<RectTransform>().anchoredPosition = new Vector2(-20f, footY);
+            var binIcon = demolish.transform.Find("Icon");
+            if (binIcon != null) binIcon.GetComponent<Image>().color = new Color(0.78f, 0.16f, 0.12f);
+            var close = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(430f, footY), new Vector2(260f, 84f));
+
+            // the confirm window: the upgrade (this level > the next, gains, price, time), the repair, the demolition
+            var dialog = CreateImage(card.transform, "Dialog", new Color(0f, 0f, 0f, 0.55f));
+            StretchFull(dialog.rectTransform);
+            dialog.rectTransform.offsetMin = new Vector2(-2000f, -2000f);
+            dialog.rectTransform.offsetMax = new Vector2(2000f, 2000f);
+            var dismiss = dialog.gameObject.AddComponent<Button>();
+            dismiss.targetGraphic = dialog;
+            var box = CreateImage(dialog.transform, "DialogCard", Color.white);
+            box.sprite = panelSprite;
+            box.type = Image.Type.Sliced;
+            SetRect(box.rectTransform, Vector2.zero, new Vector2(700f, 640f));
+            box.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;   // a tap on the card is not a tap outside it
+            var dPlaque = CreateImage(box.transform, "TitlePlaque", Color.white);
+            dPlaque.sprite = wood;
+            dPlaque.type = Image.Type.Sliced;
+            SetRect(dPlaque.rectTransform, new Vector2(0f, 300f), new Vector2(460f, 70f));
+            var dTitle = CreateText(dPlaque.transform, "Title", string.Empty, 30, Vector2.zero, new Vector2(440f, 64f));
+            dTitle.fontStyle = FontStyle.Bold;
+            Image Pic(string name, Vector2 at, float size)
+            {
+                var image = CreateImage(box.transform, name, Color.white);
+                image.preserveAspect = true;
+                image.raycastTarget = false;
+                SetRect(image.rectTransform, at, new Vector2(size, size));
+                return image;
+            }
+            var now = Pic("Now", new Vector2(-170f, 140f), 170f);
+            var next = Pic("Next", new Vector2(150f, 150f), 220f);
+            var single = Pic("Single", new Vector2(0f, 150f), 220f);
+            var arrow = CreateImage(box.transform, "Arrow", new Color(0.5f, 0.36f, 0.22f));
+            arrow.sprite = HudGlyph("Play");
+            arrow.preserveAspect = true;
+            arrow.raycastTarget = false;
+            SetRect(arrow.rectTransform, new Vector2(-10f, 140f), new Vector2(54f, 54f));
+            var gains = new GameObject("Gains", typeof(RectTransform), typeof(HorizontalLayoutGroup)).GetComponent<RectTransform>();
+            gains.SetParent(box.transform, false);
+            SetRect(gains, new Vector2(0f, 10f), new Vector2(640f, 52f));
+            var gainsLayout = gains.GetComponent<HorizontalLayoutGroup>();
+            gainsLayout.spacing = 12f;
+            gainsLayout.childAlignment = TextAnchor.MiddleCenter;
+            gainsLayout.childControlWidth = gainsLayout.childControlHeight = true;
+            gainsLayout.childForceExpandWidth = gainsLayout.childForceExpandHeight = false;
+            var dText = CreateText(box.transform, "Text", string.Empty, 22, new Vector2(0f, 4f), new Vector2(640f, 92f), addShadow: false);
+            dText.horizontalOverflow = HorizontalWrapMode.Wrap;
+            dText.supportRichText = true;
+            var priceCaption = CreateText(box.transform, "PriceCaption", string.Empty, 22, new Vector2(0f, -62f), new Vector2(640f, 32f), new Color(0.5f, 0.36f, 0.22f));
+            var costRow = CreateCostRow(box.transform, "CostRow", new Vector2(0f, -110f));
+            var time = CreateText(box.transform, "Time", string.Empty, 20, new Vector2(0f, -162f), new Vector2(640f, 32f), new Color(0.5f, 0.36f, 0.22f));
+            var cancel = CreateButton(box.transform, panelSprite, "Cancel", "#ui_cancel", new Vector2(-160f, -250f), new Vector2(280f, 76f));
+            var confirm = CreateDynamicButton(box.transform, panelSprite, "Confirm", new Vector2(160f, -250f), new Vector2(280f, 76f), out var confirmLabel);
+            dialog.gameObject.SetActive(false);
+
+            var keys = new List<string>();
+            var sprites = new List<Object>();
+            foreach (var guid in AssetDatabase.FindAssets("t:Sprite", new[] { UiTextureImport.IconsFolder }))
+            {
+                var file = AssetDatabase.GUIDToAssetPath(guid);
+                var name = System.IO.Path.GetFileNameWithoutExtension(file);
+                if (!System.Text.RegularExpressions.Regex.IsMatch(name, "_L[2-5]$|^[A-Z][A-Za-z]+$")) continue;
+                keys.Add(name);
+                sprites.Add(AssetDatabase.LoadAssetAtPath<Sprite>(file));
+            }
+
+            var so = new SerializedObject(component);
+            so.FindProperty("owner").objectReferenceValue = controller;
+            so.FindProperty("title").objectReferenceValue = title;
+            so.FindProperty("picture").objectReferenceValue = picture;
+            so.FindProperty("what").objectReferenceValue = what;
+            so.FindProperty("healthFill").objectReferenceValue = barFill;
+            so.FindProperty("healthText").objectReferenceValue = barText;
+            so.FindProperty("body").objectReferenceValue = body;
+            so.FindProperty("upgradeButton").objectReferenceValue = upgrade.gameObject;
+            so.FindProperty("upgradeLock").objectReferenceValue = upgradeLock;
+            so.FindProperty("repairButton").objectReferenceValue = repair;
+            so.FindProperty("demolishButton").objectReferenceValue = demolish;
+            so.FindProperty("dialog").objectReferenceValue = dialog.gameObject;
+            so.FindProperty("dialogTitle").objectReferenceValue = dTitle;
+            so.FindProperty("dialogNow").objectReferenceValue = now;
+            so.FindProperty("dialogArrow").objectReferenceValue = arrow.gameObject;
+            so.FindProperty("dialogNext").objectReferenceValue = next;
+            so.FindProperty("dialogSingle").objectReferenceValue = single;
+            so.FindProperty("dialogGains").objectReferenceValue = gains;
+            so.FindProperty("dialogText").objectReferenceValue = dText;
+            so.FindProperty("dialogPriceCaption").objectReferenceValue = priceCaption;
+            so.FindProperty("dialogCostRow").objectReferenceValue = costRow;
+            so.FindProperty("dialogTime").objectReferenceValue = time;
+            so.FindProperty("dialogConfirmImage").objectReferenceValue = confirm.GetComponent<Image>();
+            so.FindProperty("dialogConfirmLabel").objectReferenceValue = confirmLabel;
+            so.FindProperty("rowSprite").objectReferenceValue = panelSprite;
+            so.FindProperty("buttonSprite").objectReferenceValue = parchment;
+            so.FindProperty("barSprite").objectReferenceValue = plainBar;
+            so.FindProperty("iconLibrary").objectReferenceValue = iconLibrary;
+            so.FindProperty("heartGlyph").objectReferenceValue = HudGlyph("Heart");
+            so.FindProperty("shieldGlyph").objectReferenceValue = HudGlyph("Shield");
+            so.FindProperty("houseGlyph").objectReferenceValue = HudGlyph("Home");
+            so.FindProperty("peopleGlyph").objectReferenceValue = HudGlyph("People");
+            so.FindProperty("radiusGlyph").objectReferenceValue = HudGlyph("Radius");
+            so.FindProperty("swordsGlyph").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/Swords.png");
+            so.FindProperty("fireGlyph").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/Fire.png");
+            var keyProp = so.FindProperty("levelIconKeys");
+            keyProp.arraySize = keys.Count;
+            for (var i = 0; i < keys.Count; i++) keyProp.GetArrayElementAtIndex(i).stringValue = keys[i];
+            WriteObjects(so.FindProperty("levelIcons"), sprites.ToArray());
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            UnityEventTools.AddPersistentListener(upgrade.onClick, component.OpenUpgrade);
+            UnityEventTools.AddPersistentListener(lockButton.onClick, controller.ShowUpgradeResearch);
+            UnityEventTools.AddPersistentListener(repair.onClick, component.OpenRepair);
+            UnityEventTools.AddPersistentListener(demolish.onClick, component.OpenDemolish);
+            UnityEventTools.AddPersistentListener(close.onClick, controller.Close);
+            UnityEventTools.AddPersistentListener(confirm.onClick, component.ConfirmDialog);
+            UnityEventTools.AddPersistentListener(cancel.onClick, component.CloseDialog);
+            UnityEventTools.AddPersistentListener(dismiss.onClick, component.CloseDialog);
+
+            var panelSO = new SerializedObject(controller);
+            panelSO.FindProperty("infoCard").objectReferenceValue = component;
             panelSO.ApplyModifiedPropertiesWithoutUndo();
             card.gameObject.SetActive(false);
         }

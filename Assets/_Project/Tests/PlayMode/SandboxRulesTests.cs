@@ -308,7 +308,7 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         [Test]
-        public void TheBuildingCard_IsTheRunsCard_WithWhatItMakes()
+        public void TheBuildingCard_IsTheV2Card_WithWhatItMakes()
         {
             var sawmill = PlaceFinished("Sawmill");
             var panel = Object.FindAnyObjectByType<BuildingInfoPanelController>(FindObjectsInactive.Include);
@@ -316,15 +316,39 @@ namespace CityBuilder.Tests.PlayMode
             panel.Show(sawmill);
             try
             {
-                var card = Object.FindAnyObjectByType<RunBuildingCard>(FindObjectsInactive.Include);
-                Assert.IsTrue(card.gameObject.activeInHierarchy, "The sandbox does not show the run's building card.");
-                var band = card.transform.Find("Band");
-                Assert.IsNotNull(band, "The card has no band.");
-                Assert.IsTrue(band.gameObject.activeSelf, "The sawmill's card does not say what it makes.");
-                Assert.IsNotEmpty(band.Find("Makes").GetComponent<UnityEngine.UI.Text>().text);
+                // the sandbox's card v2 (the user, 2026-11-17), not the run's
+                var card = Object.FindAnyObjectByType<BuildingInfoCard>(FindObjectsInactive.Include);
+                Assert.IsTrue(card.gameObject.activeInHierarchy, "The sandbox does not show the v2 building card.");
+                Assert.IsFalse(Object.FindAnyObjectByType<RunBuildingCard>(FindObjectsInactive.Include).gameObject.activeInHierarchy,
+                    "The run's card is up beside the v2 card.");
+                Assert.IsNotEmpty(card.BandLine, "The sawmill's card does not say what it brings.");
             }
             finally
             {
+                panel.Close();
+            }
+        }
+
+        /// <summary>The v2 cards for the user to see (2026-11-17): a house, a workplace, a store, a tower, a tavern, the upgrade window.</summary>
+        [UnityTest]
+        public IEnumerator TheV2Cards_ForEveryKind_Photos()
+        {
+            TownHall();
+            var panel = Object.FindAnyObjectByType<BuildingInfoPanelController>(FindObjectsInactive.Include);
+            var card = Object.FindAnyObjectByType<BuildingInfoCard>(FindObjectsInactive.Include);
+            foreach (var id in new[] { "Hovel", "Sawmill", "Warehouse", "Tower", "Tavern" })
+            {
+                var building = PlaceFinished(id);
+                yield return null;
+                panel.Show(building);
+                Assert.IsTrue(card.gameObject.activeInHierarchy, $"{id}: no v2 card.");
+                yield return PlaytestCapture.ShootWithUi($"card-v2-{id.ToLowerInvariant()}", building.transform.position);
+                if (id == "Hovel")
+                {
+                    card.OpenUpgrade();
+                    yield return PlaytestCapture.ShootWithUi("card-v2-upgrade", building.transform.position);
+                    card.CloseDialog();
+                }
                 panel.Close();
             }
         }

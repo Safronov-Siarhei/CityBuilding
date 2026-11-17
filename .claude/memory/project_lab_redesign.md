@@ -40,3 +40,7 @@ Related: [[project_archipelago_map]] (ships in the Армия tab, shipyard leve
 - NEXT: the same v2 card for EVERY building, each shown to the user for approval (their words: «после правок
   лаборатории начинаем делать такие окна для каждого здания с утверждением»).
 - The font has no «→»: never use arrows in game texts. Card: Design/features/research-laboratory.md.
+- 2026-11-17: v2 cards for the ordinary buildings APPROVED (six kinds + upgrade window, concepts Design/ui/Info_*.png)
+  and BUILT (UI/BuildingInfoCard.cs, sandbox only; card hud-and-ui.md «Building card v2»), not seen by the user.
+  NEXT: concepts for the special buildings (Town Hall, Barracks, Stable, Workshop, Shipyard, Lighthouse, Healer,
+  Tax House, Cemetery, Diplomacy, Fire Brigade, Smelter, Crystal mine), approval first.

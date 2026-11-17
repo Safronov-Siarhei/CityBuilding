@@ -46,6 +46,8 @@ namespace CityBuilder.UI
         [Header("An Invasion run's card (the user's sketch, 2026-10-25) in place of the one above")]
         [SerializeField] private GameObject sandboxCard;
         [SerializeField] private RunBuildingCard runCard;
+        // the sandbox's card v2 (the user approved the concepts 2026-11-17): stands in for runCard where it Serves
+        [SerializeField] private BuildingInfoCard infoCard;
 
         private BuildingInstance _currentInstance;
         private ProductionBuilding _currentProduction;
@@ -64,9 +66,12 @@ namespace CityBuilder.UI
             _currentInstance = instance;
             _currentProduction = instance != null ? instance.GetComponent<ProductionBuilding>() : null;
             if (panelRoot != null) panelRoot.SetActive(true);
-            var run = RunCard;
-            if (sandboxCard != null) sandboxCard.SetActive(!run);
+            var v2 = V2For(instance);
+            var run = RunCard && !v2;
+            if (sandboxCard != null) sandboxCard.SetActive(!run && !v2);
             if (runCard != null) runCard.gameObject.SetActive(run);
+            if (v2) infoCard.Show(instance, _currentProduction);
+            else if (infoCard != null) infoCard.Hide();
             ModalGate.SetBlocked(true);
             WireUpgradeLock();
             Refresh();
@@ -119,6 +124,7 @@ namespace CityBuilder.UI
         public void Close()
         {
             CancelDemolish();
+            if (infoCard != null) infoCard.Hide();
             _currentInstance = null;
             _currentProduction = null;
             if (panelRoot != null) panelRoot.SetActive(false);
@@ -173,6 +179,18 @@ namespace CityBuilder.UI
             }
             Close();
             if (instance != null) instance.Demolish();
+        }
+
+        /// <summary>The v2 card's demolition text: what comes back, a cemetery's crystals, a store's goods lost (in red).</summary>
+        public string DemolishWarning()
+        {
+            if (_currentInstance == null) return string.Empty;
+            var text = DemolishCrystals(_currentInstance) > 0
+                ? Localization.Format("#demolish_confirm_crystals", _currentInstance.Data.LocalizedName, DemolishCrystals(_currentInstance))
+                : Localization.Format("#demolish_confirm", _currentInstance.Data.LocalizedName, DescribeRefund());
+            var lost = DescribeStoreLoss();
+            if (lost.Length > 0) text += "\n<color=#FF8A70>" + Localization.Format("#demolish_store_loss", lost) + "</color>";
+            return text;
         }
 
         /// <summary>What pulling this building down costs in crystals (the sandbox's Кладбище), 0 for anything else.</summary>
@@ -265,10 +283,20 @@ namespace CityBuilder.UI
         /// <summary>The user's card (RunBuildingCard) stands in for the old one -- in a run, and in the sandbox since 2026-10-25.</summary>
         private bool RunCard => runCard != null;
 
+        private bool V2For(BuildingInstance instance) => infoCard != null && instance != null && BuildingInfoCard.Serves(instance.Data);
+
         private void Refresh()
         {
             if (_currentInstance == null || _currentInstance.Data == null) return;
             var data = _currentInstance.Data;
+            if (infoCard != null && infoCard.gameObject.activeSelf)
+            {
+                var converts = _currentProduction != null && _currentProduction.MaxWorkers > 0
+                    && _currentProduction.SelectedRecipe != null && _currentProduction.SelectedRecipe.HasInputs;
+                infoCard.Refresh(converts ? null : ProductionLine(data) ?? string.Empty, converts);
+                if (converts) RefreshRecipeFormula(infoCard.RecipeRow);
+                return;
+            }
             if (RunCard)
             {
                 runCard.Refresh(_currentInstance, _currentProduction, BuildCostRow, Clock);

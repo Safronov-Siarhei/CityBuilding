@@ -208,7 +208,7 @@ DontDestroyOnLoad, put up by `LoadingScreen.IntoGame` (sandbox Start, saves Load
 Test `LoadingScreenTests` (+ photos loading-sandbox / loading-invasion).
 
 ## Building card in a run (user's sketch, 2026-10-25)
-`UI/RunBuildingCard.cs` replaces the sandbox card in a run only (sandbox card unchanged «пока»): name,
+`UI/RunBuildingCard.cs` — the card in a run, the tutorial, the campaign and on the Moat (the sandbox has v2 below): name,
 «Уровень N», heart+shield numbers, − workers/free + (minus LEFT), next level's picture
 (`Icons/<id>_L<n>.png`, rendered by render_icons.py from <id>1-lvl<n>) with gain badges (+health,
 +defence, +place, +worker, +reach), upgrade cost + button, repair cost + button (damaged only),
@@ -216,6 +216,26 @@ demolish/close. No «Производит», no recruiting: hiring is `UI/FocusH
 prices beside the bottom «!» in one centred row (`BuildingFocusBar`): Barracks = open soldier tiers
 (`Portrait<Type>.png`), castle = the three heroes (was CastleHeroCards on the castle's card, deleted).
 Hidden while the card is up (`BuildingFocus.DetailsShown`).
+
+## Building card v2 — the sandbox (concepts approved 2026-11-17, BUILT, not seen)
+Concepts: `Design/ui/Info_{House,Production,Food,Storage,Defence,Leisure,Upgrade}.png` (Tools/ui/info_cards_concepts.py).
+`UI/BuildingInfoCard.cs` (built by `SetupProjectPanels.BuildBuildingInfoCard`, object `InfoCardV2` under the info
+panel) stands in for RunBuildingCard wherever `BuildingInfoCard.Serves`: the sandbox (PiggyTasks.InSandbox, no
+dungeon), not the Moat. A run, the tutorial and the campaign keep RunBuildingCard. Frame = the Lab's «!» card:
+wood plaque «Name, ур. N» (`#lab_info_title`), level picture on a tile, «what it is for» line (`#card_what_*` by
+kind), «Прочность» bar, BODY (VerticalLayoutGroup; rows made in code once per Show), foot: Улучшить / round hammer /
+red round bin / Закрыть; a not-researched level shows `#building_upgrade_locked` in Upgrade's place (tap → research).
+Blocks (several may stack): house (residents N/M + figures, decor coins per resident or «no decor»), workplace
+(− N/M +, free, band: resource icon + ProductionLine/FoodLine + radius in cells, Smelter = recipe row; warning
+«nothing in reach» or food boost from neighbours), store (bar per kept resource, orange when full + note), tower
+(damage = Defense, range RangeOf/CellSize, shots/min = 60/DefenceAttackIntervalSeconds), decor (coins/resident/day,
+radius, houses + residents in reach, total). Card refreshes every 0.5 s. Hammer/bin/Upgrade open ONE dialog
+(upgrade: now ▶ next pictures, gain chips, price, `#card_build_time`; repair: price; demolish:
+`BuildingInfoPanelController.DemolishWarning()` + refund) whose button calls the controller (Upgrade/Repair/
+ConfirmDemolish). Texts `#card_*`. Test: SandboxRulesTests.TheBuildingCard_IsTheV2Card_WithWhatItMakes,
+photos TheV2Cards_ForEveryKind_Photos (card-v2-*.png). NEXT: special buildings (Town Hall, Barracks, Stable,
+Workshop, Shipyard, Lighthouse, Healer, Tax House, Cemetery, Diplomacy, Fire Brigade, Smelter, Crystal mine) —
+concepts first; invasion cards onto this frame proposed, not approved.
 
 ## Top resource bar (the user, 2026-11-02)
 - ONLY wood, stone, coins, CRYSTALS (own chip after the coins, always shown outside a run), food,
