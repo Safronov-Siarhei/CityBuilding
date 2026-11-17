@@ -181,6 +181,29 @@ The user: several round-4 items had NOT worked -- each checked in the code this 
 - Raid camera (2026-11-06): after the soldier's hire the camera stays on the town for `tutorial_raid_camera_sec`
   (3) before it goes over to the orcs boarding (`FollowMoving`, gated on `_stepTime`).
 
+## In-game offer in the sandbox (the user, 2026-11-17) -- PROPOSAL sent for approval, nothing built
+The user: a player who skipped the tutorial and started in the sandbox must get a banner offering it during the first
+10-20 minutes; the game is PAUSED under it and goes on only when it is closed or the tutorial is done.
+Mock-up `Design/ui/TutorialOffer_Banner.png` (`Tools/ui/tutorial_offer_concept.py`) v2: built like the PLAGUE/FIRE
+banners (the user: those are the best ones; v1 copied «Свобода» and was turned down): wood window, field of the game's
+building/resource icons at three depths on sunny blue, King left + Queen right, purple ribbon «Обучение», parchment
+«Не знаешь, с чего начать? Король покажет главное за 10 минут.», «Награда: 25 [crystal]», green «Пройти обучение»,
+«Позже». No pause plate (the game is simply paused under it, like the plague banner).
+Proposed rules (my calls, awaiting the user):
+- Only in the sandbox, only while the tutorial was never finished (`PlayerPrefs tutorial.rewarded`), at most ONCE per
+  world, at most 2 times per account (after the second «Позже» never again; the menu card stays).
+- Inside the first 20 min of game time, the FIRST trigger that fires:
+  1. no Town Hall 60 s after the start;
+  2. after the Town Hall, nothing new placed for 3 min (the start chain stalled);
+  3. no input at all for 60 s;
+  4. 1 min before the quiet start ends (the first raid) with no Barracks/soldier;
+  5. the first time the town goes hungry.
+  A player who plays well never sees it.
+- Not over a placement, an open window or a banner: waits until the screen is free.
+- «Пройти обучение»: autosave the world, load the tutorial; its victory panel gets «Вернуться в мой город» (loads that
+  save). «Позже»: unpause.
+- Numbers (60 s, 3 min, 60 s, 1 min, 20 min, 2 shows) go to the sheet.
+
 ## The script
 1. Start: two islands, no fog. King: «Поставьте Ратушу».
 2. Town Hall placed -> the King and 3 people appear. King: «Постройте Лачугу».
