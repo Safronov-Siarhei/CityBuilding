@@ -156,7 +156,8 @@ d = ImageDraw.Draw(win)
 d.rounded_rectangle((IX0, IY0, IX1, IY1), 36, outline=(60, 34, 12), width=5)
 
 # the parchment column
-pw0, pw1, pt, pb = 585, 1225, IY0 + 60, IY1 - 40
+# centred on the window (960); it stood at 905, 55 px left (the user, 2026-11-17)
+pw0, pw1, pt, pb = 640, 1280, IY0 + 60, IY1 - 40
 parch = layer()
 ImageDraw.Draw(parch).rounded_rectangle((pw0, pt, pw1, pb), 40, fill=(247, 232, 196, 255))
 pm = Image.new('L', (W, H), 0)
@@ -193,7 +194,7 @@ left = figure(FIG + '/figure_OrcTorchbearer_24.png', 620, 320)
 right = figure(FIG + '/figure_OrcTorchbearer_-24.png', 620, 1600)
 
 # ---------------------------------------------------------------- the ribbon
-rx0, rx1, ry0, ry1 = 400, 1410, Y0 - 82, IY0 + 66
+rx0, rx1, ry0, ry1 = 455, 1465, Y0 - 82, IY0 + 66
 my = (ry0 + ry1) / 2 + 42
 RIB, RIB_D, RIB_L, RIB_O = (44, 104, 176), (18, 50, 98), (96, 160, 222), (14, 38, 80)
 band = layer()

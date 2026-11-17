@@ -19,6 +19,9 @@ import sys
 
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from diplomacy_concepts import king_badge  # noqa: E402
+
 R = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) + '/'
 F = R + 'Assets/_Project/Resources/Fonts/'
 ICONS = R + 'Assets/_Project/UI/Icons/'
@@ -27,7 +30,8 @@ W, H = 1920, 1080
 X0, Y0, X1, Y1 = 60, 230, 1860, 1050
 IX0, IY0, IX1, IY1 = X0 + 34, Y0 + 34, X1 - 34, Y1 - 34
 FLOOR = IY1 - 16
-PW0, PW1, PT, PB = 585, 1225, IY0 + 60, IY1 - 40
+# centred on the WINDOW (960); v1 copied the plague/fire 905 and the ribbon stood 55 px left (the user saw it)
+PW0, PW1, PT, PB = 640, 1280, IY0 + 60, IY1 - 40
 CX = (PW0 + PW1) / 2
 INK = (60, 52, 24)
 
@@ -250,8 +254,23 @@ def window(field):
     return win
 
 
-def figure(win, path, body, x, glow):
+def neighbour_colours(a):
+    """The neighbour's King in red, not the player's purple (the user, 2026-11-17), as in the window's portrait."""
+    r, g, b, al = a.split()
+    h, sat, v = Image.merge('RGB', (r, g, b)).convert('HSV').split()
+    hp, sp = h.load(), sat.load()
+    for y in range(a.height):
+        for x in range(a.width):
+            if sp[x, y] > 70 and 170 <= hp[x, y] <= 215:
+                hp[x, y] = 0
+    r, g, b = Image.merge('HSV', (h, sat, v)).convert('RGB').split()
+    return Image.merge('RGBA', (r, g, b, al))
+
+
+def figure(win, path, body, x, glow, recolour=False):
     a = Image.open(path).convert('RGBA')
+    if recolour:
+        a = neighbour_colours(a)
     a = a.crop(a.getbbox())
     k = body / a.height
     a = a.resize((round(a.width * k), round(a.height * k)), Image.LANCZOS)
@@ -267,7 +286,7 @@ def figure(win, path, body, x, glow):
 
 
 def ribbon(img, title, rib, dark, light, out):
-    rx0, rx1, ry0, ry1 = 400, 1410, Y0 - 82, IY0 + 66
+    rx0, rx1, ry0, ry1 = 455, 1465, Y0 - 82, IY0 + 66
     my = (ry0 + ry1) / 2 + 42
     band = layer()
     db = ImageDraw.Draw(band)
@@ -334,10 +353,10 @@ def base():
     return Image.alpha_composite(img.filter(ImageFilter.GaussianBlur(6)), Image.new('RGBA', (W, H), (18, 8, 4, 200)))
 
 
-def compose(field, model, glow, tall=600):
+def compose(field, model, glow, tall=600, recolour=False):
     img = Image.alpha_composite(base(), window(field(IX1 - IX0, IY1 - IY0)))
-    img = figure(img, FIG + f'figure_{model}_24.png', tall, 320, glow)
-    return figure(img, FIG + f'figure_{model}_-24.png', tall, 1600, glow)
+    img = figure(img, FIG + f'figure_{model}_24.png', tall, 320, glow, recolour)
+    return figure(img, FIG + f'figure_{model}_-24.png', tall, 1600, glow, recolour)
 
 
 def crest(size, colour):
@@ -363,7 +382,7 @@ def help_banner():
 
 
 def gift_banner():
-    img = compose(gift_field, 'HeroKing', (255, 240, 170))
+    img = compose(gift_field, 'HeroKing', (255, 240, 170), recolour=True)
     img = ribbon(img, 'Подарок от соседа', (220, 160, 40), (140, 92, 14), (252, 214, 110), (100, 60, 8))
     body(img, 410, ['Сосед благодарит за дружбу!'])
     for x, ic, lab in ((CX - 180, icon('Res_Wood', 80), '+40'), (CX, icon('Res_Stone', 80), '+25'),
@@ -376,13 +395,46 @@ def gift_banner():
 def edge_banner():
     img = compose(edge_field, 'SoldierSpearman-lvl2', (255, 160, 80), 720)
     img = ribbon(img, 'Отношения на грани', (214, 104, 34), (130, 54, 12), (248, 160, 90), (96, 36, 6))
+    # v2 (the user, 2026-11-17: the medallion block was not liked): the two kings face each other across a crack,
+    # the relations number on it; under them the scale with the needle at the war mark
     d = ImageDraw.Draw(img)
-    d.ellipse((CX - 90, 345, CX + 90, 525), fill=(214, 170, 70), outline=(60, 36, 16), width=6)
-    d.ellipse((CX - 72, 363, CX + 72, 507), fill=(150, 46, 36), outline=(110, 74, 30), width=5)
-    d.text((CX, 435), '−52', font=font(66), fill=(255, 240, 200), anchor='mm', stroke_width=5, stroke_fill=(50, 26, 10))
-    body(img, 590, ['Сосед собирает войско.', 'Пришлите дар, чтобы избежать войны.'], 34)
-    button(img, (CX - 250, 690, CX + 250, 800), 'gold', 'Подарок', icon('Res_Coins', 64))
-    link(img, 880, 'Позже')
+    y = 445
+    crack = [(CX - 70, y - 6), (CX - 40, y + 10), (CX - 18, y - 14), (CX + 6, y + 12), (CX + 30, y - 10), (CX + 70, y + 6)]
+    d.line(crack, fill=(60, 30, 16), width=16)
+    d.line(crack, fill=(196, 52, 44), width=8)
+    for side in (-1, 1):
+        b = king_badge(170, side > 0)
+        img.alpha_composite(b, (int(CX + side * 165 - b.width / 2), int(y - b.height / 2)))
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle((CX - 62, y + 40, CX + 62, y + 104), 30, fill=(150, 46, 36), outline=(60, 30, 16), width=5)
+    d.text((CX, y + 72), '−52', font=font(46), fill=(255, 240, 200), anchor='mm', stroke_width=4, stroke_fill=(50, 26, 10))
+    # the scale
+    x0, x1, sy = int(CX) - 240, int(CX) + 240, 652
+    band = Image.new('RGBA', (x1 - x0, 34))
+    bd = ImageDraw.Draw(band)
+    for i in range(band.width):
+        k = i / (band.width - 1)
+        bd.line((i, 0, i, 34), fill=(int(196 * (1 - k) + 70 * k), int(56 * (1 - k) + 170 * k), 52, 255))
+    m = Image.new('L', band.size)
+    ImageDraw.Draw(m).rounded_rectangle((0, 0, band.width - 1, 33), 17, fill=255)
+    img.paste(band, (x0, sy), m)
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle((x0 - 3, sy - 3, x1 + 3, sy + 37), 20, outline=(60, 36, 16), width=5)
+
+    def at(v):
+        return x0 + (v + 100) / 200 * (x1 - x0)
+    wx = at(-50)
+    d.line((wx, sy + 2, wx, sy + 32), fill=(60, 36, 16), width=4)
+    sw = Image.open(R + 'Assets/_Project/UI/Glyphs/Swords.png').convert('RGBA')
+    sw = sw.crop(sw.getbbox()).resize((44, 44), Image.LANCZOS)
+    d.ellipse((wx - 30, sy - 72, wx + 30, sy - 12), fill=(178, 48, 38), outline=(60, 20, 10), width=4)
+    img.alpha_composite(sw, (int(wx - 22), int(sy - 64)))
+    d = ImageDraw.Draw(img)
+    nx = at(-44)
+    d.polygon([(nx - 16, sy - 8), (nx + 16, sy - 8), (nx, sy + 16)], fill=(255, 246, 220), outline=(60, 36, 16))
+    body(img, 728, ['Сосед собирает войско!'], 36, (150, 40, 30))
+    button(img, (CX - 250, 778, CX + 250, 884), 'gold', 'Подарок', icon('Res_Coins', 64))
+    link(img, 942, 'Позже')
     return img
 
 

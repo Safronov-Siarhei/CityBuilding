@@ -315,3 +315,8 @@ from `ArchipelagoBotCell`; `TheBotKingdom_StandsOnItsIsland...` now checks each 
     SoldierSpearman-lvl2 / SoldierKnight-lvl2. The neighbour's gift is a banner too, not a window. Notices go to the
     usual notice panel like every other notice.
   - «Ратуша соседа пала» window approved; the reward is +50 crystals (`diplomacy_hall_razed_crystals`).
+- Round 4 (the user, 2026-11-17): ALL diplomacy concepts APPROVED after three fixes: the banners' ribbon and parchment
+  centred on the window (960; v1 copied plague/fire's 905, 55 px left -- the plague and fire banners in the game have the
+  same offset); the neighbour's King on the gift banner recoloured red (purple = the player's); «Отношения на грани»
+  centre v2: the two kings across a red crack with «−52», the scale with the needle at the swords mark, one line
+  «Сосед собирает войско!», «Подарок», «Позже». Next: build it all into the game.

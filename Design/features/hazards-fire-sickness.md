@@ -142,6 +142,8 @@ SANDBOX ONLY (other modes: no fires at all).
 - `Combat/TorchErrand` -- OrcKind.Torchbearer (43, `orc_torchbearer` units row), steered like GiftThief;
   spawned by `OrcRaidManager.SpawnTorchbearers` from hall level `torch_from_hall_level`. Model
   `Models/Orcs/OrcTorchbearer.fbx` from `Tools/blender/orctorch.py`.
+- 2026-11-17 (the user, APPROVED): the plague and fire banners' ribbon + parchment moved to the WINDOW's centre (960; they stood at 905,
+  55 px left); art re-run, pieces + layout.json regenerated -- lands in the game with the next setup (not built yet).
 - `UI/PauseBanner` (base) -> `PlagueBanner`, `FireBanner`; editor `BuildDisasterBanner<T>`; art
   `Tools/ui/fire_banner_art.py` -> `UI/Fire/`. Quiet start: `MigrationManager.HazardGraceRemaining` (saved).
 - Traps: the old BurnSeconds tests were deleted (the old fire is gone); the old keys (`fire_burn_seconds`,
