@@ -215,3 +215,11 @@ NOT done: the GPGS plugin (a download -- the user's OK), the Play Console boards
 **Covering (the user, 2026-11-17):** the screen's front is one `Content` group (all but `Hall`, `Vignette`, `RatingWindow`); the mode's «!» and the saves (`MainMenuController.Animate` -> `InvasionHubController.SetMenuCovered`) and «Доска славы» (`InvasionRatingWindow` OnEnable/OnDisable -> `SetRatingShown`) hide only it -- the 3D hall stays (the «!» used to fade the whole screen and bare the old menu scene). `#mode_info_invasion` no longer names the month (sheet synced).
 
 **The hall + rating UI APPROVED by the user («утверждаю», 2026-11-17)** after the covering fix. Open for later: the GPGS plugin and boards (the user said «Позже»).
+
+## Playtest 2026-11-17 (BUILT, not seen)
+- The Town Hall's room counts toward the cap in the SANDBOX only (`HousePeople.HallRoomCounts`): in a run it had raised the people.
+- Every workplace of a run fills itself (`ProductionBuilding.AutoStaffed`, not the Lab).
+- Music: King's Feast until the first wave, then the battle track (mus_mission1) for the rest of the run (combat-sound.md, Music).
+- The event feed hangs under the lowest SHOWN left-column button (`EventFeedController.FollowColumn`): a run has no sack/shop and the notices hung low.
+- A player's move order breaks off the fight (`ArmyGroup.OrderMoveTo(dest, breakOff)` -> `SoldierUnit.Disengage`): the King kept fighting.
+- Defeat window: concept `Design/ui/InvasionDefeat_A.png` (`Tools/ui/invasion_defeat_concept.py`: burning castle halves, ribbon «Замок пал», points big in gold, rows Отбито волн / Великан / Лагеря орков, today's 5 seals, «Новый забег» + «В главное меню»), waiting for approval.

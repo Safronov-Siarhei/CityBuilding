@@ -132,3 +132,5 @@ Same royal pig, the material changes: 1 pink ceramic (300), 2 bronze (500), 3 si
 - GIF bands the pig's smooth shading into lines (256 colours) and a palette per frame flickers: concept animations go as
   full-colour animated WebP. The model itself is smooth -- the lines were never in the render.
 - The menu shop does not render in a batchmode capture (its blur/ScreenCapture) -- the concept used its mockup.
+
+- 2026-11-17: the tasks' timer shows h:mm:ss (`PiggyWindow.RedrawTimer`).

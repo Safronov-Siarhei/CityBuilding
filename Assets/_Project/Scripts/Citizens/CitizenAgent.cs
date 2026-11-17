@@ -378,6 +378,9 @@ namespace CityBuilder.Citizens
                 {
                     _isWalking = false;
                     BeginPause(HarvestSecondsFor(_gatherNode));
+                    // the axe / the pick here too: a man sent by hand who stopped within reach of his tree stood
+                    // with empty hands (the user, 2026-11-17: the invasion's chopping missing in the sandbox and tutorial)
+                    Waddle?.Work(_gatherNode.ResourceType == Resources.ResourceType.Stone ? WorkKind.Mine : WorkKind.Chop, _gatherNode.transform.position);
                     return;
                 }
 

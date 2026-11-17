@@ -66,7 +66,56 @@ namespace CityBuilder.UI
         private void OnEnable() => Subscribe();
 
         // Again in Start: EventLogManager may wake after this does -- no guaranteed order between scene objects.
-        private void Start() => Subscribe();
+        private void Start()
+        {
+            Subscribe();
+            FindColumn();
+        }
+
+        // The left column the feed hangs under (the user, 2026-11-17: in the invasion the sack and the shop are not
+        // there and the notices hung far below the citizens' button): the feed's top follows the lowest one SHOWN.
+        private static readonly string[] ColumnNames = { "MenuButton", "WorkforceButton", "InventoryButton", "ShopButton" };
+        private const float ColumnGap = 24f;
+        private RectTransform[] _column;
+        private float _columnCheckIn;
+
+        private void FindColumn()
+        {
+            var found = new List<RectTransform>();
+            foreach (var t in transform.root.GetComponentsInChildren<RectTransform>(true))
+                if (System.Array.IndexOf(ColumnNames, t.name) >= 0) found.Add(t);
+            _column = found.ToArray();
+        }
+
+        private readonly Vector3[] _corners = new Vector3[4];
+
+        private void FollowColumn()
+        {
+            if (_column == null || _column.Length == 0) return;
+            var self = (RectTransform)transform;
+            var parent = self.parent as RectTransform;
+            if (parent == null) return;
+            var lowest = float.MaxValue;
+            foreach (var item in _column)
+            {
+                if (item == null || !item.gameObject.activeInHierarchy) continue;
+                item.GetWorldCorners(_corners);
+                var bottom = parent.InverseTransformPoint(_corners[0]).y;
+                // the shop's timer pill hangs under its button
+                var timer = item.Find("Timer") as RectTransform;
+                if (timer != null && timer.gameObject.activeInHierarchy)
+                {
+                    timer.GetWorldCorners(_corners);
+                    bottom = Mathf.Min(bottom, parent.InverseTransformPoint(_corners[0]).y);
+                }
+                lowest = Mathf.Min(lowest, bottom);
+            }
+            if (lowest == float.MaxValue) return;
+            // anchored at the parent's top edge, pivot at the feed's top
+            var y = lowest - ColumnGap - parent.rect.yMax;
+            var at = self.anchoredPosition;
+            if (Mathf.Abs(at.y - y) > 0.5f) self.anchoredPosition = new Vector2(at.x, y);
+        }
 
         private void OnDisable()
         {
@@ -105,6 +154,12 @@ namespace CityBuilder.UI
 
         private void Update()
         {
+            _columnCheckIn -= Time.unscaledDeltaTime;
+            if (_columnCheckIn <= 0f)
+            {
+                _columnCheckIn = 0.25f;
+                FollowColumn();
+            }
             var slots = _model.Slots;
             if (slots.Count == 0) return;
 

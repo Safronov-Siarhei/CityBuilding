@@ -121,3 +121,5 @@ Tutorial (2026-11-05, met the other device's tutorial work): in `TutorialMode` a
 (made if none), not the Garrison -- the tutorial taps its soldier and sends him aboard. `TutorialDirector` now
 checks the mode in Start, not Awake (MeshMapApplier decides it in its Awake; the HUD objects added for the squads
 changed the Awake order and turned the tutorial off).
+
+- 2026-11-17: a PLAYER's move order (ArmyOrderInput) breaks off any fight: each member `Disengage`s (Retreat to the spot, striking nobody till there). Bots, campaign and heroes' own moves use the old `OrderMoveTo(dest)` and keep fighting.

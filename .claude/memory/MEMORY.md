@@ -101,3 +101,4 @@
 - [Sandbox menu redesign (2026-11-17)](project_sandbox_menu_redesign.md) — concept A «Стол картографа» + «Свобода песочницы» BUILT 2026-11-17 (not seen); per-map autosave built.
 - [Storage rework (2026-11-17)](project_storage_rework.md) — DECIDED, not built: per-resource caps by level (sandbox), start chain hall→lighthouse→stores, rewards may overfill.
 - [Music by mode (2026-11-17)](project_music.md) — menu/tutorial/sandbox/invasion tracks, quiet + fades + pauses, Музыка/Эффекты sliders; BUILT, not heard.
+- [Playtest list 2026-11-17](project_pending_2026_11_17.md) — 13 items (piggy timer, hall people, invasion staff/notices/King/music, chopping, load camera, lab bar, season palette) BUILT; defeat window = concept for approval.

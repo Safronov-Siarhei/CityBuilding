@@ -283,3 +283,5 @@ https://claude.ai/artifact/DLLxzFesTdktVVR6uSUwD6 (looks).
   scaled by `SetupProject.BannerScale` = 0.6. Also in Design/WORKING_RULES.md.
 - Playtest 2026-11-17: the game menu's «Лавка» cards are 580 wide (9-sliced Card.png), the timer no longer runs into
   the name; the main-menu shop darkens the screen behind it (blurred shot x0.55 + dim 0.5), it used to wash it light.
+
+- 2026-11-17: the event feed's top follows the lowest SHOWN of MenuButton / WorkforceButton / InventoryButton / ShopButton (+ its timer), 24 px under it (`EventFeedController.FollowColumn`, every 0.25 s).

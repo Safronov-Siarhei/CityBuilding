@@ -378,7 +378,7 @@ namespace CityBuilder.UI
             if (_timer == null) return;
             var left = PiggyTasks.UntilNext;
             if (left < TimeSpan.Zero) left = TimeSpan.Zero;
-            _timer.text = $"{(int)left.TotalHours:00}:{left.Minutes:00}";
+            _timer.text = $"{(int)left.TotalHours:00}:{left.Minutes:00}:{left.Seconds:00}";   // h:mm:ss (the user, 2026-11-17)
         }
 
         // ------------------------------------------------------------ living

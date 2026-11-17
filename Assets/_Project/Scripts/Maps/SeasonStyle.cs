@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CityBuilder.Core;
 using UnityEngine;
 
@@ -155,7 +156,71 @@ namespace CityBuilder.Maps
             var looks = Looks;
             var look = CurrentLook;
             if (building == null || looks == null || look == null || look.buildings == null) return;
-            Swap(building, looks.buildingsPalette, look.buildings);
+            // every slot and the crowns too: a decor building's tree kept summer's green (the user, 2026-11-17)
+            DressAny(building);
+        }
+
+        /// <summary>
+        /// EVERYTHING under `root` in the season's palettes, every material slot of every renderer (the user, 2026-11-17:
+        /// the dungeons' mouths, the rocks, some trees and the decor buildings kept summer's colours on an autumn map):
+        /// the buildings' palette, summer's conifer and broadleaf crowns and summer's terrain each go to the season's own.
+        /// Summer changes nothing. A figure's material (units) is not one of them and stays.
+        /// </summary>
+        public static void DressAny(GameObject root)
+        {
+            if (root == null) return;
+            var swaps = Swaps();
+            if (swaps == null || swaps.Count == 0) return;
+            foreach (var renderer in root.GetComponentsInChildren<Renderer>(true)) DressRenderer(renderer, swaps);
+        }
+
+        /// <summary>The same over the whole loaded scene, once a map is laid out (the props of every spawner at once).</summary>
+        public static void DressScene()
+        {
+            var swaps = Swaps();
+            if (swaps == null || swaps.Count == 0) return;
+            foreach (var renderer in UnityEngine.Object.FindObjectsByType<Renderer>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                DressRenderer(renderer, swaps);
+        }
+
+        private static void DressRenderer(Renderer renderer, Dictionary<Material, Material> swaps)
+        {
+            var shared = renderer.sharedMaterials;
+            var changed = false;
+            for (var i = 0; i < shared.Length; i++)
+            {
+                if (shared[i] != null && swaps.TryGetValue(shared[i], out var to) && to != null && to != shared[i])
+                {
+                    shared[i] = to;
+                    changed = true;
+                }
+            }
+            if (changed) renderer.sharedMaterials = shared;
+        }
+
+        private static Dictionary<Material, Material> _swaps;
+        private static MapSeason _swapsFor;
+
+        private static Dictionary<Material, Material> Swaps()
+        {
+            var looks = Looks;
+            var look = CurrentLook;
+            if (looks == null || look == null || looks.looks == null) return null;
+            if (_swaps != null && _swapsFor == Current) return _swaps;
+            _swapsFor = Current;
+            _swaps = new Dictionary<Material, Material>();
+            if (Current == MapSeason.Summer) return _swaps;
+            var summer = looks.looks[(int)MapSeason.Summer];
+            if (looks.buildingsPalette != null && look.buildings != null) _swaps[looks.buildingsPalette] = look.buildings;
+            if (looks.terrainSummer != null && look.terrain != null) _swaps[looks.terrainSummer] = look.terrain;
+            if (summer != null)
+            {
+                if (summer.conifer != null && look.conifer != null) _swaps[summer.conifer] = look.conifer;
+                if (summer.broadleaf != null && look.broadleaf != null && look.broadleaf.Length > 0)
+                    for (var i = 0; i < summer.broadleaf.Length; i++)
+                        if (summer.broadleaf[i] != null) _swaps[summer.broadleaf[i]] = look.broadleaf[i % look.broadleaf.Length];
+            }
+            return _swaps;
         }
 
         /// <summary>A unit's figure: the buildings' material without the snow, so winter does not whiten a helmet or a shoulder.</summary>

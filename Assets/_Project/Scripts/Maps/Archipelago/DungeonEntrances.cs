@@ -180,6 +180,7 @@ namespace CityBuilder.Maps.Archipelago
                 model.name = "Model";
                 model.transform.localPosition = Vector3.zero;
                 model.transform.localRotation = prefab.transform.localRotation;
+                SeasonStyle.DressAny(model);   // the map's season (the user, 2026-11-17: the mouth kept summer's)
                 SceneryShadows.DisableCasting(model);
             }
             var box = root.AddComponent<BoxCollider>();

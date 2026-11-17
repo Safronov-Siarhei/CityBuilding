@@ -190,6 +190,17 @@ namespace CityBuilder.Combat
             _retreatTo = to;
             _retreatLeft = Mathf.Max(0.1f, seconds);
         }
+
+        /// <summary>
+        /// The player's move order: break off any fight and walk there, striking nobody on the way (the user,
+        /// 2026-11-17: the King in the invasion would not leave a fight when sent elsewhere). Time = the walk + a little.
+        /// </summary>
+        public void Disengage(Vector3 to)
+        {
+            // not only one in a fight: an orc at hand would catch him again on his first step
+            _target = null;
+            Retreat(to, HorizontalDistance(to, transform.position) / Mathf.Max(0.5f, _walkSpeed) + 1.5f);
+        }
         private float AttackInterval => _attackIntervalSeconds / RageFactor;
 
         /// <summary>Has an enemy in hand: one it was sent at, or one that came within its engage radius.</summary>

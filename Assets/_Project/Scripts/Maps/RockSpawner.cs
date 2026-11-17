@@ -280,6 +280,7 @@ namespace CityBuilder.Maps
                 instance.transform.localPosition = Vector3.zero;
                 instance.transform.localRotation = model.transform.localRotation;
                 SceneryShadows.DisableCasting(instance);
+                SeasonStyle.DressAny(instance);   // the map's season (the user, 2026-11-17: summer rocks on autumn)
                 height = Mathf.Max(0.3f, MeasuredHeight(instance));
             }
             else

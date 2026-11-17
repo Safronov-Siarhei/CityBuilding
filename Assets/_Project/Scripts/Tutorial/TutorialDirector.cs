@@ -68,6 +68,9 @@ namespace CityBuilder.Tutorial
         private ShipUnit _ship;
         private ShipUnit _barge;                   // the orcs' raid
         private float _raidAt = -1f;
+
+        /// <summary>The orcs have stepped out to board their barge: the music turns warlike from here on (MusicPlayer).</summary>
+        public bool RaidStarted => _raidAt >= 0f;
         private readonly HashSet<OrcUnit> _softened = new HashSet<OrcUnit>();
         private readonly List<OrcUnit> _walkers = new List<OrcUnit>();   // the raid's orcs on their way from the portal to the barge
         private Vector3 _walkBeach;

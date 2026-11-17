@@ -163,7 +163,7 @@ namespace CityBuilder.UI
 
             var group = army.SelectedGroup;
             if (!OnFoot(group, destination)) return true;
-            group.OrderMoveTo(destination);
+            group.OrderMoveTo(destination, true);   // the player's word: out of the fight and go (2026-11-17)
             group.NotifyPlayerOrder();
             if (group.Count > 0) OrderMarker.ShowFlagFor(group.Members[0].transform, destination);
             return true;

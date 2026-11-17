@@ -87,6 +87,58 @@ namespace CityBuilder.Tests.PlayMode
             return castle;
         }
 
+        /// <summary>The user (2026-11-17): the invasion's men swing an axe at their tree, the sandbox's did not.</summary>
+        [UnityTest]
+        public IEnumerator ASawmillsMan_SwingsHisAxe_AtHisTree()
+        {
+            TownHall();
+            ResourceManager.Instance.SetInfiniteResources(true);
+            CitizenManager.Instance.SetPopulation(4);
+            var sawmill = PlaceFinished("Sawmill");
+            var workplace = sawmill.GetComponent<ProductionBuilding>();
+            Assert.IsNotNull(workplace);
+            workplace.SetAssignedWorkers(1);
+            Time.timeScale = 8f;
+            CitizenAgent man = null;
+            var sawNode = false;
+            var swung = false;
+            for (var t = 0f; t < 90f && !swung; t += Time.deltaTime)
+            {
+                yield return null;
+                if (man == null)
+                    man = Object.FindObjectsByType<CitizenAgent>(FindObjectsSortMode.None).FirstOrDefault(a => a.WorkNode != null);
+                if (man == null) continue;
+                sawNode = true;
+                var waddle = man.GetComponent<CitizenWaddle>();
+                if (waddle != null && waddle.Working == WorkKind.Chop) swung = true;
+            }
+            Time.timeScale = 1f;
+            Assert.IsTrue(sawNode, "No man of the sawmill was ever sent to a tree.");
+            Assert.IsNotNull(man.GetComponent<CitizenWaddle>(), "The sawmill's man has no CitizenWaddle (no figure).");
+            Assert.IsTrue(swung, "The sawmill's man never took up his axe at his tree.");
+
+            // a man sent to a tree BY HAND (the tutorial's way): he stopped within reach and stood empty-handed
+            workplace.SetAssignedWorkers(0);
+            yield return null;
+            var hand = Object.FindObjectsByType<CitizenAgent>(FindObjectsSortMode.None).FirstOrDefault(a => a.IsIdle);
+            Assert.IsNotNull(hand, "No idle citizen to send.");
+            var tree = Object.FindObjectsByType<CityBuilder.Maps.ResourceNode>(FindObjectsSortMode.None)
+                .Where(n => n.ResourceType == ResourceType.Wood && !n.IsDepleted && !n.IsClaimed)
+                .OrderBy(n => (n.transform.position - hand.transform.position).sqrMagnitude).FirstOrDefault();
+            Assert.IsNotNull(tree, "No tree to send him to.");
+            hand.GatherFrom(tree);
+            Time.timeScale = 8f;
+            var chopped = false;
+            for (var t = 0f; t < 90f && !chopped; t += Time.deltaTime)
+            {
+                yield return null;
+                var waddle = hand != null ? hand.GetComponent<CitizenWaddle>() : null;
+                if (waddle != null && waddle.Working == WorkKind.Chop) chopped = true;
+            }
+            Time.timeScale = 1f;
+            Assert.IsTrue(chopped, "A man sent to a tree by hand never took up his axe.");
+        }
+
         [UnityTest]
         public IEnumerator ABuildingAndItsUpgrade_TakeTheSandboxTabsTime()
         {

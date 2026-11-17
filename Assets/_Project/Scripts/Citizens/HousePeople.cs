@@ -528,14 +528,24 @@ namespace CityBuilder.Citizens
         {
             var citizens = CitizenManager.Instance;
             if (citizens == null) return;
-            citizens.ChangeCapacity(Places + HallPlaces(BuildingInstance.TownHall) - citizens.Capacity);
+            citizens.ChangeCapacity(TownRoom - citizens.Capacity);
         }
+
+        /// <summary>
+        /// The room counted: the houses' places, plus the hall's in the SANDBOX only -- in the invasion and the tutorial
+        /// the hall's room raised the people (the user, 2026-11-17: «в нашествии ратуша внесла изменения в количество
+        /// жителей», «в обучении ... их стало больше»).
+        /// </summary>
+        private int TownRoom => Places + (HallRoomCounts ? HallPlaces(BuildingInstance.TownHall) : 0);
+
+        private static bool HallRoomCounts => !Invasion.InvasionMode.IsActive && !Tutorial.TutorialMode.IsActive
+            && !Campaign.CityDefenceMode.IsActive;
 
         private void LateUpdate()
         {
             // a building's own Initialize/upgrade/teardown hands the town its sheet capacity; put it back
             var citizens = CitizenManager.Instance;
-            if (citizens != null && citizens.Capacity != Places) SyncCapacity();
+            if (citizens != null && citizens.Capacity != TownRoom) SyncCapacity();
         }
     }
 }

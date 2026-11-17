@@ -357,3 +357,8 @@ mode must load it itself. .meta files come with the next Unity setup. Next: the 
 Trap (2026-11-05): `TutorialDirector` decides it is on in **Start**, not Awake -- TutorialMode is set in
 MeshMapApplier.Awake and Awake order between scene objects is not fixed (new HUD objects broke it). Its soldier
 joins a squad, not the Garrison (army control by squads, [army-control](army-control.md)).
+
+## Playtest 2026-11-17 (BUILT, not seen)
+- The hall's room no longer adds people in the tutorial (sandbox only).
+- Battle music from the orcs' raid (boarding their barge) on: `TutorialDirector.RaidStarted` -> `MusicPlayer`.
+- A citizen sent to a tree/rock by hand swings his axe/pick (the within-reach branch of `CitizenAgent.Update` never called `CitizenWaddle.Work`).

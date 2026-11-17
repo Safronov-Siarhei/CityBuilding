@@ -10,8 +10,9 @@ namespace CityBuilder.UI
     ///   main menu  -- mus_exploration;
     ///   tutorial   -- mus_the_bards_tale;
     ///   sandbox    -- mus_harvest_season and mus_market_day by turns;
-    ///   invasion   -- mus_kings_feast, and while a wave is under way the campaign's battle track (mus_mission1),
-    ///                 the switch a quick fade out, a short breath, the other track faded in.
+    ///   invasion   -- mus_kings_feast until the first wave, then the campaign's battle track (mus_mission1) for good;
+    ///   tutorial   -- the battle track from the orcs' raid (boarding their barge) on.
+    ///   A switch: a quick fade out, a short breath, the other track faded in.
     /// The campaign plays its own music: in a mission (CityDefenceMode, MissionOne) this one keeps silent.
     /// Loudness = music_volume (sheet) x the player's «Музыка» slider (GameSettings.MusicVolume); the envelope times
     /// are music_fade_in_sec, music_fade_out_sec, music_pause_sec, music_switch_sec. One 2D streamed source.
@@ -55,12 +56,19 @@ namespace CityBuilder.UI
         {
             if (place == Place.Menu) return One(menuTrack);
             if (_campaign || Campaign.CityDefenceMode.IsActive) return null;
-            if (Tutorial.TutorialMode.IsActive) return One(tutorialTrack);
+            // the tutorial turns warlike when the orcs go to their barge (the user, 2026-11-17)
+            if (Tutorial.TutorialMode.IsActive)
+            {
+                var director = Tutorial.TutorialDirector.Instance;
+                return One(director != null && director.RaidStarted && battleTrack != null ? battleTrack : tutorialTrack);
+            }
+            // the invasion: once the waves have begun the battle track STAYS, between waves too -- the player is kept
+            // a little on edge (the user, 2026-11-17)
             var invasion = Invasion.InvasionMode.Instance;
             if (Invasion.InvasionMode.IsActive)
             {
-                var underway = invasion.Waves != null && invasion.Waves.Current == Invasion.InvasionWaves.Phase.Underway;
-                return One(underway && battleTrack != null ? battleTrack : invasionTrack);
+                var begun = invasion.Waves != null && invasion.Waves.Current != Invasion.InvasionWaves.Phase.NotStarted;
+                return One(begun && battleTrack != null ? battleTrack : invasionTrack);
             }
             return sandboxTracks;
         }

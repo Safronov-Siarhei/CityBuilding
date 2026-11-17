@@ -218,6 +218,7 @@ namespace CityBuilder.Maps
                 model.transform.localPosition = Vector3.zero;
                 model.transform.localRotation = source.transform.localRotation;
                 SceneryShadows.DisableCasting(model);
+                SeasonStyle.DressAny(model);
             }
             if (glowMaterial != null) AddGlow(visual.transform, kind, origin);
 

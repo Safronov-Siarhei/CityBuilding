@@ -96,3 +96,4 @@ does not scroll through everything. Concepts (`Tools/ui/lab_concepts.py`): Desig
 - TRAP: the font has no «→» (the concept's repair line showed a box) -- never use arrows in game texts.
 - Test: `ResearchGateTests` walks every category (>20 rows in all, >=4 categories filled) and checks ShowInfo vs Show.
 - NEXT (the user): the same v2 card for EVERY building, each shown for approval first.
+- 2026-11-17: the «!» card's health bar fill is a plain UISprite (the stretched round knob made an oval).

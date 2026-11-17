@@ -60,10 +60,12 @@ namespace CityBuilder.Citizens
         /// <summary>Production and food buildings fill themselves (not in an Invasion run, which keeps its own rules).</summary>
         /// In the sandbox EVERY workplace does (the user, 2026-11-13: «общее автоназначение»), the
         /// player's own count first: lowered by hand it is filled only up to that, set to 0 never.
+        /// In an Invasion run EVERY workplace fills itself too (the user, 2026-11-17: «если игрок ставит какое-то
+        /// здание, то туда должны автоматически назначаться жители на работу»).
         public bool AutoStaffed =>
-            Data != null && !Invasion.InvasionMode.IsActive
-            && !IsLaboratory
-            && (Data.category == BuildingCategory.Production || Data.category == BuildingCategory.Food || Infirmary.Active);
+            Data != null && !IsLaboratory
+            && (Invasion.InvasionMode.IsActive || Data.category == BuildingCategory.Production
+                || Data.category == BuildingCategory.Food || Infirmary.Active);
 
         /// <summary>Wanting hands it does not have: the worker-shortage mark goes up over it (WorkerShortageMarks).</summary>
         /// A self-staffing building the player emptied by hand keeps the mark too (the user, 2026-11-13:

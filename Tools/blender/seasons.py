@@ -12,7 +12,7 @@ Summer is today's look: it writes nothing.
 
     blender --background --factory-startup --python seasons.py -- G:/Fork/CityBuilding
 
-- the buildings': the buildings' palette with its two grass cells (the lawns of the building plots) in the season's
+- the buildings': the buildings' palette with its two grass cells and its leaf cell (2026-11-17) (the lawns of the building plots) in the season's
   ground grass (the user, 2026-11-17: an autumn map with green lawns under the buildings) -- SeasonStyle.DressBuilding.
 
 writes Assets/_Project/Models/Palette/Seasons/Terrain-<Season>.png, Trees-<Season>-<n>.png and Buildings-<Season>.png.
@@ -119,7 +119,8 @@ def main():
     for season, ground in GROUND.items():
         write_palette(terrain.TERRAIN_PALETTE, ground, terrain.COLS, terrain.ROWS, terrain.CELL,
                       os.path.join(out, f"Terrain-{season}.png"))
-        write_palette(kit.PALETTE, {"grass": ground["grass"], "grass_dark": ground["grass_dark"]}, kit.COLS, kit.ROWS,
+        # + the leaf green (moss on rocks and dungeon mouths, hedges, ivy, a decor building's bush): the user, 2026-11-17
+        write_palette(kit.PALETTE, {"grass": ground["grass"], "grass_dark": ground["grass_dark"], "leaf": ground["leaf"]}, kit.COLS, kit.ROWS,
                       kit.CELL, os.path.join(out, f"Buildings-{season}.png"))
         trees = TREES[season]
         write_palette(kit.PALETTE, trees["conifer"], kit.COLS, kit.ROWS, kit.CELL,

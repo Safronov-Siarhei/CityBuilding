@@ -271,6 +271,9 @@ namespace CityBuilder.Maps
             // back before this map was built, and its own reveal then found no island (the user,
             // 2026-11-02: fogged again after a dungeon)
             if (map.IsGenerated) StartCoroutine(RevealStartIslandOnceTheHallStands());
+            // the map's season over every prop the spawners put down (rocks, ore, dungeon mouths, trees, decor):
+            // now, and again once the late spawners have run (the user, 2026-11-17)
+            if (SeasonStyle.Current != Core.MapSeason.Summer) StartCoroutine(DressSceneSoon());
             // A designed map shows where the Town Hall may go until it stands (see StartZone).
             if (map.TownHallZone.Length >= 3 && !CityBuilder.Buildings.BuildingInstance.HasAny(CityBuilder.Buildings.BuildingIds.TownHall))
             {
@@ -281,6 +284,14 @@ namespace CityBuilder.Maps
                 var rig = FindAnyObjectByType<CityBuilder.CameraControl.RTSCameraController>();
                 if (rig != null) rig.JumpTo(StartZone.Centre(map.TownHallZone));
             }
+        }
+
+        private System.Collections.IEnumerator DressSceneSoon()
+        {
+            yield return null;
+            SeasonStyle.DressScene();
+            yield return new WaitForSecondsRealtime(1.5f);
+            SeasonStyle.DressScene();
         }
 
         public bool IsWaterCell(Vector2Int cell) => _waterCells.Contains(cell);

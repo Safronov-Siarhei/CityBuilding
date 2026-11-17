@@ -1222,7 +1222,8 @@ namespace CityBuilder.EditorTools
             StretchFull(barFill.rectTransform);
             barFill.rectTransform.offsetMin = new Vector2(4f, 4f);
             barFill.rectTransform.offsetMax = new Vector2(-4f, -4f);
-            barFill.sprite = knob;
+            // a plain bar: the round knob stretched made an oval (the user, 2026-11-17)
+            barFill.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
             barFill.type = Image.Type.Filled;
             barFill.fillMethod = Image.FillMethod.Horizontal;
             var barText = CreateText(barBack.transform, "Text", string.Empty, 24, Vector2.zero, new Vector2(600f, 44f));

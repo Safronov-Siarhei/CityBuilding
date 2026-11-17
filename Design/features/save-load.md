@@ -38,3 +38,5 @@ EditMode `SaveDataShapeTests`, `SaveSystemSanitizeNameTests`; PlayMode `SaveRoun
 - Delete a save (the user, 2026-11-17): a red bin (glyph Hud_Trash, make_hud_glyphs.py) at each row's right in the
   sandbox's saves window; a small «Удалить сохранение «X»? Его нельзя будет вернуть.» card (Отмена / Удалить) ->
   `SaveSystem.Delete`, list redrawn. LoadGamePanelController (trashGlyph, deleteConfirm...), built in BuildSavesDialog.
+
+- 2026-11-17: a resumed save looks at the Town Hall's footprint CENTRE once the hall exists and the loading screen is gone (waits up to 20 s), and again 0.6 s later (`GameSaveController.LookAtTownHallAfterLoad`) -- it gave up at frame 3 and the save opened far away.

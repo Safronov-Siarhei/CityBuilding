@@ -154,10 +154,31 @@ namespace CityBuilder.Saving
 
         private System.Collections.IEnumerator LookAtTownHallAfterLoad()
         {
-            for (var frame = 0; frame < 3; frame++) yield return null;
-            var hall = CityBuilder.Buildings.BuildingInstance.TownHall;
+            // the hall may come back only once the map is laid, and the loading screen may still be up: wait for both
+            // (the user, 2026-11-17: a sandbox save opened far from the Town Hall -- the look gave up at frame 3)
+            var waited = 0f;
+            CityBuilder.Buildings.BuildingInstance hall = null;
+            while (waited < 20f)
+            {
+                hall = CityBuilder.Buildings.BuildingInstance.TownHall;
+                if (hall != null && !CityBuilder.UI.LoadingScreen.Busy) break;
+                waited += Time.unscaledDeltaTime;
+                yield return null;
+            }
             if (hall == null) yield break;
-            StartCoroutine(LookAfterLoad(hall.transform.position));
+            var rig = FindAnyObjectByType<CityBuilder.CameraControl.RTSCameraController>();
+            var centre = HallCentre(hall);
+            if (rig != null) rig.JumpTo(centre);
+            // and once more when everything has settled: something else (a map's own start view) may move it after
+            yield return new WaitForSecondsRealtime(0.6f);
+            if (rig != null && hall != null) rig.JumpTo(HallCentre(hall));
+        }
+
+        /// <summary>The middle of the hall's footprint, not its corner.</summary>
+        private static Vector3 HallCentre(CityBuilder.Buildings.BuildingInstance hall)
+        {
+            var grid = CityBuilder.Grid.GridManager.Instance;
+            return grid != null ? grid.GetFootprintCenterWorld(hall.OriginCell, hall.RotatedFootprint()) : hall.transform.position;
         }
 
         /// <summary>The camera to a spot once the loaded game has settled (whatever looked at the Town Hall first).</summary>

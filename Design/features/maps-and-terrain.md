@@ -145,3 +145,6 @@ resources across a river; Map 3 decor ~12.8k props / ~240k tris is the first thi
   `grass`/`grass_dark` in the season's ground grass); SetupProjectSeasons makes `Buildings-<Season>.mat`
   (`SeasonLooks.Look.buildings`); `SeasonStyle.DressBuilding` swaps it onto every player building at
   `BuildingInstance.Initialize` (all level models). Bot buildings keep their own palette (not dressed); not seen.
+
+## Season palette on everything (2026-11-17, BUILT, not seen)
+The user: dungeon mouths, rocks, some trees and decor buildings kept summer's colours. `SeasonStyle.DressAny` swaps EVERY material slot (buildings palette -> Buildings-<Season>, summer conifer/broadleaf crowns -> the season's, summer terrain -> the season's); `DressScene` sweeps the scene after a map is laid and 1.5 s later (`MeshMapApplier.DressSceneSoon`); Rock/Ore spawners, `DungeonEntrances` and `BuildingInstance` (DressBuilding -> DressAny) dress their own. `Tools/blender/seasons.py` now also recolours the buildings palette's «leaf» cell (moss, hedges, ivy). A new prop spawner must call `SeasonStyle.DressAny`.

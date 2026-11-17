@@ -238,10 +238,15 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>Walk there and hold. Clears any attack order -- a move order is the player overriding what the group was doing.</summary>
-        public void OrderMoveTo(Vector3 destination)
+        public void OrderMoveTo(Vector3 destination) => OrderMoveTo(destination, false);
+
+        /// <summary>The same; `breakOff` (the PLAYER's order): whoever is fighting leaves the fight and goes.</summary>
+        public void OrderMoveTo(Vector3 destination, bool breakOff)
         {
             // an order on the ground brings whoever is on the walls down first
             for (var i = 0; i < _members.Count; i++) _members[i].LeaveWall(destination);
+            // whoever is in a fight breaks it off and goes (the King kept fighting, the user 2026-11-17)
+            if (breakOff) for (var i = 0; i < _members.Count; i++) _members[i].Disengage(destination);
             TurnTo(destination - Centre());
             HoldPosition = destination;
             AttackTarget = null;
