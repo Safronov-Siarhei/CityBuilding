@@ -26,6 +26,15 @@ namespace CityBuilder.UI
         [SerializeField] private Text mapCodeError;
         /// <summary>The round arrows by the code (2026-11-10): writes a fresh random code in, so the map's code is seen before the game.</summary>
         [SerializeField] private Button randomCodeButton;
+        /// <summary>The chart's width / height (its frame's): the map in the middle, open sea at the sides.</summary>
+        [SerializeField] private float chartAspect = 1f;
+        // the brass plate under the seals: it stands under the picked one and names its season (the A3 look, 2026-11-17)
+        [SerializeField] private RectTransform seasonPlate;
+        [SerializeField] private Text seasonText;
+        [SerializeField] private RectTransform[] seals = new RectTransform[0];
+        // the saves' count on the round badge of «Сохранения» (hidden at none)
+        [SerializeField] private GameObject savesBadge;
+        [SerializeField] private Text savesCount;
 
         [Header("A card per map, in MapSelector.PlayerMapIds order")]
         [SerializeField] private string[] mapIds = new string[0];
@@ -126,6 +135,8 @@ namespace CityBuilder.UI
             if (mapCodeError != null) mapCodeError.gameObject.SetActive(false);
             GameSessionIntent.NewGameMapId = id;
             GameSessionIntent.NewGameSeason = MapThemes.SeasonOf(Theme);
+            // the world's settings from the scroll («Свобода песочницы»)
+            GameSessionIntent.NewGameWorld = WorldSettings.Draft.Clone();
             LoadingScreen.IntoGame(gameplaySceneName);
         }
 
@@ -153,6 +164,16 @@ namespace CityBuilder.UI
                 if (i < pickedFrames.Length && pickedFrames[i] != null) pickedFrames[i].SetActive(mapIds[i] == _picked);
             }
             if (noMapsLabel != null) noMapsLabel.SetActive(!any);
+            var at = System.Array.IndexOf(MapThemes.All, theme);
+            if (seasonPlate != null && at >= 0 && at < seals.Length && seals[at] != null)
+                seasonPlate.anchoredPosition = new Vector2(seals[at].anchoredPosition.x, seasonPlate.anchoredPosition.y);
+            if (seasonText != null) seasonText.text = Localization.Get("#theme_" + MapThemes.Id(theme));
+            if (savesBadge != null)
+            {
+                var count = Saving.SaveSystem.ListSaves().Count;
+                savesBadge.SetActive(count > 0);
+                if (savesCount != null) savesCount.text = count.ToString();
+            }
             if (startButton != null) startButton.interactable = any && Shown(_picked);
         }
 
@@ -174,10 +195,12 @@ namespace CityBuilder.UI
                 var map = Maps.Archipelago.ArchipelagoGenerator.Generate(seed, version, preview: true);
                 if (_chart == null)
                 {
-                    _chart = InkMapPainter.NewTexture(map.Size);
-                    _chartSprite = Sprite.Create(_chart, new Rect(0f, 0f, map.Size, map.Size), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect);
+                    // the chart as wide as its frame (the user, 2026-11-17: rectangular, open sea at the sides)
+                    var width = InkMapPainter.WidthFor(map.Size, chartAspect);
+                    _chart = InkMapPainter.NewTexture(width, map.Size);
+                    _chartSprite = Sprite.Create(_chart, new Rect(0f, 0f, width, map.Size), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect);
                 }
-                InkMapPainter.Paint(map, _chart);
+                InkMapPainter.Paint(map, _chart, chartAspect);
                 _charted = id;
             }
             return _chartSprite;

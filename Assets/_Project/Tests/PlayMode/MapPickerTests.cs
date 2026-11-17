@@ -46,20 +46,20 @@ namespace CityBuilder.Tests.PlayMode
             screen.GetComponentInChildren<ThemePicker>().Pick(MapTheme.Summer);
             yield return null;
 
-            var cards = Cards(screen);
             var expected = MapSelector.Choosable().Select(m => "Map_" + m.MapId).ToArray();
-            // the archipelago alone since 2026-10-29 (the user: the old maps are out)
+            // the archipelago alone since 2026-10-29 (the user: the old maps are out); one chart on the table (A3, 2026-11-17)
             CollectionAssert.AreEqual(new[] { "Map_Archipelago" }, expected, "The sandbox's map is not the archipelago alone.");
-            CollectionAssert.AreEqual(expected, cards.Where(c => c.gameObject.activeSelf).Select(c => c.name).ToArray(), "The sandbox does not show every designed map, newest first.");
-            foreach (var card in cards)
-            {
-                var text = card.Find("Name").GetComponent<Text>().text;
-                StringAssert.DoesNotContain("#", text, $"{card.name} shows a raw localization key: \"{text}\"");
-                Assert.IsNotNull(card.Find("Picture").GetComponent<Image>().sprite, $"{card.name} has no picture.");
-            }
-            Assert.IsTrue(cards[0].Find("Picked").gameObject.activeSelf, "The newest map is not picked to begin with.");
+            var chart = Chart(screen);
+            Assert.IsTrue(chart.gameObject.activeSelf, "The sandbox shows no chart.");
+            var text = screen.transform.Find("Front/MapName").GetComponent<Text>().text;
+            StringAssert.DoesNotContain("#", text, $"The map's name is a raw localization key: \"{text}\"");
+            var sprite = chart.GetComponent<Image>().sprite;
+            Assert.IsNotNull(sprite, "The chart has no picture.");
+            // rectangular, the open sea at the sides (the user, 2026-11-17)
+            Assert.Greater(sprite.rect.width, sprite.rect.height * 1.5f, "The chart is not drawn as wide as its frame.");
             Assert.IsTrue(Start(screen).interactable, "«Начать» is not available with a map picked.");
 
+            for (var t = 0f; t < 25f && LoadingScreen.Busy; t += Time.unscaledDeltaTime) yield return null;
             yield return new WaitForSecondsRealtime(0.9f);
             yield return PlaytestCapture.ShootWithUi("map-picker", Vector3.zero);
             yield return PlaytestCapture.ShootWithUiAt("map-picker-phone", 2400, 1080, Vector3.zero, 40f, 50f, 25f);
@@ -72,7 +72,7 @@ namespace CityBuilder.Tests.PlayMode
             var screen = OpenSandbox();
             screen.GetComponentInChildren<ThemePicker>().Pick(MapTheme.NewYear);
             yield return null;
-            Assert.IsFalse(Cards(screen).Any(c => c.gameObject.activeSelf), "A map is shown in a theme it does not come in.");
+            Assert.IsFalse(Chart(screen).gameObject.activeSelf, "A map is shown in a theme it does not come in.");
             Assert.IsFalse(Start(screen).interactable, "«Начать» is available with no map to start on.");
         }
 
@@ -82,17 +82,34 @@ namespace CityBuilder.Tests.PlayMode
         {
             var screen = OpenSandbox();
             screen.GetComponentInChildren<ThemePicker>().Pick(MapTheme.Winter);
-            var map = Cards(screen).First(r => r.name == "Map_Archipelago");
-            map.GetComponent<Button>().onClick.Invoke();
-            Assert.IsTrue(map.Find("Picked").gameObject.activeSelf, "Tapping a card does not pick it.");
+            // «Свобода песочницы»: without the purchase a tap on a setting changes nothing (the banner comes up);
+            // with it the world starts with the settings chosen (card sandbox-freedom.md)
+            var owned = Wallet.FreedomOwned;
+            var draft = WorldSettings.Draft.Clone();
+            var scroll = screen.GetComponentInChildren<WorldSettingsScroll>();
+            Wallet.FreedomOwned = false;
+            WorldSettings.Draft = new WorldSettings();
+            scroll.Pick(WorldSettings.Setting.Raids, 0);
+            Assert.AreEqual(WorldSettings.DefaultRaids, WorldSettings.Draft.raids, "A setting changed without the purchase.");
+            Assert.IsTrue(Object.FindAnyObjectByType<FreedomBanner>(FindObjectsInactive.Include).transform.GetChild(0).gameObject.activeInHierarchy,
+                "A tap on a setting without the purchase did not bring up the banner.");
+            Wallet.FreedomOwned = true;
+            scroll.Pick(WorldSettings.Setting.Raids, 0);
+            scroll.Pick(WorldSettings.Setting.BuildSpeed, 2);
+            Assert.IsTrue(WorldSettings.Draft.Easier, "Raids off is not an easier world.");
 
             screen.StartGame();
+            Wallet.FreedomOwned = owned;
+            WorldSettings.Draft = draft;
             // a new game on the archipelago is a fresh seed of its own
             var id = GameSessionIntent.NewGameMapId;
             Assert.IsTrue(Maps.Archipelago.ArchipelagoMapId.TryParse(id, out _, out _), $"«Начать» started on \"{id}\", not a seeded archipelago.");
             yield return PlayModeScene.WaitUntilMapIsPhysicsReady(id);
             Assert.AreEqual(id, MeshMapApplier.Instance.CurrentMapId, "«Начать» did not start on the map picked.");
             Assert.AreEqual(MapSeason.Winter, SeasonStyle.Current, "The game is not in the theme's season.");
+            Assert.AreEqual(0, WorldSettings.Current.raids, "The world did not start with the raids chosen.");
+            Assert.AreEqual(2, WorldSettings.Current.buildSpeed, "The world did not start with the build speed chosen.");
+            Assert.IsTrue(WorldSettings.Current.Easier, "The running world does not know it is easier (the piggy gate).");
         }
 
         /// <summary>A friend's code typed in starts their very map (the user, 2026-10-28); a bad code starts nothing and says so.</summary>
@@ -101,10 +118,10 @@ namespace CityBuilder.Tests.PlayMode
         {
             var screen = OpenSandbox();
             screen.GetComponentInChildren<ThemePicker>().Pick(MapTheme.Summer);
-            var field = screen.transform.Find("Window/MapCode").GetComponent<InputField>();
+            var field = screen.transform.Find("Front/MapCode").GetComponent<InputField>();
             field.text = "nonsense";
             screen.StartGame();
-            Assert.IsTrue(screen.transform.Find("Window/MapCodeError").gameObject.activeSelf, "A bad code started a game without a word.");
+            Assert.IsTrue(screen.transform.Find("Front/CodeError").gameObject.activeSelf, "A bad code started a game without a word.");
 
             var id = Maps.Archipelago.ArchipelagoMapId.For(4242);
             field.text = Maps.Archipelago.ArchipelagoMapId.Code(id);
@@ -126,13 +143,13 @@ namespace CityBuilder.Tests.PlayMode
             return screen;
         }
 
-        private static Button Start(SandboxScreenController screen) => screen.transform.Find("Window/StartButton").GetComponent<Button>();
+        private static Button Start(SandboxScreenController screen) => screen.transform.Find("Front/Start").GetComponent<Button>();
 
-        private static Transform[] Cards(SandboxScreenController screen)
+        private static Transform Chart(SandboxScreenController screen)
         {
-            var grid = screen.transform.Find("Window/Maps");
-            Assert.IsNotNull(grid, "The sandbox has no map cards.");
-            return Enumerable.Range(0, grid.childCount).Select(grid.GetChild).ToArray();
+            var chart = screen.transform.Find("Front/Chart");
+            Assert.IsNotNull(chart, "The sandbox has no chart.");
+            return chart;
         }
     }
 }

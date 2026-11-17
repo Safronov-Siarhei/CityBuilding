@@ -343,6 +343,8 @@ namespace CityBuilder.Combat
             // portal to aim at, it just doesn't want the automatic waves interleaving with the
             // squads it spawns deliberately.
             if (RaidsSuspended) return;
+            // the world's settings switched the raids off (WorldSettings, «Свобода песочницы»)
+            if (WorldSettings.Current.RaidsOff) return;
             // the tutorial's orcs are its script's (Tutorial.TutorialDirector): no raid clock
             if (Tutorial.TutorialMode.IsActive) return;
 
@@ -542,7 +544,9 @@ namespace CityBuilder.Combat
         public static int ComputeRaidSize(int score)
         {
             var balance = BalanceConfig.Instance;
-            return ComputeRaidSize(score, balance.RaidBaseSize, balance.RaidProgressPerExtraRaider, balance.RaidMaxSize);
+            var size = ComputeRaidSize(score, balance.RaidBaseSize, balance.RaidProgressPerExtraRaider, balance.RaidMaxSize);
+            // the world's raid level (WorldSettings): lighter or heavier waves
+            return Mathf.Max(1, Mathf.RoundToInt(size * WorldSettings.Current.RaidSizeFactor));
         }
 
         /// <summary>
@@ -583,7 +587,8 @@ namespace CityBuilder.Combat
         public static float ComputeRaidIntervalSeconds(int score)
         {
             var balance = BalanceConfig.Instance;
-            return ComputeRaidIntervalSeconds(score, balance.RaidIntervalSeconds, balance.RaidMinIntervalSeconds, balance.RaidProgressAtMinInterval);
+            return ComputeRaidIntervalSeconds(score, balance.RaidIntervalSeconds, balance.RaidMinIntervalSeconds, balance.RaidProgressAtMinInterval)
+                   * WorldSettings.Current.RaidIntervalFactor;
         }
 
         /// <summary>Builds one orc. `scatter` is what separates a raider stepping out of the portal from a loaded one, which has to land exactly where the save says.</summary>

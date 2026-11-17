@@ -155,7 +155,7 @@ namespace CityBuilder.Diplomacy
             var score = BotRelations.Score;
             var atWar = BotRelations.Stance == BotStance.War;
 
-            if (!atWar && score < 0f && BotAround())
+            if (!atWar && score < 0f && BotAround() && !WorldSettings.Current.neighbourPeace)
             {
                 var chance = config.DiplomacyWarChanceAtMinus100 * Mathf.Clamp01(-score / 100f);
                 if (UnityEngine.Random.value < chance)

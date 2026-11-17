@@ -110,7 +110,8 @@ namespace CityBuilder.Citizens
             // opening of a new game choosing where to put the Town Hall, and spending the grace
             // period on that decision would defeat the point of having one.
             _graceStarted = true;
-            SettlingInRemaining = BalanceConfig.Instance.SettlingInSeconds;
+            // the world's quiet start (WorldSettings, «Свобода песочницы»; 7 minutes by default)
+            SettlingInRemaining = Core.WorldSettings.Current.QuietSeconds;
             HazardGraceRemaining = BalanceConfig.Instance.HazardGraceSeconds;
         }
 

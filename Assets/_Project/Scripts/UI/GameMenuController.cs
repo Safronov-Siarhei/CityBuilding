@@ -25,6 +25,9 @@ namespace CityBuilder.UI
         [SerializeField] private GameObject saveDialogRoot;
         [SerializeField] private SettingsPanelController settingsPanel;
         [SerializeField] private GameObject settingsPanelRoot;
+        /// <summary>«Настройки мира» («Свобода песочницы»): its panel, and which entry opens it (a sandbox world only).</summary>
+        [SerializeField] private GameObject worldPanelRoot;
+        [SerializeField] private int worldEntry = -1;
         /// <summary>The menu's round entries top to bottom -- save, settings, home -- and the step between them.</summary>
         [SerializeField] private RectTransform[] entries = new RectTransform[0];
         [SerializeField] private float entryStep = 112f;
@@ -32,7 +35,7 @@ namespace CityBuilder.UI
         [SerializeField] private GameObject mapCodePlaque;
         [SerializeField] private Text mapCodeLabel;
 
-        private enum State { Closed, Menu, Save, Settings }
+        private enum State { Closed, Menu, Save, Settings, World }
 
         private State _state = State.Closed;
         private float _timeScaleBefore = 1f;
@@ -71,7 +74,7 @@ namespace CityBuilder.UI
             {
                 var entry = entries[i];
                 if (entry == null) continue;
-                var shown = !(run && i == 0);
+                var shown = !(run && i == 0) && !(i == worldEntry && !PiggyTasks.InSandbox);
                 entry.gameObject.SetActive(shown);
                 if (!shown) continue;
                 entry.anchoredPosition = new Vector2(entry.anchoredPosition.x, _firstEntryY - slot++ * entryStep);
@@ -133,6 +136,14 @@ namespace CityBuilder.UI
             settingsPanel.OpenPanel();
         }
 
+        public void OpenWorld()
+        {
+            if (_state != State.Menu || worldPanelRoot == null) return;
+            _state = State.World;
+            if (menuRoot != null) menuRoot.SetActive(false);
+            worldPanelRoot.SetActive(true);
+        }
+
         public void GoToMainMenu()
         {
             if (saveController != null) saveController.Autosave();
@@ -154,6 +165,7 @@ namespace CityBuilder.UI
             // they go); when one has, the player is back in the menu, not in the game.
             if (_state == State.Save && saveDialogRoot != null && !saveDialogRoot.activeSelf) ShowMenu();
             else if (_state == State.Settings && settingsPanelRoot != null && !settingsPanelRoot.activeSelf) ShowMenu();
+            else if (_state == State.World && worldPanelRoot != null && !worldPanelRoot.activeSelf) ShowMenu();
         }
 
         private void OnDestroy()

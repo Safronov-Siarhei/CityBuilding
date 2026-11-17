@@ -236,6 +236,9 @@ namespace CityBuilder.Saving
         /// </summary>
         public bool raidsSuspended;
 
+        /// <summary>The world's own settings («Свобода песочницы», Core.WorldSettings); an old save: the defaults.</summary>
+        public Core.WorldSettings worldSettings = new Core.WorldSettings();
+
         /// <summary>
         /// Where migration had got to. Without these, reloading reset the wait for the next
         /// settler and handed a town still inside its settling-in grace the whole grace back --

@@ -150,6 +150,12 @@ namespace CityBuilder.Diplomacy
                 why = "#diplomacy_war_ends";
                 return false;
             }
+            // the world's «Всегда мир» (WorldSettings, «Свобода песочницы»): no war either way
+            if (wanted == BotStance.War && WorldSettings.Current.neighbourPeace)
+            {
+                why = "#world_peace_blocks";
+                return false;
+            }
             if (wanted == BotStance.Trade && Score < (BalanceConfig.Instance != null ? BalanceConfig.Instance.BotTradeMinScore : 30f))
             {
                 why = "#diplomacy_trade_needs";

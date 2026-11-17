@@ -19,6 +19,10 @@ namespace CityBuilder.Saving
         /// <summary>The season the fresh game is dressed in (the menu's theme); null is summer. Ignored when loading a save.</summary>
         public static Core.MapSeason? NewGameSeason;
 
+        /// <summary>The new sandbox world's settings («Свобода песочницы», the sandbox screen's scroll); null = the defaults.
+        /// Consumed by GameSaveController.</summary>
+        public static Core.WorldSettings NewGameWorld;
+
         /// <summary>The game is a walk through this dungeon (Dungeon.DungeonTravel.Enter): its map id; consumed by DungeonMode.</summary>
         public static string DungeonId;
 

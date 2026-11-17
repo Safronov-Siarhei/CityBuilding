@@ -182,7 +182,8 @@ namespace CityBuilder.Core
         private static bool CountsHere(string mode)
         {
             if (mode != ModeSandbox && mode != ModeArchipelago) return true;
-            return InSandbox;
+            // a world set easier than the default earns no tasks (the user, 2026-11-17, «Свобода песочницы» option A)
+            return InSandbox && !WorldSettings.Current.Easier;
         }
 
         /// <summary>A sandbox game is on: not a run, the campaign or the tutorial.</summary>

@@ -92,7 +92,8 @@ namespace CityBuilder.Buildings
         /// <summary>The first minutes of a town: neither fires nor illness (hazard_grace_sec, MigrationManager).</summary>
         public static bool InGrace => MigrationManager.Instance != null && MigrationManager.Instance.HazardGraceRemaining > 0f;
 
-        private static bool CanStart => FireRules.Active && !InGrace && (Instance == null || Instance.ShieldLeft <= 0f);
+        // the world's «Пожары: Выкл» (WorldSettings): no fire starts, the burning ones burn out
+        private static bool CanStart => FireRules.Active && Core.WorldSettings.Current.fires && !InGrace && (Instance == null || Instance.ShieldLeft <= 0f);
 
         /// <summary>One game day of fire risk. Public so a test can pass a day.</summary>
         public void PassDay()

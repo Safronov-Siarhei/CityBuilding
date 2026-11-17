@@ -65,7 +65,8 @@ namespace CityBuilder.Citizens
         /// <summary>Illness killed somebody on this island (Infirmary.Die).</summary>
         public void RecordIllnessDeath(int island)
         {
-            if (!Active) return;
+            // the world's «Чума: Выкл» (WorldSettings): no new outbreak; one under way runs its course
+            if (!Active || (!Core.WorldSettings.Current.plague && !_on.ContainsKey(island))) return;
             var config = BalanceConfig.Instance;
             if (_on.TryGetValue(island, out var outbreak))
             {

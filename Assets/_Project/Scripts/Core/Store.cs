@@ -24,6 +24,8 @@ namespace CityBuilder.Core
         public const string MineSale = "crystal_mine_sale";
         public const string PackPrefix = "crystals_";
         public const string PackSalePrefix = "sale_crystals_";
+        /// <summary>«Свобода песочницы»: the sandbox's world settings, once and for good (Wallet.FreedomOwned).</summary>
+        public const string Freedom = "sandbox_freedom";
 
         private const string PendingKey = "store.pending.";
 
@@ -81,6 +83,7 @@ namespace CityBuilder.Core
             if (config == null) return 0f;
             if (id == Mine) return config.MenuShopMineUsd;
             if (id == MineSale) return config.MenuShopMineSaleUsd;
+            if (id == Freedom) return config.FreedomUsd;
             if (IsPiggy(id) && int.TryParse(id.Substring(PiggyPrefix.Length), out var lv)) return BalanceConfig.Sandbox.PiggyUsd(lv - 1);
             var pack = PackIndexOf(id, out var sale);
             if (pack < 0) return 0f;
@@ -99,7 +102,7 @@ namespace CityBuilder.Core
         /// <summary>The mine's two products share one owner flag and one pending flag.</summary>
         private static string Family(string id) => IsMine(id) ? Mine : id;
 
-        public static bool CanBuy(string id) => !IsPending(id) && !(IsMine(id) && Wallet.CrystalMineOwned)
+        public static bool CanBuy(string id) => !IsPending(id) && !(IsMine(id) && Wallet.CrystalMineOwned) && !(id == Freedom && Wallet.FreedomOwned)
             && (!IsPiggy(id) || (id == PiggyBank.ProductId && PiggyBank.CanBreak));
 
         /// <summary>Buys a product. The stand-in gives it at once and says true; the billing will answer later through Granted.</summary>
@@ -115,6 +118,7 @@ namespace CityBuilder.Core
         {
             SetPending(id, false);
             if (IsMine(id)) Wallet.CrystalMineOwned = true;
+            if (id == Freedom) Wallet.FreedomOwned = true;
             var crystals = CrystalsOf(id);
             if (crystals > 0) Wallet.UpgradeCrystals += crystals;
             if (IsPiggy(id)) PiggyBank.OnBroken();
@@ -137,6 +141,7 @@ namespace CityBuilder.Core
         {
             SetPending(id, false);
             if (IsMine(id)) Wallet.CrystalMineOwned = false;
+            if (id == Freedom) Wallet.FreedomOwned = false;
             Changed?.Invoke();
         }
 

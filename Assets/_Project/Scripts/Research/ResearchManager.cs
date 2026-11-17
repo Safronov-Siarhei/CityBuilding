@@ -145,7 +145,9 @@ namespace CityBuilder.Research
 
             // One scientist per research: the ones beyond the scientists stand still, not lost.
             var working = Mathf.Min(_running.Count, LabWorkers);
-            for (var i = 0; i < working; i++) _running[i].Elapsed += Time.deltaTime;
+            // the world's research speed (WorldSettings, «Свобода песочницы»), the runs under way too
+            var step = Time.deltaTime * Core.WorldSettings.Current.ResearchFactor;
+            for (var i = 0; i < working; i++) _running[i].Elapsed += step;
             // Учёный: every running research is done at once while it runs (the user, 2026-11-12)
             if (Shop.Boosters.InstantResearch)
                 for (var i = 0; i < _running.Count; i++) _running[i].Elapsed = TotalSeconds(_running[i].Topic);

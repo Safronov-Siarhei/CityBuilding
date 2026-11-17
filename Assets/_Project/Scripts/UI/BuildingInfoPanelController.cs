@@ -142,8 +142,7 @@ namespace CityBuilder.UI
                     : Localization.Format("#demolish_confirm", _currentInstance.Data.LocalizedName, DescribeRefund());
                 // a sandbox store: what the other stores have no room for is lost -- said in red first (the user, 2026-11-17)
                 var lost = DescribeStoreLoss();
-                if (lost.Length > 0) demolishConfirmLabel.text += "
-<color=#B3261E>" + Localization.Format("#demolish_store_loss", lost) + "</color>";
+                if (lost.Length > 0) demolishConfirmLabel.text += "\n<color=#B3261E>" + Localization.Format("#demolish_store_loss", lost) + "</color>";
             }
             if (demolishConfirmRoot != null) demolishConfirmRoot.SetActive(true);
         }

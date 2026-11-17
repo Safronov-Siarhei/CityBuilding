@@ -101,7 +101,8 @@ namespace CityBuilder.EditorTools
             var closeButton = CreateGlyphButton(root.transform, "MenuCloseButton", "round_main", HudInk.OnMain, "Menu", null, RoundButton);
             Anchor(closeButton.GetComponent<RectTransform>(), new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(HudMargin, MenuButtonTop), new Vector2(RoundButton, RoundButton));
 
-            var entries = new[] { ("SaveEntry", "Save"), ("SettingsEntry", "Settings"), ("MainMenuEntry", "Home") };
+            // «Настройки мира» under «Сохранить» (the user, 2026-11-17; a sandbox world only -- GameMenuController.LayEntries)
+            var entries = new[] { ("SaveEntry", "Save"), ("WorldEntry", "Theme_summer"), ("SettingsEntry", "Settings"), ("MainMenuEntry", "Home") };
             var buttons = new Button[entries.Length];
             for (var i = 0; i < entries.Length; i++)
             {
@@ -134,6 +135,8 @@ namespace CityBuilder.EditorTools
             so.FindProperty("saveDialogRoot").objectReferenceValue = saveDialogRoot;
             so.FindProperty("settingsPanel").objectReferenceValue = settings;
             so.FindProperty("settingsPanelRoot").objectReferenceValue = settings.gameObject;
+            so.FindProperty("worldPanelRoot").objectReferenceValue = BuildWorldPanel(uiRoot);
+            so.FindProperty("worldEntry").intValue = 1;
             var entriesProp = so.FindProperty("entries");
             entriesProp.arraySize = buttons.Length;
             for (var i = 0; i < buttons.Length; i++) entriesProp.GetArrayElementAtIndex(i).objectReferenceValue = buttons[i].GetComponent<RectTransform>();
@@ -146,8 +149,9 @@ namespace CityBuilder.EditorTools
             UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
             UnityEventTools.AddPersistentListener(backdropButton.onClick, controller.Close);
             UnityEventTools.AddPersistentListener(buttons[0].onClick, controller.OpenSave);
-            UnityEventTools.AddPersistentListener(buttons[1].onClick, controller.OpenSettings);
-            UnityEventTools.AddPersistentListener(buttons[2].onClick, controller.GoToMainMenu);
+            UnityEventTools.AddPersistentListener(buttons[1].onClick, controller.OpenWorld);
+            UnityEventTools.AddPersistentListener(buttons[2].onClick, controller.OpenSettings);
+            UnityEventTools.AddPersistentListener(buttons[3].onClick, controller.GoToMainMenu);
             UnityEventTools.AddPersistentListener(codeButton.onClick, controller.CopyMapCode);
 
             root.SetActive(false);

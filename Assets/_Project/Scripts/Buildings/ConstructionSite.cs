@@ -69,7 +69,9 @@ namespace CityBuilder.Buildings
 
         private void Update()
         {
-            Remaining -= Time.deltaTime;
+            // the world's build speed (WorldSettings, «Свобода песочницы»): the player's sites only, running ones too
+            var speed = Building != null && Building.IsBot ? 1f : Core.WorldSettings.Current.BuildFactor;
+            Remaining -= Time.deltaTime * speed;
             // Зодчий: whatever stands under scaffolding while it runs is done at once (the user, 2026-11-12)
             if (Shop.Boosters.InstantBuild) Remaining = 0f;
             if (Remaining > 0f) return;

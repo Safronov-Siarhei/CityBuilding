@@ -125,7 +125,8 @@ namespace CityBuilder.Combat
             //
             // And never before the town has settled in (the user, 2026-10-20: an easy start) --
             // the same seven minutes migration and sickness wait out.
-            _raidTimer = Mathf.Max(BalanceConfig.Instance.RaidIntervalSeconds, BalanceConfig.Instance.SettlingInSeconds);
+            // the quiet start is the world's (WorldSettings: 0 / 7 / 15 / 30 minutes; 7 by default, as settling_in_seconds)
+            _raidTimer = Mathf.Max(BalanceConfig.Instance.RaidIntervalSeconds, WorldSettings.Current.QuietSeconds);
             // The nearest portal is the one the camera goes to: the closest threat to the town.
             EventLogManager.Instance?.Post(GameEvent.At(opened == 1
                     ? Localization.Get("#log_portal_opened")

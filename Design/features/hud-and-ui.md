@@ -123,7 +123,7 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
   (`ArchipelagoPreviewLibrary`, cells only, written next to ArchipelagoLibrary by CreateArchipelagoLibrary)
   via `Generate(seed, version, preview: true)` -- TRAP: never load ArchipelagoLibrary in the menu, it
   drags every island's meshes in. Test `TheMenuChart_IsTheMapTheGameMakes` (also writes RunLogs/ink_map_42.png + INKMAP ms).
-- **SANDBOX MENU REDESIGN (the user, 2026-11-17: «теперь я хочу переделать меню Песочницы»)** with the PAID
+- **SANDBOX MENU REDESIGN (the user, 2026-11-17: «теперь я хочу переделать меню Песочницы»)** with the PAID BUILT 2026-11-17 (Editor/SetupProjectSandboxHub.cs; card sandbox-freedom.md).
   «Свобода песочницы» (~$0.99 once: set the world up before the start and in the game -- raids, orc camps, portals,
   neighbour, fires, plague, storms, start goods, build speed, fog... -- the settings drawn are EXAMPLES, the list is to
   be discussed after the look). Concepts `Tools/ui/sandbox_hub_concepts.py` -> `Design/ui/SandboxHub_A/B/C.png`

@@ -27,6 +27,23 @@ namespace CityBuilder.Core
         }
 
         private const string CrystalMineKey = "wallet.crystal_mine_owned";
+        private const string FreedomKey = "wallet.sandbox_freedom_owned";
+
+        /// <summary>«Свобода песочницы» was bought (the user, 2026-11-17: ~$0.99 once): the sandbox's world settings may
+        /// be changed, on every map, before the start and in the game. Kept on the device, like the mine.</summary>
+        public static bool FreedomOwned
+        {
+            get => PlayerPrefs.GetInt(FreedomKey, 0) == 1;
+            set
+            {
+                var was = FreedomOwned;
+                PlayerPrefs.SetInt(FreedomKey, value ? 1 : 0);
+                PlayerPrefs.Save();
+                if (was != value) FreedomChanged?.Invoke();
+            }
+        }
+
+        public static event System.Action FreedomChanged;
 
         /// <summary>
         /// The Рудник кристаллов was bought (the user, 2026-11-14: a paid building, ~$8 in the shop). Bought

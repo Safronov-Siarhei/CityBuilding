@@ -3077,7 +3077,7 @@ MonoBehaviour:
       amount: 86
     - type: 1
       amount: 343
-    startsUnlocked: 0
+    startsUnlocked: 1
     unlockResearch:
       coins: 30
       seconds: 60
@@ -3176,7 +3176,7 @@ MonoBehaviour:
       intervalSeconds: 6
       happiness: 0
       buildSeconds: 160
-    requiredBuildingId: Warehouse
+    requiredBuildingId: 
     upgradeToLevel2Cost:
     - type: 0
       amount: 128
@@ -3296,7 +3296,7 @@ MonoBehaviour:
       intervalSeconds: 6
       happiness: 0
       buildSeconds: 135
-    requiredBuildingId: Barn
+    requiredBuildingId: 
     upgradeToLevel2Cost:
     - type: 0
       amount: 112
@@ -3416,7 +3416,7 @@ MonoBehaviour:
       intervalSeconds: 6
       happiness: 0
       buildSeconds: 186
-    requiredBuildingId: Treasury
+    requiredBuildingId: 
     upgradeToLevel2Cost:
     - type: 0
       amount: 48
@@ -6221,7 +6221,7 @@ MonoBehaviour:
       intervalSeconds: 6
       happiness: 0
       buildSeconds: 135
-    requiredBuildingId: Granary
+    requiredBuildingId: 
     upgradeToLevel2Cost:
     - type: 0
       amount: 112
@@ -9169,6 +9169,32 @@ MonoBehaviour:
   menuFogStart: 30
   menuFogEnd: 80
   menuLowFolkShare: 0.5
+  freedomRaidSize:
+  - 0
+  - 0.5
+  - 1
+  - 1.5
+  - 2
+  freedomRaidInterval:
+  - 1
+  - 1.5
+  - 1
+  - 0.8
+  - 0.6
+  freedomQuietMinutes:
+  - 0
+  - 7
+  - 15
+  - 30
+  freedomGoods:
+  - 0.5
+  - 1
+  - 2
+  freedomSpeed:
+  - 1
+  - 2
+  - 4
+  freedomUsd: 0.99
   hazardGraceSeconds: 600
   fireChancePerDay: 0.005
   fireDryMultiplier: 2
@@ -9891,6 +9917,11 @@ MonoBehaviour:
   startStone: 30
   startFood: 50
   startGold: 100
+  chainRewardWood: 40
+  chainRewardStone: 40
+  chainRewardFood: 20
+  chainRewardCoins: 100
+  storeFullNoticeSeconds: 150
   researchSecondsPerWorker: 5
   researchFreeWorkers: 1
   researchCancelRefundPercent: 70
@@ -10360,6 +10391,37 @@ MonoBehaviour:
     minHall: 4
     weight: 0.3
     rare: 1
+  storeCapRows:
+  - building: Warehouse
+    resources: 0000000001000000
+    caps: 320000003c00000046000000500000005a000000
+  - building: Warehouse
+    resources: 05000000030000000b00000006000000
+    caps: 14000000190000001e0000002300000028000000
+  - building: Warehouse
+    resources: 0c0000000d0000000e000000
+    caps: 0a0000000c0000000e0000001000000012000000
+  - building: BigWarehouse
+    resources: 0000000001000000
+    caps: 460000005a0000006e0000008200000096000000
+  - building: BigWarehouse
+    resources: 05000000030000000b00000006000000
+    caps: 28000000320000003c0000004600000050000000
+  - building: BigWarehouse
+    resources: 0c0000000d0000000e000000
+    caps: 14000000190000001e0000002300000028000000
+  - building: Granary
+    resources: 02000000
+    caps: 190000001e00000023000000280000002d000000
+  - building: BigGranary
+    resources: 02000000
+    caps: 320000003c00000046000000500000005a000000
+  - building: Treasury
+    resources: 07000000
+    caps: c8000000fa0000002c0100005e01000090010000
+  - building: BigTreasury
+    resources: 07000000
+    caps: 90010000f401000058020000bc02000020030000
   m2Waves:
   - part: 1
     wave: 1

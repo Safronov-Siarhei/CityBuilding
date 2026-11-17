@@ -100,12 +100,17 @@ namespace CityBuilder.Saving
             // a new game, or a dungeon (which reads the town's record from its slot): no bosses slain yet here
             if (string.IsNullOrEmpty(nameToLoad))
             {
+                // a new world takes the sandbox screen's settings (the defaults for every other game)
+                Core.WorldSettings.Current = GameSessionIntent.NewGameWorld != null ? GameSessionIntent.NewGameWorld.Clone() : new Core.WorldSettings();
+                GameSessionIntent.NewGameWorld = null;
                 Dungeon.DungeonRecord.Load(null);
                 Maps.Archipelago.TideCaches.LoadLooted(null);
                 return;
             }
 
             _pendingLoad = SaveSystem.Load(nameToLoad);
+            GameSessionIntent.NewGameWorld = null;
+            Core.WorldSettings.Current = _pendingLoad?.worldSettings != null ? _pendingLoad.worldSettings.Clone() : new Core.WorldSettings();
             if (_pendingLoad == null) return;
             Dungeon.DungeonRecord.Load(_pendingLoad.dungeonBossesSlain, _pendingLoad.dungeonCrystalsTaken, _pendingLoad.dungeonHirelings, _pendingLoad.dungeonPotions);
             Maps.Archipelago.TideCaches.LoadLooted(_pendingLoad.tideCachesLooted);
@@ -750,6 +755,7 @@ namespace CityBuilder.Saving
             var data = new GameSaveData
             {
                 mapId = CurrentMapId,
+                worldSettings = Core.WorldSettings.Current.Clone(),
                 season = (int)Maps.SeasonStyle.Session,
                 mandatoryBuildingPlaced = buildingPlacer == null || !buildingPlacer.IsPlacingTownHall,
                 population = citizenManager != null ? citizenManager.TotalPopulation : 0,

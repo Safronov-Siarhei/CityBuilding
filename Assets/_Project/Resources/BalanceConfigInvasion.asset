@@ -3251,7 +3251,7 @@ MonoBehaviour:
       amount: 86
     - type: 1
       amount: 343
-    startsUnlocked: 0
+    startsUnlocked: 1
     unlockResearch:
       coins: 30
       seconds: 60
@@ -3350,7 +3350,7 @@ MonoBehaviour:
       intervalSeconds: 6
       happiness: 0
       buildSeconds: 0
-    requiredBuildingId: Warehouse
+    requiredBuildingId: 
     upgradeToLevel2Cost:
     - type: 0
       amount: 128
@@ -3470,7 +3470,7 @@ MonoBehaviour:
       intervalSeconds: 6
       happiness: 0
       buildSeconds: 0
-    requiredBuildingId: Barn
+    requiredBuildingId: 
     upgradeToLevel2Cost:
     - type: 0
       amount: 112
@@ -3590,7 +3590,7 @@ MonoBehaviour:
       intervalSeconds: 6
       happiness: 0
       buildSeconds: 0
-    requiredBuildingId: Treasury
+    requiredBuildingId: 
     upgradeToLevel2Cost:
     - type: 0
       amount: 48
@@ -6445,7 +6445,7 @@ MonoBehaviour:
       intervalSeconds: 6
       happiness: 0
       buildSeconds: 0
-    requiredBuildingId: Granary
+    requiredBuildingId: 
     upgradeToLevel2Cost:
     - type: 0
       amount: 112
@@ -9401,6 +9401,32 @@ MonoBehaviour:
   menuFogStart: 30
   menuFogEnd: 80
   menuLowFolkShare: 0.5
+  freedomRaidSize:
+  - 0
+  - 0.5
+  - 1
+  - 1.5
+  - 2
+  freedomRaidInterval:
+  - 1
+  - 1.5
+  - 1
+  - 0.8
+  - 0.6
+  freedomQuietMinutes:
+  - 0
+  - 7
+  - 15
+  - 30
+  freedomGoods:
+  - 0.5
+  - 1
+  - 2
+  freedomSpeed:
+  - 1
+  - 2
+  - 4
+  freedomUsd: 0.99
   hazardGraceSeconds: 600
   fireChancePerDay: 0.005
   fireDryMultiplier: 2
@@ -10123,6 +10149,11 @@ MonoBehaviour:
   startStone: 30
   startFood: 50
   startGold: 100
+  chainRewardWood: 40
+  chainRewardStone: 40
+  chainRewardFood: 20
+  chainRewardCoins: 100
+  storeFullNoticeSeconds: 150
   researchSecondsPerWorker: 5
   researchFreeWorkers: 1
   researchCancelRefundPercent: 70
@@ -10135,6 +10166,7 @@ MonoBehaviour:
   baseCapacityGrain: 150
   botWaves: []
   diplomacyRows: []
+  storeCapRows: []
   m2Waves: []
   piggyTasks: []
   boosters: []

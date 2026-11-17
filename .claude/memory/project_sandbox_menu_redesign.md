@@ -1,6 +1,6 @@
 ---
 name: project_sandbox_menu_redesign
-description: Sandbox menu redesign (2026-11-17) -- concept A «Стол картографа» v3 + purchase banner APPROVED, not built; paid «Свобода песочницы» (~$0.99 world settings) look first, functions to discuss; per-map autosave BUILT
+description: Sandbox menu redesign (2026-11-17) -- concept A «Стол картографа» + purchase banner BUILT in the game 2026-11-17 (not seen); paid «Свобода песочницы» (~$0.99 world settings) look first, functions to discuss; per-map autosave BUILT
 metadata:
   type: project
 ---
@@ -20,3 +20,5 @@ Order the user set: concepts first for approval, THEN discuss the feature's func
 Card: Design/features/hud-and-ui.md (SANDBOX MENU REDESIGN). Related: [[project_menu_ui]], [[project_monetization_ideas]].
 
 FEATURE LIST DECIDED 2026-11-17 (card Design/features/sandbox-freedom.md): raids 5 levels, neighbour always-peace/as usual, quiet start 0/7/15/30, fires/storms/plague, start goods, build+research speed, fog; piggy option A; presets parked; in-game scroll under «Сохранить». Not built.
+
+BUILT 2026-11-17: new sandbox screen, rectangular chart (sea at the sides), settings scroll, purchase banner, in-game «Настройки мира» under «Сохранить», piggy line; MapPickerTests 4/4; user not seen it in Unity yet. Details: card sandbox-freedom.md.

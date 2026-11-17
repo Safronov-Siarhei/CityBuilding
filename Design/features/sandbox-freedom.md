@@ -1,6 +1,6 @@
 # «Свобода песочницы» — paid world settings
 
-**Status (2026-11-17): DECIDED, NOT BUILT** (look, list, rules and the piggy warning all agreed). The look is approved (see [hud-and-ui](hud-and-ui.md), SANDBOX MENU
+**Status (2026-11-17): BUILT, IN THE GAME, NOT SEEN BY THE USER** (setup green, MapPickerTests 4/4 incl. the purchase gate + settings carried into the world). The look is approved (see [hud-and-ui](hud-and-ui.md), SANDBOX MENU
 REDESIGN: `Design/ui/SandboxHub_A3.png`, `_A3_StartPulse.gif`, `_A3_Banner.png`); the list and the rules below are
 the user's answers of 2026-11-17. Related: [monetization](monetization.md), [piggy-bank](piggy-bank.md),
 [save-load](save-load.md).
@@ -46,7 +46,29 @@ In the game the settings that cannot change show their value greyed with a small
 - Presets on top of the scroll: «Мирный» / «Классика» / «Испытание» (the user: «пока что нет, просто пометь идею»).
 - A bonus for harder settings (option В) -- not chosen.
 
-## Not built yet: everything
-Screen (A3 look) -> `SetupProjectMainMenuScreens`; the banner (art from a script like plague_banner_art.py); a
-`WorldSettings` save block + the systems reading it (raids, bot war, quiet start, fires/storms/plague, start goods,
-build/research timers, fog); Store product `sandbox_freedom`; the piggy-task gate; the in-game scroll under «Сохранить».
+## Built (2026-11-17)
+- Data: `Core/WorldSettings.cs` (Current = the running world, Draft = the menu's; saved in `GameSaveData.worldSettings`;
+  `GameSessionIntent.NewGameWorld` carries Draft into a new game; MainMenuController.Start resets Current to defaults).
+  Factors: economy keys `freedom_*` (tab «Время и загрузка»), `BalanceConfig.Freedom*`.
+- Hooks: OrcRaidManager (off / size / interval), OrcRaidManagerPlacement + MigrationManager (quiet start), BotRelations +
+  DiplomacyRules (always peace, `#world_peace_blocks`; choosing peace during a war ends it), FireManager / Thunderstorm /
+  Plague, BuildingPlacer (start chain rewards x goods), ConstructionSite (player buildings only) / ResearchManager
+  (speed), FogOfWarManager (no fog = DisabledCheat), PiggyTasks.CountsHere (easier world: no tasks).
+- Purchase: `Store.Freedom = "sandbox_freedom"` (stand-in Grant like the crystal mine), `Wallet.FreedomOwned` (PlayerPrefs).
+- UI: `UI/WorldSettingsScroll.cs` (segments, picks, struck pigs, rows greyed in game for start-only settings, warning vs
+  hint, «По умолчанию»), `UI/FreedomBanner.cs` (hides the screen's front), `UI/ButtonBreath.cs` («Начать»).
+  Builders: `Editor/SetupProjectSandboxHub.cs` (BuildSandboxScreen, BuildWorldScroll, BuildFreedomBanner, BuildWorldPanel).
+  Art: `Tools/ui/sandbox_hub_art.py` -> `MenuArt/SandHub_*`, `Freedom_*`, `SandHub_layout.json`, row glyphs
+  `SandHub_RowGlyph0..9` (silhouettes baked from the icons), piggy line `UI/Shop/Resources/Shop/Piggy/EasyWarn.png`.
+- In game: game menu entry «WorldEntry» (glyph Theme_summer -- no scroll glyph yet) under «Сохранить», sandbox only
+  (`GameMenuController.worldEntry`), opens `WorldPanel` (the scroll centred + round ✕) and the banner over it.
+- Piggy window: the rose line `#world_warn_piggy` over the tasks in an easier sandbox world.
+- The chart is rectangular now (the user, mid-build): `InkMapPainter.Paint(map, tex, aspect)` pads open sea at the
+  sides; `SandboxScreenController.chartAspect` = 2 (layout point ChartAspect 820x410).
+- Texts: `#world_*`, `#freedom_*` (localization + sheet tab «Тексты: интерфейс и меню»), verify_sheet clean.
+
+## Traps / open
+- The SegBar/SegPick sprites get their 9-slice border from the builder (`SlicedMenuArt`), not UiTextureImport.
+- Option labels like «×2», «7 мин» are text keys, not formatted from the factors: change both when the sheet changes.
+- Real billing for `sandbox_freedom` is not wired (the stand-in Store grants at once), like the other products.
+- Not checked on a phone; the in-game panel and the banner were not photographed.

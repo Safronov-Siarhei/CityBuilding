@@ -792,6 +792,13 @@ namespace CityBuilder.Core
         [SerializeField] private float menuFogStart = 30f;
         [SerializeField] private float menuFogEnd = 80f;
         [SerializeField] private float menuLowFolkShare = 0.5f;
+        // «Свобода песочницы» (Core/WorldSettings, the user 2026-11-17): what each level of a world setting means
+        [SerializeField] private float[] freedomRaidSize = { 0f, 0.5f, 1f, 1.5f, 2f };
+        [SerializeField] private float[] freedomRaidInterval = { 1f, 1.5f, 1f, 0.8f, 0.6f };
+        [SerializeField] private float[] freedomQuietMinutes = { 0f, 7f, 15f, 30f };
+        [SerializeField] private float[] freedomGoods = { 0.5f, 1f, 2f };
+        [SerializeField] private float[] freedomSpeed = { 1f, 2f, 4f };
+        [SerializeField] private float freedomUsd = 0.99f;
         // sandbox fires v2 (the user, 2026-11-14; Buildings/FireManager)
         [SerializeField] private float hazardGraceSeconds = 600f;
         [SerializeField] private float fireChancePerDay = 0.005f;
@@ -1314,6 +1321,18 @@ namespace CityBuilder.Core
         public float MenuFogEnd => menuFogEnd;
         /// <summary>The main menu on the Low graphics tier: this share of the village's strolling folk.</summary>
         public float MenuLowFolkShare => menuLowFolkShare;
+        /// <summary>«Свобода песочницы»: the raid wave's size x this at raid level 0..4 (0 = no raids).</summary>
+        public float FreedomRaidSize(int level) => freedomRaidSize[Mathf.Clamp(level, 0, freedomRaidSize.Length - 1)];
+        /// <summary>The time between raids x this at raid level 0..4.</summary>
+        public float FreedomRaidInterval(int level) => freedomRaidInterval[Mathf.Clamp(level, 0, freedomRaidInterval.Length - 1)];
+        /// <summary>The quiet start (no raids, no illness) in minutes, levels 0..3.</summary>
+        public float FreedomQuietMinutes(int level) => freedomQuietMinutes[Mathf.Clamp(level, 0, freedomQuietMinutes.Length - 1)];
+        /// <summary>The start chain's reward x this, levels 0..2 (few / normal / many).</summary>
+        public float FreedomGoods(int level) => freedomGoods[Mathf.Clamp(level, 0, freedomGoods.Length - 1)];
+        /// <summary>Building / research speed x this, levels 0..2.</summary>
+        public float FreedomSpeed(int level) => freedomSpeed[Mathf.Clamp(level, 0, freedomSpeed.Length - 1)];
+        /// <summary>The purchase's price in dollars (a stand-in until Google Play: product sandbox_freedom).</summary>
+        public float FreedomUsd => freedomUsd;
         /// <summary>Sandbox: no fires and no illness for so long after the Town Hall is founded (the user, 2026-11-14: 10 minutes).</summary>
         public float HazardGraceSeconds => hazardGraceSeconds;
         /// <summary>Sandbox: the chance a day that a burnable building catches fire.</summary>
@@ -2575,6 +2594,15 @@ namespace CityBuilder.Core
             menuFogStart = Read(economy, "menu_fog_start", menuFogStart);
             menuFogEnd = Read(economy, "menu_fog_end", menuFogEnd);
             menuLowFolkShare = Read(economy, "menu_low_folk_share", menuLowFolkShare);
+            for (var i = 0; i < freedomRaidSize.Length; i++)
+            {
+                freedomRaidSize[i] = Read(economy, $"freedom_raid_size_{i}", freedomRaidSize[i]);
+                freedomRaidInterval[i] = Read(economy, $"freedom_raid_interval_{i}", freedomRaidInterval[i]);
+            }
+            for (var i = 0; i < freedomQuietMinutes.Length; i++) freedomQuietMinutes[i] = Read(economy, $"freedom_quiet_min_{i}", freedomQuietMinutes[i]);
+            for (var i = 0; i < freedomGoods.Length; i++) freedomGoods[i] = Read(economy, $"freedom_goods_{i}", freedomGoods[i]);
+            for (var i = 0; i < freedomSpeed.Length; i++) freedomSpeed[i] = Read(economy, $"freedom_speed_{i}", freedomSpeed[i]);
+            freedomUsd = Read(economy, "freedom_usd", freedomUsd);
             hazardGraceSeconds = Read(economy, "hazard_grace_sec", hazardGraceSeconds);
             fireChancePerDay = Read(economy, "fire_chance_per_day", fireChancePerDay);
             fireDryMultiplier = Read(economy, "fire_dry_mult", fireDryMultiplier);

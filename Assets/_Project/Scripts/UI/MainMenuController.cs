@@ -75,6 +75,8 @@ namespace CityBuilder.UI
 
         private void Start()
         {
+            // out of the world: the running world's settings are the defaults again (the piggy's line, the gates)
+            WorldSettings.Current = new WorldSettings();
             if (OpenOnModes)
             {
                 OpenOnModes = false;

@@ -84,7 +84,7 @@ namespace CityBuilder.EditorTools
             BuildModeBanners(modes, controller);
 
             // ---- the sandbox and the invasion
-            var sandboxScreen = BuildSandboxScreen(canvas, controller, out var sandbox, out var sandboxSettings);
+            var sandboxScreen = BuildSandboxScreen(canvas, controller, out var sandbox, out var sandboxSettings, out var sandboxFront);
             var invasionScreen = BuildInvasionScreen(canvas, controller, out var invasionSettings);
 
             // ---- dialogs over everything
@@ -107,6 +107,8 @@ namespace CityBuilder.EditorTools
             UnityEventTools.AddPersistentListener(closeInfo.onClick, controller.CloseInfo);
 
             var savesDialog = BuildSavesDialog(canvas, controller, out var loadPanel);
+            // «Свобода песочницы»'s purchase banner, over everything; it hides the sandbox screen's front
+            BuildFreedomBanner(canvas, SandLayout(), new[] { sandboxFront }, false);
 
             UnityEventTools.AddPersistentListener(play.onClick, controller.OpenModes);
             UnityEventTools.AddPersistentListener(offers.onClick, controller.OpenShop);
@@ -287,125 +289,7 @@ namespace CityBuilder.EditorTools
 
         // ---------------------------------------------------------------- the sandbox
 
-        // The user's pick of three concepts (2026-11-10, «Знамя и доска»): the sandbox banner of the
-        // hall on the left, a board on the right with the themes as picture tabs along its top, the
-        // map on it, and a column of the map code, Saves and Start.
-        private static readonly Vector2 SandboxBoardPos = new Vector2(180f, -60f);
-        private static readonly Vector2 SandboxBoardSize = new Vector2(1240f, 720f);
-
-        private static CanvasGroup BuildSandboxScreen(Transform canvas, MainMenuController controller, out SandboxScreenController sandbox, out Button settings)
-        {
-            var screen = StretchedChild(canvas, "SandboxScreen");
-            var back = Corner(screen, "BackButton", "Back", new Vector2(0f, 1f), new Vector2(CornerInset, -CornerInset), CornerButton);
-            var info = Corner(screen, "InfoButton", "Info", new Vector2(1f, 1f), new Vector2(-CornerInset - CornerButton - 20f, -CornerInset), CornerButton);
-            settings = Corner(screen, "SettingsButton", "Settings", new Vector2(1f, 1f), new Vector2(-CornerInset, -CornerInset), CornerButton);
-            UnityEventTools.AddPersistentListener(back.onClick, controller.Back);
-            UnityEventTools.AddIntPersistentListener(info.onClick, controller.ShowInfo, (int)GameMode.Sandbox);
-
-            // the banner, as it hangs in the hall (a sprite is 380 x 660)
-            const float bannerWidth = 340f;
-            const float k = bannerWidth / 380f;
-            var banner = CreateImage(screen, "SandboxBanner", Color.white);
-            banner.sprite = MenuArt("Banner_Sandbox");
-            banner.preserveAspect = true;
-            Anchor(banner.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 1f), new Vector2(-700f, 330f), new Vector2(bannerWidth, 660f * k));
-            // tap it and it swings like a struck cloth (the user, 2026-11-10: a small touch)
-            banner.gameObject.AddComponent<Button>().transition = Selectable.Transition.None;
-            banner.gameObject.AddComponent<BannerKnock>();
-            var plaque = MenuImage(banner.transform, "NamePlaque", "plaque", Vector2.zero, new Vector2(220f, 60f));
-            Anchor(plaque.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -318f * k), new Vector2(220f, 60f));
-            plaque.raycastTarget = false;
-            MenuLabel(plaque.transform, "Label", "#mode_sandbox", 28, new Vector2(0f, 2f), new Vector2(200f, 50f), HudInk.OnMenuPlaque, bold: true);
-
-            var window = MenuImage(screen, "Window", "panel", SandboxBoardPos, SandboxBoardSize, Image.Type.Tiled).transform;
-            var themes = BuildThemeTabs(screen, new Vector2(SandboxBoardPos.x, SandboxBoardPos.y + SandboxBoardSize.y * 0.5f + 44f));
-
-            // the map card(s), left on the board
-            var grid = new GameObject("Maps", typeof(RectTransform), typeof(GridLayoutGroup));
-            grid.transform.SetParent(window, false);
-            Anchor((RectTransform)grid.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-200f, 0f), new Vector2(760f, 580f));
-            var layout = grid.GetComponent<GridLayoutGroup>();
-            layout.cellSize = new Vector2(760f, 580f);
-            layout.spacing = new Vector2(30f, 30f);
-            layout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            layout.constraintCount = Mathf.Max(1, MapSelector.PlayerMapIds.Length);
-            layout.childAlignment = TextAnchor.MiddleCenter;
-
-            var ids = MapSelector.PlayerMapIds;
-            var cards = new Object[ids.Length];
-            var pictures = new Object[ids.Length];
-            var picked = new Object[ids.Length];
-            for (var i = 0; i < ids.Length; i++)
-            {
-                var card = MenuImage(grid.transform, $"Map_{ids[i]}", "row", Vector2.zero, layout.cellSize);
-                cards[i] = card.gameObject.AddComponent<Button>();
-                var lit = MenuImage(card.transform, "Picked", "row_selected", Vector2.zero, Vector2.zero);
-                StretchFull(lit.rectTransform);
-                lit.raycastTarget = false;
-                // one map: nothing to pick between, so no lit frame
-                lit.color = ids.Length > 1 ? Color.white : Color.clear;
-                picked[i] = lit.gameObject;
-                var picture = CreateImage(card.transform, "Picture", new Color(0.12f, 0.08f, 0.05f));
-                var plain = MenuArt($"Map_{ids[i]}");
-                if (plain != null) { picture.sprite = plain; picture.color = Color.white; }
-                picture.raycastTarget = false;
-                picture.preserveAspect = true;
-                // a square: a generated map's ink chart is drawn square (InkMapPainter), plain, no markers
-                Anchor(picture.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 30f), new Vector2(500f, 500f));
-                pictures[i] = picture;
-                var name = MenuLabel(card.transform, "Name", MapSelectPanelController.NameKey(ids[i]), 34, Vector2.zero, new Vector2(600f, 50f), HudInk.OnPanel, bold: true);
-                Anchor(name.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, 14f), new Vector2(600f, 50f));
-            }
-            var noMaps = MenuLabel(window, "NoMaps", "#sandbox_no_maps", 32, new Vector2(-200f, 0f), new Vector2(700f, 120f), HudInk.OnPanel);
-
-            // the column: the map code (+ a random one), Saves, Start
-            const float colX = 425f;
-            MenuLabel(window, "MapCodeLabel", "#sandbox_code_label", 28, new Vector2(colX, 230f), new Vector2(340f, 44f), HudInk.OnPanel, bold: true);
-            // the archipelago's code: empty = a random map, a friend's code = their map
-            var mapCode = CreateInputField(window, "MapCode", string.Empty, new Vector2(colX - 45f, 165f), new Vector2(250f, 80f),
-                AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.HudSkinsFolder}/Classic/plaque.png"));
-            mapCode.contentType = InputField.ContentType.Standard;
-            mapCode.characterLimit = 16;
-            mapCode.textComponent.alignment = TextAnchor.MiddleCenter;
-            var codePlaceholder = (Text)mapCode.placeholder;
-            codePlaceholder.alignment = TextAnchor.MiddleCenter;
-            Localize(codePlaceholder, "#sandbox_code_hint");
-            var random = MenuRoundButton(window, "RandomCodeButton", "round", "Rotate", HudInk.OnRound, 84f, 0.5f);
-            Anchor((RectTransform)random.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(colX + 130f, 165f), new Vector2(84f, 84f));
-            var codeError = CreateText(window, "MapCodeError", string.Empty, 22, new Vector2(colX, 95f), new Vector2(360f, 60f), UiTheme.Danger);
-            codeError.horizontalOverflow = HorizontalWrapMode.Wrap;
-            codeError.gameObject.SetActive(false);
-            var saves = MenuTextButton(window, "SavesButton", "plaque", "#sandbox_saves", HudInk.OnMenuPlaque, new Vector2(colX, -10f), new Vector2(340f, 104f), 34);
-            UnityEventTools.AddPersistentListener(saves.onClick, controller.OpenSaves);
-            var start = MenuTextButton(window, "StartButton", "button", "#sandbox_start", HudInk.OnButton, new Vector2(colX, -240f), new Vector2(340f, 130f), 44);
-
-            sandbox = screen.gameObject.AddComponent<SandboxScreenController>();
-            var so = new SerializedObject(sandbox);
-            so.FindProperty("themes").objectReferenceValue = themes;
-            so.FindProperty("startButton").objectReferenceValue = start;
-            so.FindProperty("mapCode").objectReferenceValue = mapCode;
-            so.FindProperty("mapCodeError").objectReferenceValue = codeError;
-            so.FindProperty("randomCodeButton").objectReferenceValue = random;
-            so.FindProperty("noMapsLabel").objectReferenceValue = noMaps.gameObject;
-            WriteStrings(so.FindProperty("mapIds"), ids);
-            WriteArray(so.FindProperty("cards"), cards);
-            WriteArray(so.FindProperty("pictures"), pictures);
-            WriteArray(so.FindProperty("pickedFrames"), picked);
-            var keys = new List<string>();
-            var sprites = new List<Object>();
-            foreach (var id in ids)
-            {
-                AddArt(keys, sprites, id, $"Map_{id}");
-                foreach (var theme in MapThemes.All) AddArt(keys, sprites, $"{id}_{MapThemes.Id(theme)}", $"Map_{id}_{MapThemes.Id(theme)}");
-            }
-            WriteStrings(so.FindProperty("pictureKeys"), keys);
-            WriteArray(so.FindProperty("pictureSprites"), sprites.ToArray());
-            so.ApplyModifiedPropertiesWithoutUndo();
-
-            var group = Group(screen.gameObject);
-            group.alpha = 0f;
-            return group;
-        }
+        // the screen itself: SetupProjectSandboxHub.cs («Стол картографа», 2026-11-17)
 
         private static void AddArt(List<string> keys, List<Object> sprites, string key, string art)
         {

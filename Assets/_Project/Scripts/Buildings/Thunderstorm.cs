@@ -53,7 +53,8 @@ namespace CityBuilder.Buildings
 
         private void Update()
         {
-            if (!FireRules.Active)
+            // the world's «Грозы: Выкл» (WorldSettings) stops a storm too
+            if (!FireRules.Active || !Core.WorldSettings.Current.storms)
             {
                 if (_on) Stop();
                 return;

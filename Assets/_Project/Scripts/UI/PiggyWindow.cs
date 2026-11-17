@@ -215,6 +215,15 @@ namespace CityBuilder.UI
             _timer = PiggyUi.Stroke(PiggyUi.Label(_root, "", 26, new Color(0.86f, 0.78f, 0.96f), R(1632 + 100, 386), new Vector2(200, 40)), 2f, PiggyUi.Ink);
             _timer.alignment = TextAnchor.MiddleLeft;
             _tasks = Group(_root, "Tasks");
+            // a sandbox world made easier («Свобода песочницы»): its tasks do not count -- said over them (the user 2026-11-17)
+            if (PiggyTasks.InSandbox && WorldSettings.Current.Easier && Maps.MeshMapApplier.Instance != null)
+            {
+                PiggyUi.Pic(_root, Art + "EasyWarn", R(1486, 304), new Vector2(600, 52));
+                var warn = PiggyUi.Label(_root, Localization.Get("#world_warn_piggy"), 20, new Color(0.5f, 0.1f, 0.08f), R(1514, 304), new Vector2(520, 46));
+                warn.resizeTextForBestFit = true;
+                warn.resizeTextMinSize = 12;
+                warn.resizeTextMaxSize = 20;
+            }
 
             _fx = Group(_root, "Fx");
         }

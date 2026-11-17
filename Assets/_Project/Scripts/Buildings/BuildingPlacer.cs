@@ -252,10 +252,12 @@ namespace CityBuilder.Buildings
             var config = BalanceConfig.Instance;
             var resources = ResourceManager.Instance;
             if (config == null || resources == null) return;
-            resources.AddOverCapacity(ResourceType.Wood, config.ChainRewardWood);
-            resources.AddOverCapacity(ResourceType.Stone, config.ChainRewardStone);
-            resources.AddOverCapacity(ResourceType.Food, config.ChainRewardFood);
-            resources.AddOverCapacity(ResourceType.Coins, config.ChainRewardCoins);
+            // the world's start goods (WorldSettings, «Свобода песочницы»: few / normal / many)
+            var k = Core.WorldSettings.Current.GoodsFactor;
+            resources.AddOverCapacity(ResourceType.Wood, Mathf.RoundToInt(config.ChainRewardWood * k));
+            resources.AddOverCapacity(ResourceType.Stone, Mathf.RoundToInt(config.ChainRewardStone * k));
+            resources.AddOverCapacity(ResourceType.Food, Mathf.RoundToInt(config.ChainRewardFood * k));
+            resources.AddOverCapacity(ResourceType.Coins, Mathf.RoundToInt(config.ChainRewardCoins * k));
             EventLogManager.Instance?.Post(GameEvent.Nowhere(Localization.Get("#chain_reward"), EventSeverity.Good, EventGlyph.Star, BuildingIds.Warehouse));
         }
 
