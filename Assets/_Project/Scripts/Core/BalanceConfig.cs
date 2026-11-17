@@ -544,6 +544,8 @@ namespace CityBuilder.Core
         [SerializeField] private float crystalMineNoticeRepeatSeconds = 60f;
         // a construction finished at once for crystals (the user, 2026-11-17; UI/InstantBuildBar)
         [SerializeField] private int instantBuildCrystals = 1;
+        // «Перенести здание» (the user, 2026-11-17): crystals for rebuilding a building on a new spot (move_building_crystals)
+        [SerializeField] private int moveBuildingCrystals = 1;
         // the main menu's «Магазин» (the user, 2026-11-15; menu_shop_* keys, UI/MenuShopWindow): the mine's price (USD,
         // a stand-in until Google Play gives the player's own price) and its gift, the «Подожди!» price and the discount
         // it shows, hours between two «Подожди!» (0 = every time), the three crystal packs: crystals, USD, bonus %;
@@ -1912,6 +1914,7 @@ namespace CityBuilder.Core
 
         public float CrystalMineNoticeShare => crystalMineNoticeShare;
         public int InstantBuildCrystals => instantBuildCrystals;
+        public int MoveBuildingCrystals => moveBuildingCrystals;
         public float CrystalMineNoticeRepeatSeconds => crystalMineNoticeRepeatSeconds;
 
         public float MenuShopMineUsd => menuShopMineUsd;
@@ -2758,6 +2761,7 @@ namespace CityBuilder.Core
             for (var l = 0; l < crystalMineCap.Length; l++) crystalMineCap[l] = (int)Read(economy, $"crystal_mine_cap_{l + 1}", crystalMineCap[l]);
             crystalMineNoticeShare = Read(economy, "crystal_mine_notice_share", crystalMineNoticeShare);
             instantBuildCrystals = Mathf.Max(0, Mathf.RoundToInt(Read(economy, "instant_build_crystals", instantBuildCrystals)));
+            moveBuildingCrystals = Mathf.Max(0, Mathf.RoundToInt(Read(economy, "move_building_crystals", moveBuildingCrystals)));
             crystalMineNoticeRepeatSeconds = Read(economy, "crystal_mine_notice_repeat_sec", crystalMineNoticeRepeatSeconds);
             menuShopMineUsd = Read(economy, "menu_shop_mine_usd", menuShopMineUsd);
             menuShopMineGift = (int)Read(economy, "menu_shop_mine_gift", menuShopMineGift);

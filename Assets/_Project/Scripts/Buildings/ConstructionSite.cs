@@ -34,6 +34,9 @@ namespace CityBuilder.Buildings
         /// <summary>Going up a level (rather than being built).</summary>
         public bool IsUpgrade { get; private set; }
 
+        /// <summary>Rebuilt on a new spot («Перенести здание»): no piggy task, no upgrade fanfare.</summary>
+        public bool IsMove { get; private set; }
+
         public float Progress => Total > 0f ? 1f - Remaining / Total : 1f;
 
         private Action _onDone;
@@ -44,7 +47,7 @@ namespace CityBuilder.Buildings
         /// upgrade's level-up). `total`, when larger, is the whole time -- a save putting a half-built
         /// one back.
         /// </summary>
-        public static ConstructionSite Begin(BuildingInstance building, float seconds, bool upgrade, Action onDone = null, float total = 0f)
+        public static ConstructionSite Begin(BuildingInstance building, float seconds, bool upgrade, Action onDone = null, float total = 0f, bool move = false)
         {
             if (building == null) return null;
             if (seconds <= 0f || InstantCheat)
@@ -57,6 +60,7 @@ namespace CityBuilder.Buildings
             site.Remaining = seconds;
             site.Total = Mathf.Max(seconds, total);
             site.IsUpgrade = upgrade;
+            site.IsMove = move;
             site._onDone = onDone;
             building.Site = site;
             site._look = ConstructionLook.Raise(building, upgrade);
@@ -92,7 +96,7 @@ namespace CityBuilder.Buildings
             done?.Invoke();
             // after the level is applied, so the finish shows the new model
             if (_look != null) _look.Complete();
-            if (Building != null && !Building.IsBot)
+            if (Building != null && !Building.IsBot && !IsMove)
             {
                 if (!IsUpgrade)
                 {

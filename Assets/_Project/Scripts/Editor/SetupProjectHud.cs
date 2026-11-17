@@ -212,6 +212,8 @@ namespace CityBuilder.EditorTools
             var mark = CreateText(button.transform, "Mark", "!", 76, new Vector2(0f, 4f), new Vector2(110f, 110f));
             mark.font = UiTheme.Heavy;
             SkinInk(mark, HudInk.OnRound);
+            // «Перенести здание», right of the «!» (the user, 2026-11-17): four arrows; sandbox only (MoveBuildingBar)
+            BuildMoveBuildingButton(row.transform);
             // a store's own goods, right of the «!» (StoreInventoryCard, the user 2026-11-17); wired by BuildStoreInventoryCard
             _storeSackButton = CreateGlyphButton(row.transform, "StoreInventoryButton", "round", HudInk.OnRound, "Bag", null, 128f, 0.62f);
             _storeSackButton.gameObject.SetActive(false);
@@ -713,6 +715,20 @@ namespace CityBuilder.EditorTools
             var so = new SerializedObject(bar);
             so.FindProperty("button").objectReferenceValue = button.gameObject;
             so.FindProperty("price").objectReferenceValue = amount;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            UnityEventTools.AddPersistentListener(button.onClick, bar.Tap);
+            button.gameObject.SetActive(false);
+        }
+
+        /// <summary>«Перенести здание» (the user, 2026-11-17): the four-arrow glyph (Hud_Move) in a round button right of the «!».</summary>
+        private static void BuildMoveBuildingButton(Transform row)
+        {
+            var button = CreateGlyphButton(row, "MoveBuildingButton", "round", HudInk.OnRound, "Move", null, 128f, 0.62f);
+            var go = new GameObject("MoveBuildingBar");
+            go.transform.SetParent(row.parent, false);
+            var bar = go.AddComponent<MoveBuildingBar>();
+            var so = new SerializedObject(bar);
+            so.FindProperty("button").objectReferenceValue = button.gameObject;
             so.ApplyModifiedPropertiesWithoutUndo();
             UnityEventTools.AddPersistentListener(button.onClick, bar.Tap);
             button.gameObject.SetActive(false);

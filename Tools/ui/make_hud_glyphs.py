@@ -402,6 +402,22 @@ def radius():
     return img
 
 
+def move():
+    """«Перенести здание» (the user, 2026-11-17: «4 стрелочки во все стороны»): a cross of bars, an arrowhead on each end."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    t = 0.05   # half the bar's thickness
+    d.rectangle(box(0.5 - t, 0.22, 0.5 + t, 0.78), fill=WHITE)
+    d.rectangle(box(0.22, 0.5 - t, 0.78, 0.5 + t), fill=WHITE)
+    for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0)):
+        tip = (0.5 + dx * 0.42, 0.5 + dy * 0.42)
+        base = (0.5 + dx * 0.24, 0.5 + dy * 0.24)
+        px, py = -dy, dx
+        d.polygon([(u(tip[0]), u(tip[1])), (u(base[0] + px * 0.15), u(base[1] + py * 0.15)),
+                   (u(base[0] - px * 0.15), u(base[1] - py * 0.15))], fill=WHITE)
+    return img
+
+
 def world():
     """The sandbox's world settings (the user picked concept B, 2026-11-17, Design/ui/WorldSettingsIcon_Concepts.png):
     an island with its mountains cut out, a small gear on its corner -- small, so it never reads as the Settings gear."""
@@ -435,7 +451,7 @@ def world():
 
 def main():
     os.makedirs(OUT, exist_ok=True)
-    for name, fn in (("Menu", menu), ("Settings", settings), ("Save", save_disk), ("World", world), ("Home", home),
+    for name, fn in (("Menu", menu), ("Settings", settings), ("Save", save_disk), ("World", world), ("Move", move), ("Home", home),
                      ("People", people), ("Rotate", rotate), ("Check", check), ("Cancel", cancel), ("Plus", plus),
                      ("Play", play), ("Shop", shop), ("Bag", bag), ("Back", back), ("Resume", resume), ("Lock", lock),
                      ("Info", info), ("Trash", trash), ("Trophy", trophy), ("Radius", radius), ("Discord", discord), ("YouTube", youtube), ("Heart", heart), ("Shield", shield),

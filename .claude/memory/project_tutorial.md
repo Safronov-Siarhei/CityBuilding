@@ -22,3 +22,8 @@ Round 5 d4c42eda5: ship always meets troops, portal collapse + 5 s victory delay
 - 2026-11-06 59b33728e: raid camera waits tutorial_raid_camera_sec (3) after the hire; victory panel after victory_delay_sec (3, economy; was a 5-s const). Built, not played.
 
 - 2026-11-06: the user declared the tutorial FINISHED. Left for the final pre-release pass (their words): how to present it to the player. Do not raise it earlier.
+
+2026-11-17: the IN-GAME OFFER BANNER in the sandbox is BUILT (e7e3ce6c0, not seen): plague/fire banner style, King+Queen,
+«за 5 минут», pauses the game; triggers (no hall / stall after the start chain / idle / raid soon with no army /
+short of wood or stone with no gain) in the first 20 min; 2 «Позже» = never again; launch saves a return slot and
+the tutorial win offers «Вернуться в мой город». Card tutorial.md, section «In-game offer in the sandbox».

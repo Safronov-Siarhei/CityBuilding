@@ -303,6 +303,31 @@ namespace CityBuilder.EditorTools
             placementHudSO.FindProperty("cancelButton").objectReferenceValue = cancelButton.gameObject;
             placementHudSO.FindProperty("aimMarker").objectReferenceValue = aimMarker;
             placementHudSO.FindProperty("statusLabel").objectReferenceValue = placementStatus;
+            // a move's price on the ✓ (the user, 2026-11-17: «на ней написана стоимость в 1 кристалл»): a crystal + the number
+            var movePrice = new GameObject("MovePrice", typeof(RectTransform));
+            movePrice.transform.SetParent(confirmButton.transform, false);
+            var moveRect = (RectTransform)movePrice.transform;
+            moveRect.anchorMin = moveRect.anchorMax = new Vector2(0.5f, 0f);
+            moveRect.sizeDelta = new Vector2(120f, 56f);
+            moveRect.anchoredPosition = new Vector2(0f, -6f);
+            var moveGem = CreateImage(movePrice.transform, "Crystal", Color.white);
+            moveGem.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.IconsFolder}/Res_UpgradeCrystal.png");
+            moveGem.preserveAspect = true;
+            moveGem.raycastTarget = false;
+            moveGem.rectTransform.anchorMin = moveGem.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            moveGem.rectTransform.sizeDelta = new Vector2(50f, 50f);
+            moveGem.rectTransform.anchoredPosition = new Vector2(24f, 0f);
+            var moveText = CreateText(movePrice.transform, "Amount", "1", 44, new Vector2(-22f, 0f), new Vector2(60f, 56f));
+            moveText.font = UiTheme.Heavy;
+            moveText.alignment = TextAnchor.MiddleRight;
+            moveText.raycastTarget = false;
+            moveText.color = new Color(1f, 0.97f, 0.86f);
+            var moveEdge = moveText.gameObject.AddComponent<Outline>();
+            moveEdge.effectColor = new Color(0.33f, 0.2f, 0.09f);
+            moveEdge.effectDistance = new Vector2(3f, -3f);
+            movePrice.SetActive(false);
+            placementHudSO.FindProperty("movePrice").objectReferenceValue = movePrice;
+            placementHudSO.FindProperty("movePriceText").objectReferenceValue = moveText;
             // the food bonus over the building in hand: big green, a dark edge (the user, 2026-11-10)
             var bonusLabel = CreateText(uiRoot, "PlacementFoodBonus", string.Empty, 52, Vector2.zero, new Vector2(320f, 80f), new Color(0.55f, 1f, 0.35f));
             bonusLabel.font = UiTheme.Heavy;

@@ -27,7 +27,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 |---|---|---|
 | **Economy** | | |
 | [resources-and-storage](resources-and-storage.md) | resource types, storage families, capacity, coins, flat tax + Tax House, lifetime produced | ресурсы, склад, вместимость, налог, налоговый дом, монеты |
-| [building-relocation](building-relocation.md) | moving a building (sandbox): a four-arrows button right of the «!», placing again with ✕/✓, 1 crystal, rebuilt in build time, same island (DECIDED 2026-11-17, not built) | перенести здание, перенос, переместить |
+| [building-relocation](building-relocation.md) | moving a building (sandbox): a four-arrows button right of the «!», placing again with ✕/✓, 1 crystal, rebuilt in build time, same island (BUILT 2026-11-17, not seen) | перенести здание, перенос, переместить |
 | [production-chains](production-chains.md) | workshops, recipes, grain→flour→bread, ore→bars, Smelter bar buttons (minting removed) | производство, рецепт, плавильня, пекарня, чеканка |
 | [gathering](gathering.md) | trees/rocks stock per node, ore veins, harvest radius, gatherer walk, manual tap-to-gather | лес, камень, сбор, радиус, лесопилка, жила, рудник |
 | [food-and-hunger](food-and-hunger.md) | eating, diet, starvation deaths, food variety | еда, голод, рацион |
