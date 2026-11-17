@@ -19,8 +19,8 @@ BROWN = (58, 30, 12)
 
 
 def logo():
-    """«CityCraft»: chunky gold letters, a thick dark-brown rim, a light band on their upper half. No crest and no
-    shadow (the user, 2026-11-17)."""
+    """«CityCraft»: chunky gold letters, a thick dark-brown rim, a soft shadow. No crest, and no light band over the
+    letters' upper half -- it greyed the gold (the user, 2026-11-17)."""
     W, H = 1100, 380
     img = Image.new('RGBA', (W, H), 0)
     f = font(150)
@@ -28,7 +28,10 @@ def logo():
     d = ImageDraw.Draw(img)
     tw = d.textlength(words, font=f)
     x, y = (W - tw) / 2, 150
-    # the rim (no shadow: the user, 2026-11-17)
+    # the shadow and the rim
+    sh = Image.new('RGBA', (W, H), 0)
+    ImageDraw.Draw(sh).text((x + 8, y + 14), words, font=f, fill=(0, 0, 0, 150), stroke_width=16, stroke_fill=(0, 0, 0, 150))
+    img = Image.alpha_composite(img, sh.filter(ImageFilter.GaussianBlur(8)))
     d = ImageDraw.Draw(img)
     d.text((x, y), words, font=f, fill=BROWN, stroke_width=16, stroke_fill=BROWN)
     d.text((x, y), words, font=f, fill=(140, 84, 20), stroke_width=7, stroke_fill=(140, 84, 20))
@@ -46,13 +49,6 @@ def logo():
     gold = Image.new('RGBA', (W, H), 0)
     gold.paste(grad, (0, 0), m)
     img = Image.alpha_composite(img, gold)
-    # a light band across the letters' upper half, and a glint line
-    hl = Image.new('RGBA', (W, H), 0)
-    hm = Image.new('L', (W, H), 0)
-    ImageDraw.Draw(hm).rectangle((0, bb[1], W, bb[1] + (bb[3] - bb[1]) * 0.38), fill=110)
-    hm = Image.composite(hm, Image.new('L', (W, H), 0), m)
-    hl.paste(Image.new('RGBA', (W, H), (255, 255, 235, 255)), (0, 0), hm)
-    img = Image.alpha_composite(img, hl)
     return img.crop(img.getbbox())
 
 
