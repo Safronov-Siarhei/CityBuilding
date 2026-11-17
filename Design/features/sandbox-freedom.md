@@ -72,3 +72,6 @@ In the game the settings that cannot change show their value greyed with a small
 - Option labels like «×2», «7 мин» are text keys, not formatted from the factors: change both when the sheet changes.
 - Real billing for `sandbox_freedom` is not wired (the stand-in Store grants at once), like the other products.
 - Not checked on a phone; the in-game panel and the banner were not photographed.
+- The WorldEntry glyph: concept sheet `Design/ui/WorldSettingsIcon_Concepts.png` (A scroll+island, B island+gear,
+  C scroll+sliders, D compass; `Tools/ui/world_settings_icon_concepts.py`), sent 2026-11-17, AWAITING the user's pick;
+  the chosen one goes into `make_hud_glyphs.py` as `Hud_World` and replaces Theme_summer in BuildGameMenu.
