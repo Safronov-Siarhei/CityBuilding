@@ -328,6 +328,83 @@ def info():
     img.save(OUT + 'Lab_Info.png')
 
 
+def round_icon(img, c, r, glyph_name, fill=(150, 92, 44), ring=(78, 44, 18)):
+    d = ImageDraw.Draw(img)
+    d.ellipse((c[0] - r, c[1] - r + 5, c[0] + r, c[1] + r + 5), fill=(60, 34, 12))
+    d.ellipse((c[0] - r, c[1] - r, c[0] + r, c[1] + r), fill=fill, outline=ring, width=4)
+    put(img, glyph(glyph_name, int(r * 1.15), CREAM), c)
+
+
+def info2(confirm=None):
+    """v2 after the user's notes (2026-11-17): «Отремонтировать» -> a round HAMMER, «Снести» -> a round BIN, both asking
+    first, both between «Улучшить» and «Закрыть». The model for every building's info panel later."""
+    img = background()
+    box = (330, 90, W - 330, H - 90)
+    panel(img, box)
+    d = ImageDraw.Draw(img)
+    plaque(d, (W / 2 - 230, box[1] - 26, W / 2 + 230, box[1] + 34), 'Лаборатория, ур. 2', 32)
+    d.rounded_rectangle((box[0] + 40, box[1] + 70, box[0] + 330, box[1] + 360), 18, fill=TILE, outline=BROWN, width=4)
+    put(img, building_icon('Laboratory', 2, 260), (box[0] + 185, box[1] + 215))
+    x = box[0] + 370
+    text(d, (x, box[1] + 90), 'Изучает здания и войска.', 26, fill=INK, stroke=0, anchor='lm')
+    text(d, (x, box[1] + 128), 'Один учёный — одно исследование.', 24, fill=SOFT, stroke=0, anchor='lm')
+    text(d, (x, box[1] + 180), 'Прочность', 24, fill=INK, stroke=0, anchor='lm')
+    d.rounded_rectangle((x, box[1] + 202, box[2] - 50, box[1] + 230), 14, fill=(214, 194, 150))
+    d.rounded_rectangle((x, box[1] + 202, x + (box[2] - 50 - x) * 0.7, box[1] + 230), 14, fill=(120, 180, 80))
+    text(d, ((x + box[2] - 50) / 2, box[1] + 216), '420 / 600', 18, fill=INK, stroke=0)
+    text(d, (x, box[1] + 280), 'Учёные', 24, fill=INK, stroke=0, anchor='lm')
+    for mark, cx in (('-', x + 160), ('+', x + 380)):
+        d.ellipse((cx - 30, box[1] + 250, cx + 30, box[1] + 310), fill=CREAM, outline=BROWN, width=3)
+        text(d, (cx, box[1] + 278), mark, 34, fill=INK, stroke=0)
+    text(d, (x + 270, box[1] + 280), '10 / 10', 30, fill=INK, stroke=0)
+    text(d, (x, box[1] + 330), 'Заняты: 2 исследования идут', 21, fill=SOFT, stroke=0, anchor='lm')
+    y = box[3] - 80
+    pill(d, (box[0] + 40, y - 34, box[0] + 330, y + 34), 'Улучшить', 28, GREEN, CREAM)
+    round_icon(img, (box[0] + 430, y), 40, 'Hammer')
+    round_icon(img, (box[0] + 540, y), 40, 'Hud_Trash', fill=(176, 64, 44), ring=(96, 26, 14))
+    pill(d, (box[2] - 260, y - 34, box[2] - 40, y + 34), 'Закрыть', 28, CREAM)
+    note = 'Окно «!» v2: молоток = ремонт, корзина = снести (оба спрашивают), между «Улучшить» и «Закрыть»'
+    name = 'Lab_Info2.png'
+    if confirm is not None:
+        img = Image.alpha_composite(img, Image.new('RGBA', (W, H), (10, 6, 2, 130)))
+        d = ImageDraw.Draw(img)
+        cb = (W / 2 - 330, 250, W / 2 + 330, 610)
+        panel(img, cb)
+        d = ImageDraw.Draw(img)
+        if confirm == 'repair':
+            round_icon(img, (W / 2, 250), 46, 'Hammer')
+            text(d, (W / 2, 340), 'Отремонтировать лабораторию?', 32, fill=INK, stroke=0)
+            text(d, (W / 2, 390), 'Прочность 420 / 600  →  600 / 600', 24, fill=SOFT, stroke=0)
+            put(img, building_icon('Res_Wood', 1, 40), (W / 2 - 110, 445))
+            text(d, (W / 2 - 84, 445), '30', 28, fill=INK, stroke=0, anchor='lm')
+            put(img, building_icon('Res_Stone', 1, 40), (W / 2 + 30, 445))
+            text(d, (W / 2 + 56, 445), '20', 28, fill=INK, stroke=0, anchor='lm')
+            pill(d, (W / 2 - 300, 510, W / 2 - 20, 572), 'Отмена', 28, CREAM)
+            pill(d, (W / 2 + 20, 510, W / 2 + 300, 572), 'Починить', 28, GREEN, CREAM)
+            note, name = 'Молоток: окошко подтверждения ремонта — что даст и цена', 'Lab_Info2_Repair.png'
+        else:
+            round_icon(img, (W / 2, 250), 46, 'Hud_Trash', fill=(176, 64, 44), ring=(96, 26, 14))
+            text(d, (W / 2, 340), 'Снести лабораторию?', 32, fill=INK, stroke=0)
+            text(d, (W / 2, 388), 'Вернётся половина цены:', 24, fill=SOFT, stroke=0)
+            put(img, building_icon('Res_Wood', 1, 40), (W / 2 - 110, 436))
+            text(d, (W / 2 - 84, 436), '20', 28, fill=INK, stroke=0, anchor='lm')
+            put(img, building_icon('Res_Stone', 1, 40), (W / 2 + 30, 436))
+            text(d, (W / 2 + 56, 436), '15', 28, fill=INK, stroke=0, anchor='lm')
+            text(d, (W / 2, 478), 'Изученное не пропадёт, идущие исследования вернут цену', 17, fill=(150, 50, 30), stroke=0)
+            pill(d, (W / 2 - 300, 520, W / 2 - 20, 582), 'Отмена', 28, CREAM)
+            pill(d, (W / 2 + 20, 520, W / 2 + 300, 582), 'Снести', 28, (200, 80, 56), CREAM)
+            note, name = 'Корзина: окошко подтверждения сноса — что вернётся', 'Lab_Info2_Demolish.png'
+    text(d, (W / 2, H - 4), note, 22, fill=CREAM, stroke=4, anchor='md')
+    img.save(OUT + name)
+
+
+if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == 'info2':
+    info2()
+    info2('repair')
+    info2('demolish')
+    print('written Lab_Info2, _Repair, _Demolish')
+    sys.exit()
+
 if __name__ == '__main__':
     buttons()
     concept_a()

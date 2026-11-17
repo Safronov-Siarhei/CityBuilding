@@ -77,3 +77,8 @@ are split by building category (Город, Склады, Развлечения
 does not scroll through everything. Concepts (`Tools/ui/lab_concepts.py`): Design/ui/Lab_Buttons.png, Lab_A.png
 («Полки», categories in a left column), Lab_B1/B2.png («Карточки», a grid of categories first), Lab_C.png
 («Вкладки», picture tabs on top), Lab_Info.png. Green count on a category = what can be researched now. Not built.
+- The user's pick (2026-11-17): **A «Полки»** (categories in a left column with green counts, the category's rows on
+  the right). The «!» window v2 (`python Tools/ui/lab_concepts.py info2` -> Design/ui/Lab_Info2*.png): «Отремонтировать»
+  becomes a round HAMMER, «Снести» a round BIN (red), both between «Улучшить» and «Закрыть», both open a small
+  confirm card (repair: health before -> after + price; demolish: the refund + «изученное не пропадёт»). Waiting for
+  approval; once approved it becomes the model for EVERY building's info panel (the user's next task).
