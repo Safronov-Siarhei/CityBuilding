@@ -296,3 +296,6 @@ from `ArchipelagoBotCell`; `TheBotKingdom_StandsOnItsIsland...` now checks each 
   neighbour across a relations medallion, МИР/ВОЙНА ribbon, the scale with icons at -50/+30/+60, three picture tiles
   (Подарок / Торговля locked below +30 / Война; at war: peace for coins, for crystals, raze their hall +N crystals).
   Concepts: Tools/ui/diplomacy_window_v2.py -> Design/ui/Diplomacy_0_Selection, _1_, _2_, Diplomacy_Window_v2.jpg.
+- The button's icon (the user, 2026-11-17): variant C «Договор с печатью» -- a treaty scroll, red seal, quill
+  (`treaty()` in Tools/ui/diplomacy_icon_concepts.py; the six choices in Design/ui/Diplomacy_Icon_Concepts.png). The
+  scroll-over-shield one was rejected. For the game: export it as a sprite to UI/Glyphs when the button is built.
