@@ -281,7 +281,10 @@ namespace CityBuilder.UI
             button.onClick.AddListener(() =>
             {
                 // the collect hint is done only by a real tap that took crystals
-                if (Collect() > 0 && PlayerPrefs.GetInt(CollectedKey, 0) != 1)
+                var taken = Collect();
+                // they fly from the bubble into the crystal counter (the user, 2026-11-17)
+                if (taken > 0) Shop.OfferRewardFlight.FromWorld(crystalIcon, "Crystals", taken, _bubble);
+                if (taken > 0 && PlayerPrefs.GetInt(CollectedKey, 0) != 1)
                 {
                     PlayerPrefs.SetInt(CollectedKey, 1);
                     PlayerPrefs.Save();

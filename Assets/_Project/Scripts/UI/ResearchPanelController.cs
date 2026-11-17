@@ -273,7 +273,13 @@ namespace CityBuilder.UI
             if (_lab != null)
             {
                 if (_dialogIsRepair) _lab.TryRepair();
-                else _lab.TryUpgrade();
+                else if (!_lab.TryUpgrade() && _lab.NextLevelResearched && _lab.IsOperational && _lab.Site == null
+                         && Shop.OfferShop.Instance != null)
+                {
+                    // too poor (the user, 2026-11-17): the «Не хватает ресурсов» offer, coins for crystals or an ad
+                    var bundle = Shop.OfferShop.Instance.ShortageFor(_lab.GetUpgradeCost());
+                    if (bundle != null) Shop.OfferShopWindow.ShowShortage(bundle);
+                }
             }
             CloseDialog();
         }
@@ -312,7 +318,13 @@ namespace CityBuilder.UI
                 _shaking = cell;
                 _shakeUntil = Time.unscaledTime + ShakeSeconds;
             }
-            if (blocker == Localization.Get("#research_blocked_coins")) Flash(coinsLabel);
+            if (blocker == Localization.Get("#research_blocked_coins"))
+            {
+                Flash(coinsLabel);
+                // short of coins (the user, 2026-11-17): the «Не хватает ресурсов» offer with exactly the shortfall
+                var bundle = Shop.OfferShop.Instance != null ? Shop.OfferShop.Instance.ShortageFor(research.CoinCostOf(topic)) : null;
+                if (bundle != null) Shop.OfferShopWindow.ShowShortage(bundle);
+            }
             else if (blocker == Localization.Get("#research_blocked_crystals")) Flash(crystalsLabel);
             else if (cell != null) ShowBubble(cell, blocker ?? Localization.Get("#research_blocked_unknown"));
             // what it waits on (the user, 2026-11-11): a bigger Laboratory -> «Улучшить лабораторию»; the level before -> its button
