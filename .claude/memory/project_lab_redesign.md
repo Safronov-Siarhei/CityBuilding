@@ -44,3 +44,5 @@ Related: [[project_archipelago_map]] (ships in the Армия tab, shipyard leve
   and BUILT (UI/BuildingInfoCard.cs, sandbox only; card hud-and-ui.md «Building card v2»), not seen by the user.
   NEXT: concepts for the special buildings (Town Hall, Barracks, Stable, Workshop, Shipyard, Lighthouse, Healer,
   Tax House, Cemetery, Diplomacy, Fire Brigade, Smelter, Crystal mine), approval first.
+- 2026-11-17: concepts for the 13 SPECIAL buildings drawn and sent (Design/ui/Special_*.png, Tools/ui/special_cards_concepts.py),
+  WAITING for the user's approval; numbers in them are examples, the game fills its own.
