@@ -299,7 +299,7 @@ from `ArchipelagoBotCell`; `TheBotKingdom_StandsOnItsIsland...` now checks each 
 - The button's icon (the user, 2026-11-17): variant C «Договор с печатью» -- a treaty scroll, red seal, quill
   (`treaty()` in Tools/ui/diplomacy_icon_concepts.py; the six choices in Design/ui/Diplomacy_Icon_Concepts.png). The
   scroll-over-shield one was rejected. For the game: export it as a sprite to UI/Glyphs when the button is built.
-- THE WINDOW (the user, 2026-11-17): keep the ROUND-1 layout (`main_window` in Tools/ui/diplomacy_concepts.py ->
+- THE WINDOW -- APPROVED by the user 2026-11-17 (final concept Design/ui/Diplomacy_1_Window_Peace.png): keep the ROUND-1 layout (`main_window` in Tools/ui/diplomacy_concepts.py ->
   Design/ui/Diplomacy_1_Window_Peace / _2_Window_War), NOT the big v2 one: title, relations number, scale, «Сейчас: Мир»,
   three buttons. Changes: no «Здание» button (the two help lines sit where it was, panel shorter); instead of the hall
   icon and the crest -- TWO KINGS facing each other INSIDE round buttons (clipped to the face, not over the rim), «Вы» left, «Сосед» right (the neighbour's portrait
