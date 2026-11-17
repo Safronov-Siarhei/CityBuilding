@@ -77,6 +77,8 @@ namespace CityBuilder.UI
         {
             // out of the world: the running world's settings are the defaults again (the piggy's line, the gates)
             WorldSettings.Current = new WorldSettings();
+            // back in the menu: a tutorial launched from a sandbox banner no longer leads back (the town is in the saves)
+            Tutorial.TutorialOffer.ForgetReturn();
             if (OpenOnModes)
             {
                 OpenOnModes = false;

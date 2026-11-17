@@ -102,6 +102,7 @@ namespace CityBuilder.Saving
             {
                 // a new world takes the sandbox screen's settings (the defaults for every other game)
                 Core.WorldSettings.Current = GameSessionIntent.NewGameWorld != null ? GameSessionIntent.NewGameWorld.Clone() : new Core.WorldSettings();
+                Tutorial.TutorialOffer.Clock = 0f;
                 GameSessionIntent.NewGameWorld = null;
                 Dungeon.DungeonRecord.Load(null);
                 Maps.Archipelago.TideCaches.LoadLooted(null);
@@ -111,6 +112,7 @@ namespace CityBuilder.Saving
             _pendingLoad = SaveSystem.Load(nameToLoad);
             GameSessionIntent.NewGameWorld = null;
             Core.WorldSettings.Current = _pendingLoad?.worldSettings != null ? _pendingLoad.worldSettings.Clone() : new Core.WorldSettings();
+            Tutorial.TutorialOffer.Clock = _pendingLoad != null ? _pendingLoad.tutorialOfferClock : -1f;
             if (_pendingLoad == null) return;
             Dungeon.DungeonRecord.Load(_pendingLoad.dungeonBossesSlain, _pendingLoad.dungeonCrystalsTaken, _pendingLoad.dungeonHirelings, _pendingLoad.dungeonPotions);
             Maps.Archipelago.TideCaches.LoadLooted(_pendingLoad.tideCachesLooted);
@@ -223,6 +225,24 @@ namespace CityBuilder.Saving
 
         /// <summary>Writes the game as it stands into this slot, leaving CurrentSaveName alone (the town before its heroes go down).</summary>
         public void WriteSlot(string slot) => SaveSystem.Save(slot, CollectSaveData());
+
+        /// <summary>The town before the tutorial launched from its banner (Tutorial.TutorialOffer): written into this map's
+        /// autosave slot, which is returned (null if nothing could be written).</summary>
+        public string WriteReturnSlot()
+        {
+            try
+            {
+                var data = CollectSaveData();
+                var slot = AutosaveSlot(data.mapId);
+                SaveSystem.Save(slot, data);
+                return slot;
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[GameSaveController] Tutorial return save failed: {e.Message}");
+                return null;
+            }
+        }
 
         private void ApplyLoadedState(GameSaveData data)
         {
@@ -771,6 +791,7 @@ namespace CityBuilder.Saving
                 data.hazardGraceRemaining = migration.HazardGraceRemaining;
             }
             if (Buildings.FireManager.Instance != null) data.fireShield = Buildings.FireManager.Instance.ShieldLeft;
+            data.tutorialOfferClock = Tutorial.TutorialOffer.Clock;
 
             var rocks = Maps.RockSpawner.Instance;
             if (rocks != null)

@@ -771,6 +771,8 @@ namespace CityBuilder.EditorTools
             BuildDisasterBanner<PlagueBanner>(panelRoot.transform.parent, UiTextureImport.PlagueFolder, "plague_banner", "PlagueBanner");
             // the fire's, the same build (sandbox fires v2, the user 2026-11-14; Tools/ui/fire_banner_art.py)
             BuildDisasterBanner<FireBanner>(panelRoot.transform.parent, UiTextureImport.FireFolder, "fire_banner", "FireBanner");
+            // the tutorial offered inside a sandbox game (the user, 2026-11-17; Tools/ui/tutorial_offer_concept.py)
+            BuildTutorialOfferBanner(panelRoot.transform.parent);
 
             var controller = panelRoot.AddComponent<BuildingInfoPanelController>();
             var controllerSO = new SerializedObject(controller);

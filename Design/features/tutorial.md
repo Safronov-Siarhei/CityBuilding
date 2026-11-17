@@ -181,6 +181,43 @@ The user: several round-4 items had NOT worked -- each checked in the code this 
 - Raid camera (2026-11-06): after the soldier's hire the camera stays on the town for `tutorial_raid_camera_sec`
   (3) before it goes over to the orcs boarding (`FollowMoving`, gated on `_stepTime`).
 
+## In-game offer in the sandbox (the user, 2026-11-17) -- BUILT 2026-11-17 (setup x2 green), not seen, no tests
+The user: a player who skipped the tutorial and started in the sandbox must get a banner offering it during the first
+10-20 minutes; the game is PAUSED under it and goes on only when it is closed or the tutorial is done.
+Mock-up `Design/ui/TutorialOffer_Banner.png` (`Tools/ui/tutorial_offer_concept.py`) v2: built like the PLAGUE/FIRE
+banners (the user: those are the best ones; v1 copied «Свобода» and was turned down): wood window, field of the game's
+building/resource icons at three depths on sunny blue, King left + Queen right, purple ribbon «Обучение», parchment
+«Не знаешь, с чего начать? Король покажет главное за 5 минут.», «Награда: 25 [crystal]», green «Пройти обучение»,
+«Позже». No pause plate (the game is simply paused under it, like the plague banner).
+Proposed rules (my calls, awaiting the user):
+- Only in the sandbox, only while the tutorial was never finished (`PlayerPrefs tutorial.rewarded`), at most ONCE per
+  world, at most 2 times per account (after the second «Позже» never again; the menu card stays).
+- Inside the first 20 min of game time, the FIRST trigger that fires:
+  1. no Town Hall 60 s after the start;
+  2. the start chain (Town Hall -> Lighthouse/Warehouse/Granary/Treasury/CrystalMine) is FINISHED and then nothing new
+     is placed for 3 min (the user, 2026-11-17);
+  3. no input at all for 60 s;
+  4. 1 min before the quiet start ends (the first raid) with no Barracks/soldier;
+  5. wood or stone is SHORT (a build refused for lack of it, or the amount under a sheet threshold) AND neither has
+     grown for 60 s -- no gathering at all (the user, 2026-11-17; replaces «the town goes hungry»).
+  The user approved 1, 3, 4 as proposed (2026-11-17).
+  A player who plays well never sees it.
+- Not over a placement, an open window or a banner: waits until the screen is free.
+- «Пройти обучение»: autosave the world, load the tutorial; its victory panel gets «Вернуться в мой город» (loads that
+  save). «Позже»: unpause.
+- Built: `UI/TutorialOfferBanner.cs` (the triggers in Update, real play seconds, pause via timeScale, Show/Play/Later),
+  `Tutorial/TutorialOffer.cs` (Clock per world = `GameSaveData.tutorialOfferClock`, -1 = no offer, old saves -1, a new
+  world 0; PlayerPrefs `tutorial.offer.declined`, `tutorial.return.slot/name`; LaunchFromGame writes the town into the
+  map's autosave slot via `GameSaveController.WriteReturnSlot`, GoBack loads it under its own name),
+  `GameOverController` (tutorial win + a return pending: the menu button says `#tutorial_return` and loads the town),
+  MainMenuController.Start forgets the return. `BuildingPlacer.ShortOfMaterialsAt` (the ghost blocked by cost).
+  Builder `Editor/SetupProjectTutorialOffer.cs` (pieces `Assets/_Project/UI/TutorialOffer/` + layout.json from
+  `Tools/ui/tutorial_offer_concept.py`, figures stand below the field and are cut by the frame -- the user).
+  Numbers: tab «Обучение» `tutorial_offer_*` (1200/60/180/60/60/10/60/2); texts `#tutorial_offer_*`, `#tutorial_return`
+  (tab «Тексты: обучение и сюжет»).
+- Traps: the «first raid» is seen as the raid timer jumping UP; soldiers = `SoldierUnit.All` (bot garrison counts too);
+  the window clock runs only while the game runs (timeScale > 0).
+
 ## The script
 1. Start: two islands, no fog. King: «Поставьте Ратушу».
 2. Town Hall placed -> the King and 3 people appear. King: «Постройте Лачугу».

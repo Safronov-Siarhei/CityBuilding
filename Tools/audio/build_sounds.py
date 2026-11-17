@@ -140,6 +140,6 @@ if __name__ == '__main__':
         write('built_poof', built_poof())
         write('upgraded_chime', upgraded())
     else:
-        write('place', place_pop())
+        write('place', place_thud())     # the user's pick of the four, 2026-11-17 (C)
         write('built', built_poof())
         write('upgraded', upgraded())

@@ -649,6 +649,15 @@ namespace CityBuilder.Core
         [SerializeField] private int islandStartRocks = 40;
         // crystals for finishing the tutorial, shown on its menu tag (tutorial_reward_crystals)
         [SerializeField] private int tutorialRewardCrystals = 25;
+        // the tutorial offered inside a sandbox game (UI/TutorialOfferBanner; tutorial_offer_*)
+        [SerializeField] private float tutorialOfferWindowSeconds = 1200f;
+        [SerializeField] private float tutorialOfferHallSeconds = 60f;
+        [SerializeField] private float tutorialOfferStallSeconds = 180f;
+        [SerializeField] private float tutorialOfferIdleSeconds = 60f;
+        [SerializeField] private float tutorialOfferRaidSeconds = 60f;
+        [SerializeField] private int tutorialOfferLowResource = 10;
+        [SerializeField] private float tutorialOfferNoGainSeconds = 60f;
+        [SerializeField] private int tutorialOfferMaxDeclines = 2;
         // the sandbox offer shop («Наборы: настройки»): a slot's real seconds, the slots' stagger, the
         // free bonus's chance per change and its earliest second, the loud notice's seconds, the
         // starter gift's second in the first game, the ad stand-in's seconds
@@ -1506,6 +1515,14 @@ namespace CityBuilder.Core
         public int DecorGiftCrystals => decorGiftCrystals;
         public int IslandStartRocks => islandStartRocks;
         public int TutorialRewardCrystals => tutorialRewardCrystals;
+        public float TutorialOfferWindowSeconds => tutorialOfferWindowSeconds;
+        public float TutorialOfferHallSeconds => tutorialOfferHallSeconds;
+        public float TutorialOfferStallSeconds => tutorialOfferStallSeconds;
+        public float TutorialOfferIdleSeconds => tutorialOfferIdleSeconds;
+        public float TutorialOfferRaidSeconds => tutorialOfferRaidSeconds;
+        public int TutorialOfferLowResource => tutorialOfferLowResource;
+        public float TutorialOfferNoGainSeconds => tutorialOfferNoGainSeconds;
+        public int TutorialOfferMaxDeclines => tutorialOfferMaxDeclines;
         public float ShopSlotSeconds => shopSlotSeconds;
         public float ShopSlotStaggerSeconds => shopSlotStaggerSeconds;
         public float ShopBonusChance => shopBonusChance;
@@ -2779,6 +2796,14 @@ namespace CityBuilder.Core
             loadingSecondsExit = Read(economy, "loading_seconds_exit", loadingSecondsExit);
             loadingSecondsCampaignMap = Read(economy, "loading_seconds_campaign_map", loadingSecondsCampaignMap);
             tutorialRewardCrystals = (int)Read(economy, "tutorial_reward_crystals", tutorialRewardCrystals);
+            tutorialOfferWindowSeconds = Read(economy, "tutorial_offer_window_sec", tutorialOfferWindowSeconds);
+            tutorialOfferHallSeconds = Read(economy, "tutorial_offer_hall_sec", tutorialOfferHallSeconds);
+            tutorialOfferStallSeconds = Read(economy, "tutorial_offer_stall_sec", tutorialOfferStallSeconds);
+            tutorialOfferIdleSeconds = Read(economy, "tutorial_offer_idle_sec", tutorialOfferIdleSeconds);
+            tutorialOfferRaidSeconds = Read(economy, "tutorial_offer_raid_sec", tutorialOfferRaidSeconds);
+            tutorialOfferLowResource = (int)Read(economy, "tutorial_offer_low_res", tutorialOfferLowResource);
+            tutorialOfferNoGainSeconds = Read(economy, "tutorial_offer_no_gain_sec", tutorialOfferNoGainSeconds);
+            tutorialOfferMaxDeclines = (int)Read(economy, "tutorial_offer_max_declines", tutorialOfferMaxDeclines);
             shopSlotSeconds = Read(economy, "shop_slot_seconds", shopSlotSeconds);
             shopSlotStaggerSeconds = Read(economy, "shop_slot_stagger_seconds", shopSlotStaggerSeconds);
             shopBonusChance = Read(economy, "shop_bonus_chance", shopBonusChance);

@@ -175,6 +175,8 @@ namespace CityBuilder.Saving
 
         /// <summary>Seconds left of the fire banner's shield (Buildings.FireManager.ShieldLeft).</summary>
         public float fireShield;
+        // the tutorial offer's play seconds in this world (Tutorial.TutorialOffer.Clock); -1 = it offers nothing
+        public float tutorialOfferClock = -1f;
 
         /// <summary>Seconds left of the sandbox's quiet start for fires and illness (MigrationManager.HazardGraceRemaining).</summary>
         public float hazardGraceRemaining;

@@ -67,5 +67,6 @@ EditMode `FoodConsumptionTests`, `FoodBalanceTests` (asserts `food_variety_targe
 nothing forces it UP as foods are added; raise it by hand).
 
 ## Open
-The farm feeds nobody directly (grain isn't edible) — the opening food is the Fisher Hut. Meat/fruit
-design owed by the user.
+- (2026-11-17) The six food buildings (Fisher hut, Farm, Orchard, Pig farm, Bakery, Smokehouse) are BUILT per the
+  2026-11-02 rework but NEVER SEEN or played by the user; food is stored in the Кладовая (storage rework, per-store).
+- Old hunger tests (deaths at the meal) are outdated; the meat/fruit chains of the old Open are superseded by the rework.

@@ -122,6 +122,9 @@ namespace CityBuilder.Buildings
         // the building being put down for nothing (a link of the start chain)
         private static BuildingData _freeNow;
         public bool IsSelecting => _selectedBuilding != null;
+        /// <summary>When (Time.unscaledTime) the building in hand was last shown blocked for its cost -- the tutorial offer's
+        /// «short of wood or stone» (UI/TutorialOfferBanner).</summary>
+        public float ShortOfMaterialsAt { get; private set; } = -1000f;
         public IReadOnlyList<BuildingData> AvailableBuildings => availableBuildings;
 
         /// <summary>Roads and fences: placed one piece at a time like any building, but the next piece is offered straight after.</summary>
@@ -595,6 +598,7 @@ namespace CityBuilder.Buildings
             var canPlace = CanPlaceSelectedBuilding(cell, footprint);
             var canAfford = ResourceManager.Instance == null || ResourceManager.Instance.HasEnough(CostOf(_selectedBuilding));
             var hasRequirement = HasRequiredBuilding();
+            if (!canAfford) ShortOfMaterialsAt = Time.unscaledTime;
             var ok = canPlace && canAfford && hasRequirement;
 
             SetStatus(ok, ok ? string.Empty : DescribeBlock(canPlace, canAfford, hasRequirement, cell, footprint));

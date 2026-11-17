@@ -6,7 +6,7 @@ namespace CityBuilder.Buildings
     /// <summary>
     /// The building sounds in every mode (the user, 2026-11-17: «когда игрок ставит какое-то здание на карте - должен
     /// быть звук, при окончании его улучшения на карте тоже»): a wooden thump-knock when the player puts a building
-    /// down (BuildingPlacer.PlaceAt -- roads and fences too, piece by piece; round 2: a soft «plop»), a dust whoosh and a
+    /// down (BuildingPlacer.PlaceAt -- roads and fences too, piece by piece; round 2: the user picked C, a deep thud with a puff of dust), a dust whoosh and a
     /// «ding-dong» when a new building is done on its timer, a rising chime when a player's upgrade is done (both
     /// ConstructionSite.Finish). Clips: Audio/Resources/Build/{place,upgraded} (our own, Tools/audio/build_sounds.py).
     /// One 2D source made once and kept; volume build_sfx_volume (sheet). A road laid piece after piece is not a rattle:
