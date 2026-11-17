@@ -40,6 +40,7 @@ namespace CityBuilder.UI
         [SerializeField] private CanvasGroup modesScreen;
         [SerializeField] private CanvasGroup sandboxScreen;
         [SerializeField] private CanvasGroup invasionScreen;
+        [SerializeField] private InvasionHubController invasionHub;
 
         [Header("Dialogs")]
         [SerializeField] private GameObject exitDialog;
@@ -258,7 +259,9 @@ namespace CityBuilder.UI
             Fade(mainScreen, _screen == Screen.Main && !covered, k);
             Fade(modesScreen, _screen == Screen.Modes && !covered, k);
             Fade(sandboxScreen, _screen == Screen.Sandbox && !covered, k);
-            Fade(invasionScreen, _screen == Screen.Invasion && !covered, k);
+            // the Invasion's 3D hall stays behind a window; what stands in front of it hides
+            Fade(invasionScreen, _screen == Screen.Invasion, k);
+            if (invasionHub != null) invasionHub.SetMenuCovered(covered);
         }
 
         private static void Fade(CanvasGroup group, bool shown, float k)

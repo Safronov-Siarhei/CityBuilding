@@ -112,6 +112,7 @@ namespace CityBuilder.EditorTools
             so.FindProperty("modesScreen").objectReferenceValue = Group(modes.gameObject);
             so.FindProperty("sandboxScreen").objectReferenceValue = sandboxScreen;
             so.FindProperty("invasionScreen").objectReferenceValue = invasionScreen;
+            so.FindProperty("invasionHub").objectReferenceValue = invasionScreen.GetComponent<InvasionHubController>();
             so.FindProperty("exitDialog").objectReferenceValue = exitDialog;
             so.FindProperty("infoDialog").objectReferenceValue = infoDialog;
             so.FindProperty("infoTitle").objectReferenceValue = infoTitle;
@@ -704,9 +705,9 @@ namespace CityBuilder.EditorTools
             rp.anchorMin = rp.anchorMax = new Vector2(1f, 0.5f);
             rp.anchoredPosition = new Vector2(-20f, 0f);
             template.gameObject.SetActive(false);
-            var empty = HallLabel(w, "Empty", null, 28, false, TextAnchor.MiddleCenter);
+            var empty = HallLabel(w, "Empty", null, 26, false, TextAnchor.MiddleCenter);
             empty.color = soft;
-            if (listBox != null) HallPlace(empty.rectTransform, new[] { listBox.rect[0] + 40f, listBox.rect[1], listBox.rect[2] - 40f, listBox.rect[3] });
+            if (listBox != null) HallPlace(empty.rectTransform, new[] { listBox.rect[0], listBox.rect[1], listBox.rect[2], listBox.rect[3] });
 
             // the player's own line
             HallPiece(w, layout, "RateYou");
@@ -726,7 +727,7 @@ namespace CityBuilder.EditorTools
                 tierWho[k] = HallText(tier, layout, $"RateTier{k}Who", null, 28, cream, wood, align: TextAnchor.MiddleLeft);
                 tierPrize[k] = HallGemAmount(tier, HallPoint(layout, $"RateTier{k}Prize"), 28, TextAnchor.MiddleRight, cream, wood).number;
             }
-            var note = HallText(w, layout, "RateNote", null, 24, cream, wood, bold: false);
+            var note = HallText(w, layout, "RateNote", null, 21, cream, wood, bold: false);
 
             var close = MenuRoundButton(w, "Close", "round", "Cancel", HudInk.OnRound, 84f, 0.5f);
             Anchor((RectTransform)close.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), HallPoint(layout, "RateClose"), new Vector2(84f, 84f));
@@ -967,6 +968,17 @@ namespace CityBuilder.EditorTools
             settings = Corner(screen, "SettingsButton", "Settings", new Vector2(1f, 1f), new Vector2(-CornerInset, -CornerInset), CornerButton);
             UnityEventTools.AddPersistentListener(backButton.onClick, controller.Back);
             var rating = BuildRatingWindow(screen, layout);
+            // all that stands in front of the hall, in one group a window over the screen hides
+            var content = StretchedChild(screen, "Content");
+            content.SetSiblingIndex(2);
+            var keep = new HashSet<Transform> { hall.transform, edges.transform, rating.transform, content };
+            var front = new List<Transform>();
+            foreach (Transform child in screen) if (!keep.Contains(child)) front.Add(child);
+            foreach (var child in front) child.SetParent(content, false);
+            var contentGroup = content.gameObject.AddComponent<CanvasGroup>();
+            var rso = new SerializedObject(rating);
+            rso.FindProperty("hub").objectReferenceValue = hub;
+            rso.ApplyModifiedPropertiesWithoutUndo();
 
             var so = new SerializedObject(hub);
             so.FindProperty("themes").objectReferenceValue = themes;
@@ -986,6 +998,7 @@ namespace CityBuilder.EditorTools
             WriteArray(so.FindProperty("runTexts"), runs);
             WriteArray(so.FindProperty("bannerPlace"), places);
             so.FindProperty("ratingWindow").objectReferenceValue = rating;
+            so.FindProperty("content").objectReferenceValue = contentGroup;
             so.FindProperty("crystalsText").objectReferenceValue = crystalsText;
             so.ApplyModifiedPropertiesWithoutUndo();
 

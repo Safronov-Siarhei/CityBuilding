@@ -38,6 +38,7 @@ namespace CityBuilder.UI
         [SerializeField] private Text[] tierPrize = new Text[0];
         [SerializeField] private Text noteText;
         [SerializeField] private int rowsLoaded = 25;
+        [SerializeField] private InvasionHubController hub;
 
         private InvasionRecords.Period _period;
         private readonly List<GameObject> _rows = new List<GameObject>();
@@ -51,6 +52,10 @@ namespace CityBuilder.UI
         }
 
         public void Close() => gameObject.SetActive(false);
+
+        private void OnEnable() { if (hub != null) hub.SetRatingShown(true); }
+
+        private void OnDisable() { if (hub != null) hub.SetRatingShown(false); }
 
         public void SelectTab(int period)
         {

@@ -38,6 +38,27 @@ namespace CityBuilder.UI
         /// <summary>Per period: the place on the player's line.</summary>
         [SerializeField] private Text[] bannerPlace = new Text[0];
         [SerializeField] private InvasionRatingWindow ratingWindow;
+        /// <summary>Everything in front of the 3D hall: a window over the screen (the mode's «!», «Доска славы») hides
+        /// it and leaves the hall (the user, 2026-11-17: «скрывай интерфейс позади окна славы»; the «!» showed the
+        /// old menu scene behind).</summary>
+        [SerializeField] private CanvasGroup content;
+
+        private bool _menuCovered;
+        private bool _ratingShown;
+
+        /// <summary>The menu's own windows (MainMenuController): the mode's «!», the saves.</summary>
+        public void SetMenuCovered(bool covered) { _menuCovered = covered; ShowContent(); }
+
+        /// <summary>«Доска славы» opened or closed.</summary>
+        public void SetRatingShown(bool shown) { _ratingShown = shown; ShowContent(); }
+
+        private void ShowContent()
+        {
+            if (content == null) return;
+            var shown = !_menuCovered && !_ratingShown;
+            content.alpha = shown ? 1f : 0f;
+            content.blocksRaycasts = content.interactable = shown;
+        }
         /// <summary>5 per period, period-major.</summary>
         [SerializeField] private Text[] runTexts = new Text[0];
         [SerializeField] private Text crystalsText;
