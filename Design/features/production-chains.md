@@ -22,8 +22,10 @@ picker (iron / copper / gold bar / coins). A starved converter logs once; a full
 ## Rules (decided)
 - **Grain chain (user, 2026-08-16):** Ферма → пшеница (Амбар) → Ветряк → мука (Кладовая) →
   Пекарня → хлеб (Кладовая). Stays **1:1:1 at every level**.
-- **Metals (user, 2026-08-17):** ore stays raw (Склад); 2 ore + 1 coal → 1 bar (Сокровищница). The
-  player picks the recipe in the Smelter card. One recipe at a time.
+- **Metals (user, 2026-08-17):** ore stays raw (Склад); the bar recipes are in «Mines and Smelter v2» below. One
+  recipe at a time. Since the storage rework (2026-11-17) bars lie in the СКЛАД (10/12/14/16/18 each), not the Сокровищница.
+- **Who spends bars (checked 2026-11-17):** iron -- Укреплённая башня 8, Укреплённые ворота 6 (sandbox); copper -- NOTHING;
+  gold -- nothing but diplomacy (a bot gift, a trade that pays in gold bars). No unit costs bars (recruit_*bar empty).
 - **Minting REMOVED (the user, 2026-11-12: «Убрать чеканку»).** It was (2026-08-31) Smelter recipe `coins`: 1 GoldBar + 1 Coal → 4 Coins; the row, `#recipe_coins` and `MintingTests` are gone.
   ~120 coins/day from one level-1 gold chain.
 - **Пристань and Водяная мельница produce NOTHING** («это бред») until the Water category is designed.
