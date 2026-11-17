@@ -30,7 +30,8 @@ seen, even at 0). Storage ceilings per family; storehouses raise them. Coins arr
 ## Storage buildings (checked 2026-11-17)
 - In the build menu: Склад `Warehouse` + Большой склад `BigWarehouse` (Materials), Кладовая `Granary` +
   Большая кладовая `BigGranary` (Food), Сокровищница `Treasury` + Большая сокровищница `BigTreasury`
-  (Valuables). The Big one needs the ordinary one. Levels 1-5 each (`storage_capacity.._5`), sandbox prices
+  (Valuables). The Big ones are opened in the Lab; the «needs the ordinary one» rule was REMOVED 2026-11-17 (the user; it was
+  my own rule of 2026-08-16, the sheet column `requires` cleared). Levels 1-5 each (`storage_capacity.._5`), sandbox prices
   in the sheet tab «Песочница: Здания (Склады)», level icons in Design/Reference.md.
 - HIDDEN since the food rework (2026-11-02, `BuildingIds.Hidden`): Амбар `Barn`, `BigBarn` -- all food in the
   Pantries. The `Grain` family stays in the code.
