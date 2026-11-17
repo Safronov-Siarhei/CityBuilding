@@ -104,6 +104,14 @@ SANDBOX ONLY. Replaces the family pools with a cap PER RESOURCE.
 - Each storage building holds ITS OWN amounts. Tapping a store (or any building holding resources) shows, next to
   the «!», a round INVENTORY button: what this very building holds. Destroyed with 50 wood inside -> the player
   loses 50 wood; restoring its ruin gives back 25; fractions round UP (in the player's favour).
+- Overflow (purchases, gifts, rewards past the caps) lies «in the Town Hall»: never lost with a store, spent first.
+- Demolishing a store by hand: its contents move to the other stores as far as they fit, the rest is lost; a
+  WARNING first («пропадёт 30 дерева») -- concept to show the user before building it.
+- A store under upgrade keeps its OLD level's caps until the upgrade ends (no stock thrown away).
+- The inventory button by the «!» sits on the six storage buildings only.
+- The start chain's buildings are given INTO THE HAND one after another (like the Town Hall and the Lighthouse now),
+  not looked up in the build tabs; each, when placed, shows a short line on what it is for («Маяк открывает
+  местность», «Склад хранит ваши ресурсы»...) -- texts in the sheet.
 - PRE-RELEASE CHECK: prices above the caps (Tax House 150/200, Colosseum 90/80, Big Treasury 110 stone, Big
   Warehouse 80 / Big Granary 70 wood, Manor 55, Moat 25 of a 20-cap resource, research up to 800 coins) -- the user
   re-balances after the review of every building's logic.
