@@ -1,32 +1,51 @@
 # News in the main menu (Новости)
 
-> **Status (2026-11-17): CONCEPTS drawn (A/B/C + the button), the user picks. NOT BUILT.**
+> **Status (2026-11-17): BUILT (stage A: news ship with the build), not seen by the user.**
 
 ## Rules (the user, 2026-11-17)
-- A separate «Новости» button in the main menu; inside, every news item with its date, newest first; a tap opens
-  its text; optional building icons and an optional reward.
-- No setup/code per news item: the build takes every row of a config tab and lays the news out in date order.
-- The window OPENS BY ITSELF on entering the game once the player has entered at least 3 times (and there is unread
-  news); before that only a red dot on the button.
-- Rewards: sandbox boosters and crystals.
-- The look: concepts first, details discussed after.
-- Button icon: variant 4 «Письмо с печатью» (the user, 2026-11-17).
+- A «Новости» button in the main menu: the letter with the wax seal (icon variant 4), third in the top-left row
+  after settings and language. Inside: the newest items, a tap opens one.
+- No code/setup per item: the build takes every row of the sheet tab «Новости» and orders them.
+- NO DATES: items carry a NUMBER (a build goes to review and may not ship on a planned day). Bigger = newer.
+- The window lists the 10 newest (`news_shown_count`).
+- The window OPENS BY ITSELF on entering the menu only for a player with at least 6 hours of total play
+  (`news_auto_open_hours`) and only when something is unread; once a launch. A new player gets only the red dot.
+  (Replaces the earlier «from the 3rd entry» rule.)
+- Read = the item was seen open once. The red dot stays while a reward is not claimed.
+- Rewards: sandbox boosters and crystals, claimed once per item.
+- No pictures per item: text + the game's building/resource icons.
+- Formatting from the sheet by tags; the text scrolls when long. Comments on every header cell of the tab.
+- The texts are the LAST columns of the tab; further languages are added to the right (title_xx, text_xx).
+- Window look: concept A «Свиток» + the wax seals (my idea, accepted): an unread item has a whole seal, an opened
+  one a broken seal (it pops as it breaks).
 
-## Proposed implementation (my proposal 2026-11-17, agreed in outline)
-- Sheet tab «Новости» -> `Balance/news.csv`, one row = one item: `id, date (YYYY-MM-DD), title_ru, title_en,
-  text_ru, text_en, icons (building ids / res:<id>), reward (crystal:5 / booster:<id>:1), picture (optional)`.
-  The importer turns the texts into localization keys itself; a generic window lists whatever rows there are.
-- Read state, entry count, claimed rewards: PlayerPrefs for now (player ID later).
-- Stage B (later): fetch the published tab at start (short timeout, cached), so news ships without a build;
-  future-dated rows hidden until their day; rewards from the fetched copy capped or disallowed (a reply can be forged).
+## The sheet tab «Новости» (gid 2000078, `Balance/news.csv`, `sheet_tabs.csv` target `news`)
+`number, icons, reward, comment, title_ru, text_ru, title_en, text_en[, title_xx, text_xx ...]`
+- `icons`: building ids (as on «Здания») or `res:<Name>` (UI/Icons/Res_<Name>.png), split by space/comma.
+- `reward`: `crystal:5; booster:architect:1` (booster ids from «Песочница (Лавка): Бустеры»).
+- Texts: `\n` = new line; tags `<b>`, `<i>`, `<color=#hex>`, `<size=N>` (normal text is 32).
+- Keys: `news_shown_count`, `news_auto_open_hours` (economy, tab «Время и загрузка»); window words
+  `#news_title/_reward/_claim/_claimed/_empty` («Тексты: интерфейс и меню»).
+- Two example items (1 tutorial-in-sandbox + 5 crystals, 2 building move + Architect booster) -- the user edits them.
 
-## Concepts (Tools/ui/news_concepts.py -> Design/ui/)
-- `News_Button.png` -- a round wood button with a scroll, third after settings and language, red dot + «Новости».
-- `News_A_Scroll.png` A «Свиток»: dated tabs on the left, the open item on parchment right (text, icons, reward).
-- `News_B_Board.png` B «Доска объявлений»: cork board with a pinned note per item; a tap opens it.
-- `News_C_Book.png` C «Летопись»: an open leather book, contents left, the item right.
+## Code
+- `Editor/BalanceImporter.ReadNews` -> `BalanceConfig.News` (NewsItem: number, icon sprites resolved at setup,
+  rewards); texts -> localization keys `#news_<n>_title` / `#news_<n>_text` (every `title_*`/`text_*` column; a
+  language the localization tab lacks is dropped; an empty cell falls back to en).
+- `Core/PlayTime` -- total play seconds outside the main menu, PlayerPrefs `playtime.seconds`, flushed every 30 s,
+  on pause and quit.
+- `UI/News` -- state: read/claimed (PlayerPrefs `news.read.<n>`, `news.claimed.<n>`), AnyDot, Claim (crystals into
+  Wallet, boosters into Boosters.AddStock), ShouldOpenByItself.
+- `UI/NewsWindow` -- built in code from the menu skin (MenuSkins/Classic panel/title/row/card/divider) +
+  `Resources/News` (SealWhole, SealBroken, Close) + `Shop/MenuShop` (Crystal, ButtonGreen, Sticker).
+- `UI/NewsButton` -- the menu button: dot, auto-open (0.8 s after the menu, never over another menu window).
+- `Editor/SetupProjectMainMenuScreens.BuildNewsButton`; art `Tools/ui/news_art.py` (Hud_News glyph, seals, close).
+- Concepts: `Tools/ui/news_concepts.py` (A/B/C), `Tools/ui/news_icon_concepts.py` (8 icons) -> `Design/ui/News_*.png`.
 
-- `News_Icons.png` -- 8 glyph variants for the button (Tools/ui/news_icon_concepts.py): scroll, scroll with «!», newspaper, sealed letter, herald horn, bell, chronicle book, notice board.
+## Traps
+- Never renumber a shipped item: the device remembers read/claimed by the number.
+- The play-time counter starts with the build that has it: earlier players start from 0 hours.
 
 ## Open
-- Which concept; a picture per item or not; whether the in-game Reference/notes feed the news text.
+- Stage B (news over the internet without a build) -- the user chose «with the build» for now.
+- Not seen by the user; no test (a test only if a rule breaks).

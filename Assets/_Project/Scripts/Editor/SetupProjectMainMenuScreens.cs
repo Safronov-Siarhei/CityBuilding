@@ -66,6 +66,7 @@ namespace CityBuilder.EditorTools
             logo.preserveAspect = true;
             logo.raycastTarget = false;
             Anchor(logo.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -110f), new Vector2(638f, 170f));
+            BuildNewsButton(main);       // «Новости», right of the language button (the user, 2026-11-17)
             BuildLanguagePicker(main);   // right of the settings button; last, so its open list lies over the rest
 
             // ---- the modes
@@ -166,6 +167,32 @@ namespace CityBuilder.EditorTools
         {
             property.arraySize = values.Count;
             for (var i = 0; i < values.Count; i++) property.GetArrayElementAtIndex(i).stringValue = values[i];
+        }
+
+        /// <summary>
+        /// «Новости» (the user, 2026-11-17; card Design/features/news.md): the letter with the wax seal (glyph Hud_News,
+        /// its own colours, Tools/ui/news_art.py) third in the top-left row, after settings and language; a red dot
+        /// while something is unread or a reward waits. The window itself is built in code (UI/NewsWindow).
+        /// </summary>
+        private static void BuildNewsButton(Transform main)
+        {
+            const float size = 150f, gap = 20f;
+            var button = MenuRoundButton(main, "NewsButton", "round", "News", HudInk.Keep, size, 0.58f);
+            Anchor((RectTransform)button.transform, new Vector2(0f, 1f), new Vector2(0.5f, 0.5f),
+                new Vector2(CornerInset + 2f * (size + gap), -CornerInset), new Vector2(size, size));
+            var dot = CreateImage(button.transform, "Dot", new Color(0.86f, 0.16f, 0.13f));
+            dot.sprite = SkinSprite("circle_mask");
+            dot.raycastTarget = false;
+            Anchor(dot.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(size * 0.5f - 18f, size * 0.5f - 18f), new Vector2(44f, 44f));
+            var rim = dot.gameObject.AddComponent<Outline>();
+            rim.effectColor = Color.white;
+            rim.effectDistance = new Vector2(3f, -3f);
+            dot.gameObject.SetActive(false);
+            var news = button.gameObject.AddComponent<NewsButton>();
+            var so = new SerializedObject(news);
+            so.FindProperty("dot").objectReferenceValue = dot.gameObject;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            UnityEventTools.AddPersistentListener(button.onClick, news.Open);
         }
 
         /// <summary>A round picture button held at an anchor of the screen (a corner, a side's middle).</summary>
