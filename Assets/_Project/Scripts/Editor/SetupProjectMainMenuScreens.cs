@@ -31,6 +31,10 @@ namespace CityBuilder.EditorTools
         /// <summary>The period tabs: centred between the window's foot and the screen's (1080 high), the user 2026-10-25.</summary>
         private static float PeriodTabsY => (MenuWindowPos.y - MenuWindowSize.y * 0.5f - 540f) * 0.5f;
         private const float CornerInset = 100f;
+        // the small settings / news buttons under «Магазин» (0.62 of the old 150, the approved concept)
+        private const float SmallMenuButton = 94f;
+        private const float SmallMenuGap = 26f;
+        private const float SmallMenuY = 82f;
         private static readonly Color BadgeColour = new Color(0.94f, 0.54f, 0.17f);
 
         private static void BuildMainMenu(Transform canvas, Sprite panelSprite)
@@ -47,8 +51,13 @@ namespace CityBuilder.EditorTools
 
             // ---- main
             var main = StretchedChild(canvas, "MainScreen");
-            // top left (the piggy bank took the top right; the language button stands beside it, 2026-11-17)
-            var settings = Corner(main, "SettingsButton", "Settings", new Vector2(0f, 1f), new Vector2(CornerInset, -CornerInset), 150f);
+            // settings and news: small, under «Магазин», inside the safe area (the user approved Design/ui/MenuCorner_Concept.png,
+            // 2026-11-17); the top-left corner keeps only the language button
+            var underShop = StretchedChild(main, "UnderShop");
+            underShop.gameObject.AddComponent<SafeAreaFitter>();
+            var settings = MenuRoundButton(underShop, "SettingsButton", "round", "Settings", HudInk.OnRound, SmallMenuButton, 0.5f);
+            Anchor((RectTransform)settings.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f),
+                new Vector2(-(SmallMenuButton + SmallMenuGap) * 0.5f, SmallMenuY), new Vector2(SmallMenuButton, SmallMenuButton));
             var play = MenuTextButton(main, "ContinueButton", "button", "#menu_continue", HudInk.OnButton, Vector2.zero, new Vector2(560f, 140f), 50);
             Anchor((RectTransform)play.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 330f), new Vector2(560f, 140f));
             var offers = MenuTextButton(main, "OffersButton", "plaque", "#menu_offers", HudInk.OnMenuPlaque, Vector2.zero, new Vector2(440f, 110f), 38);
@@ -66,8 +75,8 @@ namespace CityBuilder.EditorTools
             logo.preserveAspect = true;
             logo.raycastTarget = false;
             Anchor(logo.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -110f), new Vector2(638f, 170f));
-            BuildNewsButton(main);       // «Новости», right of the language button (the user, 2026-11-17)
-            BuildLanguagePicker(main);   // right of the settings button; last, so its open list lies over the rest
+            BuildNewsButton(underShop);  // «Новости», right of the settings, under «Магазин» (the user, 2026-11-17)
+            BuildLanguagePicker(main);   // alone in the top-left corner; last, so its open list lies over the rest
 
             // ---- the modes
             var modes = StretchedChild(canvas, "ModesScreen");
@@ -176,14 +185,14 @@ namespace CityBuilder.EditorTools
         /// </summary>
         private static void BuildNewsButton(Transform main)
         {
-            const float size = 150f, gap = 20f;
+            const float size = SmallMenuButton;
             var button = MenuRoundButton(main, "NewsButton", "round", "News", HudInk.Keep, size, 0.58f);
-            Anchor((RectTransform)button.transform, new Vector2(0f, 1f), new Vector2(0.5f, 0.5f),
-                new Vector2(CornerInset + 2f * (size + gap), -CornerInset), new Vector2(size, size));
+            Anchor((RectTransform)button.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f),
+                new Vector2((SmallMenuButton + SmallMenuGap) * 0.5f, SmallMenuY), new Vector2(size, size));
             var dot = CreateImage(button.transform, "Dot", new Color(0.86f, 0.16f, 0.13f));
             dot.sprite = SkinSprite("circle_mask");
             dot.raycastTarget = false;
-            Anchor(dot.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(size * 0.5f - 18f, size * 0.5f - 18f), new Vector2(44f, 44f));
+            Anchor(dot.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(size * 0.5f - 12f, size * 0.5f - 12f), new Vector2(30f, 30f));
             var rim = dot.gameObject.AddComponent<Outline>();
             rim.effectColor = Color.white;
             rim.effectDistance = new Vector2(3f, -3f);

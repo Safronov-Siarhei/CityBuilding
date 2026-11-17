@@ -43,7 +43,8 @@ namespace CityBuilder.EditorTools
 
             // ---- the button: the settings' round wooden button with the language's flag in its face, right of the
             // settings in the top-left corner (the user, 2026-11-17, option A of Design/ui/lang/)
-            var at = new Vector2(CornerInset + PickerButton + PickerGap, -CornerInset);
+            // alone in the corner since 2026-11-17 (settings and news moved under «Магазин»)
+            var at = new Vector2(CornerInset, -CornerInset);
             var pill = MenuImage(root, "Pill", "round", Vector2.zero, new Vector2(PickerButton, PickerButton), Image.Type.Simple);
             pill.preserveAspect = true;
             Anchor(pill.rectTransform, new Vector2(0f, 1f), new Vector2(0.5f, 0.5f), at, new Vector2(PickerButton, PickerButton));

@@ -3,8 +3,9 @@
 > **Status (2026-11-17): BUILT (stage A: news ship with the build), not seen by the user.**
 
 ## Rules (the user, 2026-11-17)
-- A «Новости» button in the main menu: the letter with the wax seal (icon variant 4), third in the top-left row
-  after settings and language. Inside: the newest items, a tap opens one.
+- A «Новости» button in the main menu: the letter with the wax seal (icon variant 4). Since 2026-11-17 (concept
+  Design/ui/MenuCorner_Concept.png, approved) it stands SMALL (94) under «Магазин», right of the settings, in a
+  SafeAreaFitter holder «UnderShop»; the top-left corner keeps only the language button. Inside: the newest items.
 - No code/setup per item: the build takes every row of the sheet tab «Новости» and orders them.
 - NO DATES: items carry a NUMBER (a build goes to review and may not ship on a planned day). Bigger = newer.
 - The window lists the 10 newest (`news_shown_count`).

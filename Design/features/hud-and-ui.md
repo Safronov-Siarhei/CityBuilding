@@ -173,6 +173,9 @@ Live scene behind the menu unchanged (`MainMenuBackground` etc.). Tests: `MainMe
   a round wooden button with the current language's flag, the settings button's size (150) and look,
   right of ⚙ in the top-left corner (gap 20). The pill had stood top centre, then clashed with the
   CityCraft logo of main-menu concept 1. Name and chevron are gone (LanguagePicker skips nulls).
+- MOVED AGAIN 2026-11-17 (concept Design/ui/MenuCorner_Concept.png, approved): the language button stands ALONE in
+  the top-left corner; ⚙ and «Новости» are small (94) under «Магазин» in a SafeAreaFitter holder «UnderShop»
+  (SetupProjectMainMenuScreens: SmallMenuButton / SmallMenuGap / SmallMenuY).
 - A tap opens a list under it (left edge under ⚙) (flag + own name per row, the current one gold with a tick), a tap
   outside closes it. Own names, not country names (my proposal in the concept, accepted).
 - Base language English (`Localization.BaseLanguage`): no saved choice -> the phone's language if it is
