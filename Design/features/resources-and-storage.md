@@ -99,6 +99,12 @@ SANDBOX ONLY. Replaces the family pools with a cap PER RESOURCE.
 - A storage building destroyed: its resources are lost, with a visible «minus» effect on the inventory; restoring
   the ruin gives back half of them.
 - Islands: one shared store for the whole archipelago.
-- Open: whether the chain buildings are free; prices above the caps (Tax House 150/200, Colosseum 90/80, Big Treasury
-  110 stone, Big Warehouse 80 / Big Granary 70 wood, Manor 55, Moat 25 of a 20-cap resource, research up to 800
-  coins); food arrives once a day in one lump vs a 25 cap; how much a destroyed store loses.
+- The chain buildings are FREE (the user, 2026-11-17).
+- Food stays 25 at lvl 1 on purpose: the player starts with 5 residents; growth must be hard (the user).
+- Each storage building holds ITS OWN amounts. Tapping a store (or any building holding resources) shows, next to
+  the «!», a round INVENTORY button: what this very building holds. Destroyed with 50 wood inside -> the player
+  loses 50 wood; restoring its ruin gives back 25; fractions round UP (in the player's favour).
+- PRE-RELEASE CHECK: prices above the caps (Tax House 150/200, Colosseum 90/80, Big Treasury 110 stone, Big
+  Warehouse 80 / Big Granary 70 wood, Manor 55, Moat 25 of a 20-cap resource, research up to 800 coins) -- the user
+  re-balances after the review of every building's logic.
+- Open: which store a new resource goes into and which one pays a price (fill / spend order).
