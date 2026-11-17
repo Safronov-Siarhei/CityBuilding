@@ -273,3 +273,21 @@ from `ArchipelagoBotCell`; `TheBotKingdom_StandsOnItsIsland...` now checks each 
 - USER (2026-11-17): after PEACE they come back -- `Rebuild()` skips byTown slots only while the stance is War;
   the first rebuild after peace (still every 3rd orc raid + calm) raises them and clears the flag.
 - Compiled only; untested, not seen.
+
+## Diplomacy rework -- DECIDED by the user 2026-11-17, NOT BUILT (concepts drawn: Design/ui/Diplomacy_*.png, Tools/ui/diplomacy_concepts.py)
+- Relations start when the Diplomacy Hall is built: 0, then FALL -1 per game day (replaces drift-to-0).
+- Gifts to the bot: three fixed coin gifts Малый / Средний / Большой = +1 / +3 / +5; ONE gift per game day.
+  Prices and everything about the hall in its OWN sheet tab («Зал дипломатии»).
+- Help requests: a banner «Соседнее королевство просит помощи» -- resource + amount, Отправить (+5) / Игнорировать (-1);
+  one every 5 game days once the hall stands; MANY request variants, editable in the hall's tab.
+- Trade = a shop: a sheet table of offers with levels (what the player gets, how much, for what); every resource can take part;
+  10 offers every 10 minutes (timer), only TWO may be taken, then the rest lock; deals are one-off;
+  forced refresh for an ad or crystals; trade only in the Trade state (from +30).
+- Gifts from the bot: above +60, chance grows with relations; on screen «Подарок от соседа» + a notice «Вам подарок»;
+  modest prizes, all in a sheet table; size and the chance of better resources grow with the hall level.
+- War: the bot declares war itself, a daily chance below 0 growing as relations fall (a bit higher than my 5%@-50/15%@-100 proposal);
+  a banner «Отношения с королевством на грани -- пришлите дар» when they are very low; the player can still declare war himself;
+  razing the bot's town hall gives CRYSTALS; after peace relations return to 0.
+- Hall levels: better rates and more interesting offers, richer bot gifts, cheaper peace.
+- Open: exact numbers (gift prices, war chance curve, warning threshold, crystals for the hall, refresh price), the offer table's
+  columns, the level ladder; the user reviews the concepts first.
