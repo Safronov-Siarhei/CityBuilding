@@ -173,7 +173,7 @@ for lay in (win, Image.alpha_composite(left, right), band, btn):
 d = ImageDraw.Draw(img)
 d.text((CX, (ry0 + ry1) / 2 + 6), 'Обучение', font=font(78), fill=(255, 240, 200), anchor='mm', stroke_width=5,
        stroke_fill=RIB_O)
-d.multiline_text((CX, 468), 'Не знаешь, с чего начать?' + chr(10) + 'Король покажет главное' + chr(10) + 'за 10 минут.',
+d.multiline_text((CX, 468), 'Не знаешь, с чего начать?' + chr(10) + 'Король покажет главное' + chr(10) + 'за 5 минут.',
                  font=font(38, 'Rubik-Medium.ttf'), fill=(60, 52, 24), anchor='mm', align='center', spacing=14)
 ry = 610
 d.text((CX + 52, ry), 'Награда: 25', font=font(40, 'Rubik-Bold.ttf'), fill=(120, 80, 30), anchor='rm')

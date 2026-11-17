@@ -181,23 +181,26 @@ The user: several round-4 items had NOT worked -- each checked in the code this 
 - Raid camera (2026-11-06): after the soldier's hire the camera stays on the town for `tutorial_raid_camera_sec`
   (3) before it goes over to the orcs boarding (`FollowMoving`, gated on `_stepTime`).
 
-## In-game offer in the sandbox (the user, 2026-11-17) -- PROPOSAL sent for approval, nothing built
+## In-game offer in the sandbox (the user, 2026-11-17) -- rules AGREED 2026-11-17, banner v2 awaiting the go-ahead, nothing built
 The user: a player who skipped the tutorial and started in the sandbox must get a banner offering it during the first
 10-20 minutes; the game is PAUSED under it and goes on only when it is closed or the tutorial is done.
 Mock-up `Design/ui/TutorialOffer_Banner.png` (`Tools/ui/tutorial_offer_concept.py`) v2: built like the PLAGUE/FIRE
 banners (the user: those are the best ones; v1 copied «Свобода» and was turned down): wood window, field of the game's
 building/resource icons at three depths on sunny blue, King left + Queen right, purple ribbon «Обучение», parchment
-«Не знаешь, с чего начать? Король покажет главное за 10 минут.», «Награда: 25 [crystal]», green «Пройти обучение»,
+«Не знаешь, с чего начать? Король покажет главное за 5 минут.», «Награда: 25 [crystal]», green «Пройти обучение»,
 «Позже». No pause plate (the game is simply paused under it, like the plague banner).
 Proposed rules (my calls, awaiting the user):
 - Only in the sandbox, only while the tutorial was never finished (`PlayerPrefs tutorial.rewarded`), at most ONCE per
   world, at most 2 times per account (after the second «Позже» never again; the menu card stays).
 - Inside the first 20 min of game time, the FIRST trigger that fires:
   1. no Town Hall 60 s after the start;
-  2. after the Town Hall, nothing new placed for 3 min (the start chain stalled);
+  2. the start chain (Town Hall -> Lighthouse/Warehouse/Granary/Treasury/CrystalMine) is FINISHED and then nothing new
+     is placed for 3 min (the user, 2026-11-17);
   3. no input at all for 60 s;
   4. 1 min before the quiet start ends (the first raid) with no Barracks/soldier;
-  5. the first time the town goes hungry.
+  5. wood or stone is SHORT (a build refused for lack of it, or the amount under a sheet threshold) AND neither has
+     grown for 60 s -- no gathering at all (the user, 2026-11-17; replaces «the town goes hungry»).
+  The user approved 1, 3, 4 as proposed (2026-11-17).
   A player who plays well never sees it.
 - Not over a placement, an open window or a banner: waits until the screen is free.
 - «Пройти обучение»: autosave the world, load the tutorial; its victory panel gets «Вернуться в мой город» (loads that
