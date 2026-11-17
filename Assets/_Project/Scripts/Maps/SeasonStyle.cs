@@ -145,6 +145,19 @@ namespace CityBuilder.Maps
             Swap(tree, looks.buildingsPalette, crown);
         }
 
+        /// <summary>
+        /// A building in the season's lawns (the user, 2026-11-17: green grass under a building on an autumn map): every
+        /// renderer drawing with the buildings' palette, every level's model included, takes the season's copy of it
+        /// (snow and all -- only the two grass cells differ). Summer has none: nothing changes.
+        /// </summary>
+        public static void DressBuilding(GameObject building)
+        {
+            var looks = Looks;
+            var look = CurrentLook;
+            if (building == null || looks == null || look == null || look.buildings == null) return;
+            Swap(building, looks.buildingsPalette, look.buildings);
+        }
+
         /// <summary>A unit's figure: the buildings' material without the snow, so winter does not whiten a helmet or a shoulder.</summary>
         public static void NoSnow(GameObject figure)
         {

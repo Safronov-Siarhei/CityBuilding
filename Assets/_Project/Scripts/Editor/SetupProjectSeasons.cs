@@ -69,6 +69,8 @@ namespace CityBuilder.EditorTools
             var look = new SeasonLooks.Look { snow = snow, sunTint = sunTint };
             look.terrain = MaterialCopy(terrain, $"{SeasonsFolder}Terrain-{season}.mat", $"{SeasonsFolder}Terrain-{season}.png");
             look.conifer = Windy(MaterialCopy(buildings, $"{SeasonsFolder}Trees-{season}-Conifer.mat", $"{SeasonsFolder}Trees-{season}-Conifer.png"));
+            look.buildings = MaterialCopy(buildings, $"{SeasonsFolder}Buildings-{season}.mat", $"{SeasonsFolder}Buildings-{season}.png");
+            if (look.buildings == buildings) look.buildings = null;
             var broadleaf = new System.Collections.Generic.List<Material>();
             for (var n = 1; AssetDatabase.LoadAssetAtPath<Texture2D>($"{SeasonsFolder}Trees-{season}-{n}.png") != null; n++)
                 broadleaf.Add(Windy(MaterialCopy(buildings, $"{SeasonsFolder}Trees-{season}-{n}.mat", $"{SeasonsFolder}Trees-{season}-{n}.png")));

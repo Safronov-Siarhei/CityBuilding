@@ -646,7 +646,8 @@ namespace CityBuilder.EditorTools
             content.transform.SetParent(stripGO.transform, false);
             StretchFull((RectTransform)content.transform);
 
-            const float cardW = 460f, cardH = 190f;
+            // wider than the drawn card (the user, 2026-11-17: the timer ran into the name): 9-sliced
+            const float cardW = 580f, cardH = 190f;
             var x = HudMargin + RoundButton + 36f;
             var top = MenuButtonTop - RoundButton - 18f + 20f * OfferCardScale;
             var header = ShopText(content.transform, "Header", "#shop_title", 38, UiTheme.Heavy, new Color(1f, 0.94f, 0.78f), TextAnchor.LowerLeft);
@@ -657,7 +658,8 @@ namespace CityBuilder.EditorTools
             for (var i = 0; i < cards.Length; i++)
             {
                 var image = CreateImage(content.transform, $"Card{i + 1}", Color.white);
-                image.sprite = ShopSprite("Card");
+                image.sprite = SlicedSprite($"{UiTextureImport.ShopFolder}/Card.png", 44f);
+                image.type = Image.Type.Sliced;
                 var rect = image.rectTransform;
                 Anchor(rect, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(x, top - i * (cardH - 30f) * OfferCardScale), new Vector2(cardW, cardH));
                 rect.localScale = new Vector3(OfferCardScale, OfferCardScale, 1f);
@@ -669,9 +671,12 @@ namespace CityBuilder.EditorTools
 
                 var card = new OfferMenuStrip.Card { button = button };
                 card.name = ShopText(rect, "Name", null, 30, UiTheme.Heavy, ShopInk, TextAnchor.MiddleLeft);
-                TopLeft(card.name.rectTransform, 44f, 30f, 320f, 74f);
+                TopLeft(card.name.rectTransform, 44f, 30f, 420f, 74f);
+                card.name.resizeTextForBestFit = true;
+                card.name.resizeTextMinSize = 18;
+                card.name.resizeTextMaxSize = 30;
                 card.timer = ShopText(rect, "Timer", null, 28, UiTheme.Bold, UiTheme.Rgb(0x8c623a), TextAnchor.MiddleRight);
-                TopLeft(card.timer.rectTransform, 300f, 30f, 420f, 74f);
+                TopLeft(card.timer.rectTransform, 424f, 30f, 540f, 74f);
                 card.goodIcons = new Image[3];
                 card.goodAmounts = new Text[3];
                 for (var g = 0; g < 3; g++)

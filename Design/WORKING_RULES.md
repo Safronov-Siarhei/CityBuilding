@@ -26,6 +26,11 @@ see the map at the bottom.
   until the user says so — see `Design/features/ideas.md`.
 - Do not copy existing games (Kingdoms & Castles etc.): take simplicity + juicy saturated colour; the
   art brief is in `Design/features/art-pipeline.md`.
+- **Every banner is the same size and stands in the same place** (the user, 2026-11-17, after «Свобода песочницы» came
+  out too big and too low): plague, fire, «Свобода песочницы» and any new one are drawn on the 1920 x 1080 reference with
+  the window at (60, 230)-(1860, 1050), wood frame + picture field + ribbon with tails + parchment in the middle; in Unity
+  the whole reference frame is centred on the screen and scaled by ONE constant, `SetupProject.BannerScale` (0.6,
+  Editor/SetupProjectPanels.cs). Never place a banner at scale 1 or at its own size, or the style breaks.
 - Dungeons are built like the island maps (relief, colour zones, decor kit), bright Warcraft-like —
   never a grid of cubes.
 

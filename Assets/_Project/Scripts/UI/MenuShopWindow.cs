@@ -120,11 +120,13 @@ namespace CityBuilder.UI
             _blur = Img<RawImage>(_root, "Blur");
             Stretch(_blur.rectTransform);
             _blur.texture = _blurTexture = BlurredScreen();
-            _blur.color = Color.white;
+            // the screen behind DARKER, never lighter (the user, 2026-11-17: the blurred shot came out washed light):
+            // the shot itself toned down, then a warm dark over it
+            _blur.color = new Color(0.55f, 0.55f, 0.55f, 1f);
             var dim = Img<Image>(_root, "Dim");
             Stretch(dim.rectTransform);
             dim.raycastTarget = true;   // nothing behind takes a tap
-            dim.color = new Color(0.12f, 0.07f, 0.03f, 0.42f);
+            dim.color = new Color(0.08f, 0.05f, 0.02f, 0.5f);
 
             if (_kind == Kind.Shop)
             {

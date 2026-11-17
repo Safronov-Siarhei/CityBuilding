@@ -14,6 +14,8 @@ namespace CityBuilder.Maps
         public class Look
         {
             public Material terrain;
+            /// <summary>The buildings' palette with the plot lawns in the season's grass (null: summer, the palette itself).</summary>
+            public Material buildings;
             public Material conifer;
             public Material[] broadleaf = new Material[0];
             [Range(0f, 1f)] public float snow;

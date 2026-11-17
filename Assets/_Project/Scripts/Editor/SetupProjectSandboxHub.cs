@@ -39,9 +39,11 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>A bit drawn to be stretched (the segment bars): its rounded ends kept by a 9-slice border.</summary>
-        private static Sprite SlicedMenuArt(string name, float border)
+        private static Sprite SlicedMenuArt(string name, float border) => SlicedSprite($"{UiTextureImport.MenuArtFolder}/{name}.png", border);
+
+        /// <summary>A picture drawn at one size and stretched in Unity: a 9-slice border set on its importer here.</summary>
+        private static Sprite SlicedSprite(string path, float border)
         {
-            var path = $"{UiTextureImport.MenuArtFolder}/{name}.png";
             if (AssetImporter.GetAtPath(path) is TextureImporter importer && importer.spriteBorder.x != border)
             {
                 importer.spriteBorder = new Vector4(border, border, border, border);
@@ -200,6 +202,7 @@ namespace CityBuilder.EditorTools
             var dim = CreateImage(root.transform, "Dim", new Color(0f, 0f, 0f, 0.55f));
             StretchBleed(dim.rectTransform);     // takes every tap behind the window
             var frame = HallFrame(root.transform, "Window");
+            frame.localScale = Vector3.one * BannerScale;     // the banner rule: as big and as placed as the plague's
             SandPiece(frame, layout, "Window", "Freedom_");
             SandPiece(frame, layout, "Band", "Freedom_");
             HallText(frame, layout, "BTitle", "#freedom_title", 60, HubCream, new Color(0.03f, 0.2f, 0.25f));

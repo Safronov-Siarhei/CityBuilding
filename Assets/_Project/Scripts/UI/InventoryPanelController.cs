@@ -173,9 +173,9 @@ namespace CityBuilder.UI
                 }
                 if (i < amounts.Length && amounts[i] != null)
                 {
-                    // the sandbox's stores: «amount/room» for what they keep (the user, 2026-11-17); full blinks red (Update)
+                    // the sandbox's stores: «amount/room» only once full, like the top bar (the user, 2026-11-17); full blinks red (Update)
                     amounts[i].text = StoreLedger.Active && StoreLedger.Keeps(type) && !resources.InfiniteResources
-                        ? amount + "/" + resources.GetCapacity(type) : amount.ToString();
+                        ? ResourceHUDController.Format(amount, resources.GetCapacity(type), false) : amount.ToString();
                     amounts[i].color = amount > 0 ? Ink : InkDimmed;
                 }
             }

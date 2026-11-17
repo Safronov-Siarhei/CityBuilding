@@ -97,6 +97,7 @@ namespace CityBuilder.Buildings
                 if (!IsUpgrade) Core.PiggyTasks.Built(Building.Data);
                 else
                 {
+                    BuildSound.Upgraded();
                     Core.PiggyTasks.Report(Core.PiggyTasks.Upgrade);
                     Core.PiggyTasks.ReportMax(Core.PiggyTasks.BuildingLevel, Building.Level);
                 }

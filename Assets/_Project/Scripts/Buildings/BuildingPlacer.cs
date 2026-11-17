@@ -1145,6 +1145,7 @@ namespace CityBuilder.Buildings
             if (_selectedBuilding != mandatoryFirstBuilding && _selectedBuilding != _freeNow) buildingInstance.BuildOnTimer(_selectedBuilding.BuildSeconds(1));
 
             GridManager.Instance.SetAreaOccupied(cell, footprint, true);
+            BuildSound.Placed();
 
             if (_selectedBuilding.isRoad && RoadNetwork.Instance != null)
             {

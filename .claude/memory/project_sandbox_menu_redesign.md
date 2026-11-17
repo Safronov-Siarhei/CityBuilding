@@ -22,3 +22,5 @@ Card: Design/features/hud-and-ui.md (SANDBOX MENU REDESIGN). Related: [[project_
 FEATURE LIST DECIDED 2026-11-17 (card Design/features/sandbox-freedom.md): raids 5 levels, neighbour always-peace/as usual, quiet start 0/7/15/30, fires/storms/plague, start goods, build+research speed, fog; piggy option A; presets parked; in-game scroll under «Сохранить». Not built.
 
 BUILT 2026-11-17: new sandbox screen, rectangular chart (sea at the sides), settings scroll, purchase banner, in-game «Настройки мира» under «Сохранить», piggy line; MapPickerTests 4/4; user not seen it in Unity yet. Details: card sandbox-freedom.md.
+
+PLAYTEST 2026-11-17 (9 items) BUILT, not seen: banner rule (BannerScale 0.6 for all banners, in WORKING_RULES), «/room» only when full, wider Лавка cards, build/upgrade sounds (BuildSound), season lawns under buildings, hall room = 5 in sandbox, one-resource store card centred, shop dims.

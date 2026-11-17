@@ -21,9 +21,9 @@ namespace CityBuilder.Tests.EditMode
         [Test]
         public void ANearlyFullStore_ShowsWhatItCanHold()
         {
-            // 80% of the ceiling is where the warning starts.
-            Assert.AreEqual("79", ResourceHUDController.Format(79, 100, false));
-            Assert.AreEqual("80/100", ResourceHUDController.Format(80, 100, false));
+            // only a full store shows its ceiling (the user, 2026-11-17)
+            Assert.AreEqual("80", ResourceHUDController.Format(80, 100, false));
+            Assert.AreEqual("99", ResourceHUDController.Format(99, 100, false));
             Assert.AreEqual("100/100", ResourceHUDController.Format(100, 100, false));
         }
 

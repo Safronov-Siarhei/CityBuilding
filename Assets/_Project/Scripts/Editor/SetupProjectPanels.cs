@@ -1238,7 +1238,14 @@ namespace CityBuilder.EditorTools
         /// at each side, the red ribbon, the parchment with the text, a green «Смотреть рекламу», the
         /// crystals button showing only the price and the crystal, «Закрыть».
         /// </summary>
-        private const float PlagueBannerSize = 0.6f;
+        /// <summary>
+        /// THE banner rule (the user, 2026-11-17, after «Свобода песочницы» came out too big and too low): every banner
+        /// (plague, fire, «Свобода песочницы», any new one) is drawn on the 1920 x 1080 reference with its window at
+        /// (60, 230)-(1860, 1050), and in Unity that whole reference frame is centred on the screen and scaled by this
+        /// one number -- so all banners are the same size and stand in the same place. Never place a banner's pieces
+        /// at scale 1. Rule written in Design/WORKING_RULES.md and Design/features/hud-and-ui.md.
+        /// </summary>
+        public const float BannerScale = 0.6f;
 
         private static void BuildDisasterBanner<T>(Transform uiRoot, string folder, string stem, string name) where T : PauseBanner
         {
@@ -1272,7 +1279,7 @@ namespace CityBuilder.EditorTools
             window.SetParent(root.transform, false);
             window.anchorMin = window.anchorMax = window.pivot = new Vector2(0.5f, 0.5f);
             window.sizeDelta = new Vector2(refW, refH);
-            window.localScale = Vector3.one * PlagueBannerSize;
+            window.localScale = Vector3.one * BannerScale;
 
             void Place(RectTransform rect, float[] r)
             {

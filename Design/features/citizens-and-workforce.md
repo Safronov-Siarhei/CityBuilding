@@ -139,3 +139,7 @@ EditMode `CitizenManagerTests`, `SettlementTierManagerTests`, `CitizenNamesTests
   building is gone.
 - `CharacterController` costs ~8 µs per Move; dropping it was offered and the user took only the safe
   half (terrain out of the collision matrix). Roads don't carve the NavMesh; citizens sink ~2 cm.
+
+- The Town Hall's room counts in the people cap (the user, 2026-11-17: «7/5» -- the hall's hidden residents were people
+  with no place): sandbox tab «Песочница: Здания (Город)» Castle housing_capacity 1-5 = 5 (= citizens_on_build). The hall
+  is still not a house (`BuildingInstance.IsHouse` excludes it), so it does not grow residents twice.

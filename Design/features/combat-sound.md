@@ -44,3 +44,9 @@
 ## Open
 - The user's ideas for more sounds (proposed 2026-11-15, not agreed): gate hit / break, catapult landing, deaths,
   victory/defeat stingers, wave-cleared fanfare, UI clicks, building collapse, construction hammering.
+
+## Building sounds (2026-11-17, built, not heard by the user)
+- The user: a sound when a building is put down and when its upgrade ends, every mode. `Buildings/BuildSound.cs`:
+  `Placed()` from `BuildingPlacer.PlaceAt` (roads/fences per piece, at most every 0.08 s), `Upgraded()` from
+  `ConstructionSite.Finish` for a player's upgrade. Clips are our own: `Tools/audio/build_sounds.py` ->
+  `Audio/Resources/Build/{place,upgraded}.wav`. Volume `build_sfx_volume` (sheet «Время и загрузка»).

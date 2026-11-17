@@ -1,0 +1,48 @@
+using CityBuilder.Core;
+using UnityEngine;
+
+namespace CityBuilder.Buildings
+{
+    /// <summary>
+    /// The building sounds in every mode (the user, 2026-11-17: «когда игрок ставит какое-то здание на карте - должен
+    /// быть звук, при окончании его улучшения на карте тоже»): a wooden thump-knock when the player puts a building
+    /// down (BuildingPlacer.PlaceAt -- roads and fences too, piece by piece), a rising chime when a player's upgrade is
+    /// done (ConstructionSite.Finish). Clips: Audio/Resources/Build/{place,upgraded} (our own, Tools/audio/build_sounds.py).
+    /// One 2D source made once and kept; volume build_sfx_volume (sheet). A road laid piece after piece is not a rattle:
+    /// the same sound no oftener than every 0.08 s.
+    /// </summary>
+    public static class BuildSound
+    {
+        private static AudioSource _source;
+        private static AudioClip _place, _upgraded;
+        private static float _lastPlace = -1f;
+
+        public static void Placed()
+        {
+            var now = Time.unscaledTime;
+            if (now - _lastPlace < 0.08f) return;
+            _lastPlace = now;
+            Play(ref _place, "Build/place", Random.Range(0.94f, 1.06f));
+        }
+
+        public static void Upgraded() => Play(ref _upgraded, "Build/upgraded", 1f);
+
+        private static void Play(ref AudioClip clip, string path, float pitch)
+        {
+            var volume = BalanceConfig.Instance != null ? BalanceConfig.Instance.BuildSfxVolume : 0.7f;
+            if (volume <= 0f) return;
+            if (clip == null) clip = UnityEngine.Resources.Load<AudioClip>(path);
+            if (clip == null) return;
+            if (_source == null)
+            {
+                var host = new GameObject("BuildSound");
+                Object.DontDestroyOnLoad(host);
+                _source = host.AddComponent<AudioSource>();
+                _source.playOnAwake = false;
+                _source.spatialBlend = 0f;
+            }
+            _source.pitch = pitch;
+            _source.PlayOneShot(clip, volume);
+        }
+    }
+}

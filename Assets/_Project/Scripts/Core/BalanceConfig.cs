@@ -515,6 +515,7 @@ namespace CityBuilder.Core
         // screen's centre on the ground) past which a shot or a blow is not heard, the voices at once, the least gap
         // between two sounds of one kind, and the share of arrows that clink where they land
         [SerializeField] private float combatSfxVolume = 0.6f, combatSfxHearRange = 30f, combatSfxGapSeconds = 0.05f, combatSfxHitShare = 0.35f;
+        [SerializeField] private float buildSfxVolume = 0.7f;
         [SerializeField] private int combatSfxVoices = 8;
         // the interface buttons' click (UI.UiClickSound; the user, 2026-11-15)
         [SerializeField] private float uiClickVolume = 0.5f;
@@ -1486,6 +1487,8 @@ namespace CityBuilder.Core
         public float CastleAttackRangeMultiplier => castleAttackRangeMultiplier;
         public float DayLengthSeconds => dayLengthSeconds;
         public float CombatSfxVolume => combatSfxVolume;
+        /// <summary>The building sounds' loudness: a building put down, an upgrade done (build_sfx_volume).</summary>
+        public float BuildSfxVolume => buildSfxVolume;
         public float CombatSfxHearRange => combatSfxHearRange;
         public float CombatSfxGapSeconds => combatSfxGapSeconds;
         public float CombatSfxHitShare => combatSfxHitShare;
@@ -2717,6 +2720,7 @@ namespace CityBuilder.Core
             castleAttackRangeMultiplier = Read(economy, "castle_attack_range_mult", castleAttackRangeMultiplier);
             dayLengthSeconds = Read(economy, "day_length_seconds", dayLengthSeconds);
             combatSfxVolume = Read(economy, "combat_sfx_volume", combatSfxVolume);
+            buildSfxVolume = Read(economy, "build_sfx_volume", buildSfxVolume);
             combatSfxHearRange = Read(economy, "combat_sfx_hear_range", combatSfxHearRange);
             combatSfxGapSeconds = Read(economy, "combat_sfx_gap_sec", combatSfxGapSeconds);
             combatSfxHitShare = Read(economy, "combat_sfx_hit_share", combatSfxHitShare);

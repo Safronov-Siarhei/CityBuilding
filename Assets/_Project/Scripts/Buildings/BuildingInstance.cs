@@ -209,6 +209,8 @@ namespace CityBuilder.Buildings
                 _levelAppearance?.Apply(Level);
                 _fenceAppearance?.SetLevel(Level);
                 UpdateLevelMarker();
+                // the plot's lawn in the map's season, every level's model at once
+                SeasonStyle.DressBuilding(gameObject);
             }
         }
 

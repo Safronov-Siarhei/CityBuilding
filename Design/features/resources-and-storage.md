@@ -145,3 +145,9 @@ SANDBOX ONLY. Replaces the family pools with a cap PER RESOURCE.
   («Пропадёт: 30 дерева — другим складам некуда их взять») from `StoreLedger.WouldLose`; no line when all fits.
 - OPEN: first setup + playtest;
   base_capacity_* / start_* still serve the campaign and other modes.
+
+## Playtest 2026-11-17 (built, not seen)
+- The top bar and the inventory show «amount/room» ONLY when the store is full (was: from 80 %) --
+  `ResourceHUDController.Format`, used by `InventoryPanelController` too; EditMode ResourceHUDFormatTests updated.
+- A store card of ONE resource (Кладовая, Сокровищница) puts its icon and number in the card's middle
+  (`StoreInventoryCard.Centre`); more resources keep the 3x3 grid.

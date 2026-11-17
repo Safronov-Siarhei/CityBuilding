@@ -34,7 +34,15 @@ namespace CityBuilder.UI
         private int _count;
         private float _refresh;
 
-        private void Awake() => Instance = this;
+        // the first slot's own places, for a store of one resource that moves it to the middle and back
+        private Vector2 _iconAt, _amountAt;
+
+        private void Awake()
+        {
+            Instance = this;
+            if (icons.Length > 0 && icons[0] != null) _iconAt = icons[0].rectTransform.anchoredPosition;
+            if (amounts.Length > 0 && amounts[0] != null) _amountAt = amounts[0].rectTransform.anchoredPosition;
+        }
 
         private void OnDestroy()
         {
@@ -99,6 +107,29 @@ namespace CityBuilder.UI
                 amounts[i].text = have + "/" + room;
                 amounts[i].color = room > 0 && have >= room ? red : Ink;
             }
+            Centre();
+        }
+
+        /// <summary>A store of ONE resource (Кладовая, Сокровищница): its icon and number in the card's middle (the user,
+        /// 2026-11-17); more than one keep the grid.</summary>
+        private void Centre()
+        {
+            if (icons.Length == 0 || amounts.Length == 0 || icons[0] == null || amounts[0] == null) return;
+            var icon = icons[0].rectTransform;
+            var amount = amounts[0].rectTransform;
+            if (_count != 1)
+            {
+                icon.anchoredPosition = _iconAt;
+                amount.anchoredPosition = _amountAt;
+                return;
+            }
+            const float gap = 12f;
+            var iconW = icon.sizeDelta.x;
+            var textW = Mathf.Min(amounts[0].preferredWidth, amount.sizeDelta.x);
+            var left = -(iconW + gap + textW) * 0.5f;
+            icon.anchoredPosition = new Vector2(left + iconW * 0.5f, 0f);
+            // the number is left-aligned in its box: its box's left edge right after the icon
+            amount.anchoredPosition = new Vector2(left + iconW + gap + amount.sizeDelta.x * amount.pivot.x, 0f);
         }
 
         private void Update()

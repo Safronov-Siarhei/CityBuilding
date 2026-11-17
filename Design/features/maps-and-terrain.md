@@ -139,3 +139,9 @@ unlocked by play). Every mesh map, both modes, in Summer (today's look), Autumn,
 ## Open / ideas
 Vikings by sea (free mode); dungeons in ruins (squad walks a labyrinth for treasure); islands of
 resources across a river; Map 3 decor ~12.8k props / ~240k tris is the first thing to watch on a phone.
+
+- Building lawns in the season (the user, 2026-11-17: green grass under a building on an autumn map):
+  `Tools/blender/seasons.py` also writes `Models/Palette/Seasons/Buildings-<Season>.png` (the buildings' palette with
+  `grass`/`grass_dark` in the season's ground grass); SetupProjectSeasons makes `Buildings-<Season>.mat`
+  (`SeasonLooks.Look.buildings`); `SeasonStyle.DressBuilding` swaps it onto every player building at
+  `BuildingInstance.Initialize` (all level models). Bot buildings keep their own palette (not dressed); not seen.
