@@ -520,12 +520,15 @@ namespace CityBuilder.Citizens
                 EventGlyph.Sad, "Res_Population"));
         }
 
-        /// <summary>The town's room is the houses' places and nothing else: not the Town Hall's.</summary>
+        /// <summary>
+        /// The town's room: the houses' places PLUS the Town Hall's own residents (the user, 2026-11-17: the hall's
+        /// hidden residents counted as people with no room -- «7/5»).
+        /// </summary>
         private void SyncCapacity()
         {
             var citizens = CitizenManager.Instance;
             if (citizens == null) return;
-            citizens.ChangeCapacity(Places - citizens.Capacity);
+            citizens.ChangeCapacity(Places + HallPlaces(BuildingInstance.TownHall) - citizens.Capacity);
         }
 
         private void LateUpdate()

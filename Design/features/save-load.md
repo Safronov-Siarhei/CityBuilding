@@ -35,3 +35,6 @@ load slot across the scene change), `UI/LoadGamePanelController.cs`.
 
 ## Tests
 EditMode `SaveDataShapeTests`, `SaveSystemSanitizeNameTests`; PlayMode `SaveRoundTripTests`, `AutosaveTests`.
+- Delete a save (the user, 2026-11-17): a red bin (glyph Hud_Trash, make_hud_glyphs.py) at each row's right in the
+  sandbox's saves window; a small «Удалить сохранение «X»? Его нельзя будет вернуть.» card (Отмена / Удалить) ->
+  `SaveSystem.Delete`, list redrawn. LoadGamePanelController (trashGlyph, deleteConfirm...), built in BuildSavesDialog.

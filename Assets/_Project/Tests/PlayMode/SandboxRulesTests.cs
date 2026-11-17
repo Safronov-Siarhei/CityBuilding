@@ -193,7 +193,12 @@ namespace CityBuilder.Tests.PlayMode
             going.BuildOnTimer(going.Data.BuildSeconds(1));
             Assert.AreEqual(0, HousePeople.PlacesOf(going), "A house still going up already holds people.");
             yield return null;
-            Assert.AreEqual(places, CitizenManager.Instance.Capacity, "The town's room is not the houses' places.");
+            // the hall's own residents have their room in the cap too (the user, 2026-11-17: «7/5» with 2 people over)
+            var hall = BuildingInstance.TownHall;
+            var hallRoom = hall != null ? hall.Data.citizensOnBuild : 0;
+            Assert.Greater(hallRoom, 0, "The sandbox's Town Hall keeps no residents.");
+            Assert.AreEqual(hallRoom, hall.Data.LevelStats(hall.Level).housingCapacity, "The Town Hall's room is not its residents.");
+            Assert.AreEqual(places + hallRoom, CitizenManager.Instance.Capacity, "The town's room is not the houses' places plus the hall's.");
 
             CitizenManager.Instance.SetPopulation(0);
             var seconds = BalanceConfig.Sandbox.PersonRespawnSeconds;
@@ -209,9 +214,11 @@ namespace CityBuilder.Tests.PlayMode
             food.RestoreFromSave(0, null);
 
             Time.timeScale = 20f;
-            for (var t = 0f; t < seconds * 1.5f && CitizenManager.Instance.TotalPopulation == 0; t += Time.deltaTime) yield return null;
+            for (var t = 0f; t < seconds * 1.5f && people.CitizensOf(hovel) == 0; t += Time.deltaTime) yield return null;
             Time.timeScale = 1f;
-            Assert.AreEqual(1, CitizenManager.Instance.TotalPopulation, "The house did not make a person in person_respawn_sec.");
+            // the hall regrows its own residents beside it now that they have room (2026-11-17): the house's counted alone
+            Assert.AreEqual(1, people.CitizensOf(hovel), "The house did not make a person in person_respawn_sec.");
+            Assert.LessOrEqual(CitizenManager.Instance.TotalPopulation, CitizenManager.Instance.Capacity, "More people than room.");
             Assert.IsFalse(Citizens.MigrationManager.MovesPeople, "Migration still brings people.");
         }
 

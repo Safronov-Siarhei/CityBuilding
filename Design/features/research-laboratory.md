@@ -69,3 +69,11 @@ list them). Ships go into the Армия tab later (3 levels, see archipelago me
 - Short of coins: starting a research (blocker `#research_blocked_coins`) and the Lab's own upgrade open the
   «Не хватает ресурсов» offer (`OfferShop.ShortageFor` -> `OfferShopWindow.ShowShortage`: crystals or an ad), like a
   building's upgrade. `ResearchManager.CoinCostOf(topic)`.
+
+## Split + categories -- CONCEPTS 2026-11-17, waiting for the user's pick
+The user: the lab's upgrades and its own info window are to be SEPARATE: a second round button left of the held lab's
+«!» opens «Прокачка зданий»; the «!» opens the lab itself (level, health, scientists, upgrade, repair). The upgrades
+are split by building category (Город, Склады, Развлечения, Оборона, Производство, Еда, Водные + Армия) so the player
+does not scroll through everything. Concepts (`Tools/ui/lab_concepts.py`): Design/ui/Lab_Buttons.png, Lab_A.png
+(«Полки», categories in a left column), Lab_B1/B2.png («Карточки», a grid of categories first), Lab_C.png
+(«Вкладки», picture tabs on top), Lab_Info.png. Green count on a category = what can be researched now. Not built.

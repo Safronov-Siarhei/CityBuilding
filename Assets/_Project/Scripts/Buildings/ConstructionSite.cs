@@ -94,7 +94,11 @@ namespace CityBuilder.Buildings
             if (_look != null) _look.Complete();
             if (Building != null && !Building.IsBot)
             {
-                if (!IsUpgrade) Core.PiggyTasks.Built(Building.Data);
+                if (!IsUpgrade)
+                {
+                    BuildSound.Built();
+                    Core.PiggyTasks.Built(Building.Data);
+                }
                 else
                 {
                     BuildSound.Upgraded();

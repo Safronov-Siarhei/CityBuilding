@@ -232,6 +232,18 @@ def lock():
     return img
 
 
+def trash():
+    """A rubbish bin -- delete a save (the user, 2026-11-17)."""
+    img = canvas()
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle(box(0.4, 0.1, 0.6, 0.22), u(0.04), outline=WHITE, width=int(u(0.05)))
+    d.rounded_rectangle(box(0.16, 0.19, 0.84, 0.29), u(0.04), fill=WHITE)
+    d.polygon([(u(0.23), u(0.33)), (u(0.77), u(0.33)), (u(0.71), u(0.9)), (u(0.29), u(0.9))], fill=WHITE)
+    for x in (0.38, 0.5, 0.62):
+        d.rounded_rectangle(box(x - 0.025, 0.42, x + 0.025, 0.8), u(0.02), fill=0)
+    return img
+
+
 def info():
     """An exclamation mark -- "what is this?": a short word about a mode (the user, 2026-10-25)."""
     img = canvas()
@@ -426,7 +438,7 @@ def main():
     for name, fn in (("Menu", menu), ("Settings", settings), ("Save", save_disk), ("World", world), ("Home", home),
                      ("People", people), ("Rotate", rotate), ("Check", check), ("Cancel", cancel), ("Plus", plus),
                      ("Play", play), ("Shop", shop), ("Bag", bag), ("Back", back), ("Resume", resume), ("Lock", lock),
-                     ("Info", info), ("Trophy", trophy), ("Radius", radius), ("Discord", discord), ("YouTube", youtube), ("Heart", heart), ("Shield", shield),
+                     ("Info", info), ("Trash", trash), ("Trophy", trophy), ("Radius", radius), ("Discord", discord), ("YouTube", youtube), ("Heart", heart), ("Shield", shield),
                      ("Theme_spring", theme_spring), ("Theme_summer", theme_summer), ("Theme_autumn", theme_autumn),
                      ("Theme_winter", theme_winter), ("Theme_newyear", theme_newyear)):
         save(fn(), name)

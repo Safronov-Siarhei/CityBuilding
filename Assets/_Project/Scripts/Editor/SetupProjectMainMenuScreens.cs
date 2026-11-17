@@ -332,6 +332,23 @@ namespace CityBuilder.EditorTools
             WriteArray(so.FindProperty("themeGlyphs"), glyphs);
             // pieces, not buildings: roads, fences, moats, bridges and the decor pieces
             WriteStrings(so.FindProperty("uncountedBuildings"), new[] { "Road", "Fence", "Moat", "Bridge", "Drawbridge", "DecTree", "DecBush", "DecGarden" });
+            // the bin on each row and its «sure?» card (the user, 2026-11-17)
+            so.FindProperty("trashGlyph").objectReferenceValue = HudGlyph("Trash");
+            var confirm = new GameObject("DeleteConfirm", typeof(RectTransform));
+            confirm.transform.SetParent(body, false);
+            StretchFull((RectTransform)confirm.transform);
+            var shade = CreateImage(confirm.transform, "Dim", new Color(0f, 0f, 0f, 0.45f));
+            StretchBleed(shade.rectTransform);      // takes the taps meant for the list
+            var small = MenuImage(confirm.transform, "Card", "panel", new Vector2(0f, 20f), new Vector2(720f, 340f), Image.Type.Tiled);
+            var question = MenuLabel(small.transform, "Question", null, 32, new Vector2(0f, 60f), new Vector2(640f, 130f), HudInk.OnPanel, bold: true);
+            question.horizontalOverflow = HorizontalWrapMode.Wrap;
+            var no = MenuTextButton(small.transform, "No", "plaque", "#ui_cancel", HudInk.OnMenuPlaque, new Vector2(-160f, -90f), new Vector2(280f, 100f), 34);
+            var yes = MenuTextButton(small.transform, "Yes", "button", "#load_delete", HudInk.OnButton, new Vector2(160f, -90f), new Vector2(280f, 100f), 34);
+            so.FindProperty("deleteConfirm").objectReferenceValue = confirm;
+            so.FindProperty("deleteQuestion").objectReferenceValue = question;
+            so.FindProperty("deleteYes").objectReferenceValue = yes;
+            so.FindProperty("deleteNo").objectReferenceValue = no;
+            confirm.SetActive(false);
             so.ApplyModifiedPropertiesWithoutUndo();
             UnityEventTools.AddPersistentListener(load.onClick, loadPanel.ConfirmLoad);
             UnityEventTools.AddPersistentListener(close.onClick, controller.CloseSaves);

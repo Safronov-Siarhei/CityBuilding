@@ -143,3 +143,7 @@ EditMode `CitizenManagerTests`, `SettlementTierManagerTests`, `CitizenNamesTests
 - The Town Hall's room counts in the people cap (the user, 2026-11-17: «7/5» -- the hall's hidden residents were people
   with no place): sandbox tab «Песочница: Здания (Город)» Castle housing_capacity 1-5 = 5 (= citizens_on_build). The hall
   is still not a house (`BuildingInstance.IsHouse` excludes it), so it does not grow residents twice.
+- FIX 2026-11-17 (the user: «почему ты не сделал количество жителей»): the first fix (hall housing 5 in the sheet)
+  did NOTHING in the sandbox -- `HousePeople.SyncCapacity` overwrites the cap every frame with the houses' places only.
+  Now the cap = houses' places + `HallPlaces(TownHall)` (citizens_on_build). SandboxRulesTests
+  .TheHouses_MakeThePeople_NotTheTownHall checks cap = places + hall and people <= cap (the hall regrows beside a house).

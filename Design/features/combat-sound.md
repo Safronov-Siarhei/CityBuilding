@@ -50,3 +50,6 @@
   `Placed()` from `BuildingPlacer.PlaceAt` (roads/fences per piece, at most every 0.08 s), `Upgraded()` from
   `ConstructionSite.Finish` for a player's upgrade. Clips are our own: `Tools/audio/build_sounds.py` ->
   `Audio/Resources/Build/{place,upgraded}.wav`. Volume `build_sfx_volume` (sheet «Время и загрузка»).
+- Round 2 (2026-11-17): the user disliked the knock -> «place» is now a soft plop (variant B); NEW «built» (dust whoosh +
+  ding-dong) when a new building finishes on its timer with BuildFinishEffect (ConstructionSite.Finish, !IsUpgrade).
+  Variants to choose from: Design/audio/*.wav (`python Tools/audio/build_sounds.py variants`); the user to pick.

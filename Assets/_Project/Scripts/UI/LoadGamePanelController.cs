@@ -22,6 +22,12 @@ namespace CityBuilder.UI
         [SerializeField] private Button loadSelectedButton;
         [SerializeField] private Text selectedNameLabel;
         [SerializeField] private Sprite rowSprite;
+        /// <summary>The bin at a row's right (the user, 2026-11-17) and the small «Удалить?» card it opens.</summary>
+        [SerializeField] private Sprite trashGlyph;
+        [SerializeField] private GameObject deleteConfirm;
+        [SerializeField] private Text deleteQuestion;
+        [SerializeField] private Button deleteYes;
+        [SerializeField] private Button deleteNo;
         /// <summary>On in the main menu: rows take the menu's look (MenuRowLook) instead of the tinted rowSprite.</summary>
         [SerializeField] private bool menuLook;
 
@@ -40,6 +46,37 @@ namespace CityBuilder.UI
 
         private readonly List<(string name, Image image)> _rows = new List<(string, Image)>();
         private string _selectedName;
+
+        private string _deleting;
+
+        private void Awake()
+        {
+            if (deleteYes != null) deleteYes.onClick.AddListener(ConfirmDelete);
+            if (deleteNo != null) deleteNo.onClick.AddListener(CancelDelete);
+            if (deleteConfirm != null) deleteConfirm.SetActive(false);
+        }
+
+        /// <summary>The bin tapped: asks first, in a small card over the list.</summary>
+        private void AskDelete(string name)
+        {
+            _deleting = name;
+            if (deleteQuestion != null) deleteQuestion.text = Localization.Format("#load_delete_question", DisplayName(name));
+            if (deleteConfirm != null) deleteConfirm.SetActive(true);
+            else ConfirmDelete();
+        }
+
+        private void ConfirmDelete()
+        {
+            if (!string.IsNullOrEmpty(_deleting)) SaveSystem.Delete(_deleting);
+            CancelDelete();
+            Populate();
+        }
+
+        private void CancelDelete()
+        {
+            _deleting = null;
+            if (deleteConfirm != null) deleteConfirm.SetActive(false);
+        }
 
         public void OpenPanel()
         {
@@ -69,6 +106,7 @@ namespace CityBuilder.UI
             _look = menuLook ? MenuRowLook.Current() : null;
             _selectedName = null;
             UpdateSelectionUI();
+            CancelDelete();
 
             GameSaveController.MigrateSharedAutosave();
             var saves = SaveSystem.ListSaves();
@@ -127,6 +165,26 @@ namespace CityBuilder.UI
             details.text = data == null ? string.Empty
                 : mapExists ? Details(data)
                 : Localization.Get("#load_map_removed");
+
+            // the bin, right on the row: delete after a «sure?» (any save, a map's autosave too)
+            if (trashGlyph != null)
+            {
+                var binGO = new GameObject("Delete", typeof(RectTransform), typeof(Image), typeof(Button));
+                binGO.transform.SetParent(rowGO.transform, false);
+                var binRect = (RectTransform)binGO.transform;
+                binRect.anchorMin = binRect.anchorMax = new Vector2(1f, 0.5f);
+                binRect.pivot = new Vector2(0.5f, 0.5f);
+                binRect.anchoredPosition = new Vector2(-56f, 0f);
+                binRect.sizeDelta = new Vector2(64f, 64f);
+                var bin = binGO.GetComponent<Image>();
+                bin.sprite = trashGlyph;
+                bin.preserveAspect = true;
+                bin.color = new Color(0.62f, 0.16f, 0.1f);
+                var deleteName = info.Name;
+                binGO.GetComponent<Button>().onClick.AddListener(() => AskDelete(deleteName));
+                title.rectTransform.offsetMax = new Vector2(-110f, title.rectTransform.offsetMax.y);
+                details.rectTransform.offsetMax = new Vector2(-110f, details.rectTransform.offsetMax.y);
+            }
 
             var button = rowGO.GetComponent<Button>();
             if (mapExists)
