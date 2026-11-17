@@ -173,12 +173,29 @@ namespace CityBuilder.UI
                 }
                 if (i < amounts.Length && amounts[i] != null)
                 {
-                    amounts[i].text = amount.ToString();
+                    // the sandbox's stores: «amount/room» for what they keep (the user, 2026-11-17); full blinks red (Update)
+                    amounts[i].text = StoreLedger.Active && StoreLedger.Keeps(type) && !resources.InfiniteResources
+                        ? amount + "/" + resources.GetCapacity(type) : amount.ToString();
                     amounts[i].color = amount > 0 ? Ink : InkDimmed;
                 }
             }
             ShowCrystals();
             RefreshBoosters();
+        }
+
+        /// <summary>A full store's row: its number blinks red, as the top bar's does (ResourceHUDController.IsFull).</summary>
+        private void BlinkFull()
+        {
+            if (!IsOpen || !StoreLedger.Active) return;
+            var pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f);
+            var red = Color.Lerp(new Color(0.75f, 0.08f, 0.04f), new Color(1f, 0.35f, 0.25f), pulse);
+            for (var i = 0; i < types.Length && i < amounts.Length; i++)
+            {
+                if (amounts[i] == null) continue;
+                if (ResourceHUDController.IsFull(types[i])) amounts[i].color = red;
+                else if (amounts[i].color != Ink && amounts[i].color != InkDimmed)
+                    amounts[i].color = ResourceManager.Instance != null && ResourceManager.Instance.GetAmount(types[i]) > 0 ? Ink : InkDimmed;
+            }
         }
 
         private void ShowCrystals()
@@ -283,6 +300,7 @@ namespace CityBuilder.UI
 
         private void Update()
         {
+            BlinkFull();
             if (IsOpen) UpdateTimes();
         }
 

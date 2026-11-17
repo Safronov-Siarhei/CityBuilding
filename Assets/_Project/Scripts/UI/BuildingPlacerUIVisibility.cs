@@ -26,11 +26,12 @@ namespace CityBuilder.UI
 
         private Text _hint;
         private string _townHallHint;
-        private bool _lighthouseHint;
+        private BuildingData _hintFor;
 
         private void Awake()
         {
-            // the hint says the Town Hall (baked at setup), then the lighthouse (the user, 2026-11-02)
+            // the hint says the Town Hall (baked at setup), then each link of the start chain: what the building is
+            // for (the lighthouse, the user 2026-11-02; the stores, 2026-11-17)
             _hint = showWhilePlacingMandatory != null ? showWhilePlacingMandatory.GetComponentInChildren<Text>(true) : null;
             if (_hint != null) _townHallHint = _hint.text;
             if (placementControls != null) _controlsY = placementControls.anchoredPosition.y;
@@ -40,10 +41,12 @@ namespace CityBuilder.UI
         {
             if (buildingPlacer == null) return;
             var mandatory = buildingPlacer.IsPlacingMandatoryBuilding;
-            if (_hint != null && _lighthouseHint != buildingPlacer.IsPlacingLighthouse)
+            if (_hint != null && _hintFor != buildingPlacer.ChainLink)
             {
-                _lighthouseHint = buildingPlacer.IsPlacingLighthouse;
-                _hint.text = _lighthouseHint ? Localization.Get("#hud_place_lighthouse_hint") : _townHallHint;
+                _hintFor = buildingPlacer.ChainLink;
+                _hint.text = _hintFor == null ? _townHallHint
+                    : buildingPlacer.IsPlacingLighthouse ? Localization.Get("#hud_place_lighthouse_hint")
+                    : Localization.Get("#chain_hint_" + _hintFor.buildingName);
             }
             if (showWhilePlacingMandatory != null && showWhilePlacingMandatory.activeSelf != mandatory)
             {

@@ -46,10 +46,45 @@ namespace CityBuilder.Resources
         /// </summary>
         public int LifetimeProduced { get; private set; }
 
+        // a save put the totals back (SetAmount): the sandbox's empty start must not wipe them
+        private bool _loaded;
+        // where the gain being added was made (AddProduced with a point): the stores nearest it take it
+        private Vector3? _origin;
+
         private void Start()
         {
             // the tutorial shows gathering and building, it never waits on them (the user, 2026-11-05)
             if (Tutorial.TutorialMode.IsActive) SetInfiniteResources(true);
+            // the sandbox opens with nothing: there is no store to keep it in until the start chain stands, and the
+            // chain lays its own reward in (BuildingPlacer; the user, 2026-11-17 -- start_* are for the other modes)
+            if (StoreLedger.Active && !_loaded)
+            {
+                Write(ResourceType.Wood, 0);
+                Write(ResourceType.Stone, 0);
+                Write(ResourceType.Food, 0);
+                Write(ResourceType.Gold, 0);
+            }
+        }
+
+        /// <summary>The one place a total changes: the sandbox's stores are told where it lies (StoreLedger).</summary>
+        private void Write(ResourceType type, int value)
+        {
+            _resources[type] = value;
+            if (StoreLedger.Active) StoreLedger.Sync(type, value, _origin);
+            OnResourceChanged?.Invoke(type, value);
+        }
+
+        /// <summary>
+        /// A store's goods lost with it (StoreLedger.OnStoreLost / OnStoreDemolished): the ledger has already taken
+        /// them out of that store, so the total only follows -- no other store is touched.
+        /// </summary>
+        public void DropKept(ResourceType type, int amount)
+        {
+            if (amount <= 0) return;
+            _resources.TryGetValue(type, out var current);
+            var updated = Mathf.Max(0, current - amount);
+            _resources[type] = updated;
+            OnResourceChanged?.Invoke(type, updated);
         }
 
         private void Awake()
@@ -60,6 +95,7 @@ namespace CityBuilder.Resources
                 return;
             }
             Instance = this;
+            StoreLedger.Reset();
 
             // What a new game opens with lives in the sheet (economy: start_*), so an easier or a
             // harder opening is a cell, not a scene edit. A loaded save overwrites it right after.
@@ -103,6 +139,8 @@ namespace CityBuilder.Resources
             if (UnlimitedStorage) return int.MaxValue;
             var group = ResourceStorage.GroupOf(type);
             if (group == ResourceStorageGroup.None) return int.MaxValue;
+            // the sandbox: only what the stores standing hold (per resource and level), nothing of the Town Hall's own
+            if (StoreLedger.Active && StoreLedger.Keeps(type)) return StoreLedger.CapacityOf(type);
 
             _builtCapacity.TryGetValue(group, out var built);
             return BaseCapacity(group) + built;
@@ -126,7 +164,10 @@ namespace CityBuilder.Resources
 
             _builtCapacity.TryGetValue(group, out var current);
             _builtCapacity[group] = Mathf.Max(0, current + amount);
+            StoreLedger.MarkCapacityDirty();
             OnCapacityChanged?.Invoke();
+            // the sandbox spills nothing: what lies above the room stays in the Town Hall (StoreLedger)
+            if (StoreLedger.Active) return;
 
             // Losing a storehouse can leave more in store than there is now room for. Spill the
             // difference rather than carrying an impossible number around: everything that reads a
@@ -143,8 +184,7 @@ namespace CityBuilder.Resources
                 var capacity = GetCapacity(type);
                 if (GetAmount(type) <= capacity) continue;
 
-                _resources[type] = capacity;
-                OnResourceChanged?.Invoke(type, capacity);
+                Write(type, capacity);
             }
         }
 
@@ -169,8 +209,7 @@ namespace CityBuilder.Resources
             var stored = updated - current;
             if (stored == 0) return 0;
 
-            _resources[type] = updated;
-            OnResourceChanged?.Invoke(type, updated);
+            Write(type, updated);
             if (stored > 0 && type == ResourceType.Coins) Core.PiggyTasks.Report(Core.PiggyTasks.Coins, stored);
             return stored;
         }
@@ -184,9 +223,15 @@ namespace CityBuilder.Resources
         {
             if (amount <= 0) return;
             _resources.TryGetValue(type, out var current);
-            var updated = current + amount;
-            _resources[type] = updated;
-            OnResourceChanged?.Invoke(type, updated);
+            Write(type, current + amount);
+        }
+
+        /// <summary>AddOverCapacity, laid into the stores nearest `at` (a ruin's goods coming back to its store).</summary>
+        public void AddOverCapacity(ResourceType type, int amount, Vector3 at)
+        {
+            _origin = at;
+            try { AddOverCapacity(type, amount); }
+            finally { _origin = null; }
         }
 
         /// <summary>
@@ -196,6 +241,14 @@ namespace CityBuilder.Resources
         /// granary went on the floor, and a town whose stores have been full for an hour has not
         /// been getting richer for that hour.
         /// </summary>
+        /// <summary>AddProduced made at `at`: the stores nearest it take it (the user, 2026-11-17).</summary>
+        public int AddProduced(ResourceType type, int amount, Vector3 at)
+        {
+            _origin = at;
+            try { return AddProduced(type, amount); }
+            finally { _origin = null; }
+        }
+
         public int AddProduced(ResourceType type, int amount)
         {
             var stored = Add(type, amount);
@@ -226,8 +279,8 @@ namespace CityBuilder.Resources
 
         public void SetAmount(ResourceType type, int amount)
         {
-            _resources[type] = amount;
-            OnResourceChanged?.Invoke(type, amount);
+            _loaded = true;
+            Write(type, amount);
         }
 
         public bool HasEnough(IEnumerable<ResourceAmount> costs)

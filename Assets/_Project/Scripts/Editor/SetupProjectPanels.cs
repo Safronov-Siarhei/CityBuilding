@@ -372,6 +372,67 @@ namespace CityBuilder.EditorTools
             panelRoot.SetActive(false);
         }
 
+        // the sack beside the «!» made with the focus row (SetupProjectHud), wired to its card here
+        private static Button _storeSackButton;
+
+        /// <summary>
+        /// «Запас здания» (StoreInventoryCard, the user 2026-11-17): the store's name and level, then up to nine
+        /// slots in a 3x3 grid -- the resource's icon and «amount/room» -- and Закрыть.
+        /// </summary>
+        private static void BuildStoreInventoryCard(Transform canvasParent, Sprite panelSprite, ResourceIconLibrary iconLibrary)
+        {
+            var panelRoot = new GameObject("StoreInventoryCard", typeof(RectTransform));
+            panelRoot.AddComponent<HudOverlay>();
+            panelRoot.transform.SetParent(canvasParent, false);
+            StretchFull(panelRoot.GetComponent<RectTransform>());
+            var backdrop = CreateImage(panelRoot.transform, "Backdrop", new Color(0f, 0f, 0f, 0.55f));
+            StretchBleed(backdrop.GetComponent<RectTransform>());
+
+            var card = CreateImage(panelRoot.transform, "Card", new Color(0.16f, 0.18f, 0.15f, 0.98f));
+            card.sprite = panelSprite;
+            card.type = Image.Type.Sliced;
+            SetRect(card.rectTransform, Vector2.zero, new Vector2(720f, 560f));
+            var ink = new Color(0.27f, 0.16f, 0.07f, 1f);
+            var title = CreateText(card.transform, "Title", string.Empty, 34, new Vector2(0f, 220f), new Vector2(660f, 56f), ink);
+            const int slots = 9;
+            var icons = new Image[slots];
+            var amounts = new Text[slots];
+            for (var i = 0; i < slots; i++)
+            {
+                var x = -220f + (i % 3) * 220f;
+                var y = 120f - (i / 3) * 110f;
+                icons[i] = CreateImage(card.transform, $"Icon{i}", Color.white);
+                icons[i].preserveAspect = true;
+                icons[i].raycastTarget = false;
+                SetRect(icons[i].rectTransform, new Vector2(x - 60f, y), new Vector2(72f, 72f));
+                amounts[i] = CreateText(card.transform, $"Amount{i}", "0/0", 32, new Vector2(x + 30f, y), new Vector2(130f, 60f), ink);
+                amounts[i].alignment = TextAnchor.MiddleLeft;
+                amounts[i].font = UiTheme.Heavy;
+            }
+            var closeButton = CreateButton(card.transform, panelSprite, "CloseButton", "#ui_close", new Vector2(0f, -210f), new Vector2(300f, 64f));
+
+            var controller = canvasParent.gameObject.AddComponent<StoreInventoryCard>();
+            var so = new SerializedObject(controller);
+            so.FindProperty("panelRoot").objectReferenceValue = panelRoot;
+            so.FindProperty("title").objectReferenceValue = title;
+            so.FindProperty("iconLibrary").objectReferenceValue = iconLibrary;
+            so.FindProperty("button").objectReferenceValue = _storeSackButton != null ? _storeSackButton.gameObject : null;
+            var iconsProp = so.FindProperty("icons");
+            var amountsProp = so.FindProperty("amounts");
+            iconsProp.arraySize = slots;
+            amountsProp.arraySize = slots;
+            for (var i = 0; i < slots; i++)
+            {
+                iconsProp.GetArrayElementAtIndex(i).objectReferenceValue = icons[i];
+                amountsProp.GetArrayElementAtIndex(i).objectReferenceValue = amounts[i];
+            }
+            so.ApplyModifiedPropertiesWithoutUndo();
+            UnityEventTools.AddPersistentListener(closeButton.onClick, controller.Close);
+            if (_storeSackButton != null) UnityEventTools.AddPersistentListener(_storeSackButton.onClick, controller.Tap);
+            _storeSackButton = null;
+            panelRoot.SetActive(false);
+        }
+
         /// <summary>
         /// The card of a ruin of the player's (RuinCard, the user 2026-11-05): title, a line of
         /// explanation, «Восстановление:» over the price, and Восстановить / Снести / Закрыть.

@@ -58,6 +58,7 @@ TABS = {
     "piggytasks": {"key": ["id"]},
     # the Diplomacy Hall's lists (2026-11-17): help requests, the bot's gifts, trade offers
     "diplomacy": {"key": ["kind", "id"]},
+    "storage": {"key": ["building", "resources"]},
     # every number of the tutorial (2026-11-05): key/value like economy
     "tutorial": {"key": ["key"]},
 }

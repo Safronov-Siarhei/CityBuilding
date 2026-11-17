@@ -339,6 +339,8 @@ namespace CityBuilder.Saving
                     else buildingInstance.BuildOnTimer(entry.siteRemaining, entry.siteTotal);
                 }
 
+                StoreLedger.Load(buildingInstance, entry.stock);
+
                 var production = instance.GetComponent<ProductionBuilding>();
                 if (production != null)
                 {
@@ -360,9 +362,13 @@ namespace CityBuilder.Saving
                 foreach (var entry in data.ruins)
                 {
                     if (!_catalog.TryGetValue(entry.buildingName, out var ruinData)) continue;
-                    BuildingRuin.Restore(ruinData, new Vector2Int(entry.cellX, entry.cellY), entry.rotationSteps, entry.level, entry.pieces, entry.cells);
+                    var ruin = BuildingRuin.Restore(ruinData, new Vector2Int(entry.cellX, entry.cellY), entry.rotationSteps, entry.level, entry.pieces, entry.cells);
+                    if (ruin != null && entry.stock != null) ruin.HeldStock = new List<ResourceAmount>(entry.stock);
                 }
             }
+
+            // after the buildings: each store's goods as they lay, the overflow, the totals squared up (StoreLedger)
+            if (StoreLedger.Active) StoreLedger.Restored(data.storesSaved, data.storeOverflow);
 
             var restoredGroups = RestoreArmy(data);
             RestoreHeroes(data);
@@ -1040,7 +1046,10 @@ namespace CityBuilder.Saving
                     siteTotal = instance.Site != null ? instance.Site.Total : 0f,
                     siteUpgrade = instance.Site != null && instance.Site.IsUpgrade,
                 });
+                StoreLedger.Save(instance, data.buildings[data.buildings.Count - 1].stock);
             }
+            data.storesSaved = true;
+            StoreLedger.SaveOverflow(data.storeOverflow);
 
             foreach (var ruin in BuildingRuin.All)
             {
@@ -1053,7 +1062,8 @@ namespace CityBuilder.Saving
                     rotationSteps = ruin.RotationSteps,
                     level = ruin.Level,
                     pieces = new List<BuildingRuin.Piece>(ruin.Pieces),
-                    cells = new List<Vector2Int>(ruin.Cells)
+                    cells = new List<Vector2Int>(ruin.Cells),
+                    stock = ruin.HeldStock != null ? new List<ResourceAmount>(ruin.HeldStock) : new List<ResourceAmount>()
                 });
             }
 

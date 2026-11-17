@@ -208,6 +208,9 @@ namespace CityBuilder.EditorTools
             var mark = CreateText(button.transform, "Mark", "!", 76, new Vector2(0f, 4f), new Vector2(110f, 110f));
             mark.font = UiTheme.Heavy;
             SkinInk(mark, HudInk.OnRound);
+            // a store's own goods, right of the «!» (StoreInventoryCard, the user 2026-11-17); wired by BuildStoreInventoryCard
+            _storeSackButton = CreateGlyphButton(row.transform, "StoreInventoryButton", "round", HudInk.OnRound, "Bag", null, 128f, 0.62f);
+            _storeSackButton.gameObject.SetActive(false);
 
             var go = new GameObject("BuildingFocus");
             go.transform.SetParent(uiRoot, false);

@@ -86,7 +86,7 @@ namespace CityBuilder.Buildings
         private Vector2 _offeredAtMouse;
         private readonly StringBuilder _costText = new StringBuilder();
 
-        public bool IsPlacingMandatoryBuilding => IsPlacingTownHall || _lighthousePending;
+        public bool IsPlacingMandatoryBuilding => IsPlacingTownHall || _chainLink != null;
 
         /// <summary>The Town Hall still to be put down -- the first of the two mandatory buildings.</summary>
         public bool IsPlacingTownHall => mandatoryFirstBuilding != null && !_mandatoryBuildingPlaced;
@@ -96,14 +96,30 @@ namespace CityBuilder.Buildings
         /// user, 2026-11-02, the archipelago only): free, standing at once, and it opens the island
         /// round it (BuildingInstance.RevealRadius).
         /// </summary>
-        public bool IsPlacingLighthouse => _lighthousePending;
+        public bool IsPlacingLighthouse => _chainLink != null && IsLighthouse(_chainLink);
 
-        // the lighthouse owed after the Town Hall; checked once the map and a loaded town stand
-        private BuildingData _lighthouse;
-        private bool _lighthousePending;
-        private bool _lighthouseChecked;
+        /// <summary>
+        /// The start chain (the user, 2026-11-17; card resources-and-storage.md), the sandbox only: after the Town Hall
+        /// the Lighthouse (the archipelago), the Склад, the Кладовая, the Сокровищница and the Crystal Mine (when
+        /// bought) come into the hand one after another -- free, standing at once, each with a line on what it is
+        /// for (BuildingPlacerUIVisibility). Once the last stands, the stores get chain_reward_* (wood, stone,
+        /// food, coins). A link the town already has is skipped (a loaded game gets the ones it lacks, free).
+        /// </summary>
+        private static readonly string[] ChainIds =
+        {
+            BuildingIds.Lighthouse, BuildingIds.Warehouse, BuildingIds.Granary, BuildingIds.Treasury, BuildingIds.CrystalMine,
+        };
+
+        /// <summary>The start chain's building in hand now, or null.</summary>
+        public BuildingData ChainLink => _chainLink;
+
+        // the chain's link owed now; checked once the map and a loaded town stand
+        private BuildingData _chainLink;
+        private bool _chainChecked;
+        // the chain began with this Town Hall (a new game): its end lays the reward in
+        private bool _chainFresh;
         private static readonly List<ResourceAmount> Free = new List<ResourceAmount>();
-        // the building being put down for nothing (the mandatory lighthouse)
+        // the building being put down for nothing (a link of the start chain)
         private static BuildingData _freeNow;
         public bool IsSelecting => _selectedBuilding != null;
         public IReadOnlyList<BuildingData> AvailableBuildings => availableBuildings;
@@ -208,26 +224,44 @@ namespace CityBuilder.Buildings
             if (!Tutorial.TutorialMode.IsActive) Ships.ShipManager.Instance?.GiveStartScout(hall.transform.position);
         }
 
-        private void TryBeginLighthouse()
+        /// <summary>The next link of the start chain into the hand, or -- none left -- the chain's reward (a new game only).</summary>
+        private void TryBeginChain()
         {
-            _lighthouseChecked = true;
+            _chainChecked = true;
+            _chainLink = null;
+            _freeNow = null;
+            if (!StoreLedger.Active || BuildingInstance.TownHall == null) return;
             var map = Maps.MeshMapApplier.Instance;
-            if (map == null || !Maps.Archipelago.ArchipelagoMapId.IsArchipelago(map.CurrentMapId)) return;
-            if (Invasion.InvasionRules.Active || Dungeon.DungeonMode.IsActive || Tutorial.TutorialMode.IsActive) return;
-            if (BuildingInstance.HasAny(Ships.LighthouseAim.BuildingId)) return;
-            BuildingData lighthouse = null;
-            foreach (var data in availableBuildings)
-                if (data != null && data.buildingName == Ships.LighthouseAim.BuildingId) { lighthouse = Resolve(data); break; }
-            if (lighthouse == null) return;
-            _lighthouse = lighthouse;
-            _lighthousePending = true;
-            _freeNow = lighthouse;
-            SelectBuilding(lighthouse);
+            var archipelago = map != null && Maps.Archipelago.ArchipelagoMapId.IsArchipelago(map.CurrentMapId);
+            foreach (var id in ChainIds)
+            {
+                if (id == BuildingIds.Lighthouse && !archipelago) continue;
+                if (id == BuildingIds.CrystalMine && !Wallet.CrystalMineOwned) continue;
+                if (BuildingInstance.HasAny(id)) continue;
+                BuildingData link = null;
+                foreach (var data in availableBuildings)
+                    if (data != null && data.buildingName == id) { link = Resolve(data); break; }
+                if (link == null) continue;
+                _chainLink = link;
+                _freeNow = link;
+                SelectBuilding(link);
+                return;
+            }
+            if (!_chainFresh) return;
+            _chainFresh = false;
+            var config = BalanceConfig.Instance;
+            var resources = ResourceManager.Instance;
+            if (config == null || resources == null) return;
+            resources.AddOverCapacity(ResourceType.Wood, config.ChainRewardWood);
+            resources.AddOverCapacity(ResourceType.Stone, config.ChainRewardStone);
+            resources.AddOverCapacity(ResourceType.Food, config.ChainRewardFood);
+            resources.AddOverCapacity(ResourceType.Coins, config.ChainRewardCoins);
+            EventLogManager.Instance?.Post(GameEvent.Nowhere(Localization.Get("#chain_reward"), EventSeverity.Good, EventGlyph.Star, BuildingIds.Warehouse));
         }
 
         private void OnDestroy()
         {
-            if (_freeNow == _lighthouse) _freeNow = null;
+            if (_freeNow == _chainLink) _freeNow = null;
         }
 
         /// <summary>
@@ -241,7 +275,7 @@ namespace CityBuilder.Buildings
 
         private void Update()
         {
-            if (!_lighthouseChecked && !IsPlacingTownHall && Time.timeSinceLevelLoad > 1f) TryBeginLighthouse();
+            if (!_chainChecked && !IsPlacingTownHall && Time.timeSinceLevelLoad > 1f) TryBeginChain();
             if (ModalGate.IsBlocked) return;
 
             HandleKeyboard();
@@ -364,7 +398,7 @@ namespace CityBuilder.Buildings
             // already hides it (see BuildingCategoryPanel), so this catches the number keys and
             // anything else reaching in from outside.
             // A run has no Laboratory: its nine buildings are open from the start (InvasionRules).
-            if (data != null && data != mandatoryFirstBuilding && !(_lighthousePending && data == _lighthouse)
+            if (data != null && data != mandatoryFirstBuilding && !(_chainLink != null && data == _chainLink)
                 && !(Tutorial.TutorialMode.IsActive ? Tutorial.TutorialRules.IsWanted(data)
                      : Invasion.InvasionRules.Active ? Invasion.InvasionRules.Allows(data)
                                                    : Research.ResearchManager.BuildingUnlocked(data.buildingName))) return;
@@ -676,7 +710,7 @@ namespace CityBuilder.Buildings
                 if (mapApplier != null && !IslandOpenToBuild(mapApplier, cell, footprint)) return Localization.Get("#place_blocked_no_hero");
                 if (mapApplier != null && !FoodSiteAllowed(mapApplier, cell, footprint))
                     return Localization.Get(_selectedBuilding.buildingName == BuildingIds.FisherHut ? "#place_blocked_coast" : "#place_blocked_inland");
-                if (_lighthousePending && IsLighthouse(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return Localization.Get("#place_blocked_start_zone");
+                if (IsPlacingLighthouse && IsLighthouse(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return Localization.Get("#place_blocked_start_zone");
                 if (_selectedBuilding.isCrossing) return Localization.Get("#place_blocked_crossing");
                 if (mapApplier != null && _selectedBuilding.isWaterCategory) return Localization.Get("#place_blocked_water");
                 if (mapApplier != null && FootprintTouchesWater(mapApplier, cell, footprint)) return Localization.Get("#place_blocked_land");
@@ -908,7 +942,7 @@ namespace CityBuilder.Buildings
             if (wholeFootprintRules && IsTownHall(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return false;
             // the mandatory lighthouse goes in the same yellow zone, anywhere on its land -- not only
             // at the shore (the user, 2026-11-02)
-            if (wholeFootprintRules && _lighthousePending && IsLighthouse(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return false;
+            if (wholeFootprintRules && IsPlacingLighthouse && IsLighthouse(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return false;
 
             var mapApplier = MeshMapApplier.Instance;
             if (mapApplier == null) return true;
@@ -980,6 +1014,7 @@ namespace CityBuilder.Buildings
             if (!HasRequiredBuilding()) return;
 
             var placedData = _selectedBuilding;
+            var wasChainLink = _chainLink != null && placedData == _chainLink;
             if (!PlaceAt(cell)) return;
             // the first of its kind: a happy moment for the rate-us window (the user, 2026-11-11)
             if (BuildingInstance.CountOf(placedData.buildingName) == 1) UI.RateUsDirector.Note("first_building");
@@ -993,8 +1028,11 @@ namespace CityBuilder.Buildings
                 if (placedData == mandatoryFirstBuilding)
                 {
                     GiveStartingParty();
-                    TryBeginLighthouse();
+                    _chainFresh = true;
+                    TryBeginChain();
                 }
+                // a link of the start chain down: the next one into the hand (or the reward)
+                else if (wasChainLink) TryBeginChain();
             }
             else
             {
@@ -1116,9 +1154,9 @@ namespace CityBuilder.Buildings
             // of usefulness (see EventLogManager).
             if (!placedData.isRoad) EventLogManager.Instance?.Log(Localization.Format("#log_built", placedData.LocalizedName));
 
-            if (_lighthousePending && placedData == _lighthouse)
+            if (_chainLink != null && placedData == _chainLink)
             {
-                _lighthousePending = false;
+                _chainLink = null;
                 _freeNow = null;
             }
 

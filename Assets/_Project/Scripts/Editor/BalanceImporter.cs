@@ -49,6 +49,7 @@ namespace CityBuilder.EditorTools
         public const string PiggyTasksCsvPath = BalanceFolder + "/piggytasks.csv";
         /// <summary>The sheet's tab «Зал дипломатии: таблицы» (the user, 2026-11-17): help requests, the bot's gifts, trade offers.</summary>
         public const string DiplomacyCsvPath = BalanceFolder + "/diplomacy.csv";
+        public const string StorageCsvPath = BalanceFolder + "/storage.csv";
 
         /// <summary>The sheet's tutorial tab (the user, 2026-11-05): every number of the tutorial, key/value, laid over the economy keys.</summary>
         public const string TutorialCsvPath = BalanceFolder + "/tutorial.csv";
@@ -105,6 +106,7 @@ namespace CityBuilder.EditorTools
             config.EditorSetM2Waves(ReadM2Waves(M2WavesCsvPath));
             config.EditorSetPiggyTasks(ReadPiggyTasks(PiggyTasksCsvPath, out var piggyNames));
             config.EditorSetDiplomacyRows(ReadDiplomacy(DiplomacyCsvPath, out var diplomacyNames));
+            config.EditorSetStoreCapRows(ReadStoreCaps(StorageCsvPath));
             var offers = ReadBundles(BundlesCsvPath);
             config.EditorSetOffers(offers.Bundles, offers.Levels);
             bundleNames = offers.Names;
@@ -392,6 +394,48 @@ namespace CityBuilder.EditorTools
                 });
                 if (k == "help")
                     names["#diplomacy_ask_" + key] = new Dictionary<string, string> { ["ru"] = Cell(Col("text_ru")), ["en"] = Cell(Col("text_en")) };
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// The storage tab: building, resources (game names, space separated), cap_1..cap_5, comment. An empty
+        /// cap repeats the level below.
+        /// </summary>
+        private static List<BalanceConfig.StoreCapRow> ReadStoreCaps(string path)
+        {
+            var result = new List<BalanceConfig.StoreCapRow>();
+            if (!File.Exists(path)) return result;
+            var rows = ReadCsv(path);
+            if (rows.Count == 0) return result;
+            var header = rows[0];
+            int Col(string name) => header.FindIndex(h => h.Trim() == name);
+            int building = Col("building"), resources = Col("resources");
+            if (building < 0 || resources < 0)
+            {
+                Debug.LogError($"BalanceImporter: {path} needs the columns building, resources, cap_1..cap_5.");
+                return result;
+            }
+            var culture = System.Globalization.CultureInfo.InvariantCulture;
+            for (var i = 1; i < rows.Count; i++)
+            {
+                var row = rows[i];
+                string Cell(int c) => c >= 0 && c < row.Count ? row[c].Trim() : string.Empty;
+                var id = Cell(building);
+                if (string.IsNullOrEmpty(id)) continue;
+                var entry = new BalanceConfig.StoreCapRow { building = id };
+                foreach (var name in Cell(resources).Split(new[] { ' ', ';', ',' }, System.StringSplitOptions.RemoveEmptyEntries))
+                {
+                    if (System.Enum.TryParse<ResourceType>(name, true, out var type)) entry.resources.Add(type);
+                    else Debug.LogError($"BalanceImporter: {path} row {i + 1}: no resource called '{name}'.");
+                }
+                var last = 0;
+                for (var level = 1; level <= 5; level++)
+                {
+                    if (int.TryParse(Cell(Col("cap_" + level)), System.Globalization.NumberStyles.Integer, culture, out var n)) last = Mathf.Max(0, n);
+                    entry.caps[level - 1] = last;
+                }
+                result.Add(entry);
             }
             return result;
         }

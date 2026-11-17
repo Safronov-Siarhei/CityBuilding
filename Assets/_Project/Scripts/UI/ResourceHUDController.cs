@@ -89,6 +89,7 @@ namespace CityBuilder.UI
 
         private void Update()
         {
+            BlinkFull();
             if (_foodSlot == -2) _foodSlot = resourceOrder != null ? System.Array.IndexOf(resourceOrder, ResourceType.Food) : -1;
             if (_foodSlot < 0 || amountTexts == null || _foodSlot >= amountTexts.Length || amountTexts[_foodSlot] == null) return;
             var food = FoodConsumptionManager.Instance;
@@ -108,6 +109,66 @@ namespace CityBuilder.UI
                 if (icon != null) icon.localScale = Vector3.one;
             }
             _warning = warn;
+        }
+
+        // the sandbox's full stores (the user, 2026-11-17): «10/10» blinks red, and a notice per kind of store
+        // (склад, кладовая, сокровищница) at most once per store_full_notice_sec
+        private Color[] _fullInk;
+        private bool[] _fullBlinking;
+        private float _fullCheck;
+        private readonly float[] _nextFullNotice = new float[5];
+
+        /// <summary>Whether `type` sits at its ceiling in the sandbox's stores (something in hand and no room for more).</summary>
+        public static bool IsFull(ResourceType type)
+        {
+            var resources = ResourceManager.Instance;
+            if (resources == null || resources.InfiniteResources || !StoreLedger.Active || !StoreLedger.Keeps(type)) return false;
+            var amount = resources.GetAmount(type);
+            return amount > 0 && amount >= resources.GetCapacity(type);
+        }
+
+        private void BlinkFull()
+        {
+            if (resourceOrder == null || amountTexts == null) return;
+            var count = Math.Min(resourceOrder.Length, amountTexts.Length);
+            if (_fullInk == null || _fullInk.Length != count) { _fullInk = new Color[count]; _fullBlinking = new bool[count]; }
+            var pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 6f);
+            for (var i = 0; i < count; i++)
+            {
+                var text = amountTexts[i];
+                if (text == null || i == _foodSlot && _warning) continue;
+                var full = text.gameObject.activeInHierarchy && IsFull(resourceOrder[i]);
+                if (full)
+                {
+                    if (!_fullBlinking[i]) _fullInk[i] = text.color;
+                    text.color = Color.Lerp(new Color(0.8f, 0.1f, 0.05f), new Color(1f, 0.4f, 0.3f), pulse);
+                }
+                else if (_fullBlinking[i]) text.color = _fullInk[i];
+                _fullBlinking[i] = full;
+            }
+            _fullCheck -= Time.unscaledDeltaTime;
+            if (_fullCheck > 0f || !StoreLedger.Active) return;
+            _fullCheck = 1f;
+            NoticeFull();
+        }
+
+        private static readonly ResourceType[] AllTypes = (ResourceType[])Enum.GetValues(typeof(ResourceType));
+
+        private void NoticeFull()
+        {
+            if (Time.timeScale <= 0f || Tutorial.TutorialMode.IsActive) return;
+            var every = Core.BalanceConfig.Instance != null ? Core.BalanceConfig.Instance.StoreFullNoticeSeconds : 150f;
+            foreach (var type in AllTypes)
+            {
+                if (!IsFull(type)) continue;
+                var kind = (int)ResourceStorage.GroupOf(type);
+                if (kind < 0 || kind >= _nextFullNotice.Length || Time.unscaledTime < _nextFullNotice[kind]) continue;
+                _nextFullNotice[kind] = Time.unscaledTime + every;
+                var group = ResourceStorage.GroupOf(type);
+                var picture = group == ResourceStorageGroup.Food ? Buildings.BuildingIds.Granary
+                    : group == ResourceStorageGroup.Valuables ? Buildings.BuildingIds.Treasury : Buildings.BuildingIds.Warehouse;
+                Core.EventLogManager.Instance?.Post(Core.GameEvent.Nowhere(Core.Localization.Get("#store_full_" + group), Core.EventSeverity.Warning, Core.EventGlyph.Alert, picture));
+            }
         }
 
         private void OnRectTransformDimensionsChange()
