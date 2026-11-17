@@ -94,6 +94,12 @@ namespace CityBuilder.UI
             }
             var menu = panelRoot != null ? panelRoot.transform.Find("Card/GameOverMenuButton") as RectTransform : null;
             if (menu != null) menu.anchoredPosition = new Vector2(0f, menu.anchoredPosition.y);
+            // launched from the sandbox's banner: «Вернуться в мой город» instead of the menu (the user, 2026-11-17)
+            if (menu != null && Tutorial.TutorialOffer.HasReturn)
+            {
+                var words = menu.GetComponentInChildren<LocalizedText>(true);
+                if (words != null) words.SetKey("#tutorial_return");
+            }
         }
 
         /// <summary>
@@ -139,6 +145,11 @@ namespace CityBuilder.UI
             // Must run before the scene unloads -- MainMenu would otherwise inherit a frozen
             // timescale and its own flythrough camera/UI would never animate.
             Time.timeScale = 1f;
+            if (Tutorial.TutorialMode.IsActive && Tutorial.TutorialOffer.HasReturn)
+            {
+                Tutorial.TutorialOffer.GoBack();
+                return;
+            }
             LoadingScreen.OutToMenu(mainMenuSceneName);
         }
     }

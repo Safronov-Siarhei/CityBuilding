@@ -12,9 +12,10 @@ a royal-purple ribbon «Обучение»; parchment with short lines + the rew
 import math
 import random
 
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
-
+import json
 import os
+
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
 R = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) + '/'
 F = R + 'Assets/_Project/Resources/Fonts/'
@@ -23,7 +24,9 @@ OUT = R + 'Design/ui/TutorialOffer_Banner.png'
 W, H = 1920, 1080
 X0, Y0, X1, Y1 = 60, 230, 1860, 1050
 IX0, IY0, IX1, IY1 = X0 + 34, Y0 + 34, X1 - 34, Y1 - 34
-FLOOR = IY1 - 16
+# the figures stand BELOW the field's edge and are cut by the frame (the user, 2026-11-17: a gap under them)
+FLOOR = IY1 + 70
+ART = R + 'Assets/_Project/UI/TutorialOffer/'
 FIELD_ICONS = ['Barracks', 'Castle', 'Farm', 'FisherHut', 'Sawmill', 'Quarry', 'Shipyard', 'Lighthouse', 'Tower',
                'Hovel', 'Cottage', 'Warehouse', 'Granary', 'Smelter', 'Church', 'Manor', 'Baker', 'Gate',
                'Res_Wood', 'Res_Stone', 'Res_Food', 'Res_Coins', 'Res_Population', 'Res_UpgradeCrystal']
@@ -122,9 +125,6 @@ def figure(name, body, x):
     a = a.crop(a.getbbox())
     k = body / a.height
     a = a.resize((round(a.width * k), round(a.height * k)), Image.LANCZOS)
-    e = layer()
-    ImageDraw.Draw(e).ellipse((x - body * 0.25, FLOOR - 22, x + body * 0.25, FLOOR + 20), fill=(0, 0, 0, 150))
-    win = Image.alpha_composite(win, e.filter(ImageFilter.GaussianBlur(12)))
     g = layer()
     ImageDraw.Draw(g).ellipse((x - body * 0.42, FLOOR - body * 0.95, x + body * 0.42, FLOOR - body * 0.05),
                               fill=(255, 226, 140, 110))
@@ -134,8 +134,12 @@ def figure(name, body, x):
     return lay
 
 
-left = figure('King', 660, 330)
-right = figure('Queen', 620, 1600)
+left = figure('King', 700, 330)
+right = figure('Queen', 660, 1600)
+clip = Image.new('L', (W, H), 0)
+ImageDraw.Draw(clip).rounded_rectangle((IX0, IY0, IX1, IY1), 36, fill=255)
+figures = Image.alpha_composite(left, right)
+figures.putalpha(ImageChops.multiply(figures.split()[3], clip))
 
 # ---------------------------------------------------------------- the ribbon (royal purple)
 rx0, rx1, ry0, ry1 = 455, 1465, Y0 - 82, IY0 + 66
@@ -164,18 +168,35 @@ g_out = (28, 84, 18)
 b1 = (CX - 270, 690, CX + 270, 802)
 btn = layer()
 button(ImageDraw.Draw(btn), b1, (70, 170, 44), (118, 214, 72), g_out)
+ry = 610
+
+# ---------------------------------------------------------------- the game's pieces + layout.json
+# (SetupProjectPanels.BuildTutorialOfferBanner; the RateUs/plague contract: rects in the 1920 x 1080 reference, y down)
+texts = {'Title': (rx0 + 40, ry0 + 24, rx1 - 40, ry1 - 10), 'Body': (pw0 + 50, 380, pw1 - 50, 560),
+         'Reward': (pw0 + 50, ry - 32, CX + 52, ry + 32), 'RewardIcon': (CX + 60, ry - 34, CX + 132, ry + 30),
+         'PlayLabel': (b1[0] + 24, b1[1] + 8, b1[2] - 24, b1[3] - 4), 'Later': (CX - 200, 870, CX + 200, 940)}
+pieces = [('Window', win), ('Figures', figures), ('Band', band), ('PlayButton', btn)]
+os.makedirs(ART, exist_ok=True)
+layout = {'reference': [W, H], 'frame': [X0, Y0, X1, Y1], 'pieces': [], 'texts': []}
+for name, lay in pieces:
+    bb = lay.getbbox()
+    lay.crop(bb).save(ART + name + '.png')
+    layout['pieces'].append({'name': name, 'rect': list(bb)})
+for name, rect in texts.items():
+    layout['texts'].append({'name': name, 'rect': [round(v) for v in rect]})
+with open(ART + 'layout.json', 'w', encoding='utf-8') as f:
+    json.dump(layout, f, indent=1)
 
 # ---------------------------------------------------------------- the mock-up
 img = Image.open(R + 'Design/store/RateWindow_Mockup.png').convert('RGBA')   # stands in for the dimmed game
 img = Image.alpha_composite(img.filter(ImageFilter.GaussianBlur(6)), Image.new('RGBA', (W, H), (18, 8, 4, 200)))
-for lay in (win, Image.alpha_composite(left, right), band, btn):
+for lay in (win, figures, band, btn):
     img = Image.alpha_composite(img, lay)
 d = ImageDraw.Draw(img)
 d.text((CX, (ry0 + ry1) / 2 + 6), 'Обучение', font=font(78), fill=(255, 240, 200), anchor='mm', stroke_width=5,
        stroke_fill=RIB_O)
 d.multiline_text((CX, 468), 'Не знаешь, с чего начать?' + chr(10) + 'Король покажет главное' + chr(10) + 'за 5 минут.',
                  font=font(38, 'Rubik-Medium.ttf'), fill=(60, 52, 24), anchor='mm', align='center', spacing=14)
-ry = 610
 d.text((CX + 52, ry), 'Награда: 25', font=font(40, 'Rubik-Bold.ttf'), fill=(120, 80, 30), anchor='rm')
 gem = load_icon('Res_UpgradeCrystal')
 gem = gem.resize((round(gem.width * 64 / gem.height), 64), Image.LANCZOS)

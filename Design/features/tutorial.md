@@ -181,7 +181,7 @@ The user: several round-4 items had NOT worked -- each checked in the code this 
 - Raid camera (2026-11-06): after the soldier's hire the camera stays on the town for `tutorial_raid_camera_sec`
   (3) before it goes over to the orcs boarding (`FollowMoving`, gated on `_stepTime`).
 
-## In-game offer in the sandbox (the user, 2026-11-17) -- rules AGREED 2026-11-17, banner v2 awaiting the go-ahead, nothing built
+## In-game offer in the sandbox (the user, 2026-11-17) -- BUILT 2026-11-17 (setup x2 green), not seen, no tests
 The user: a player who skipped the tutorial and started in the sandbox must get a banner offering it during the first
 10-20 minutes; the game is PAUSED under it and goes on only when it is closed or the tutorial is done.
 Mock-up `Design/ui/TutorialOffer_Banner.png` (`Tools/ui/tutorial_offer_concept.py`) v2: built like the PLAGUE/FIRE
@@ -205,7 +205,18 @@ Proposed rules (my calls, awaiting the user):
 - Not over a placement, an open window or a banner: waits until the screen is free.
 - «Пройти обучение»: autosave the world, load the tutorial; its victory panel gets «Вернуться в мой город» (loads that
   save). «Позже»: unpause.
-- Numbers (60 s, 3 min, 60 s, 1 min, 20 min, 2 shows) go to the sheet.
+- Built: `UI/TutorialOfferBanner.cs` (the triggers in Update, real play seconds, pause via timeScale, Show/Play/Later),
+  `Tutorial/TutorialOffer.cs` (Clock per world = `GameSaveData.tutorialOfferClock`, -1 = no offer, old saves -1, a new
+  world 0; PlayerPrefs `tutorial.offer.declined`, `tutorial.return.slot/name`; LaunchFromGame writes the town into the
+  map's autosave slot via `GameSaveController.WriteReturnSlot`, GoBack loads it under its own name),
+  `GameOverController` (tutorial win + a return pending: the menu button says `#tutorial_return` and loads the town),
+  MainMenuController.Start forgets the return. `BuildingPlacer.ShortOfMaterialsAt` (the ghost blocked by cost).
+  Builder `Editor/SetupProjectTutorialOffer.cs` (pieces `Assets/_Project/UI/TutorialOffer/` + layout.json from
+  `Tools/ui/tutorial_offer_concept.py`, figures stand below the field and are cut by the frame -- the user).
+  Numbers: tab «Обучение» `tutorial_offer_*` (1200/60/180/60/60/10/60/2); texts `#tutorial_offer_*`, `#tutorial_return`
+  (tab «Тексты: обучение и сюжет»).
+- Traps: the «first raid» is seen as the raid timer jumping UP; soldiers = `SoldierUnit.All` (bot garrison counts too);
+  the window clock runs only while the game runs (timeScale > 0).
 
 ## The script
 1. Start: two islands, no fog. King: «Поставьте Ратушу».
