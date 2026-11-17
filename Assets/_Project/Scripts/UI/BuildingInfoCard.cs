@@ -31,7 +31,7 @@ namespace CityBuilder.UI
     /// window's own button does it through BuildingInfoPanelController, which owns every action.
     /// A run, the tutorial and the Moat keep RunBuildingCard. The rows are made here, once per building shown.
     /// </summary>
-    public class BuildingInfoCard : MonoBehaviour
+    public partial class BuildingInfoCard : MonoBehaviour
     {
         [SerializeField] private BuildingInfoPanelController owner;
         [SerializeField] private Text title;
@@ -98,6 +98,8 @@ namespace CityBuilder.UI
         private readonly List<Image> _figures = new List<Image>();
         private Text _decorEach;
         private Text _workers;
+        private GameObject _bandRow;
+        private int _builtLevel;
         private Text _free;
         private Button _plus, _minus;
         private GameObject _bandIconHolder;
@@ -152,7 +154,8 @@ namespace CityBuilder.UI
         private bool IsWork => _work != null && _building.Data.LevelStats(BuildingInstance.MaxLevel).maxWorkers > 0;
         private bool IsStore => StoreLedger.Active && StoreLedger.IsStore(_building.Data);
         private bool IsDecor => DecorBonus.IsDecor(_building.Data);
-        private bool IsDefence => _building.GetComponent<DefensiveBuilding>() != null;
+        // a special building's own block says what it is for: only the Town Hall keeps its damage and range
+        private bool IsDefence => _building.GetComponent<DefensiveBuilding>() != null && (SpecialWhat() == null || IsHall);
         private bool Gathers => _work != null && (_work.HarvestRadius > 0 || _building.Data.buildingName == BuildingIds.FisherHut);
 
         /// <summary>
@@ -164,6 +167,7 @@ namespace CityBuilder.UI
             var b = _building;
             if (b == null || b.Data == null) return;
             var data = b.Data;
+            if (b.Level != _builtLevel) BuildBody();
             if (title != null) title.text = Localization.Format("#lab_info_title", data.LocalizedName, b.Level);
             if (picture != null) picture.sprite = LevelIcon(data.buildingName, b.Level);
             if (what != null) what.text = WhatFor();
@@ -180,12 +184,14 @@ namespace CityBuilder.UI
             RefreshStore();
             RefreshDefence();
             RefreshDecor();
+            RefreshSpecial();
             RefreshFoot();
         }
 
         private string WhatFor()
         {
-            var data = _building.Data;
+            var special = SpecialWhat();
+            if (special != null) return Localization.Get(special);
             if (IsHouse) return Localization.Get("#card_what_house");
             if (IsStore) return Localization.Get("#card_what_store");
             if (IsDecor) return Localization.Get("#card_what_decor");
@@ -238,6 +244,10 @@ namespace CityBuilder.UI
             _bandIcon = null;
             _bandIconHolder = null;
             _recipeRow = null;
+            _bandRow = null;
+            ClearSpecial();
+            _builtLevel = _building.Level;
+            BuildSpecialTop();
 
             if (IsHouse)
             {
@@ -262,13 +272,15 @@ namespace CityBuilder.UI
             if (IsWork)
             {
                 var row = Row(70f);
-                Label(row, Localization.Get("#card_workers"), 26, Ink, 0f, 200f, TextAnchor.MiddleLeft);
+                Label(row, Localization.Get(WorkersKey), 26, Ink, 0f, 200f, TextAnchor.MiddleLeft);
                 _minus = RoundButton(row, "−", 250f, owner.UnassignWorker);
                 _workers = Label(row, string.Empty, 30, Ink, 300f, 160f, TextAnchor.MiddleCenter);
                 _plus = RoundButton(row, "+", 510f, owner.AssignWorker);
                 _free = Label(Row(30f), string.Empty, 21, Soft, 0f, BodyWidth, TextAnchor.MiddleLeft);
+                MetalButtons();
 
                 var band = Row(72f);
+                _bandRow = band.gameObject;
                 var plate = NewImage(band, "Plate", rowSprite, new Color(0.55f, 0.38f, 0.2f, 0.25f));
                 plate.type = Image.Type.Sliced;
                 Stretch(plate.rectTransform);
@@ -321,8 +333,11 @@ namespace CityBuilder.UI
             {
                 _damage = Stat(swordsGlyph, "#card_damage");
                 _range = Stat(radiusGlyph, "#card_range");
-                _shots = Stat(fireGlyph, "#card_shots");
-                Label(Row(32f), Localization.Get("#card_radius_shown"), 20, Soft, 0f, BodyWidth, TextAnchor.MiddleLeft);
+                if (!IsHall)
+                {
+                    _shots = Stat(fireGlyph, "#card_shots");
+                    Label(Row(32f), Localization.Get("#card_radius_shown"), 20, Soft, 0f, BodyWidth, TextAnchor.MiddleLeft);
+                }
             }
 
             if (IsDecor)
@@ -345,6 +360,8 @@ namespace CityBuilder.UI
                 Pin(totalCoin.rectTransform, 0f, 32f, 32f);
                 _decorTotal = Label(total, string.Empty, 22, Good, 44f, BodyWidth - 44f, TextAnchor.MiddleLeft);
             }
+
+            BuildSpecial();
         }
 
         private void RefreshHouse()
@@ -372,6 +389,7 @@ namespace CityBuilder.UI
             if (makes == null && !converts) return;   // the half-second tick: the line stays what the last full refresh said
 
             var empty = _work.NothingLeftInReach;
+            if (_bandRow != null) _bandRow.SetActive(!HidesBand && (converts || !string.IsNullOrEmpty(makes)));
             var food = FoodOutput.IsProducer(_work.BuildingId) || FoodOutput.IsBooster(_work.BuildingId);
             var healer = Infirmary.CardLine(_building) != null || Remains.CardLine(_building) != null;
             var icon = healer || iconLibrary == null ? null : iconLibrary.GetIcon(food ? ResourceType.Food : _work.ProducesResource);
@@ -419,6 +437,7 @@ namespace CityBuilder.UI
             if (_damage == null) return;
             _damage.text = _building.Defense.ToString();
             _range.text = Localization.Format("#card_cells", Mathf.RoundToInt(DefensiveBuilding.RangeOf(_building) / Cell));
+            if (_shots == null) return;
             var interval = BalanceConfig.Instance != null ? BalanceConfig.Instance.DefenceAttackIntervalSeconds : 0f;
             _shots.text = interval > 0f ? Mathf.RoundToInt(60f / interval).ToString() : "—";
         }
@@ -595,12 +614,12 @@ namespace CityBuilder.UI
         }
 
         /// <summary>A glyph, a label on the left and a value on the right.</summary>
-        private Text Stat(Sprite glyph, string key)
+        private Text Stat(Sprite glyph, string key, string label = null)
         {
             var row = Row(42f);
             var icon = NewImage(row, "Icon", glyph, Ink);
             Pin(icon.rectTransform, 0f, 32f, 32f);
-            Label(row, Localization.Get(key), 23, Ink, 46f, 480f, TextAnchor.MiddleLeft);
+            Label(row, label ?? Localization.Get(key), 23, Ink, 46f, 480f, TextAnchor.MiddleLeft);
             return Label(row, string.Empty, 25, Ink, 0f, 220f, TextAnchor.MiddleRight, right: true);
         }
 

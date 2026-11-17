@@ -295,6 +295,7 @@ namespace CityBuilder.UI
                     && _currentProduction.SelectedRecipe != null && _currentProduction.SelectedRecipe.HasInputs;
                 infoCard.Refresh(converts ? null : ProductionLine(data) ?? string.Empty, converts);
                 if (converts) RefreshRecipeFormula(infoCard.RecipeRow);
+                if (infoCard.MetalRow != null) RefreshRecipeControls(null, infoCard.MetalRow);
                 return;
             }
             if (RunCard)

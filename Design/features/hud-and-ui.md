@@ -233,9 +233,20 @@ radius, houses + residents in reach, total). Card refreshes every 0.5 s. Hammer/
 (upgrade: now ▶ next pictures, gain chips, price, `#card_build_time`; repair: price; demolish:
 `BuildingInfoPanelController.DemolishWarning()` + refund) whose button calls the controller (Upgrade/Repair/
 ConfirmDemolish). Texts `#card_*`. Test: SandboxRulesTests.TheBuildingCard_IsTheV2Card_WithWhatItMakes,
-photos TheV2Cards_ForEveryKind_Photos (card-v2-*.png). NEXT: special buildings (Town Hall, Barracks, Stable,
-Workshop, Shipyard, Lighthouse, Healer, Tax House, Cemetery, Diplomacy, Fire Brigade, Smelter, Crystal mine) —
-concepts first; invasion cards onto this frame proposed, not approved.
+photos TheV2Cards_ForEveryKind_Photos (card-v2-*.png).
+SPECIAL buildings (concepts Design/ui/Special_*.png, Tools/ui/special_cards_concepts.py, APPROVED 2026-11-17, BUILT,
+not seen): `UI/BuildingInfoCard.Special.cs` (partial). Town Hall: own room (HousePeople.HallPlaces) + defence +
+hero tiles (HeroRoster.CanBuy: tick / open / padlock «ур. N» = castleLevel). Hires = every SoldierStats.Hireable
+whose HiredAt == this building (Barracks 5, Stable knight, Church monk, Workshop 4 machines) as tiles locked by
+BarracksLevel; one capped type shows «Есть / мест» (CapPerLevel x level), else army count. Shipyard: ShipStats.All
+by ShipyardLevel. Lighthouse: LighthouseLightCells now/next. Healer: beds (InBed), waiting on its island, rule.
+Fire Brigade: perks lvl2-5 tick/padlock (`#card_fire_l2..5`). Tax House: base + bonus x level formula, town
+people, ComputeDailyIncome. Cemetery: graves bar, bodies on the island, sickness %, demolish crystals. Diplomacy:
+neighbour band, BotRelations score bar, trade open/closed, «Открыть дипломатию» (closes card, DiplomacyWindow.Show).
+Smelter: metal buttons in the card (controller RefreshRecipeControls into MetalRow). Crystal Mine: stored bar,
+pace now/next, «Забрать N» (CrystalMines.Collect). Workers row is «Лекари»/«Пожарные» for healer/brigade; their
+band is hidden. The body is rebuilt when the level changes. Portraits = Icons/Portrait*.png. Photos:
+TheV2Cards_ForSpecialBuildings_Photos. Invasion cards onto this frame: proposed, not approved.
 
 ## Top resource bar (the user, 2026-11-02)
 - ONLY wood, stone, coins, CRYSTALS (own chip after the coins, always shown outside a run), food,

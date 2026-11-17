@@ -1180,6 +1180,27 @@ namespace CityBuilder.EditorTools
             so.FindProperty("radiusGlyph").objectReferenceValue = HudGlyph("Radius");
             so.FindProperty("swordsGlyph").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/Swords.png");
             so.FindProperty("fireGlyph").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/Fire.png");
+            // the special buildings (Special_*.png concepts, approved 2026-11-17): unit portraits, padlock, tick, skull, sick mark, crystal
+            Sprite Glyph(string name) => AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/{name}.png");
+            so.FindProperty("lockGlyph").objectReferenceValue = HudGlyph("Lock");
+            so.FindProperty("checkGlyph").objectReferenceValue = Glyph("Check");
+            so.FindProperty("skullGlyph").objectReferenceValue = Glyph("Skull");
+            so.FindProperty("sickGlyph").objectReferenceValue = Glyph("Sick");
+            so.FindProperty("crystalIcon").objectReferenceValue = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.IconsFolder}/Res_UpgradeCrystal.png");
+            var portraitKeys = new List<string>();
+            var portraitSprites = new List<Object>();
+            foreach (var guid in AssetDatabase.FindAssets("Portrait t:Sprite", new[] { UiTextureImport.IconsFolder }))
+            {
+                var file = AssetDatabase.GUIDToAssetPath(guid);
+                var name = System.IO.Path.GetFileNameWithoutExtension(file);
+                if (!name.StartsWith("Portrait")) continue;
+                portraitKeys.Add(name);
+                portraitSprites.Add(AssetDatabase.LoadAssetAtPath<Sprite>(file));
+            }
+            var portraitProp = so.FindProperty("portraitKeys");
+            portraitProp.arraySize = portraitKeys.Count;
+            for (var i = 0; i < portraitKeys.Count; i++) portraitProp.GetArrayElementAtIndex(i).stringValue = portraitKeys[i];
+            WriteObjects(so.FindProperty("portraits"), portraitSprites.ToArray());
             var keyProp = so.FindProperty("levelIconKeys");
             keyProp.arraySize = keys.Count;
             for (var i = 0; i < keys.Count; i++) keyProp.GetArrayElementAtIndex(i).stringValue = keys[i];

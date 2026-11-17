@@ -46,3 +46,5 @@ Related: [[project_archipelago_map]] (ships in the Армия tab, shipyard leve
   Tax House, Cemetery, Diplomacy, Fire Brigade, Smelter, Crystal mine), approval first.
 - 2026-11-17: concepts for the 13 SPECIAL buildings drawn and sent (Design/ui/Special_*.png, Tools/ui/special_cards_concepts.py),
   WAITING for the user's approval; numbers in them are examples, the game fills its own.
+- 2026-11-17: the 13 special concepts APPROVED and BUILT (UI/BuildingInfoCard.Special.cs; card hud-and-ui.md), photos sent;
+  not seen in the game. Shipyard, Lighthouse, Crystal Mine have no photo (shore/archipelago/purchase), unchecked visually.

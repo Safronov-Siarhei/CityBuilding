@@ -353,6 +353,28 @@ namespace CityBuilder.Tests.PlayMode
             }
         }
 
+        /// <summary>The special buildings' v2 cards for the user to see (concepts Special_*.png approved 2026-11-17).</summary>
+        [UnityTest]
+        public IEnumerator TheV2Cards_ForSpecialBuildings_Photos()
+        {
+            var hall = TownHall();
+            var panel = Object.FindAnyObjectByType<BuildingInfoPanelController>(FindObjectsInactive.Include);
+            var card = Object.FindAnyObjectByType<BuildingInfoCard>(FindObjectsInactive.Include);
+            panel.Show(hall);
+            Assert.IsTrue(card.gameObject.activeInHierarchy, "The Town Hall has no v2 card.");
+            yield return PlaytestCapture.ShootWithUi("card-v2-castle", hall.transform.position);
+            panel.Close();
+            foreach (var id in new[] { "Barracks", "Stable", "Workshop", "HealerHouse", "FireBrigade", "TaxHouse", "Cemetery", "DiplomacyHall", "Smelter" })
+            {
+                var building = PlaceFinished(id);
+                yield return null;
+                panel.Show(building);
+                Assert.IsTrue(card.gameObject.activeInHierarchy, $"{id}: no v2 card.");
+                yield return PlaytestCapture.ShootWithUi($"card-v2-{id.ToLowerInvariant()}", building.transform.position);
+                panel.Close();
+            }
+        }
+
         [UnityTest]
         public IEnumerator HeroesAndHalfBuiltBuildings_ComeBackFromASave()
         {

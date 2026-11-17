@@ -100,7 +100,8 @@ namespace CityBuilder.Citizens
             return Mathf.Max(0, house.Data.LevelStats(house.Level).housingCapacity);
         }
 
-        private static int HallPlaces(BuildingInstance hall) =>
+        /// <summary>The Town Hall's own room (its citizens_on_build), 0 for a fallen hall -- the v2 card shows it.</summary>
+        public static int HallPlaces(BuildingInstance hall) =>
             hall == null || hall.Data == null || hall.CurrentHealth <= 0 ? 0 : Mathf.Max(0, hall.Data.citizensOnBuild);
 
         private static int PlacesFor(House house) => house.IsHall ? HallPlaces(house.Building) : PlacesOf(house.Building);
