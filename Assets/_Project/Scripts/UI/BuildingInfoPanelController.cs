@@ -761,7 +761,7 @@ namespace CityBuilder.UI
             var grid = GridManager.Instance;
             if (grid == null) return;
 
-            Grid.HarvestRadiusOverlay.ShowFor(FootprintCenter(), _currentInstance.HarvestRadius, _currentInstance.Data);
+            Grid.HarvestRadiusOverlay.ShowFor(FootprintCenter(), Grid.HarvestRadiusOverlay.RadiusOf(_currentInstance.Data, _currentInstance.Level), _currentInstance.Data);
         }
 
         private void HideHarvestRadius()

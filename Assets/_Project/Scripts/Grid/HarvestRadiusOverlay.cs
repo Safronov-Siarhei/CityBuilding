@@ -80,6 +80,7 @@ namespace CityBuilder.Grid
         /// <summary>Lays the disc under a building centred at this point. A radius of zero hides it.</summary>
         public static void ShowFor(Vector3 center, int radiusMetres)
         {
+            Buildings.WellReachOverlay.HideIfShown();
             if (radiusMetres <= 0)
             {
                 HideIfShown();
@@ -96,6 +97,13 @@ namespace CityBuilder.Grid
         /// </summary>
         public static void ShowFor(Vector3 center, int radiusMetres, Buildings.BuildingData yard)
         {
+            // a Колодец shows its own circle + yellow frames on what it covers instead (the user, 2026-11-17)
+            if (Buildings.WellReach.IsWell(yard))
+            {
+                HideIfShown();
+                Buildings.WellReachOverlay.Show(center, radiusMetres);
+                return;
+            }
             ShowFor(center, radiusMetres);
             if (radiusMetres > 0 && _instance != null) _instance.MarkNodes(center, radiusMetres, GatheredBy(yard));
         }
@@ -111,6 +119,7 @@ namespace CityBuilder.Grid
         /// <summary>Hides the overlay, without creating one just to hide it -- the common case is a building that never had a radius.</summary>
         public static void HideIfShown()
         {
+            Buildings.WellReachOverlay.HideIfShown();
             if (_instance == null) return;
             _instance.gameObject.SetActive(false);
             _instance.HideMarks();

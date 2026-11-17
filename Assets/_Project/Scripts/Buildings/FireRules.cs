@@ -45,7 +45,7 @@ namespace CityBuilder.Buildings
         private static readonly Dictionary<BuildingInstance, (bool wet, float until)> WetCache = new Dictionary<BuildingInstance, (bool, float)>();
 
         /// <summary>
-        /// Water within fire_water_cells of the building: a Колодец, or the sea / a river / a lake cell
+        /// Water near the building: inside a Колодец's circle (WellReach), or within fire_water_cells of the sea / a river / a lake cell
         /// of the map. Remembered for a minute (the town changes slowly; this is asked once a game day).
         /// </summary>
         public static bool WaterNear(BuildingInstance b)
@@ -62,8 +62,9 @@ namespace CityBuilder.Buildings
             var area = Cells(b);
             foreach (var other in BuildingInstance.All)
             {
-                if (other == null || other.IsBot || other.Data == null || other.Data.buildingName != "Well" || !other.IsOperational) continue;
-                if (CellGap(area, Cells(other)) <= reach) return true;
+                // a Колодец waters its own circle, the one that also keeps sickness off (the user, 2026-11-17)
+                if (other == null || other.IsBot || !WellReach.IsWell(other.Data) || !other.IsOperational) continue;
+                if (WellReach.Covers(other, b)) return true;
             }
             var map = Maps.MeshMapApplier.Instance;
             if (map == null) return false;
@@ -71,13 +72,6 @@ namespace CityBuilder.Buildings
                 for (var y = area.yMin - reach; y < area.yMax + reach; y++)
                     if (map.IsWaterCell(new Vector2Int(x, y))) return true;
             return false;
-        }
-
-        private static int CellGap(RectInt a, RectInt b)
-        {
-            var dx = Mathf.Max(0, Mathf.Max(a.xMin - b.xMax + 1, b.xMin - a.xMax + 1));
-            var dy = Mathf.Max(0, Mathf.Max(a.yMin - b.yMax + 1, b.yMin - a.yMax + 1));
-            return Mathf.Max(dx, dy);
         }
 
         /// <summary>

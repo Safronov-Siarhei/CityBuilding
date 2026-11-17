@@ -13,7 +13,7 @@
 - **Fires are diced; illness is worked out**: illness chance = base + hungry + no well in reach.
   Sick people leave their jobs. The untreated streak counts days the BEDS WERE NOT CLEARED
   (one healer must not immunise a town of forty). Дом лекаря heals `heal_per_healer_per_day`.
-- Well, Healer, Brigade share one per-level `service_radius` column (Well 14/18/24, Healer 16/20/26, Brigade 18/24/30).
+- Well, Healer, Brigade share one per-level `service_radius` column (METRES; Well 16/20/24/28/32 = 8/10/12/14/16 cells since 2026-11-17).
 - No sickness while the town settles in (easy start, 2026-10-20). Fires and illness are off in Invasion.
 - Saved: sick count, untreated streak, every fire with ELAPSED time (remaining depends on the crew after load).
 
@@ -101,7 +101,8 @@ Cemetery + the dead -- `Citizens/Remains.cs`:
 Why: decay is OFF since 2026-10-25, and fire chance WAS decay -> no fire has started anywhere since.
 SANDBOX ONLY (other modes: no fires at all).
 - Chance: random, every burnable building, `fire_chance_per_day` (~0.5%/game day), x2 when no water
-  within 8 CELLS (a well, the sea, a river) -- the user: 4 cells would force wells everywhere.
+  water near: inside a WELL's own circle (its service_radius, see «Well: one reach»), or within
+  8 CELLS (`fire_water_cells`) of the sea / a river / a lake.
 - No fires and no illness the first 10 minutes of a run (was 7 for illness).
 - Spread ONLY to a burnable building TOUCHING it (no gap); a 1-cell gap stops it. Every 10 s of
   burning, 30% per touching neighbour.
@@ -166,3 +167,20 @@ economy: `fire_*`, `visit_*`, `torch_*`, `storm_*`, `strike_*`, `hazard_grace_se
 
 ## Tests
 EditMode `SicknessAndFireTests`; PlayMode `HazardTests`.
+
+## Well: one reach -- DECIDED and BUILT 2026-11-17 (the user), compiled, not seen, no tests
+- ONE radius for everything the well does: the per-level `service_radius` (metres in the column):
+  16/20/24/28/32 m = 8/10/12/14/16 CELLS (sheet «Здания» + «Песочница: Здания (Город)», both CSVs).
+- Sickness: a house is watered when its footprint centre is inside a well's circle (was transform position).
+- Fire: a building is "near water" when inside an operational well's circle (was a fixed 8-cell
+  footprint gap); sea/river still `fire_water_cells` 8. Firefighters' bucket spot unchanged (nearest well/shore).
+- NO effect on food (the old «ждёт ... влияние на еду» comment replaced).
+- Visual: placing a well (ghost) and holding a placed one show a thin pale-gold ring like a tower's
+  reach + a YELLOW frame on the ground round every building inside it that the well affects
+  (houses; in the sandbox also every building that can burn). Wells themselves are never framed.
+- Code: `Buildings/WellReach.cs` (WellReach rule helpers + WellReachOverlay, pooled LineRenderers,
+  outlines re-found only when the circle moves or every 0.5 s, max 80). Hooked through
+  `HarvestRadiusOverlay.ShowFor(.., yard)` (a well routes to WellReachOverlay; every Hide hides both),
+  so BuildingPlacer / BuildingFocus / BuildingInfoPanelController needed no new calls
+  (the info panel now passes RadiusOf(data, level) instead of HarvestRadius).
+- Trap: earlier notes called 14/18/24 "cells" -- they were METRES (7-17 cells).
