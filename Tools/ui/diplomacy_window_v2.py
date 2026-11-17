@@ -22,17 +22,9 @@ def round_button(size, glyph=None, mark=None):
 
 
 def diplomacy_glyph(size=128):
-    """A sealed scroll over the neighbour's shield."""
-    im = Image.new("RGBA", (size, size))
-    s = size / 100
-    im.alpha_composite(crest(int(70 * s)), (int(30 * s), int(2 * s)))
-    d = ImageDraw.Draw(im)
-    d.rounded_rectangle([10 * s, 52 * s, 74 * s, 82 * s], 6 * s, fill=(246, 232, 196, 255), outline=INK + (255,), width=int(3 * s))
-    d.ellipse([4 * s, 50 * s, 18 * s, 84 * s], fill=(226, 206, 160, 255), outline=INK + (255,), width=int(3 * s))
-    for k in range(3):
-        d.line([(24 * s, (60 + k * 7) * s), (58 * s, (60 + k * 7) * s)], fill=(150, 120, 80, 255), width=int(2.5 * s))
-    d.ellipse([60 * s, 70 * s, 82 * s, 92 * s], fill=(190, 40, 40, 255), outline=INK + (255,), width=int(2 * s))
-    return im
+    """The treaty with a red seal and a quill (the user picked variant C, 2026-11-17)."""
+    from diplomacy_icon_concepts import treaty
+    return treaty().resize((size, size), Image.LANCZOS)
 
 
 def selection():
