@@ -68,7 +68,7 @@ namespace CityBuilder.Bot
             public int steps;
             public int level;
             public BuildingInstance instance;
-            /// <summary>Razed by the town's army: never rebuilt (the user, 2026-11-17: only what the orcs broke comes back).</summary>
+            /// <summary>Razed by the town's army: not rebuilt while the war lasts (the user, 2026-11-17); after peace it is.</summary>
             public bool byTown;
         }
 
@@ -430,7 +430,11 @@ namespace CityBuilder.Bot
             var share = BalanceConfig.Instance != null ? BalanceConfig.Instance.RuinRestoreTimeFraction : 0.5f;
             foreach (var slot in _slots)
             {
-                if (slot.instance != null || slot.byTown) continue;
+                if (slot.instance != null) continue;
+                // what the town's army razed stays down while the war lasts; after peace it comes
+                // back with the next rebuild like the orcs' damage (the user, 2026-11-17)
+                if (slot.byTown && BotRelations.Stance == BotStance.War) continue;
+                slot.byTown = false;
                 BuildingRuin.BotRuinAt(slot.data, slot.origin)?.Remove();
                 Raise(slot, map);
                 if (slot.instance == null || slot.data.isRoad) continue;
@@ -442,7 +446,7 @@ namespace CityBuilder.Bot
 
         /// <summary>
         /// The town's army has razed the bot's building of `data` standing at `origin`: its slot is
-        /// never rebuilt (the user, 2026-11-17). Only the orcs' damage is put back.
+        /// not rebuilt until the war is over (the user, 2026-11-17).
         /// </summary>
         public void NoteRazedByTown(BuildingData data, Vector2Int origin)
         {
