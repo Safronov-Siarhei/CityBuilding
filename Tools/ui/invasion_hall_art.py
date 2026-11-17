@@ -254,6 +254,7 @@ RATE_BASE = RATE_INNER[1] + 336                                # the podium's fl
 RATE_ROW_H, RATE_ROW_STEP = 40, 46
 RATE_TIERS = 6
 PARCH = (247, 232, 196)
+PARCH_EDGE = (227, 196, 136)       # c.parchment's colour at its rim
 BROWN = (90, 56, 24)
 
 
@@ -344,8 +345,10 @@ def rating_pieces():
         ty = iy0 - 64
         on = c.layer()
         d = ImageDraw.Draw(on)
-        d.rounded_rectangle((x - 110, ty, x + 110, ty + 72), 18, fill=PARCH, outline=(150, 104, 40), width=4, corners=(True, True, False, False))
-        d.rectangle((x - 106, ty + 40, x + 106, ty + 80), fill=PARCH)
+        # the colour of the table's own edge right under it (the parchment darkens to its rim), so the two join
+        # without a seam (the user, 2026-11-17: «не совпадает по цвету»)
+        d.rounded_rectangle((x - 110, ty, x + 110, ty + 72), 18, fill=PARCH_EDGE, outline=(150, 104, 40), width=4, corners=(True, True, False, False))
+        d.rectangle((x - 106, ty + 40, x + 106, ty + 75), fill=PARCH_EDGE)
         save('RateTab%dOn' % i, on)
         off = c.layer()
         ImageDraw.Draw(off).rounded_rectangle((x - 110, ty + 6, x + 110, ty + 66), 18, fill=(110, 66, 30), outline=INK, width=4,
