@@ -78,3 +78,27 @@ EditMode `ResourceManagerTests`, `ResourceStorageTests`, `TaxManagerTests`, `Tax
 ## Open
 - Stone is finite (~2 800 on a map) vs ~4 700 to build everything at level 3 — never addressed.
 - Resource wishlist not built: sand, clay, water, hides; fruit, meat, vegetables, fish, wine.
+
+## Storage rework -- DECIDED by the user 2026-11-17, NOT BUILT (talk only so far)
+SANDBOX ONLY. Replaces the family pools with a cap PER RESOURCE.
+- Start chain (shown to the player at map start): Town Hall -> Lighthouse -> Склад -> Кладовая -> Сокровищница
+  (open from the start, no Lab) -> Crystal Mine (if the map has one). After the chain the stores receive
+  wood 40, stone 40, food 20, coins 100 (replaces start_* and the Town Hall's base capacity).
+- Caps by level 1..5 (each building of the kind ADDS its cap: two lvl-1 Склады = 100 wood):
+  | | Склад | Большой склад |
+  |---|---|---|
+  | wood, stone | 50/60/70/80/90 | 70/90/110/130/150 |
+  | iron, gold, copper ore; coal | 20/25/30/35/40 | 40/50/60/70/80 |
+  | iron, copper, gold bars | 10/12/14/16/18 | 20/25/30/35/40 |
+  Кладовая food 25/30/35/40/45, Большая кладовая 50/60/70/80/90.
+  Сокровищница coins 200/250/300/350/400, Большая сокровищница 400/500/600/700/800.
+  Crystals: no cap. The `Grain` family and resource go away.
+- Full: the bar shows «10/10» blinking red (top bar + inventory); a notice «Постройте больше складов или улучшите
+  старый» at most once per 2-3 min PER BUILDING KIND (склад / кладовая / сокровищница).
+- Purchases, gifts and rewards may overfill a store; production stops until the stock drops below the cap.
+- A storage building destroyed: its resources are lost, with a visible «minus» effect on the inventory; restoring
+  the ruin gives back half of them.
+- Islands: one shared store for the whole archipelago.
+- Open: whether the chain buildings are free; prices above the caps (Tax House 150/200, Colosseum 90/80, Big Treasury
+  110 stone, Big Warehouse 80 / Big Granary 70 wood, Manor 55, Moat 25 of a 20-cap resource, research up to 800
+  coins); food arrives once a day in one lump vs a 25 cap; how much a destroyed store loses.
