@@ -29,7 +29,7 @@ namespace CityBuilder.UI
     /// «Улучшить», the hammer and the bin open one small window (the dialog): the next level's picture beside
     /// this one with its gains, price and build time; the repair's price; what demolition gives back. The
     /// window's own button does it through BuildingInfoPanelController, which owns every action.
-    /// A run, the tutorial and the Moat keep RunBuildingCard. The rows are made here, once per building shown.
+    /// The sandbox and the Invasion; the tutorial, the campaign and the Moat keep RunBuildingCard. The rows are made here, once per building shown.
     /// </summary>
     public partial class BuildingInfoCard : MonoBehaviour
     {
@@ -118,9 +118,10 @@ namespace CityBuilder.UI
         /// <summary>The workplace band's line as shown (the tests read it).</summary>
         public string BandLine => _bandText != null && _bandText.gameObject.activeSelf ? _bandText.text : null;
 
-        /// <summary>Whether this card stands in for the run's: the sandbox (not a run, the tutorial, the campaign or a dungeon), not the Moat.</summary>
+        /// <summary>Whether this card stands in for the run's: the sandbox and the Invasion (the user, 2026-11-17); not the tutorial, the campaign, a dungeon or the Moat.</summary>
         public static bool Serves(BuildingData data) =>
-            data != null && !data.isMoat && PiggyTasks.InSandbox && !Dungeon.DungeonMode.IsActive;
+            data != null && !data.isMoat && !Dungeon.DungeonMode.IsActive && !Tutorial.TutorialMode.IsActive
+            && !Campaign.CityDefenceMode.IsActive;
 
         /// <summary>Opens on `building`: lays its blocks out, then fills them.</summary>
         public void Show(BuildingInstance building, ProductionBuilding work)

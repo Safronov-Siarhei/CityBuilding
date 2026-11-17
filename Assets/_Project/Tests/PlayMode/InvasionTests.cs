@@ -1711,8 +1711,8 @@ namespace CityBuilder.Tests.PlayMode
         }
 
         /// <summary>
-        /// A run's card after the user's sketch (2026-10-25): health and defence, the next level's
-        /// picture with what it adds (a Hovel's next level: +1 place), and no upgrade at the top level.
+        /// A run's card is the v2 card since 2026-11-17 (the user: «карточки в нашествии переведи на эту же рамку»):
+        /// «Улучшить» opens the next level with what it adds (a Hovel's next level: +1 place); none at the top level.
         /// </summary>
         [UnityTest]
         public IEnumerator ARunsCard_ShowsTheNextLevelAndItsGains_NoneAtTheTop()
@@ -1721,23 +1721,24 @@ namespace CityBuilder.Tests.PlayMode
             var panel = Object.FindFirstObjectByType<CityBuilder.UI.BuildingInfoPanelController>(FindObjectsInactive.Include);
             panel.Show(house);
             yield return null;
-            var card = panel.transform.Find("RunCard");
-            Assert.IsNotNull(card, "No run card.");
-            Assert.IsTrue(card.gameObject.activeInHierarchy, "The run shows the sandbox's card.");
-            Assert.IsFalse(panel.transform.Find("Card").gameObject.activeSelf, "The sandbox's card stayed under the run's.");
-            Assert.IsTrue(card.Find("Bottom/NextLevel").gameObject.activeSelf, "No next level on a level-1 house.");
-            Assert.IsNotNull(card.Find("Bottom/NextLevel/Picture").GetComponent<UnityEngine.UI.Image>().sprite, "The next level has no picture.");
-            var gains = card.Find("Bottom/NextLevel/Gains");
+            var card = Object.FindFirstObjectByType<CityBuilder.UI.BuildingInfoCard>(FindObjectsInactive.Include);
+            Assert.IsNotNull(card, "No v2 card.");
+            Assert.IsTrue(card.gameObject.activeInHierarchy, "The run does not show the v2 card.");
+            Assert.IsFalse(panel.transform.Find("RunCard").gameObject.activeSelf, "The old run card stayed up beside the v2 card.");
+            card.OpenUpgrade();
+            yield return null;
+            var gains = card.transform.Find("Dialog/DialogCard/Gains");
+            Assert.IsTrue(gains.gameObject.activeInHierarchy, "«Улучшить» shows no next level on a level-1 house.");
             Assert.Greater(gains.childCount, 0, "The next level adds nothing, says the card.");
             Assert.IsTrue(gains.GetComponentsInChildren<UnityEngine.UI.Text>().Any(t => t.text == "+1"), "The house's next level does not say +1 place.");
             if (PlaytestCapture.Available) yield return PlaytestCapture.ShootWithUiAt("invasion-run-card", 1600, 900, house.transform.position, 18f, 52f, 0f);
+            card.CloseDialog();
 
             panel.Close();
             house.SetLevel(BuildingInstance.MaxLevel);
             panel.Show(house);
             yield return null;
-            Assert.IsFalse(card.Find("Bottom/NextLevel").gameObject.activeSelf, "A top-level house still offers a next level.");
-            Assert.IsFalse(card.Find("Bottom/UpgradeBlock").gameObject.activeSelf, "A top-level house still offers an upgrade.");
+            Assert.IsFalse(card.transform.Find("UpgradeButton").gameObject.activeSelf, "A top-level house still offers an upgrade.");
             panel.Close();
         }
 

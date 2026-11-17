@@ -208,7 +208,7 @@ DontDestroyOnLoad, put up by `LoadingScreen.IntoGame` (sandbox Start, saves Load
 Test `LoadingScreenTests` (+ photos loading-sandbox / loading-invasion).
 
 ## Building card in a run (user's sketch, 2026-10-25)
-`UI/RunBuildingCard.cs` — the card in a run, the tutorial, the campaign and on the Moat (the sandbox has v2 below): name,
+`UI/RunBuildingCard.cs` — the card in the tutorial, the campaign and on the Moat (the sandbox AND the Invasion have v2 below since 2026-11-17): name,
 «Уровень N», heart+shield numbers, − workers/free + (minus LEFT), next level's picture
 (`Icons/<id>_L<n>.png`, rendered by render_icons.py from <id>1-lvl<n>) with gain badges (+health,
 +defence, +place, +worker, +reach), upgrade cost + button, repair cost + button (damaged only),
@@ -220,8 +220,9 @@ Hidden while the card is up (`BuildingFocus.DetailsShown`).
 ## Building card v2 — the sandbox (concepts approved 2026-11-17, BUILT, not seen)
 Concepts: `Design/ui/Info_{House,Production,Food,Storage,Defence,Leisure,Upgrade}.png` (Tools/ui/info_cards_concepts.py).
 `UI/BuildingInfoCard.cs` (built by `SetupProjectPanels.BuildBuildingInfoCard`, object `InfoCardV2` under the info
-panel) stands in for RunBuildingCard wherever `BuildingInfoCard.Serves`: the sandbox (PiggyTasks.InSandbox, no
-dungeon), not the Moat. A run, the tutorial and the campaign keep RunBuildingCard. Frame = the Lab's «!» card:
+panel) stands in for RunBuildingCard wherever `BuildingInfoCard.Serves`: the sandbox and the Invasion (the user,
+2026-11-17), not a dungeon, the tutorial, the campaign or the Moat. Bars (health, stores, graves...) have NO sprite:
+a filled round UISprite stretches its ends into an oval (the user complained twice). Frame = the Lab's «!» card:
 wood plaque «Name, ур. N» (`#lab_info_title`), level picture on a tile, «what it is for» line (`#card_what_*` by
 kind), «Прочность» bar, BODY (VerticalLayoutGroup; rows made in code once per Show), foot: Улучшить / round hammer /
 red round bin / Закрыть; a not-researched level shows `#building_upgrade_locked` in Upgrade's place (tap → research).
@@ -246,7 +247,7 @@ neighbour band, BotRelations score bar, trade open/closed, «Открыть ди
 Smelter: metal buttons in the card (controller RefreshRecipeControls into MetalRow). Crystal Mine: stored bar,
 pace now/next, «Забрать N» (CrystalMines.Collect). Workers row is «Лекари»/«Пожарные» for healer/brigade; their
 band is hidden. The body is rebuilt when the level changes. Portraits = Icons/Portrait*.png. Photos:
-TheV2Cards_ForSpecialBuildings_Photos. Invasion cards onto this frame: proposed, not approved.
+TheV2Cards_ForSpecialBuildings_Photos; InvasionTests.ARunsCard_ShowsTheNextLevelAndItsGains_NoneAtTheTop checks the run's v2 card.
 
 ## Top resource bar (the user, 2026-11-02)
 - ONLY wood, stone, coins, CRYSTALS (own chip after the coins, always shown outside a run), food,

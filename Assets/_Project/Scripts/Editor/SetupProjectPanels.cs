@@ -1002,7 +1002,8 @@ namespace CityBuilder.EditorTools
         {
             var wood = SkinSprite("pill_wood") ?? panelSprite;
             var parchment = SkinSprite("pill_parchment") ?? panelSprite;
-            var plainBar = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+            // no sprite: a flat bar (the round UISprite filled stretches its rounded ends into an oval -- the user, 2026-11-17, twice)
+            Sprite plainBar = null;
 
             var card = CreateImage(panelRoot, "InfoCardV2", new Color(0.16f, 0.18f, 0.15f, 0.98f));
             card.sprite = panelSprite;
@@ -1454,7 +1455,7 @@ namespace CityBuilder.EditorTools
             barFill.rectTransform.offsetMin = new Vector2(4f, 4f);
             barFill.rectTransform.offsetMax = new Vector2(-4f, -4f);
             // a plain bar: the round knob stretched made an oval (the user, 2026-11-17)
-            barFill.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+            barFill.sprite = null;   // flat: a filled round sprite stretches its ends into an oval
             barFill.type = Image.Type.Filled;
             barFill.fillMethod = Image.FillMethod.Horizontal;
             var barText = CreateText(barBack.transform, "Text", string.Empty, 24, Vector2.zero, new Vector2(600f, 44f));
