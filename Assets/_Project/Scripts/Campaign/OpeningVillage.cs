@@ -78,6 +78,12 @@ namespace CityBuilder.Campaign
         private Random _rnd;
         private Transform _root;
 
+        /// <summary>Ground the village leaves empty (x, z, radius): the main menu's building site
+        /// (MenuBuildSite, 2026-11-17) asks before the village is built.</summary>
+        private readonly List<Vector3> _keepClear = new List<Vector3>();
+
+        public void KeepClear(Vector2 at, float radius) => _keepClear.Add(new Vector3(at.x, at.y, radius));
+
         /// <summary>A set piece by its model name (CineChurch, CinePortalStone_Arch3...).</summary>
         public Transform Piece(string name) => _pieces.TryGetValue(name, out var t) ? t : null;
 
@@ -159,6 +165,7 @@ namespace CityBuilder.Campaign
             Reserve(Vector2.zero, 5.4f);                                       // the square stays open
             Reserve(new Vector2(0f, 7.4f), 3.4f);                              // the church
             Reserve(new Vector2(2.4f, -5.6f), 2.6f);                           // the market
+            foreach (var k in _keepClear) Reserve(new Vector2(k.x, k.y), k.z);
         }
 
         private void Streets()

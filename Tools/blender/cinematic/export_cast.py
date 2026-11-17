@@ -487,6 +487,11 @@ def main():
         for a in acts:                                  # the next figure's export takes only its own
             bpy.data.actions.remove(a)
     out = os.path.join(project, "Assets", "_Project", "Campaign", "OpeningCast.json")
+    # figures another exporter put there (the menu's builders, export_builders.py) stay
+    if os.path.exists(out):
+        with open(out, encoding="utf-8") as f:
+            ours = {x["name"] for x in data["figures"]}
+            data["figures"] += [x for x in json.load(f).get("figures", []) if x["name"] not in ours]
     with open(out, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=1)
     with open(os.path.join(project, "Assets", "_Project", "Campaign", "OpeningTracks.json"), "w", encoding="utf-8") as f:

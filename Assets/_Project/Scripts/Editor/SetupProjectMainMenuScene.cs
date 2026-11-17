@@ -99,7 +99,27 @@ namespace CityBuilder.EditorTools
             RenderSettings.fogStartDistance = 45f;
             RenderSettings.fogEndDistance = 140f;
 
-            var (village, life) = CreateOpeningVillage(BakeCastClips());
+            var clips = BakeCastClips();
+            var (village, life) = CreateOpeningVillage(clips);
+            // the house going up (stage 2, approved 2026-11-17): the site, its two builders on their loops
+            var site = village.gameObject.AddComponent<CityBuilder.Campaign.MenuBuildSite>();
+            var sso = new SerializedObject(site);
+            sso.FindProperty("village").objectReferenceValue = village;
+            sso.FindProperty("siteFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(MenuVillagePath);
+            sso.FindProperty("layoutFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/MenuBuilders.json");
+            var workers = new[] { "CineCarpenter", "CineLabourer" };
+            var castProp = sso.FindProperty("cast");
+            castProp.arraySize = workers.Length;
+            for (var i = 0; i < workers.Length; i++)
+            {
+                var e = castProp.GetArrayElementAtIndex(i);
+                e.FindPropertyRelative("id").stringValue = workers[i];
+                e.FindPropertyRelative("model").objectReferenceValue =
+                    AssetDatabase.LoadAssetAtPath<GameObject>($"{ModelImportDefaults.CinematicCastFolder}{workers[i]}.fbx");
+                e.FindPropertyRelative("clips").objectReferenceValue = clips.TryGetValue(workers[i], out var c) ? c : null;
+                if (!clips.ContainsKey(workers[i])) Debug.LogError($"[MainMenu] builder {workers[i]} has no clips");
+            }
+            sso.ApplyModifiedPropertiesWithoutUndo();
             cam.GetUniversalAdditionalCameraData().renderPostProcessing = true;
             var volume = new GameObject("MenuVolume", typeof(UnityEngine.Rendering.Volume)).GetComponent<UnityEngine.Rendering.Volume>();
             volume.isGlobal = true;
