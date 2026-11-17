@@ -18,3 +18,5 @@ Order the user set: concepts first for approval, THEN discuss the feature's func
   old, a later manual save on the map deletes it); see Design/features/save-load.md.
 
 Card: Design/features/hud-and-ui.md (SANDBOX MENU REDESIGN). Related: [[project_menu_ui]], [[project_monetization_ideas]].
+
+FEATURE LIST DECIDED 2026-11-17 (card Design/features/sandbox-freedom.md): raids 5 levels, neighbour always-peace/as usual, quiet start 0/7/15/30, fires/storms/plague, start goods, build+research speed, fog; piggy option A; presets parked; in-game scroll under «Сохранить». Not built.
