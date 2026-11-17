@@ -81,13 +81,10 @@ def ribbon():
     for side, bx in ((-1, x0), (1, x1)):
         d.polygon([(bx + side * reach, y0 + drop), (bx - side * under, y0 + drop), (bx - side * under, y1 + drop),
                    (bx + side * reach, y1 + drop), (bx + side * notch, my)], fill=tail, outline=edge)
-        for y in (y0 + drop + 8, y1 + drop - 8):
-            d.line([(bx + side * (reach - 10), y), (bx + side * 4, y)], fill=(214, 164, 60), width=3)
     for side, bx in ((-1, x0), (1, x1)):
         d.polygon([(bx, y1 - 3), (bx - side * under, y1 - 3), (bx - side * under, y1 + drop)], fill=fold, outline=edge)
     d.rounded_rectangle((x0, y0, x1, y1), 16, fill=band, outline=edge, width=5, corners=(True, True, False, False))
     d.line((x0 + 20, y0 + 12, x1 - 20, y0 + 12), fill=light, width=4)
-    d.line((x0 + 16, y1 - 10, x1 - 16, y1 - 10), fill=(236, 186, 70), width=4)
     for x in (x0 + 24, x1 - 24):
         d.ellipse((x - 6, (y0 + y1) / 2 - 6, x + 6, (y0 + y1) / 2 + 6), fill=(236, 186, 70), outline=edge)
     return lay
@@ -243,7 +240,7 @@ def main():
     vignette()
     # the ribbon (its words are the game's)
     save('Ribbon', ribbon())
-    box_text('Title', (W / 2 - 280, 24, W / 2 + 280, 112))
+    box_text('Title', (W / 2 - 280, 20, W / 2 + 280, 104))
     # the gilt frame with its hole for the theme's picture, its brass plate, the seals' shelf
     lay = c.layer()
     lay = c.shadowed(lay, (PX0 - 24, PY0 - 24, PX0 + PW + 24, PY0 + PH + 24), 8, 16, 160, (6, 14))

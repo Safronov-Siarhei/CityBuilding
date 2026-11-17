@@ -19,6 +19,7 @@ import invasion_hall_art as a  # noqa: E402
 from menu_shop_mockup import W, H, R, INK, CREAM, GOLD, GOLD_D, text, put, crystal, glow, font  # noqa: E402
 
 OUT = R + 'Design/ui/'
+SCRATCH = os.environ.get('TEMP', '/tmp').replace('\\', '/') + '/'
 SHOT = R + 'playtest_shots/inv_hall.png'
 PURPLE, PURPLE_D = (132, 58, 182), (44, 12, 70)
 LEFT, RIGHT = W / 2 - 400, W / 2 + 400
@@ -104,7 +105,15 @@ def medallion(img, cx):
 
 def hall_mockup():
     img = Image.open(SHOT).convert('RGBA')
-    murk(img, (290, 528, 1630, 1080))
+    murk(img, (290, 522, 1630, 1080))
+    a.OUT, keep = SCRATCH, a.OUT
+    a.BANNERS, old = [(LEFT, None), (RIGHT, None)], a.BANNERS
+    a.layout['pieces'] = []
+    a.beam()
+    a.OUT, a.BANNERS = keep, old
+    r = a.layout['pieces'][-1]['rect']
+    beam = Image.open(SCRATCH + 'InvHall_Beam.png').convert('RGBA')
+    img.alpha_composite(beam.crop((max(0, -int(r[0])), 0, max(0, -int(r[0])) + W, beam.height)), (0, int(r[1])))
     # the two banners, wider apart: the day picked (big), the week small
     for cx, col, big, title, pts in ((LEFT, (178, 44, 36), True, 'День', '4 120'), (RIGHT, (46, 84, 170), False, 'Неделя', '10 190')):
         size = a.BIG if big else a.SMALL
@@ -137,6 +146,9 @@ def hall_mockup():
             text(d, (cx, T + 140), 'нажми, чтобы открыть', 22, stroke=3, stroke_fill=dark, heavy=False)
     medallion(img, W / 2)
     fight(img)
+    # the title's ribbon as it now is (the shot has the old one)
+    img.alpha_composite(a.ribbon())
+    text(ImageDraw.Draw(img), (W / 2, 64), 'Нашествие', 58, stroke=5, stroke_fill=PURPLE_D)
     img.convert('RGB').save(OUT + 'InvasionRating_Hall.png')
 
 
@@ -168,28 +180,35 @@ def window_mockup():
     rib = rib.crop(rib.getbbox())
     put(img, rib, (W / 2, box[1] - 4))
     d = ImageDraw.Draw(img)
-    text(d, (W / 2, box[1] - 10), 'Доска славы', 50, stroke=5, stroke_fill=PURPLE_D)
+    text(d, (W / 2, box[1] - 4 - (rib.height / 2 - 42)), 'Доска славы', 50, stroke=5, stroke_fill=PURPLE_D)
     c.round_button(img, (box[2] - 18, box[1] + 18), 40, '✕' if False else 'x')
     # the tabs and the timer
     tabs = (('День', False), ('Неделя', True))
     for i, (name, on) in enumerate(tabs):
         x = inner[0] + 150 + i * 250
         y0 = inner[1] - 64
-        d.rounded_rectangle((x - 110, y0, x + 110, y0 + 70), 18, fill=(46, 84, 170) if on else (110, 66, 30), outline=INK, width=4,
-                            corners=(True, True, False, False))
-        text(d, (x, y0 + 34), name, 34, stroke=4, stroke_fill=(16, 30, 80) if on else INK)
+        if on:
+            d.rounded_rectangle((x - 110, y0, x + 110, y0 + 72), 18, fill=c.PARCH, outline=(150, 104, 40), width=4,
+                                corners=(True, True, False, False))
+            d.rectangle((x - 106, y0 + 40, x + 106, y0 + 80), fill=c.PARCH)
+            text(d, (x, y0 + 34), name, 34, fill=(90, 56, 24), stroke=0)
+        else:
+            d.rounded_rectangle((x - 110, y0 + 6, x + 110, y0 + 66), 18, fill=(110, 66, 30), outline=INK, width=4,
+                                corners=(True, True, False, False))
+            text(d, (x, y0 + 36), name, 32, stroke=4)
     text(d, (inner[2] - 40, inner[1] - 30), 'Неделя закончится через 2 д 5 ч', 28, fill=CREAM, stroke=4, anchor='rm', heavy=False)
     # the podium: the top three with their crowns, points and prizes
     ink = (90, 56, 24)
     lx0, lx1 = inner[0] + 30, inner[0] + 900
-    pod_cx, base = (lx0 + lx1) / 2, inner[1] + 320
-    places = ((2, 'Мира_Ветер', '18 940', '300', (190, 196, 206), 104), (1, 'КорольЛев', '21 360', '500', (236, 186, 70), 140),
-              (3, 'Grimbold', '17 205', '300', (200, 130, 70), 80))
+    pod_cx, base = (lx0 + lx1) / 2, inner[1] + 336
+    places = ((2, 'Мира_Ветер', '18 940', '300', (190, 196, 206), 122), (1, 'КорольЛев', '21 360', '500', (236, 186, 70), 156),
+              (3, 'Grimbold', '17 205', '300', (200, 130, 70), 104))
     for i, (place, name, pts, prize, col, h) in enumerate(places):
         x = pod_cx + (i - 1) * 270
         d.rounded_rectangle((x - 110, base - h, x + 110, base), 12, fill=col, outline=INK, width=4)
-        text(d, (x, base - h + 34), str(place), 46, stroke=4)
-        gem_amount(img, d, (x + 34, base - 26), prize, 26, anchor_right=False, fill=CREAM)
+        text(d, (x, base - h + 32), str(place), 46, stroke=4)
+        tw = d.textlength(prize, font=font(26))
+        gem_amount(img, d, (x - (tw + 8 + 34) / 2, base - 28), prize, 26, anchor_right=False, fill=CREAM)
         d = ImageDraw.Draw(img)
         top = base - h - 12
         d.ellipse((x - 46, top - 96, x + 46, top - 4), fill=(230, 214, 180), outline=col, width=6)
