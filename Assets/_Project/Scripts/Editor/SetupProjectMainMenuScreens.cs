@@ -651,8 +651,29 @@ namespace CityBuilder.EditorTools
             // «В бой», the crystals, «?», the corners, the King and the Queen at the sides
             var buttonBox = HallFind(layout.texts, "Button");
             var fightAt = buttonBox != null ? new Vector2((buttonBox.rect[0] + buttonBox.rect[2]) * 0.5f - 960f, 540f - (buttonBox.rect[1] + buttonBox.rect[3]) * 0.5f) : new Vector2(0f, -480f);
+            // «В бой»: crossed swords at both ends, a glow behind, the whole of it beating (the user, 2026-11-17:
+            // «добавь мечи + эффект пульсации, чтобы игроку хотелось нажать»)
+            var fightGlow = CreateImage(screen, "RunGlow", new Color(1f, 0.82f, 0.4f, 0.4f));
+            fightGlow.sprite = MenuArt("InvHall_ButtonGlow");
+            fightGlow.raycastTarget = false;
+            Anchor(fightGlow.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), fightAt, new Vector2(640f, 230f));
             var fight = MenuTextButton(screen, "RunButton", "button", "#invasion_fight", HudInk.OnButton, fightAt, new Vector2(480f, 96f), 52);
             UnityEventTools.AddPersistentListener(fight.onClick, controller.StartInvasion);
+            var swords = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/Swords.png");
+            foreach (var side in new[] { -1f, 1f })
+            {
+                if (swords == null) break;
+                var sword = CreateImage(fight.transform, side < 0 ? "SwordsLeft" : "SwordsRight", new Color(0.33f, 0.19f, 0.07f));
+                sword.sprite = swords;
+                sword.preserveAspect = true;
+                sword.raycastTarget = false;
+                Anchor(sword.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(side * 158f, 4f), new Vector2(66f, 66f));
+                sword.rectTransform.localScale = new Vector3(side, 1f, 1f);
+            }
+            var pulse = fight.gameObject.AddComponent<ButtonPulse>();
+            var pso = new SerializedObject(pulse);
+            pso.FindProperty("glow").objectReferenceValue = fightGlow;
+            pso.ApplyModifiedPropertiesWithoutUndo();
             foreach (var (hero, anchor, x) in new[] { ("King", 0f, 185f), ("Queen", 1f, -185f) })
             {
                 var art = MenuArt($"Peek_{hero}");
@@ -664,12 +685,20 @@ namespace CityBuilder.EditorTools
                 Anchor(figure.rectTransform, new Vector2(anchor, 0f), new Vector2(0.5f, 0f), new Vector2(x, -20f), new Vector2(560f * art.rect.width / art.rect.height, 560f));
             }
             // the crystals as the game shows them: the number, the crystal after it (the user, 2026-11-17)
-            var plaque = MenuImage(screen, "Crystals", "plaque", new Vector2(640f, 470f), new Vector2(210f, 80f));
-            plaque.raycastTarget = false;
-            var crystalsText = MenuLabel(plaque.transform, "Number", null, 42, new Vector2(-30f, 3f), new Vector2(120f, 60f), HudInk.OnMenuPlaque, bold: true, align: TextAnchor.MiddleRight);
-            Gem(plaque.transform, new Vector2(62f, 3f), 58f);
-            var info = MenuRoundButton(screen, "InfoButton", "round", "Info", HudInk.OnRound, 92f, 0.5f);
-            Anchor((RectTransform)info.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(470f, 470f), new Vector2(92f, 92f));
+            // no plate behind it (the user, the same day): the number and the crystal, left of the settings
+            var crystals = new GameObject("Crystals", typeof(RectTransform));
+            crystals.transform.SetParent(screen, false);
+            Anchor((RectTransform)crystals.transform, new Vector2(1f, 1f), new Vector2(1f, 0.5f),
+                new Vector2(-(CornerInset + CornerButton * 0.5f + 24f), -CornerInset), new Vector2(240f, 80f));
+            var crystalsText = HallLabel(crystals.transform, "Number", null, 46, true, TextAnchor.MiddleRight);
+            crystalsText.color = cream;
+            Anchor(crystalsText.rectTransform, new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-70f, 2f), new Vector2(170f, 64f));
+            var rim = crystalsText.gameObject.AddComponent<Outline>();
+            rim.effectColor = new Color(0.16f, 0.08f, 0.03f);
+            rim.effectDistance = new Vector2(2.5f, -2.5f);
+            Gem(crystals.transform, new Vector2(85f, 2f), 62f);
+            // «!» under the settings, as big (the user, the same day)
+            var info = Corner(screen, "InfoButton", "Info", new Vector2(1f, 1f), new Vector2(-CornerInset, -CornerInset - CornerButton - 20f), CornerButton);
             UnityEventTools.AddIntPersistentListener(info.onClick, controller.ShowInfo, (int)GameMode.Invasion);
             var backButton = Corner(screen, "BackButton", "Back", new Vector2(0f, 1f), new Vector2(CornerInset, -CornerInset), CornerButton);
             settings = Corner(screen, "SettingsButton", "Settings", new Vector2(1f, 1f), new Vector2(-CornerInset, -CornerInset), CornerButton);

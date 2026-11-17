@@ -68,33 +68,27 @@ def masked(base, paint, mask):
 
 
 def ribbon():
-    """The title's ribbon: a band, its two notched tails folded BEHIND it and lower, the fold's dark triangle."""
+    """The title's ribbon, built as the plague and fire banners' (Tools/ui/plague_banner_art.py, the user 2026-11-17:
+    «посмотри как это сделано на баннерах для чумы и пожаров»): the tails lie behind and lower, each reaching under
+    the band; the fold is a dark triangle from the band's square bottom corner inward and down to the tail; the
+    band's top corners only are rounded."""
     lay = c.layer()
     d = ImageDraw.Draw(lay)
-    band, tail, fold, edge = (132, 58, 182), (98, 38, 140), (54, 16, 84), (44, 12, 70)
+    band, tail, fold, edge, light = (132, 58, 182), (98, 38, 140), (54, 16, 84), (44, 12, 70), (176, 112, 220)
     x0, x1, y0, y1 = W / 2 - 300, W / 2 + 300, 22, 106
-    drop, reach, notch = 26, 130, 34
+    drop, under, reach, notch = 28, 34, 112, 60
+    my = (y0 + y1) / 2 + drop
     for side, bx in ((-1, x0), (1, x1)):
-        out = bx + side * reach
-        inner = bx - side * 46
-        d.polygon([(inner, y0 + drop), (out, y0 + drop), (out - side * notch, (y0 + y1) / 2 + drop), (out, y1 + drop), (inner, y1 + drop)],
-                  fill=tail, outline=edge)
+        d.polygon([(bx + side * reach, y0 + drop), (bx - side * under, y0 + drop), (bx - side * under, y1 + drop),
+                   (bx + side * reach, y1 + drop), (bx + side * notch, my)], fill=tail, outline=edge)
         for y in (y0 + drop + 8, y1 + drop - 8):
-            d.line([(out - side * 8, y), (bx + side * 4, y)], fill=(236, 186, 70), width=3)
-        d.polygon([(bx, y1), (bx, y1 + drop), (bx - side * 46, y1 + drop)], fill=fold, outline=edge)
-    body = c.layer()
-    bd = ImageDraw.Draw(body)
-    for k in range(int(y1 - y0)):
-        t = k / (y1 - y0)
-        bd.line((x0, y0 + k, x1, y0 + k), fill=shade(band, 1.18 - 0.36 * t) + (255,))
-    m = Image.new('L', (W, H), 0)
-    ImageDraw.Draw(m).rounded_rectangle((x0, y0, x1, y1), 8, fill=255)
-    lay = masked(lay, body, m)
-    d = ImageDraw.Draw(lay)
-    d.rounded_rectangle((x0, y0, x1, y1), 8, outline=edge, width=4)
-    for y in (y0 + 9, y1 - 9):
-        d.line((x0 + 14, y, x1 - 14, y), fill=(236, 186, 70), width=4)
-    for x in (x0 + 22, x1 - 22):
+            d.line([(bx + side * (reach - 10), y), (bx + side * 4, y)], fill=(214, 164, 60), width=3)
+    for side, bx in ((-1, x0), (1, x1)):
+        d.polygon([(bx, y1 - 3), (bx - side * under, y1 - 3), (bx - side * under, y1 + drop)], fill=fold, outline=edge)
+    d.rounded_rectangle((x0, y0, x1, y1), 16, fill=band, outline=edge, width=5, corners=(True, True, False, False))
+    d.line((x0 + 20, y0 + 12, x1 - 20, y0 + 12), fill=light, width=4)
+    d.line((x0 + 16, y1 - 10, x1 - 16, y1 - 10), fill=(236, 186, 70), width=4)
+    for x in (x0 + 24, x1 - 24):
         d.ellipse((x - 6, (y0 + y1) / 2 - 6, x + 6, (y0 + y1) / 2 + 6), fill=(236, 186, 70), outline=edge)
     return lay
 
@@ -323,6 +317,12 @@ def main():
     bb = lay.getbbox()
     lay.crop(bb).save(OUT + 'InvHall_YouRow.png', optimize=True)
     box_text('Button', BUTTON)
+    # the soft gold glow behind «В бой» (ButtonPulse beats its alpha), white: the game tints it
+    g = Image.new('RGBA', (640, 230), (255, 255, 255, 0))
+    m = Image.new('L', (640, 230), 0)
+    ImageDraw.Draw(m).rounded_rectangle((80, 66, 560, 164), 48, fill=255)
+    g.putalpha(m.filter(ImageFilter.GaussianBlur(28)))
+    g.save(OUT + 'InvHall_ButtonGlow.png', optimize=True)
     for side, x in (('King', 185), ('Queen', W - 185)):
         point(side, (x, H + 20))
     with open(OUT + 'InvHall_layout.json', 'w', encoding='utf-8') as f:
