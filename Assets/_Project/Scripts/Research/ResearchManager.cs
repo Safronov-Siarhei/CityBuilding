@@ -402,6 +402,10 @@ namespace CityBuilder.Research
         // a window holding dozens of rows.
         private readonly List<ResourceAmount> _coinCost = new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Coins, amount = 0 } };
 
+        /// <summary>What starting this research costs in coins, as a cost list (the shortage offer reads it).</summary>
+        public List<ResourceAmount> CoinCostOf(ResearchTopic topic) =>
+            topic == null ? null : new List<ResourceAmount> { new ResourceAmount { type = ResourceType.Coins, amount = topic.Coins } };
+
         private List<ResourceAmount> CoinCost(int coins)
         {
             _coinCost[0].amount = coins;

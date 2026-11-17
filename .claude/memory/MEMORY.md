@@ -97,4 +97,3 @@
 - [Online lobby mode idea (2026-11-15)](project_online_lobby_idea.md) — PARKED: network mode up to 4 players, own lobby, join by lobby code.
 - [Campaign support banner rule](feedback_campaign_support_banner.md) — every new campaign level calls SupportOfferWindow.ShowAfterWin on its win (from level 2).
 - [Piggy bank (2026-11-16)](project_piggy_bank.md) — «Копилка» BUILT 2026-11-16 (not seen): button, window, shatter, 40 tasks/8 h; card piggy-bank.md.
-- [Pending 2026-11-17](project_pending_2026_11_17.md) — 4 queued, not built: crystal fly-to-bar, Lab staffing bug, Lab coin offer, instant build 1 crystal.

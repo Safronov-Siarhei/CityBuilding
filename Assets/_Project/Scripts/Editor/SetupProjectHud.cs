@@ -199,6 +199,7 @@ namespace CityBuilder.EditorTools
                 new[] { "PortraitGnomeMiner", "PortraitGnomeCrossbow", "PortraitGnomeGuardian" }, iconLibrary);
 
             BuildLighthouseButton(row.transform, iconLibrary);
+            BuildInstantBuildButton(row.transform);
 
             var button = CreateGlyphButton(row.transform, "BuildingDetailsButton", "round", HudInk.OnRound, null, null, 128f);
             var icon = button.transform.Find("Icon");
@@ -677,6 +678,32 @@ namespace CityBuilder.EditorTools
             var so = new SerializedObject(bar);
             so.FindProperty("button").objectReferenceValue = button.gameObject;
             so.FindProperty("icon").objectReferenceValue = button.transform.Find("Icon").GetComponent<Image>();
+            so.FindProperty("price").objectReferenceValue = amount;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            UnityEventTools.AddPersistentListener(button.onClick, bar.Tap);
+            button.gameObject.SetActive(false);
+        }
+
+        /// <summary>«Построить сразу» (the user, 2026-11-17): a crystal and its price in the same round button, left of the «!».</summary>
+        private static void BuildInstantBuildButton(Transform row)
+        {
+            var crystal = AssetDatabase.LoadAssetAtPath<Sprite>(UiTextureImport.IconsFolder + "/Res_UpgradeCrystal.png");
+            var button = CreateGlyphButton(row, "InstantBuildButton", "round", HudInk.Keep, null, crystal, 128f, 0.6f);
+            ((RectTransform)button.transform.Find("Icon")).anchoredPosition = new Vector2(-10f, 8f);
+            var amount = CreateText(button.transform, "Amount", "1", 52, new Vector2(30f, -26f), new Vector2(70f, 60f));
+            amount.font = UiTheme.Heavy;
+            amount.alignment = TextAnchor.MiddleCenter;
+            amount.raycastTarget = false;
+            amount.color = new Color(1f, 0.97f, 0.86f);
+            var outline = amount.gameObject.AddComponent<Outline>();
+            outline.effectColor = new Color(0.33f, 0.2f, 0.09f);
+            outline.effectDistance = new Vector2(3f, -3f);
+
+            var go = new GameObject("InstantBuildBar");
+            go.transform.SetParent(row.parent, false);
+            var bar = go.AddComponent<InstantBuildBar>();
+            var so = new SerializedObject(bar);
+            so.FindProperty("button").objectReferenceValue = button.gameObject;
             so.FindProperty("price").objectReferenceValue = amount;
             so.ApplyModifiedPropertiesWithoutUndo();
             UnityEventTools.AddPersistentListener(button.onClick, bar.Tap);

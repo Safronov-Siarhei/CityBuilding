@@ -41,9 +41,18 @@ namespace CityBuilder.Citizens
         /// from then on it wants what the player left it (WorkersCapped), until it is filled again.
         /// Any other workplace (the Laboratory, the healer) wants what the player gave it.
         /// </summary>
-        public int WantedWorkers => AutoStaffed && !WorkersCapped ? MaxWorkers : _wanted;
+        public int WantedWorkers => AutoStaffed && !WorkersCapped ? MaxWorkers
+            : IsLaboratory && !_scientistsSetByHand ? Mathf.Max(1, _wanted) : _wanted;
 
         private int _wanted;
+
+        /// <summary>
+        /// The Laboratory is never staffed by itself, not even in the sandbox (the user, 2026-11-17: built at the
+        /// start it took all five citizens as scientists and still showed «no workers» -- it has 10 places). It
+        /// wants ONE scientist until the player sets the count with -/+; scientists are research slots.
+        /// </summary>
+        private bool IsLaboratory => Data != null && Data.buildingName == Research.ResearchManager.LaboratoryBuildingId;
+        private bool _scientistsSetByHand;
 
         /// <summary>The player took a worker off this self-staffing building: it is no longer filled by itself.</summary>
         public bool WorkersCapped { get; private set; }
@@ -53,6 +62,7 @@ namespace CityBuilder.Citizens
         /// player's own count first: lowered by hand it is filled only up to that, set to 0 never.
         public bool AutoStaffed =>
             Data != null && !Invasion.InvasionMode.IsActive
+            && !IsLaboratory
             && (Data.category == BuildingCategory.Production || Data.category == BuildingCategory.Food || Infirmary.Active);
 
         /// <summary>Wanting hands it does not have: the worker-shortage mark goes up over it (WorkerShortageMarks).</summary>
@@ -575,6 +585,7 @@ namespace CityBuilder.Citizens
         {
             if (!LayOffWorker()) return false;
             _wanted = AssignedWorkers;
+            _scientistsSetByHand = true;
             if (AutoStaffed) WorkersCapped = true;
             return true;
         }
@@ -594,6 +605,7 @@ namespace CityBuilder.Citizens
         {
             AssignedWorkers = Mathf.Clamp(count, 0, MaxWorkers);
             _wanted = AssignedWorkers;
+            _scientistsSetByHand = true;   // a saved count is the player's
             WorkersCapped = capped;
             CitizenManager.Instance?.NotifyWorkersAssignedBulk(AssignedWorkers);
             OnAssignedWorkersChanged?.Invoke();

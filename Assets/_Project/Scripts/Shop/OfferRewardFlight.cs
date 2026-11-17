@@ -25,10 +25,36 @@ namespace CityBuilder.Shop
         private static readonly Color PlusRim = new Color(0.33f, 0.2f, 0.09f);
 
         private RectTransform _root;
+        private bool _liveHud;
+        private static OfferRewardFlight _world;
 
         private void Awake()
         {
             _root = (RectTransform)transform;
+        }
+
+        /// <summary>
+        /// The same flight out of the play view into the LIVE HUD (the user, 2026-11-17: the crystals taken from
+        /// the Рудник fly into the crystal counter): from a bubble over the world to the top bar's chip
+        /// (`Icon_&lt;resource&gt;`), on its own overlay canvas over the HUD. Made once a scene.
+        /// </summary>
+        public static void FromWorld(Sprite icon, string resource, int amount, RectTransform from)
+        {
+            if (icon == null || from == null || amount <= 0) return;
+            if (_world == null)
+            {
+                var go = new GameObject("RewardFlightCanvas", typeof(Canvas), typeof(CanvasScaler));
+                var canvas = go.GetComponent<Canvas>();
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                canvas.sortingOrder = 40;
+                var scaler = go.GetComponent<CanvasScaler>();
+                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+                scaler.referenceResolution = new Vector2(1920f, 1080f);
+                scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
+                _world = go.AddComponent<OfferRewardFlight>();
+                _world._liveHud = true;
+            }
+            _world.Fly(icon, resource, amount, from, null, 0f);
         }
 
         /// <summary>One good: `amount` of `resource` from `from` (a strip's icon) to its place; `counter` is the window's crystal counter.</summary>
@@ -45,13 +71,15 @@ namespace CityBuilder.Shop
 
             RectTransform target;
             Image ghost = null;
-            if (resource == "Crystals") target = counter;
+            if (resource == "Crystals" && counter != null) target = counter;
+            else if (_liveHud) target = Find(resource);
             else
             {
                 var hud = Find(resource);
                 ghost = hud != null ? Ghost(hud) : null;
                 target = ghost != null ? ghost.rectTransform : counter;
             }
+            if (target == null) yield break;
             var end = LocalCentre(target);
 
             var flyers = new List<RectTransform>();

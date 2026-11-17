@@ -531,3 +531,15 @@ Not checked against the live Play Console -- re-read Google's pages before actin
   Open, for a lawyer/accountant: which entity can take rubles (ЮKassa/CloudPayments etc. want a
   Russian entity), sanctions law of our company's country, taxes. Alternative: a separate RuStore
   build with its own payments; rewarded ads as a fallback income there.
+
+## Crystals fly from the mine (2026-11-17, the user) -- BUILT, not seen
+- A tap on the mine's bubble: the crystals fly into the top bar's crystal chip (`Icon_Crystals`) -- the shop's
+  `OfferRewardFlight`, now also `OfferRewardFlight.FromWorld(icon, resource, amount, fromRect)` on its own overlay
+  canvas (sorting 40) into the LIVE HUD. Hooked in `CrystalMines` (bubble onClick).
+
+## Instant build for crystals (2026-11-17, the user) -- BUILT, not seen
+- A held building of the player's under construction (new or upgrade): a round button with a crystal and «1» LEFT of
+  the «!» in the focus row (the row's layout centres both). Tap: pays `instant_build_crystals` (economy, 1; sheet
+  «Здания и постройки» row 45) and `ConstructionSite.Finish()`; short of crystals -> `OfferShopWindow.Show()`.
+  Every building; hidden in the tutorial and for bot buildings. `UI/InstantBuildBar.cs`, built by
+  `SetupProjectHud.BuildInstantBuildButton`.

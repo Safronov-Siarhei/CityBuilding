@@ -61,3 +61,11 @@ Save: `GameSaveData.runningResearch` (list); the old single `currentResearch*` f
 ## Traps
 Keys `#research_start/_cost/_cancel/_lab_state/_empty_lab_level` are no longer shown (kept: LocalizationTests
 list them). Ships go into the Армия tab later (3 levels, see archipelago memory).
+
+## Fixes 2026-11-17 (the user's playtest) -- BUILT, not seen
+- The Lab is NEVER auto-staffed (was: the sandbox's «every workplace» rule filled its 10 places -- all 5 citizens
+  became scientists and the «no workers» mark stayed, 5 < 10). It wants ONE scientist until the player uses -/+
+  (`ProductionBuilding.IsLaboratory`, `_scientistsSetByHand`; a saved count counts as set by hand).
+- Short of coins: starting a research (blocker `#research_blocked_coins`) and the Lab's own upgrade open the
+  «Не хватает ресурсов» offer (`OfferShop.ShortageFor` -> `OfferShopWindow.ShowShortage`: crystals or an ad), like a
+  building's upgrade. `ResearchManager.CoinCostOf(topic)`.
