@@ -423,7 +423,7 @@ namespace CityBuilder.Campaign
             }
         }
 
-        [Serializable] private class PropsFile { public float search; public FeaturedProp[] featured, houses; }
+        [Serializable] private class PropsFile { public float search; public FeaturedProp[] featured, houses, trees; }
         [Serializable] private class FeaturedProp { public string id; public float x, z, yaw; }
 
         private bool PutProp(string id, Vector2 at, float radius, float yaw)
@@ -471,6 +471,20 @@ namespace CityBuilder.Campaign
                             done = PlaceFacing(f.id, want + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r, face, 0f);
                         }
                     if (!done) Debug.Log($"[OpeningVillage] no room for house {f.id} at {want}");
+                }
+            // the game's own trees by the church, where the church model's kit cones stood (the user,
+            // 2026-11-17: «у церкви заменить деревья на наши обычные»)
+            if (file.trees != null && trees.Length > 0)
+                foreach (var f in file.trees)
+                {
+                    var at = new Vector2(f.x, f.z);
+                    var model = trees[_rnd.Next(trees.Length)];
+                    var go = Instantiate(model, _root);
+                    go.name = "Tree";
+                    go.transform.SetPositionAndRotation(new Vector3(at.x, 0f, at.y), Quaternion.Euler(0f, f.yaw, 0f) * model.transform.rotation);
+                    go.transform.localScale = model.transform.localScale * BuildingScale;
+                    Reserve(at, 0.7f);
+                    _trunks.Add(go.transform);
                 }
             foreach (var f in file.featured)
             {

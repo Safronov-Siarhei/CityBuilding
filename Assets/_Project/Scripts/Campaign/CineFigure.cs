@@ -34,12 +34,20 @@ namespace CityBuilder.Campaign
         /// <summary>The main menu on the Low graphics tier: the figures cast no shadows.</summary>
         public static bool NoShadows;
 
+        /// <summary>The main menu (the user, 2026-11-17: «убери мешок на спине ардана»): renderers whose
+        /// name starts with one of these are switched off.</summary>
+        public static string[] HideParts;
+
         public void Init(CineClips set)
         {
             clips = set;
             _bones = null;
             if (!(KeepSkinned && Application.isPlaying)) Rigidify();
             CineTwoSided.Apply(gameObject);
+            if (HideParts != null)
+                foreach (var r in GetComponentsInChildren<Renderer>(true))
+                    foreach (var h in HideParts)
+                        if (r.name.StartsWith(h)) r.enabled = false;
             if (NoShadows)
                 foreach (var r in GetComponentsInChildren<Renderer>(true)) r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }

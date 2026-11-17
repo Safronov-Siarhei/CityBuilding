@@ -173,8 +173,8 @@ def build(with_bell=True):
     for x in (-0.55, 0.55):
         b.box(x - 0.14, x + 0.14, -1.42, -1.3, 0, 0.03, 'wood_mid')
         d.flowers(b, x, -1.36)
-    d.tree(b, -1.0, -1.05)
-    d.tree(b, 1.0, -0.9, r=0.2)
+    # its two trees are the game's own now, set by OpeningVillage at these spots x SET_SCALE
+    # (Campaign/OpeningProps.json "trees"; the user, 2026-11-17)
     for x, y in ((-0.95, 0.3), (0.98, 1.0), (-0.9, 1.2)):
         d.bush(b, x, y, r=0.1)
     return b

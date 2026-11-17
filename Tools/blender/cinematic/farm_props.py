@@ -34,12 +34,15 @@ def haystack():
     """A domed haystack round a pole, the hay in rough layers, a little fallen hay at its foot."""
     b = Builder()
     rnd = random.Random(3)
-    b.box(-0.012, 0.012, -0.012, 0.012, 0, 0.62, 'wood_mid')                        # the pole
+    # a blob is a double cone: its widest ring is 0.4 of its height up, so the mound is sunk until
+    # that ring meets the ground (the user, 2026-11-17: on its point it looked hung in the air)
+    sink = 0.15
+    b.box(-0.012, 0.012, -0.012, 0.012, 0, 0.62 - sink, 'wood_mid')                 # the pole
     # a round-shouldered mound: a wide body, a rounder top, a straw cap tied at the pole
-    b.blob(0, 0, 0.0, 0.3, 0.42, 'hay', sides=10)
-    b.blob(0, 0, 0.12, 0.25, 0.4, 'roof_straw', sides=10)
-    b.blob(0, 0, 0.3, 0.14, 0.26, 'hay', sides=8)
-    b.cylinder(0, 0, 0.47, 0.5, 0.035, 'roof_straw_dark', sides=6)
+    b.blob(0, 0, 0.0 - sink, 0.3, 0.42, 'hay', sides=10)
+    b.blob(0, 0, 0.12 - sink, 0.25, 0.4, 'roof_straw', sides=10)
+    b.blob(0, 0, 0.3 - sink, 0.14, 0.26, 'hay', sides=8)
+    b.cylinder(0, 0, 0.47 - sink, 0.5 - sink, 0.035, 'roof_straw_dark', sides=6)
     for k in range(7):
         a = rnd.uniform(0, 6.28)
         rr = rnd.uniform(0.27, 0.36)

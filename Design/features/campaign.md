@@ -48,7 +48,7 @@
   only back faces (_Cull Front) pushed deeper (`BuildingDetail` `_OffsetFactor/_OffsetUnits`, 0 in
   the game). church.py: nave roof starts at the tower's back wall, belfry `stone_top` U_TOP+0.8
   (ridge was level with the belfry floor) -> bell/priest/rope re-exported, bell shot camera +0.288.
-  Bushes along road verges. FARM PROPS `Tools/blender/cinematic/farm_props.py` (CineHaystack,
+  Bushes along road verges. (2026-11-17, the menu playtest: CineHaystack sunk 0.15 -- the kit blob's point stood on the ground with the widest ring in the air; the church model's kit cone trees replaced by the game's trees from OpeningProps.json "trees".) FARM PROPS `Tools/blender/cinematic/farm_props.py` (CineHaystack,
   CineHayBales, CinePigPen, CineHenYard, CineWashing from approved pieces): renders SENT FOR
   APPROVAL, not exported, not in the film.
 - **v10 (2026-11-11):** ground layers each at their own height (OpeningVillage FieldY 0.004 < RingY

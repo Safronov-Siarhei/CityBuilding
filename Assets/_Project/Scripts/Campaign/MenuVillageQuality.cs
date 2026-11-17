@@ -8,8 +8,10 @@ namespace CityBuilder.Campaign
     /// The editor census found ~1 600 draws and 283 000 triangles in the menu's view, two thirds of the
     /// draws the folk -- each figure a renderer per body part, each renderer with a back-face twin.
     /// Here, for the menu only (the film and the missions keep theirs):
-    ///   * a figure keeps its one skinned mesh (CineFigure.KeepSkinned) and nothing gets back-face twins
-    ///     (CineTwoSided.Off) -- the menu's camera stays far and high;
+    ///   * a figure keeps its one skinned mesh (CineFigure.KeepSkinned) -- a skinned mesh gets no
+    ///     back-face twins either. The houses keep theirs: without them the roofs showed the sky
+    ///     from below and flickered (the user, 2026-11-17);
+    ///   * Ардан's sack is hidden (the user);
     ///   * on the Low graphics tier the figures cast no shadows and only a share of the folk come out;
     ///   * the camera draws only so far, a haze hiding that edge (the sheet's menu_* keys).
     /// Set in Awake, before anything is built or spawned; undone when the menu goes.
@@ -23,8 +25,8 @@ namespace CityBuilder.Campaign
         {
             var low = GraphicsQuality.Effective == GraphicsTier.Low;
             CineFigure.KeepSkinned = true;
-            CineTwoSided.Off = true;
             CineFigure.NoShadows = low;
+            CineFigure.HideParts = new[] { "CineArdanSack" };
             var config = BalanceConfig.Instance;
             if (config == null) return;
             if (life != null) life.FolkShare = low ? config.MenuLowFolkShare : 1f;
@@ -36,8 +38,8 @@ namespace CityBuilder.Campaign
         private void OnDestroy()
         {
             CineFigure.KeepSkinned = false;
-            CineTwoSided.Off = false;
             CineFigure.NoShadows = false;
+            CineFigure.HideParts = null;
         }
     }
 }
