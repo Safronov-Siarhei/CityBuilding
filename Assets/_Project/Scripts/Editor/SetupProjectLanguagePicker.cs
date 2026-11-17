@@ -10,15 +10,15 @@ namespace CityBuilder.EditorTools
 {
     /// <summary>
     /// The main menu's language picker (UI/LanguagePicker; the user 2026-11-14, concept v2 approved,
-    /// Design/ui/LanguagePicker_Concept.png): a small parchment pill in the main screen's top-right
-    /// corner and the list it opens. The languages, their own names and flags come from
+    /// Design/ui/LanguagePicker_Concept.png): a round wooden button with the flag beside the settings
+    /// button in the top-left corner (2026-11-17), and the list it opens. The languages, their own names and flags come from
     /// Tools/ui/language_flags.py (UI/Icons/Flags/languages.json + Flag_&lt;code&gt;.png).
     /// </summary>
     public static partial class SetupProject
     {
         private const string FlagsFolder = UiTextureImport.IconsFolder + "/Flags";
-        private static readonly Vector2 PickerPill = new Vector2(244f, 60f);
-        private const float PickerInset = 40f;
+        private const float PickerButton = 150f;   // the settings button's size (SetupProjectMainMenuScreens)
+        private const float PickerGap = 20f;
         private const float PickerRow = 62f;
         private const float PickerPad = 18f;
         private const float PickerListWidth = 318f;
@@ -41,14 +41,19 @@ namespace CityBuilder.EditorTools
             var root = StretchedChild(screen, "LanguagePicker");
             var picker = root.gameObject.AddComponent<LanguagePicker>();
 
-            // ---- the pill: flag, the language's own name, a chevron
-            var pill = MenuImage(root, "Pill", "plaque", Vector2.zero, PickerPill);
-            // top centre (2026-11-16: the piggy bank stands top right)
-            Anchor(pill.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -PickerInset), PickerPill);
+            // ---- the button: the settings' round wooden button with the language's flag in its face, right of the
+            // settings in the top-left corner (the user, 2026-11-17, option A of Design/ui/lang/)
+            var at = new Vector2(CornerInset + PickerButton + PickerGap, -CornerInset);
+            var pill = MenuImage(root, "Pill", "round", Vector2.zero, new Vector2(PickerButton, PickerButton), Image.Type.Simple);
+            pill.preserveAspect = true;
+            Anchor(pill.rectTransform, new Vector2(0f, 1f), new Vector2(0.5f, 0.5f), at, new Vector2(PickerButton, PickerButton));
             var pillButton = pill.gameObject.AddComponent<Button>();
-            var pillFlag = PickerIcon(pill.transform, "Flag", Icon("Flag_en"), new Vector2(18f + 24f, 0f), new Vector2(48f, 32f));
-            var pillName = PickerText(pill.transform, "Name", 26, new Vector2(76f, 0f), new Vector2(PickerPill.x - 76f - 44f, PickerPill.y));
-            var chevron = PickerIcon(pill.transform, "Chevron", Icon("Chevron"), new Vector2(PickerPill.x - 26f, 0f), new Vector2(24f, 24f));
+            pillButton.transition = Selectable.Transition.ColorTint;
+            var pillFlag = CreateImage(pill.transform, "Flag", Color.white);
+            pillFlag.sprite = Icon("Flag_en");
+            pillFlag.preserveAspect = true;
+            pillFlag.raycastTarget = false;
+            Anchor(pillFlag.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 3f), new Vector2(PickerButton * 0.52f, PickerButton * 0.52f));
 
             // ---- the list: a tap outside it closes it
             var list = StretchedChild(root, "List");
@@ -58,7 +63,8 @@ namespace CityBuilder.EditorTools
             outside.transition = Selectable.Transition.None;
             var size = new Vector2(PickerListWidth, PickerPad * 2f + PickerRow * langs.Length);
             var card = MenuImage(list, "Card", "card", Vector2.zero, size);
-            Anchor(card.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -PickerInset - PickerPill.y - 18f), size);
+            // under the button, its left edge under the settings button's
+            Anchor(card.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(CornerInset - PickerButton * 0.5f, at.y - PickerButton * 0.5f - 14f), size);
 
             var codes = new string[langs.Length];
             var names = new string[langs.Length];
@@ -88,8 +94,6 @@ namespace CityBuilder.EditorTools
 
             var so = new SerializedObject(picker);
             so.FindProperty("pillFlag").objectReferenceValue = pillFlag;
-            so.FindProperty("pillName").objectReferenceValue = pillName;
-            so.FindProperty("chevron").objectReferenceValue = chevron.rectTransform;
             so.FindProperty("list").objectReferenceValue = list.gameObject;
             SetArray(so.FindProperty("codes"), codes, (p, v) => p.stringValue = v);
             SetArray(so.FindProperty("names"), names, (p, v) => p.stringValue = v);

@@ -1,6 +1,6 @@
 ---
 name: project-language-picker
-description: Main menu language picker (flag + own name pill, dropdown) BUILT 2026-11-14, base English; languages to add per the reference-market analysis; translations last; CJK waits for a font
+description: Main menu language picker (round flag button right of ⚙ since 2026-11-17, dropdown) BUILT 2026-11-14, base English; languages to add per the reference-market analysis; translations last; CJK waits for a font
 metadata:
   type: project
 ---
@@ -9,6 +9,7 @@ metadata:
 My recommendation: release en ru de fr es pt(BR); then ja ko zh with a CJK font; cheap wave it pl tr id.
 Then the user asked for a main-menu language picker: flag + name pill, dropdown, base English; concept
 v1 «too big», v2 approved and BUILT (not seen). Own language names, not country names.
+2026-11-17: moved to a round flag button right of the settings (option A), size/look of ⚙; the list opens under it.
 Translations are the LAST step (the user) -- untranslated languages read English.
 
 **Why:** release localization planning.

@@ -91,7 +91,7 @@
 - [Sandbox healer v2 (2026-11-13)](project_sandbox_healer_v2.md) — beds instead of radius, 30 s/60 s, manual worker count beats auto; BUILT 2026-11-13, not seen.
 - [Mission 2 playtest 7 + one part (2026-11-13)](project_pending_2026_11_13b_mission2.md) — wall fight BUILT; then ONE 11-min mission BUILT (goals outer gate→inner gate→square, HUD gate bar, wreckers, inner guard), not seen; OPEN: gatehouse doors renders, capital cutscene at 8 min.
 - [Plague + Cemetery (2026-11-13)](project_plague_cemetery.md) — BUILT, not seen: plague per island, banner v2 (skull field, skeletons, «30»+crystal) approved, cemetery + lying skeleton approved and in; banner end gives a 7-min plague shield (plague_shield_sec).
-- [Language picker (2026-11-14)](project_language_picker.md) — main-menu flag+name dropdown BUILT (not seen), base English; language priority list; translations last; CJK waits for a font.
+- [Language picker (2026-11-14, moved 11-17)](project_language_picker.md) — round flag button right of ⚙ + dropdown, base English; language priority list; translations last; CJK waits for a font.
 - [Sandbox fires v2 (2026-11-14)](project_sandbox_fires.md) — BUILT 2026-11-14 (setup green, not seen, no tests): random fires, touch-only spread, torch orcs, thunderstorm, bucket firefighters, island-wide brigade, fire banner + shield.
 - [Model workshop mode idea (2026-11-15)](project_model_editor_idea.md) — PARKED: players make their own building models; first free, then each variant for a special shop currency; base models restorable.
 - [Online lobby mode idea (2026-11-15)](project_online_lobby_idea.md) — PARKED: network mode up to 4 players, own lobby, join by lobby code.

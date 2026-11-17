@@ -148,8 +148,11 @@ Live scene behind the menu unchanged (`MainMenuBackground` etc.). Tests: `MainMe
 `MapPickerTests` (sandbox screen).
 
 ### Language picker (the user, 2026-11-14; concept v2 approved, Design/ui/LanguagePicker_Concept.png) -- BUILT, not seen
-- Main screen, top-right corner: a small parchment pill (244x60: flag, the language's OWN name, chevron);
-  a tap opens a list under it (flag + own name per row, the current one gold with a tick), a tap
+- MOVED 2026-11-17 (the user picked option A of `Design/ui/lang/`: «А — рядом с ⚙»): no pill any more --
+  a round wooden button with the current language's flag, the settings button's size (150) and look,
+  right of ⚙ in the top-left corner (gap 20). The pill had stood top centre, then clashed with the
+  CityCraft logo of main-menu concept 1. Name and chevron are gone (LanguagePicker skips nulls).
+- A tap opens a list under it (left edge under ⚙) (flag + own name per row, the current one gold with a tick), a tap
   outside closes it. Own names, not country names (my proposal in the concept, accepted).
 - Base language English (`Localization.BaseLanguage`): no saved choice -> the phone's language if it is
   in the list, else English. A language with no sheet column yet reads the English text (translations
