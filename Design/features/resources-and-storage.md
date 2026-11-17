@@ -24,8 +24,16 @@
 
 ## What the player sees
 A resource bar at the top showing only resources the settlement has ever met (a chip stays once
-seen, even at 0). Storage ceilings per family; storehouses raise them. A tax control bottom-right
-(«Налог: 10%», − / +) — coins arrive once per game day.
+seen, even at 0). Storage ceilings per family; storehouses raise them. Coins arrive once per game day
+(flat tax, no slider since 2026-11-02 -- see the top note).
+
+## Storage buildings (checked 2026-11-17)
+- In the build menu: Склад `Warehouse` + Большой склад `BigWarehouse` (Materials), Кладовая `Granary` +
+  Большая кладовая `BigGranary` (Food), Сокровищница `Treasury` + Большая сокровищница `BigTreasury`
+  (Valuables). The Big one needs the ordinary one. Levels 1-5 each (`storage_capacity.._5`), sandbox prices
+  in the sheet tab «Песочница: Здания (Склады)», level icons in Design/Reference.md.
+- HIDDEN since the food rework (2026-11-02, `BuildingIds.Hidden`): Амбар `Barn`, `BigBarn` -- all food in the
+  Pantries. The `Grain` family stays in the code.
 
 ## Rules (the user's decisions — don't re-ask)
 - `ResourceType`: Wood, Stone, Food, Gold, Population, Iron, Coal, Coins, Grain, Flour, Bread,
@@ -43,14 +51,13 @@ seen, even at 0). Storage ceilings per family; storehouses raise them. A tax con
 - **Easy start (2026-10-20):** opening stock from the sheet `start_*` (80 wood, 30 stone, 50 food,
   `start_gold`); first levels of the basic buildings cost 30–50 % less (road 1 stone), upgrades keep
   their prices; no raid and no sickness while the town settles in (`settling_in_seconds`, ~7 min).
-- Tax: 0–100 %, `coins_per_citizen_per_day_at_max_tax` × population × rate, per day. Lower tax =
-  happier (`TaxScore = 100 − rate`).
+- Tax: flat `coins_per_citizen_per_day` + Tax House bonus (top note); the old 0–100 % rate no longer changes income.
 
 ## Code
 - `Scripts/Resources/`: `ResourceManager` (store, Add/TrySpend/AddProduced, OnChanged),
   `ResourceStorage` (families, capacity), `ResourceType`, `ResourceNames`, `ResourceDiet`,
   `ResourceAmount`, `ResourceIconLibrary`, `TaxManager`.
-- UI: `UI/ResourceHUDController.cs` (chips, reads its real width), `UI/TaxRateController.cs`,
+- UI: `UI/ResourceHUDController.cs` (chips, reads its real width), `UI/InventoryPanelController.cs`,
   `UI/CostRowBuilder.cs`.
 - Day clock: `Core/GameCalendar.cs` (`day_length_seconds` = 120 s real).
 
