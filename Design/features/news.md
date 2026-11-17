@@ -10,6 +10,7 @@
   news); before that only a red dot on the button.
 - Rewards: sandbox boosters and crystals.
 - The look: concepts first, details discussed after.
+- Button icon: variant 4 «Письмо с печатью» (the user, 2026-11-17).
 
 ## Proposed implementation (my proposal 2026-11-17, agreed in outline)
 - Sheet tab «Новости» -> `Balance/news.csv`, one row = one item: `id, date (YYYY-MM-DD), title_ru, title_en,
@@ -28,4 +29,4 @@
 - `News_Icons.png` -- 8 glyph variants for the button (Tools/ui/news_icon_concepts.py): scroll, scroll with «!», newspaper, sealed letter, herald horn, bell, chronicle book, notice board.
 
 ## Open
-- Which concept; which button icon (1-8); a picture per item or not; whether the in-game Reference/notes feed the news text.
+- Which concept; a picture per item or not; whether the in-game Reference/notes feed the news text.
