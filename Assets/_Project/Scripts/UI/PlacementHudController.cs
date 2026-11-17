@@ -28,6 +28,9 @@ namespace CityBuilder.UI
         [SerializeField] private RectTransform aimMarker;
 
         [SerializeField] private Text statusLabel;
+        // a move's price on the ✓ («Перенести здание», the user 2026-11-17)
+        [SerializeField] private GameObject movePrice;
+        [SerializeField] private Text movePriceText;
         /// <summary>Over the building in hand: the food bonus it would get or give there (the user, 2026-11-10).</summary>
         [SerializeField] private Text bonusLabel;
 
@@ -45,6 +48,9 @@ namespace CityBuilder.UI
             // Confirm belongs to every placement on a touch screen, roads and fences included:
             // each piece is put down on its own tick (the user's call, 2026-10-20).
             SetActive(confirmButton, touchAiming);
+            var moving = touchAiming && buildingPlacer.Moving != null;
+            SetActive(movePrice, moving);
+            if (moving && movePriceText != null) movePriceText.text = BuildingPlacer.MovePrice.ToString();
             SetActive(aimMarker != null ? aimMarker.gameObject : null, touchAiming);
 
             // Rotation is meaningless for a road or a fence -- their shape comes from their

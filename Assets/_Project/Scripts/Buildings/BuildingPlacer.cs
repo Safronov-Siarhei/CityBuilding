@@ -122,6 +122,76 @@ namespace CityBuilder.Buildings
         // the building being put down for nothing (a link of the start chain)
         private static BuildingData _freeNow;
         public bool IsSelecting => _selectedBuilding != null;
+
+        // «Перенести здание» (the user, 2026-11-17; Design/features/building-relocation.md): the building picked up
+        private static BuildingInstance _movingNow;
+        private bool _moveCellsFreed;
+
+        /// <summary>The building being carried to a new spot, or null.</summary>
+        public BuildingInstance Moving => _movingNow;
+
+        public static int MovePrice => BalanceConfig.Instance != null ? BalanceConfig.Instance.MoveBuildingCrystals : 1;
+
+        /// <summary>
+        /// Whether this building may be moved: the sandbox only; the player's own, standing and finished; never the
+        /// Town Hall, nor anything laid piece by piece or tied to its ground -- roads, fences, walls, gates, the moat,
+        /// bridges, water buildings, the Shipyard, mines on their veins (the user, 2026-11-17).
+        /// </summary>
+        public static bool CanBeMoved(BuildingInstance b)
+        {
+            if (b == null || b.Data == null || b.IsBot || b.Site != null || b.CurrentHealth <= 0) return false;
+            if (!StoreLedger.Sandbox || Tutorial.TutorialMode.IsActive) return false;
+            var d = b.Data;
+            if (d.buildingName == BuildingIds.TownHall || d.isRoad || d.keepSelectedAfterPlacement || d.connectsToFences || d.isGate
+                || d.isMoat || d.isCrossing || d.providesWalkableSurface || d.isWaterCategory) return false;
+            if (d.buildingName == Ships.ShipManager.ShipyardId || WallWalk.Concerns(d.buildingName)) return false;
+            return !OreDeposit.KindForBuilding(d.buildingName).HasValue;
+        }
+
+        /// <summary>The «Перенести» button: the building's placement again, ✕ leaves it where it was, ✓ pays and rebuilds it.</summary>
+        public void BeginMove(BuildingInstance building)
+        {
+            if (!CanBeMoved(building) || IsPlacingMandatoryBuilding) return;
+            ClearSelection();
+            _movingNow = building;
+            SelectBuilding(building.Data);
+            if (_selectedBuilding != building.Data)
+            {
+                _movingNow = null;
+                return;
+            }
+            _rotationSteps = building.RotationSteps;
+            // its own cells are free while it is carried: it may land overlapping where it stood
+            GridManager.Instance.SetAreaOccupied(building.OriginCell, building.RotatedFootprint(), false);
+            _moveCellsFreed = true;
+            RefreshTargetCell();
+        }
+
+        private void FinishMove(Vector2Int cell)
+        {
+            var building = _movingNow;
+            if (building == null) return;
+            var price = MovePrice;
+            if (Wallet.UpgradeCrystals < price)
+            {
+                Shop.OfferShopWindow.Show();
+                return;
+            }
+            Wallet.UpgradeCrystals -= price;
+            var footprint = RotatedFootprint(building.Data.footprintSize);
+            var centre = GridManager.Instance.GetFootprintCenterWorld(cell, footprint);
+            _moveCellsFreed = false;   // the old cells stay free: it has left them
+            _movingNow = null;
+            building.MoveTo(cell, _rotationSteps, centre);
+            GridManager.Instance.SetAreaOccupied(cell, footprint, true);
+            // rebuilt in its CURRENT level's time; meanwhile it does not work (a store keeps its goods)
+            ConstructionSite.Begin(building, building.Data.BuildSeconds(building.Level), false, null, 0f, move: true);
+            BuildSound.Placed();
+            var size = GridManager.Instance.CellSize;
+            DustPuff.Spawn(centre, new Vector2(footprint.x * size, footprint.y * size));
+            EventLogManager.Instance?.Log(Localization.Format("#log_moved", building.Data.LocalizedName));
+            ClearSelection();
+        }
         /// <summary>When (Time.unscaledTime) the building in hand was last shown blocked for its cost -- the tutorial offer's
         /// «short of wood or stone» (UI/TutorialOfferBanner).</summary>
         public float ShortOfMaterialsAt { get; private set; } = -1000f;
@@ -147,7 +217,7 @@ namespace CityBuilder.Buildings
 
         /// <summary>What putting a building down costs: the sheet's price, or an Invasion run's (wood, stone and gold).</summary>
         public static List<ResourceAmount> CostOf(BuildingData data) =>
-            data != null && data == _freeNow ? Free
+            data != null && (data == _freeNow || (_movingNow != null && data == _movingNow.Data)) ? Free
             : Invasion.InvasionRules.Active ? Invasion.InvasionRules.BuildCost(data) : data.cost;
         public event Action<BuildingData> OnBuildingPlaced;
 
@@ -403,7 +473,7 @@ namespace CityBuilder.Buildings
             // already hides it (see BuildingCategoryPanel), so this catches the number keys and
             // anything else reaching in from outside.
             // A run has no Laboratory: its nine buildings are open from the start (InvasionRules).
-            if (data != null && data != mandatoryFirstBuilding && !(_chainLink != null && data == _chainLink)
+            if (data != null && data != mandatoryFirstBuilding && !(_chainLink != null && data == _chainLink) && !(_movingNow != null && data == _movingNow.Data)
                 && !(Tutorial.TutorialMode.IsActive ? Tutorial.TutorialRules.IsWanted(data)
                      : Invasion.InvasionRules.Active ? Invasion.InvasionRules.Allows(data)
                                                    : Research.ResearchManager.BuildingUnlocked(data.buildingName))) return;
@@ -461,6 +531,14 @@ namespace CityBuilder.Buildings
             if (cameraController != null) cameraController.InertiaEnabled = true;
             var router = TouchInputRouter.Instance;
             if (router != null) router.SingleDragOwner = DragOwner.Camera;
+
+            // ✕ on a move: the building never left, its cells are taken again, nothing paid
+            if (_moveCellsFreed)
+            {
+                _moveCellsFreed = false;
+                if (_movingNow != null) GridManager.Instance.SetAreaOccupied(_movingNow.OriginCell, _movingNow.RotatedFootprint(), true);
+                _movingNow = null;
+            }
         }
 
         /// <summary>Rotates the current ghost/pending placement by 90 degrees -- PC 'R' key, or the mobile rotate button.</summary>
@@ -602,6 +680,8 @@ namespace CityBuilder.Buildings
             var ok = canPlace && canAfford && hasRequirement;
 
             SetStatus(ok, ok ? string.Empty : DescribeBlock(canPlace, canAfford, hasRequirement, cell, footprint));
+            // a move: its price in the status line (the ✓ carries it too, PlacementHudController)
+            if (_movingNow != null && canPlace) SetStatus(true, Localization.Format("#move_status", MovePrice));
 
             if (_ghostInstance == null) return;
 
@@ -943,7 +1023,10 @@ namespace CityBuilder.Buildings
         private bool CanPlaceSelectedBuilding(Vector2Int cell, Vector2Int footprint, bool wholeFootprintRules = true)
         {
             if (!GridManager.Instance.IsWithinBounds(cell, footprint) || !IsFreeFor(_selectedBuilding, cell, footprint)) return false;
-            if (OnlyOneAlreadyStands()) return false;
+            if (_movingNow == null && OnlyOneAlreadyStands()) return false;
+            // a move stays on its own island (its residents and workers are bound to it)
+            if (_movingNow != null && !Citizens.HousePeople.Same(Citizens.HousePeople.IslandOf(GridManager.Instance.GetFootprintCenterWorld(cell, footprint)),
+                    Citizens.HousePeople.IslandOf(_movingNow))) return false;
             // the start zone is a rule about the whole building, not about any one cell of it
             if (wholeFootprintRules && IsTownHall(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return false;
             // the mandatory lighthouse goes in the same yellow zone, anywhere on its land -- not only
@@ -1017,6 +1100,11 @@ namespace CityBuilder.Buildings
         {
             var footprint = RotatedFootprint(_selectedBuilding.footprintSize);
             if (!CanPlaceSelectedBuilding(cell, footprint)) return;
+            if (_movingNow != null)
+            {
+                FinishMove(cell);
+                return;
+            }
             if (!HasRequiredBuilding()) return;
 
             var placedData = _selectedBuilding;

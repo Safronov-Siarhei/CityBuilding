@@ -971,6 +971,24 @@ namespace CityBuilder.Buildings
         /// until the time is up -- its storehouse room comes only then -- and a hammer counts it
         /// down. `total` is the whole time, for a building a save puts back half built.
         /// </summary>
+        /// <summary>
+        /// «Перенести здание» (the user, 2026-11-17): the building stands at `cell` now, turned `rotationSteps`, its
+        /// centre at `centre` (the caller frees the old cells and takes the new ones). Its stone footing is laid
+        /// again for the new ground and the fog opens round it as on a placement.
+        /// </summary>
+        public void MoveTo(Vector2Int cell, int rotationSteps, Vector3 centre)
+        {
+            OriginCell = cell;
+            RotationSteps = ((rotationSteps % 4) + 4) % 4;
+            transform.SetPositionAndRotation(centre, Quaternion.Euler(0f, RotationSteps * 90f, 0f));
+            var footing = transform.Find("Footing");
+            if (footing != null) Destroy(footing.gameObject);
+            if (Data == null) return;
+            BuildingFooting.Add(this);
+            var footprint = RotatedFootprint();
+            FogOfWarManager.Instance?.RevealPermanent(cell + new Vector2Int(footprint.x / 2, footprint.y / 2), RevealRadius());
+        }
+
         public void BuildOnTimer(float seconds, float total = 0f)
         {
             if (Data == null || seconds <= 0f || Site != null) return;
