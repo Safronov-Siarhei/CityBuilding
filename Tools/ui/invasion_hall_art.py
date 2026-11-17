@@ -27,6 +27,7 @@ BEAM_Y = 500                       # the beam's middle; it runs past both screen
 BEAM_W = 2600
 CHAIN = 40                         # the chains from the beam's iron eyes down to a banner's pole
 POLE = 24
+EXTRA_EYES = []                     # more chains' eyes on the beam (screen x), e.g. a medallion's
 HANG = 110                          # a chain's distance from its banner's middle (the same for big and small)
 BANNER_TOP = BEAM_Y + 20 + CHAIN + POLE + 14     # where the cloth's face begins (its hem wraps the pole above)
 BANNERS = [(W / 2 - 400, (178, 44, 36)), (W / 2, (46, 84, 170)), (W / 2 + 400, (54, 120, 60))]
@@ -109,14 +110,17 @@ def beam():
     d.line((0, y0, BEAM_W, y0), fill=INK, width=4)
     d.line((0, y1, BEAM_W, y1), fill=INK, width=4)
     d.line((0, y0 + 4, BEAM_W, y0 + 4), fill=WOOD_L, width=2)
+    eyes = [x for cx, _ in BANNERS for x in (cx - HANG, cx + HANG)] + list(EXTRA_EYES)
     for x in range(int(off + 120) % 400, BEAM_W, 400):
+        if any(abs(x - off - e) < 40 for e in eyes):
+            continue                    # no iron band over a chain's eye (the user, 2026-11-17)
         d.rectangle((x - 12, y0 - 3, x + 12, y1 + 3), fill=IRON, outline=INK, width=2)
         for yy in (y0 + 7, y1 - 7):
             d.ellipse((x - 4, yy - 4, x + 4, yy + 4), fill=IRON_L)
-    for cx, _ in BANNERS:
-        for x in (cx - HANG + off, cx + HANG + off):
-            d.rectangle((x - 10, y1 - 14, x + 10, y1 + 2), fill=IRON, outline=INK, width=2)
-            d.ellipse((x - 3, y1 - 10, x + 3, y1 - 4), fill=IRON_L)
+    for e in eyes:
+        x = e + off
+        d.rectangle((x - 10, y1 - 14, x + 10, y1 + 2), fill=IRON, outline=INK, width=2)
+        d.ellipse((x - 3, y1 - 10, x + 3, y1 - 4), fill=IRON_L)
     bb = lay.getbbox()
     lay.crop(bb).save(OUT + 'InvHall_Beam.png', optimize=True)
     layout['pieces'].append({'name': 'Beam', 'rect': [bb[0] - off, bb[1], bb[2] - off, bb[3]]})
