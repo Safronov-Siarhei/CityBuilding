@@ -515,14 +515,26 @@ namespace CityBuilder.EditorTools
             var layout = json != null ? JsonUtility.FromJson<HallLayout>(json.text) : new HallLayout();
             if (json == null) Debug.LogWarning("[MainMenu] no InvHall_layout.json -- run Tools/ui/invasion_hall_art.py");
 
-            // the hall fills the screen whatever its shape (its edges trimmed, never bared)
-            var back = CreateImage(screen, "Hall", Color.white);
-            back.sprite = MenuArt("InvHall_Back");
-            back.raycastTarget = true;     // nothing behind takes a tap
-            Anchor(back.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1920f, 1080f));
-            var fit = back.gameObject.AddComponent<AspectRatioFitter>();
-            fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
-            fit.aspectRatio = 1920f / 1080f;
+            // behind it all mission 2's throne room, live, drifting by (the user, 2026-11-17): drawn small and
+            // stretched (its blur), dimmed by the tint and the dark edges -- InvasionHallBackdrop
+            var hall = new GameObject("Hall", typeof(RectTransform), typeof(RawImage)).GetComponent<RawImage>();
+            hall.transform.SetParent(screen, false);
+            StretchBleed(hall.rectTransform);
+            hall.color = new Color(0.24f, 0.21f, 0.19f);
+            hall.raycastTarget = true;     // nothing behind takes a tap
+            var edges = CreateImage(screen, "Vignette", Color.white);
+            edges.sprite = MenuArt("InvHall_Vignette");
+            edges.raycastTarget = false;
+            StretchBleed(edges.rectTransform);
+            var backdrop = screen.gameObject.AddComponent<InvasionHallBackdrop>();
+            var bso = new SerializedObject(backdrop);
+            bso.FindProperty("hallSet").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Cinematic/M2ThroneSet.fbx");
+            bso.FindProperty("target").objectReferenceValue = hall;
+            var menuCameraGO = GameObject.Find("Menu Camera");
+            if (menuCameraGO != null) bso.FindProperty("menuCamera").objectReferenceValue = menuCameraGO.GetComponent<Camera>();
+            bso.ApplyModifiedPropertiesWithoutUndo();
+            // the beam runs past both edges, behind the seals
+            HallPiece(screen, layout, "Beam");
 
             var hub = screen.gameObject.AddComponent<InvasionHubController>();
             var cream = new Color(1f, 0.94f, 0.78f);
@@ -583,8 +595,7 @@ namespace CityBuilder.EditorTools
             WriteArray(tso.FindProperty("picked"), picked);
             tso.ApplyModifiedPropertiesWithoutUndo();
 
-            // the beam and the three period banners
-            HallPiece(screen, layout, "Beam");
+            // the three period banners, on chains from the beam
             var periods = new[] { "#invasion_day", "#invasion_week", "#invasion_month" };
             var darks = new[] { new Color(0.35f, 0.06f, 0.04f), new Color(0.06f, 0.12f, 0.31f), new Color(0.06f, 0.2f, 0.08f) };
             var bigs = new Object[3];
@@ -652,7 +663,11 @@ namespace CityBuilder.EditorTools
                 figure.raycastTarget = false;
                 Anchor(figure.rectTransform, new Vector2(anchor, 0f), new Vector2(0.5f, 0f), new Vector2(x, -20f), new Vector2(560f * art.rect.width / art.rect.height, 560f));
             }
-            var crystalsText = Counter(screen, "Crystals", new Vector2(640f, 470f), new Color(0.5f, 0.77f, 0.94f), null, IconSprite("Res_UpgradeCrystal"), discRight: true);
+            // the crystals as the game shows them: the number, the crystal after it (the user, 2026-11-17)
+            var plaque = MenuImage(screen, "Crystals", "plaque", new Vector2(640f, 470f), new Vector2(210f, 80f));
+            plaque.raycastTarget = false;
+            var crystalsText = MenuLabel(plaque.transform, "Number", null, 42, new Vector2(-30f, 3f), new Vector2(120f, 60f), HudInk.OnMenuPlaque, bold: true, align: TextAnchor.MiddleRight);
+            Gem(plaque.transform, new Vector2(62f, 3f), 58f);
             var info = MenuRoundButton(screen, "InfoButton", "round", "Info", HudInk.OnRound, 92f, 0.5f);
             Anchor((RectTransform)info.transform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(470f, 470f), new Vector2(92f, 92f));
             UnityEventTools.AddIntPersistentListener(info.onClick, controller.ShowInfo, (int)GameMode.Invasion);
@@ -681,6 +696,8 @@ namespace CityBuilder.EditorTools
 
             var group2 = Group(screen.gameObject);
             group2.alpha = 0f;
+            bso.FindProperty("screen").objectReferenceValue = group2;
+            bso.ApplyModifiedPropertiesWithoutUndo();
             return group2;
         }
 

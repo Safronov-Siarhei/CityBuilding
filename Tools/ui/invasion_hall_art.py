@@ -23,12 +23,20 @@ OUT = R + 'Assets/_Project/UI/MenuArt/'
 PW, PH = 1040, 236
 PX0, PY0 = (W - PW) // 2, 140
 SEAL_Y, SEAL_STEP, SEAL_R = PY0 + PH + 52, 160, 52
-BEAM_Y = 500
-BANNER_TOP = BEAM_Y + 62
+BEAM_Y = 500                       # the beam's middle; it runs past both screen edges (BEAM_W wide)
+BEAM_W = 2600
+CHAIN = 40                         # the chains from the beam's iron eyes down to a banner's pole
+POLE = 24
+HANG = 110                          # a chain's distance from its banner's middle (the same for big and small)
+BANNER_TOP = BEAM_Y + 20 + CHAIN + POLE + 14     # where the cloth's face begins (its hem wraps the pole above)
 BANNERS = [(W / 2 - 400, (178, 44, 36)), (W / 2, (46, 84, 170)), (W / 2 + 400, (54, 120, 60))]
-BIG, SMALL = (330, 400), (290, 210)
-TIP = 46
+BIG, SMALL = (330, 356), (290, 200)
+TIP = 34
+ROW0, ROW_STEP = 140, 34           # the picked banner's rows, from its top
+YOU_Y = ROW0 + 4 * ROW_STEP + 48
 BUTTON = (W / 2 - 240, H - 100, W / 2 + 240, H - 18)
+IRON, IRON_L = (46, 40, 38), (98, 90, 84)
+WOOD, WOOD_L = (104, 62, 28), (138, 88, 44)
 
 layout = {'reference': [W, H], 'pieces': [], 'texts': [], 'points': []}
 
@@ -47,17 +55,173 @@ def point(name, xy):
     layout['points'].append({'name': name, 'at': [round(xy[0]), round(xy[1])]})
 
 
-def banner(colour, w, h, cx, big):
+def shade(col, k):
+    return tuple(max(0, min(255, int(v * k))) for v in col[:3])
+
+
+def masked(base, paint, mask):
+    """`paint` laid over `base` only inside `mask` (L)."""
+    a = Image.composite(paint.getchannel('A'), Image.new('L', base.size, 0), mask)
+    cut = paint.copy()
+    cut.putalpha(a)
+    return Image.alpha_composite(base, cut)
+
+
+def ribbon():
+    """The title's ribbon: a band, its two notched tails folded BEHIND it and lower, the fold's dark triangle."""
     lay = c.layer()
     d = ImageDraw.Draw(lay)
+    band, tail, fold, edge = (132, 58, 182), (98, 38, 140), (54, 16, 84), (44, 12, 70)
+    x0, x1, y0, y1 = W / 2 - 300, W / 2 + 300, 22, 106
+    drop, reach, notch = 26, 130, 34
+    for side, bx in ((-1, x0), (1, x1)):
+        out = bx + side * reach
+        inner = bx - side * 46
+        d.polygon([(inner, y0 + drop), (out, y0 + drop), (out - side * notch, (y0 + y1) / 2 + drop), (out, y1 + drop), (inner, y1 + drop)],
+                  fill=tail, outline=edge)
+        for y in (y0 + drop + 8, y1 + drop - 8):
+            d.line([(out - side * 8, y), (bx + side * 4, y)], fill=(236, 186, 70), width=3)
+        d.polygon([(bx, y1), (bx, y1 + drop), (bx - side * 46, y1 + drop)], fill=fold, outline=edge)
+    body = c.layer()
+    bd = ImageDraw.Draw(body)
+    for k in range(int(y1 - y0)):
+        t = k / (y1 - y0)
+        bd.line((x0, y0 + k, x1, y0 + k), fill=shade(band, 1.18 - 0.36 * t) + (255,))
+    m = Image.new('L', (W, H), 0)
+    ImageDraw.Draw(m).rounded_rectangle((x0, y0, x1, y1), 8, fill=255)
+    lay = masked(lay, body, m)
+    d = ImageDraw.Draw(lay)
+    d.rounded_rectangle((x0, y0, x1, y1), 8, outline=edge, width=4)
+    for y in (y0 + 9, y1 - 9):
+        d.line((x0 + 14, y, x1 - 14, y), fill=(236, 186, 70), width=4)
+    for x in (x0 + 22, x1 - 22):
+        d.ellipse((x - 6, (y0 + y1) / 2 - 6, x + 6, (y0 + y1) / 2 + 6), fill=(236, 186, 70), outline=edge)
+    return lay
+
+
+def beam():
+    """The beam across the hall, past both screen edges: wood with grain, iron bands with rivets, an iron eye
+    over each chain."""
+    lay = Image.new('RGBA', (BEAM_W, H), 0)
+    off = (BEAM_W - W) / 2
+    y0, y1 = BEAM_Y - 22, BEAM_Y + 22
+    sh = Image.new('RGBA', (BEAM_W, H), 0)
+    ImageDraw.Draw(sh).rectangle((0, y0 + 14, BEAM_W, y1 + 16), fill=(0, 0, 0, 120))
+    lay = Image.alpha_composite(lay, sh.filter(ImageFilter.GaussianBlur(10)))
+    d = ImageDraw.Draw(lay)
+    for k in range(y1 - y0):
+        t = k / (y1 - y0)
+        d.line((0, y0 + k, BEAM_W, y0 + k), fill=shade(WOOD, 1.25 - 0.55 * t) + (255,))
+    for i, y in enumerate(range(y0 + 7, y1 - 4, 8)):
+        for x in range(-200 + (i * 97) % 300, BEAM_W, 300):
+            d.line((x, y + (i % 2), x + 160 + (i * 37) % 90, y + (i % 2)), fill=shade(WOOD, 0.8) + (255,), width=2)
+    d.line((0, y0, BEAM_W, y0), fill=INK, width=4)
+    d.line((0, y1, BEAM_W, y1), fill=INK, width=4)
+    d.line((0, y0 + 4, BEAM_W, y0 + 4), fill=WOOD_L, width=2)
+    for x in range(int(off + 120) % 400, BEAM_W, 400):
+        d.rectangle((x - 12, y0 - 3, x + 12, y1 + 3), fill=IRON, outline=INK, width=2)
+        for yy in (y0 + 7, y1 - 7):
+            d.ellipse((x - 4, yy - 4, x + 4, yy + 4), fill=IRON_L)
+    for cx, _ in BANNERS:
+        for x in (cx - HANG + off, cx + HANG + off):
+            d.rectangle((x - 10, y1 - 14, x + 10, y1 + 2), fill=IRON, outline=INK, width=2)
+            d.ellipse((x - 3, y1 - 10, x + 3, y1 - 4), fill=IRON_L)
+    bb = lay.getbbox()
+    lay.crop(bb).save(OUT + 'InvHall_Beam.png', optimize=True)
+    layout['pieces'].append({'name': 'Beam', 'rect': [bb[0] - off, bb[1], bb[2] - off, bb[3]]})
+
+
+def chain(d, x, y0, y1):
+    y, k = y0, 0
+    while y < y1 - 2:
+        if k % 2 == 0:
+            d.ellipse((x - 6, y - 1, x + 6, y + 12), outline=INK, width=5)
+            d.ellipse((x - 5, y, x + 5, y + 11), outline=(140, 130, 120), width=2)
+        else:
+            d.line((x, y - 2, x, y + 13), fill=INK, width=6)
+            d.line((x, y - 2, x, y + 13), fill=(140, 130, 120), width=2)
+        y += 9
+        k += 1
+
+
+def tassel(d, x, y, length, gold=(236, 186, 70)):
+    d.line((x, y, x, y + length), fill=shade(gold, 0.7), width=3)
+    d.ellipse((x - 6, y + length - 4, x + 6, y + length + 8), fill=gold, outline=INK, width=2)
+    d.polygon([(x - 6, y + length + 6), (x + 6, y + length + 6), (x + 9, y + length + 30), (x - 9, y + length + 30)], fill=gold, outline=INK)
+    for k in (-5, 0, 5):
+        d.line((x + k, y + length + 10, x + k * 1.4, y + length + 28), fill=shade(gold, 0.72), width=1)
+
+
+def banner(colour, w, h, cx, big):
+    """A standard: chains from the beam's eyes, a turned pole with gold knobs and tassel cords, the cloth (folds,
+    a faint lattice, a gold border, corner studs, a stitched hem over the pole), a gold fringe on its point and a
+    medallion with a tassel at the tip."""
     top = BANNER_TOP
-    d.line((cx - w / 2 - 20, top - 30, cx, top - 92), fill=(60, 40, 20), width=5)
-    d.line((cx + w / 2 + 20, top - 30, cx, top - 92), fill=(60, 40, 20), width=5)
-    d.rounded_rectangle((cx - w / 2 - 34, top - 40, cx + w / 2 + 34, top - 10), 14, fill=(110, 66, 30), outline=INK, width=4)
-    body = [(cx - w / 2, top - 14), (cx + w / 2, top - 14), (cx + w / 2, top + h), (cx, top + h + TIP), (cx - w / 2, top + h)]
-    d.polygon(body, fill=colour, outline=INK)
-    d.line([(cx - w / 2 + 14, top), (cx + w / 2 - 14, top), (cx + w / 2 - 14, top + h - 6), (cx, top + h + TIP - 18),
-            (cx - w / 2 + 14, top + h - 6), (cx - w / 2 + 14, top)], fill=(236, 186, 70), width=4)
+    gold = (236, 186, 70)
+    lay = c.layer()
+    d = ImageDraw.Draw(lay)
+    pole_y0 = BEAM_Y + 20 + CHAIN
+    pole_y1 = pole_y0 + POLE
+    for x in (cx - HANG, cx + HANG):
+        chain(d, x, BEAM_Y + 22, pole_y0 + 4)
+    body = [(cx - w / 2, pole_y0 + 6), (cx + w / 2, pole_y0 + 6), (cx + w / 2, top + h), (cx, top + h + TIP), (cx - w / 2, top + h)]
+    sh = c.layer()
+    ImageDraw.Draw(sh).polygon([(x + 10, y + 14) for x, y in body], fill=(0, 0, 0, 110))
+    lay = Image.alpha_composite(lay, sh.filter(ImageFilter.GaussianBlur(12)))
+    m = Image.new('L', (W, H), 0)
+    ImageDraw.Draw(m).polygon(body, fill=255)
+    cloth = c.layer()
+    ImageDraw.Draw(cloth).rectangle((cx - w / 2, pole_y0, cx + w / 2, top + h + TIP), fill=colour + (255,))
+    folds = c.layer()
+    fd = ImageDraw.Draw(folds)
+    n = 6
+    for i in range(n):
+        x = cx - w / 2 + (i + 0.5) * w / n
+        fd.rectangle((x - 10, pole_y0, x + 10, top + h + TIP), fill=(255, 255, 255, 34))
+        fd.rectangle((x + w / n / 2 - 8, pole_y0, x + w / n / 2 + 8, top + h + TIP), fill=(0, 0, 0, 40))
+    cloth = Image.alpha_composite(cloth, folds.filter(ImageFilter.GaussianBlur(9)))
+    lat = c.layer()
+    ld = ImageDraw.Draw(lat)
+    for k in range(-20, 20):
+        x = cx + k * 46
+        ld.line((x, top, x + 600, top + 600), fill=gold + (34,), width=2)
+        ld.line((x, top, x - 600, top + 600), fill=gold + (34,), width=2)
+    cloth = Image.alpha_composite(cloth, lat)
+    lay = masked(lay, cloth, m)
+    d = ImageDraw.Draw(lay)
+    d.line(body + [body[0]], fill=INK, width=4)
+
+    def inset(k):
+        return [(cx - w / 2 + k, top + 4), (cx + w / 2 - k, top + 4), (cx + w / 2 - k, top + h - k * 0.4),
+                (cx, top + h + TIP - k * 1.15), (cx - w / 2 + k, top + h - k * 0.4), (cx - w / 2 + k, top + 4)]
+    d.line(inset(12), fill=gold, width=5, joint='curve')
+    d.line(inset(22), fill=shade(gold, 0.85), width=2, joint='curve')
+    for x, y in ((cx - w / 2 + 12, top + 4), (cx + w / 2 - 12, top + 4), (cx - w / 2 + 12, top + h - 5), (cx + w / 2 - 12, top + h - 5)):
+        d.polygon([(x, y - 8), (x + 8, y), (x, y + 8), (x - 8, y)], fill=gold, outline=INK)
+    for (ax, ay), (bx, by) in (((cx - w / 2, top + h), (cx, top + h + TIP)), ((cx, top + h + TIP), (cx + w / 2, top + h))):
+        steps = int(math.hypot(bx - ax, by - ay) / 7)
+        for i in range(1, steps):
+            t = i / steps
+            x, y = ax + (bx - ax) * t, ay + (by - ay) * t
+            d.line((x, y + 1, x, y + 12), fill=gold if i % 2 else shade(gold, 0.75), width=3)
+    d.rectangle((cx - w / 2, pole_y0 + 6, cx + w / 2, top - 2), fill=shade(colour, 0.7), outline=INK, width=3)
+    for x in range(int(cx - w / 2 + 10), int(cx + w / 2 - 10), 14):
+        d.line((x, top - 8, x + 7, top - 8), fill=shade(gold, 0.9), width=2)
+    px0, px1 = cx - w / 2 - 26, cx + w / 2 + 26
+    for k in range(POLE):
+        t = k / POLE
+        d.line((px0 + 6, pole_y0 + k, px1 - 6, pole_y0 + k), fill=shade(WOOD, 1.3 - 0.6 * t))
+    d.rounded_rectangle((px0, pole_y0, px1, pole_y1), 10, outline=INK, width=3)
+    for x in (px0, px1):
+        d.ellipse((x - 15, pole_y0 - 3, x + 15, pole_y1 + 3), fill=gold, outline=INK, width=3)
+        d.ellipse((x - 7, pole_y0 + 3, x + 1, pole_y0 + 10), fill=(255, 236, 170))
+        tassel(d, x + (-6 if x < cx else 6), pole_y1, 46)
+    for x in (cx - HANG, cx + HANG):
+        d.ellipse((x - 7, pole_y0 - 4, x + 7, pole_y0 + 8), outline=INK, width=4)
+    ty = top + h + TIP
+    d.ellipse((cx - 13, ty - 34, cx + 13, ty - 8), fill=gold, outline=INK, width=3)
+    d.ellipse((cx - 6, ty - 27, cx + 6, ty - 15), fill=shade(colour, 0.8))
+    tassel(d, cx, ty - 2, 10)
     if not big:
         sh = c.layer()
         ImageDraw.Draw(sh).polygon(body, fill=(20, 10, 4, 70))
@@ -65,13 +229,26 @@ def banner(colour, w, h, cx, big):
     return lay, body
 
 
+def vignette():
+    """Dark edges over the hall's picture, stretched to any screen."""
+    w, h = 480, 270
+    im = Image.new('L', (w, h))
+    px = im.load()
+    for y in range(h):
+        for x in range(w):
+            dx, dy = (x - w / 2) / (w / 2), (y - h / 2) / (h / 2)
+            r = math.sqrt(dx * dx * 0.9 + dy * dy * 1.1)
+            px[x, y] = int(max(0.0, min(1.0, (r - 0.35) / 0.85)) ** 1.4 * 235)
+    out = Image.new('RGBA', (w, h), (12, 6, 4, 0))
+    out.putalpha(im)
+    out.save(OUT + 'InvHall_Vignette.png', optimize=True)
+
+
 def main():
-    # the hall behind everything, whole frame (shown enveloping the screen)
-    save('Back', c.hall().convert('RGB').convert('RGBA'), crop=False)
+    # the hall behind is the game's 3D throne room (InvasionHallBackdrop); its dark edges
+    vignette()
     # the ribbon (its words are the game's)
-    lay = c.layer()
-    lay = c.ribbon(lay, W / 2, 24, 116, 560, (122, 52, 168), (60, 20, 92), (48, 14, 74), '', 58)
-    save('Ribbon', lay)
+    save('Ribbon', ribbon())
     box_text('Title', (W / 2 - 280, 24, W / 2 + 280, 112))
     # the gilt frame with its hole for the theme's picture, its brass plate, the seals' shelf
     lay = c.layer()
@@ -111,43 +288,37 @@ def main():
         layout['pieces'].append({'name': name, 'rect': [bb[0] - W / 2, bb[1] - H / 2, bb[2] - W / 2, bb[3] - H / 2]})
     for i in range(5):
         point('Seal%d' % i, (W / 2 + (i - 2) * SEAL_STEP, SEAL_Y))
-    # the beam
-    lay = c.layer()
-    d = ImageDraw.Draw(lay)
-    d.rounded_rectangle((300, BEAM_Y - 20, W - 300, BEAM_Y + 20), 12, fill=(96, 58, 26), outline=INK, width=5)
-    for x in (318, W - 318):
-        d.ellipse((x - 24, BEAM_Y - 24, x + 24, BEAM_Y + 24), fill=(70, 40, 18), outline=INK, width=4)
-    save('Beam', lay)
+    beam()
     # the banners, big (picked) and small, each with its glow; their rows; the texts' boxes
+    T = BANNER_TOP
     for i, (cx, col) in enumerate(BANNERS):
         for size, big in ((BIG, True), (SMALL, False)):
             lay, body = banner(col, size[0], size[1], cx, big)
             save('Banner%d_%s' % (i, 'Big' if big else 'Small'), lay)
             if big:
                 g = c.layer()
-                ImageDraw.Draw(g).polygon([(x + (8 if x > cx else -8 if x < cx else 0), y) for x, y in body], fill=(255, 220, 120, 200))
+                ImageDraw.Draw(g).polygon([(x + (10 if x > cx else -10 if x < cx else 0), y) for x, y in body], fill=(255, 220, 120, 190))
                 save('Banner%d_Glow' % i, g.filter(ImageFilter.GaussianBlur(26)))
-        dark = tuple(int(v * .74) for v in col)
+        dark = tuple(int(v * .7) for v in col)
         lay = c.layer()
         w = BIG[0]
         for k in range(5):
-            yy = BANNER_TOP + 168 + k * 38
-            ImageDraw.Draw(lay).rounded_rectangle((cx - w / 2 + 30, yy - 16, cx + w / 2 - 30, yy + 16), 12, fill=dark)
+            yy = T + ROW0 + k * ROW_STEP
+            ImageDraw.Draw(lay).rounded_rectangle((cx - w / 2 + 32, yy - 14, cx + w / 2 - 32, yy + 14), 11, fill=dark + (235,))
         save('Banner%d_Rows' % i, lay)
-        box_text('Title%d' % i, (cx - 150, BANNER_TOP + 10, cx + 150, BANNER_TOP + 60))
-        point('Trophy%d' % i, (cx - 92, BANNER_TOP + 100))
-        box_text('Points%d' % i, (cx - 60, BANNER_TOP + 72, cx + 140, BANNER_TOP + 128))
-        box_text('Hint%d' % i, (cx - 130, BANNER_TOP + 140, cx + 130, BANNER_TOP + 200))
+        box_text('Title%d' % i, (cx - 150, T + 6, cx + 150, T + 52))
+        point('Trophy%d' % i, (cx - 92, T + 86))
+        box_text('Points%d' % i, (cx - 60, T + 60, cx + 140, T + 112))
+        box_text('Hint%d' % i, (cx - 130, T + 118, cx + 130, T + 168))
         for k in range(5):
-            yy = BANNER_TOP + 168 + k * 38
-            box_text('Rank%d_%d' % (i, k), (cx - w / 2 + 40, yy - 16, cx - w / 2 + 80, yy + 16))
-            box_text('Run%d_%d' % (i, k), (cx - w / 2 + 84, yy - 16, cx + w / 2 - 46, yy + 16))
-        yy = BANNER_TOP + 168 + 5 * 38 + 18
-        box_text('You%d' % i, (cx - w / 2 + 40, yy - 20, cx + w / 2 - 40, yy + 20))
-        # the banner's tap area: the big banner's body
-        box_text('Tap%d' % i, (cx - BIG[0] / 2, BANNER_TOP - 40, cx + BIG[0] / 2, BANNER_TOP + BIG[1] + TIP))
+            yy = T + ROW0 + k * ROW_STEP
+            box_text('Rank%d_%d' % (i, k), (cx - w / 2 + 42, yy - 14, cx - w / 2 + 82, yy + 14))
+            box_text('Run%d_%d' % (i, k), (cx - w / 2 + 86, yy - 14, cx + w / 2 - 48, yy + 14))
+        yy = T + YOU_Y
+        box_text('You%d' % i, (cx - w / 2 + 42, yy - 18, cx + w / 2 - 42, yy + 18))
+        box_text('Tap%d' % i, (cx - BIG[0] / 2, T - 60, cx + BIG[0] / 2, T + BIG[1] + TIP))
     lay = c.layer()
-    ImageDraw.Draw(lay).rounded_rectangle((-BIG[0] / 2 + 24 + W / 2, H / 2 - 22, BIG[0] / 2 - 24 + W / 2, H / 2 + 22), 14,
+    ImageDraw.Draw(lay).rounded_rectangle((-BIG[0] / 2 + 26 + W / 2, H / 2 - 20, BIG[0] / 2 - 26 + W / 2, H / 2 + 20), 13,
                                           fill=(255, 238, 196), outline=(236, 186, 70), width=4)
     bb = lay.getbbox()
     lay.crop(bb).save(OUT + 'InvHall_YouRow.png', optimize=True)
