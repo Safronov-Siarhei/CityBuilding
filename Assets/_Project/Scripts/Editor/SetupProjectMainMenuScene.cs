@@ -101,6 +101,13 @@ namespace CityBuilder.EditorTools
 
             var clips = BakeCastClips();
             var (village, life) = CreateOpeningVillage(clips);
+            // what it costs a phone (stage 3): one draw a figure, no back twins; on Low no figure shadows,
+            // fewer folk; the far plane and the haze from the sheet
+            var quality = village.gameObject.AddComponent<CityBuilder.Campaign.MenuVillageQuality>();
+            var qso = new SerializedObject(quality);
+            qso.FindProperty("cam").objectReferenceValue = cam;
+            qso.FindProperty("life").objectReferenceValue = life;
+            qso.ApplyModifiedPropertiesWithoutUndo();
             // the house going up (stage 2, approved 2026-11-17): the site, its two builders on their loops
             var site = village.gameObject.AddComponent<CityBuilder.Campaign.MenuBuildSite>();
             var sso = new SerializedObject(site);

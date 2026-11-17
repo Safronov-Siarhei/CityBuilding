@@ -26,12 +26,22 @@ namespace CityBuilder.Campaign
         public string Current => _clip != null ? _clip.name : null;
         public float ClipTime => _time;
 
+        /// <summary>The main menu's village (MenuVillageQuality, 2026-11-17): in play the figure keeps its one
+        /// skinned mesh -- one draw instead of a renderer per body part (~10 a figure). Off in the film and
+        /// the missions: their torches, the sack and the mage's staff hang on the rigid parts.</summary>
+        public static bool KeepSkinned;
+
+        /// <summary>The main menu on the Low graphics tier: the figures cast no shadows.</summary>
+        public static bool NoShadows;
+
         public void Init(CineClips set)
         {
             clips = set;
             _bones = null;
-            Rigidify();
+            if (!(KeepSkinned && Application.isPlaying)) Rigidify();
             CineTwoSided.Apply(gameObject);
+            if (NoShadows)
+                foreach (var r in GetComponentsInChildren<Renderer>(true)) r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         }
 
         private ParticleSystem _torch;

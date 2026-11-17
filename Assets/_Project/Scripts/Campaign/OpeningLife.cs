@@ -136,9 +136,17 @@ namespace CityBuilder.Campaign
         public Transform FirstOrc => _orcs.Count > 0 ? _orcs[0].t : null;
 
         /// <summary>Spawns the strolling villagers (the village must be built).</summary>
+        /// <summary>The share of the strolling and chatting folk to put out (the main menu on the Low graphics tier).</summary>
+        public float FolkShare { get; set; } = 1f;
+
         public void Begin()
         {
             _c = JsonUtility.FromJson<Config>(config.text);
+            if (FolkShare < 0.999f)
+            {
+                _c.walkers = Mathf.RoundToInt(_c.walkers * FolkShare);
+                _c.squareStanders = Mathf.RoundToInt(_c.squareStanders * FolkShare);
+            }
             _rnd = new Random(_c.seed);
             if (_root != null) Kill(_root.gameObject);
             _root = new GameObject("Life").transform;

@@ -23,8 +23,13 @@ namespace CityBuilder.Campaign
 
         private static readonly Dictionary<Material, Material> Backs = new Dictionary<Material, Material>();
 
+        /// <summary>The main menu's village (MenuVillageQuality): its camera stays far and high, never under
+        /// a roof or into a head, so no twins there -- they doubled every renderer's draws.</summary>
+        public static bool Off;
+
         public static void Apply(GameObject go)
         {
+            if (Off) return;
             foreach (var r in go.GetComponentsInChildren<MeshRenderer>(true))
             {
                 if (r.name == "Back") continue;

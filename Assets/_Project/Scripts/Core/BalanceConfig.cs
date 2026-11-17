@@ -768,6 +768,10 @@ namespace CityBuilder.Core
         [SerializeField] private float plagueBannerShare = 0.4f;
         [SerializeField] private float plagueCalmSeconds = 180f;
         [SerializeField] private float plagueShieldSeconds = 420f;
+        [SerializeField] private float menuFarClip = 85f;
+        [SerializeField] private float menuFogStart = 30f;
+        [SerializeField] private float menuFogEnd = 80f;
+        [SerializeField] private float menuLowFolkShare = 0.5f;
         // sandbox fires v2 (the user, 2026-11-14; Buildings/FireManager)
         [SerializeField] private float hazardGraceSeconds = 600f;
         [SerializeField] private float fireChancePerDay = 0.005f;
@@ -1275,6 +1279,13 @@ namespace CityBuilder.Core
         public float PlagueCalmSeconds => plagueCalmSeconds;
         /// <summary>After the banner ended a plague: no plague breaks out anywhere for so long (the user, 2026-11-13: 7 minutes).</summary>
         public float PlagueShieldSeconds => plagueShieldSeconds;
+        /// <summary>The main menu's village (2026-11-17, phones): how far its camera draws, and the haze that
+        /// hides that edge (start, end), in metres.</summary>
+        public float MenuFarClip => menuFarClip;
+        public float MenuFogStart => menuFogStart;
+        public float MenuFogEnd => menuFogEnd;
+        /// <summary>The main menu on the Low graphics tier: this share of the village's strolling folk.</summary>
+        public float MenuLowFolkShare => menuLowFolkShare;
         /// <summary>Sandbox: no fires and no illness for so long after the Town Hall is founded (the user, 2026-11-14: 10 minutes).</summary>
         public float HazardGraceSeconds => hazardGraceSeconds;
         /// <summary>Sandbox: the chance a day that a burnable building catches fire.</summary>
@@ -2470,6 +2481,10 @@ namespace CityBuilder.Core
             plagueBannerShare = Read(economy, "plague_banner_share", plagueBannerShare);
             plagueCalmSeconds = Read(economy, "plague_calm_sec", plagueCalmSeconds);
             plagueShieldSeconds = Read(economy, "plague_shield_sec", plagueShieldSeconds);
+            menuFarClip = Read(economy, "menu_far_clip", menuFarClip);
+            menuFogStart = Read(economy, "menu_fog_start", menuFogStart);
+            menuFogEnd = Read(economy, "menu_fog_end", menuFogEnd);
+            menuLowFolkShare = Read(economy, "menu_low_folk_share", menuLowFolkShare);
             hazardGraceSeconds = Read(economy, "hazard_grace_sec", hazardGraceSeconds);
             fireChancePerDay = Read(economy, "fire_chance_per_day", fireChancePerDay);
             fireDryMultiplier = Read(economy, "fire_dry_mult", fireDryMultiplier);
