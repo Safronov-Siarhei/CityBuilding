@@ -756,6 +756,11 @@ namespace CityBuilder.EditorTools
 
             // Filled in at run time: it names the building and what the refund actually is.
             var demolishConfirmLabel = CreateText(demolishCard.transform, "Question", string.Empty, 28, new Vector2(0f, 60f), new Vector2(680f, 120f));
+            // a store's red «Пропадёт: ...» line may follow (StoreLedger): the words shrink to fit rather than spill
+            demolishConfirmLabel.supportRichText = true;
+            demolishConfirmLabel.resizeTextForBestFit = true;
+            demolishConfirmLabel.resizeTextMinSize = 18;
+            demolishConfirmLabel.resizeTextMaxSize = 28;
 
             var demolishConfirmButton = CreateButton(demolishCard.transform, panelSprite, "ConfirmDemolishButton", "#building_demolish", new Vector2(-160f, -80f), new Vector2(300f, 84f));
             demolishConfirmButton.GetComponent<Image>().color = new Color(0.45f, 0.2f, 0.18f, 0.95f);
