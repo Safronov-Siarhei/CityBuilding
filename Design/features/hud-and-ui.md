@@ -142,7 +142,8 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
   Round 4 (the user, 2026-11-17): «Начать» WITHOUT glow, a smoother breath (36 frames: scale +-4 %, a +-2 deg turn,
   `start_layer`); the title ribbon lowered onto the frame (band 92..184, overlapping the frame top: no gap in the middle either); the banner hides the menu's
   interface behind it (village only), the Queen faces the centre, the ribbon TEAL (was green).
-  NOT approved yet, nothing built. Open after the look: the feature's list, crystals/piggy rules in a custom world.
+  The screen (`SandboxHub_A3.png` + `_A3_StartPulse.gif`) and the banner (`_A3_Banner.png`) APPROVED by the user
+  («Утверждаю», 2026-11-17). Nothing built yet. Next (the user's order): discuss the feature's list, then build.
 - saves dialog rows (2026-11-10, the user): the save's THEME glyph alone (no round under it, like the tabs) (season -> first
   theme of it; old saves summer), name + date, then «День N · Жителей N · Зданий N · Код карты v-seed»
   (`#load_row_stats` / `#load_row_code`; buildings = save entries minus Road/Fence/Moat/Bridge/

@@ -1,6 +1,6 @@
 ---
 name: project_sandbox_menu_redesign
-description: Sandbox menu redesign (2026-11-17) -- user picked concept A «Стол картографа», v2 mock-ups sent; paid «Свобода песочницы» (~$0.99 world settings) look first, functions to discuss; per-map autosave BUILT
+description: Sandbox menu redesign (2026-11-17) -- concept A «Стол картографа» v3 + purchase banner APPROVED, not built; paid «Свобода песочницы» (~$0.99 world settings) look first, functions to discuss; per-map autosave BUILT
 metadata:
   type: project
 ---
@@ -10,7 +10,7 @@ Order the user set: concepts first for approval, THEN discuss the feature's func
 
 - Concepts A/B/C (`Tools/ui/sandbox_hub_concepts.py`, `Design/ui/SandboxHub_*.png`); user picked **A «Стол картографа»**
   and asked to refine it; v2 = `SandboxHub_A2_*`; v3 after notes = `SandboxHub_A3.png`, `_A3_StartPulse.gif`,
-  `_A3_Banner.png` (purchase banner like plague/fire) sent, awaiting verdict. RULES: settings SHOWN OPEN, a change
+  `_A3_Banner.png` (purchase banner like plague/fire) APPROVED («Утверждаю», 2026-11-17); not built; next = discuss the feature's list, then build. RULES: settings SHOWN OPEN, a change
   attempt opens the purchase banner; «Начать» pulses; ribbon joined like plague/fire banners.
 - Settings in the mock-ups are examples only. Open: the list; whether a custom world earns piggy tasks/crystals
   (risk: easy settings farm paid currency -- options A mark world «Свой мир» no tasks, B same rules, C bonus for hard).
