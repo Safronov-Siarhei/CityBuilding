@@ -139,6 +139,9 @@ Glass only; Classic menu inks in `HudSkinApplier.MenuInk` (dark on parchment pla
   (RULE, the user): a try to change one opens the purchase banner «Свобода песочницы», built like the plague/fire
   banners (wood window, a sunny chart field with sparkles, the King and the Queen at the sides, parchment: «Сделай этот
   мир своим!», the settings' glyphs, «Навсегда, для всех карт», gold «Открыть за $0.99», «Закрыть»; green ribbon).
+  Round 4 (the user, 2026-11-17): «Начать» WITHOUT glow, a smoother breath (36 frames: scale +-4 %, a +-2 deg turn,
+  `start_layer`); the title ribbon lowered so its tails lie on the frame (no gap); the banner hides the menu's
+  interface behind it (village only), the Queen faces the centre, the ribbon TEAL (was green).
   NOT approved yet, nothing built. Open after the look: the feature's list, crystals/piggy rules in a custom world.
 - saves dialog rows (2026-11-10, the user): the save's THEME glyph alone (no round under it, like the tabs) (season -> first
   theme of it; old saves summer), name + date, then «День N · Жителей N · Зданий N · Код карты v-seed»

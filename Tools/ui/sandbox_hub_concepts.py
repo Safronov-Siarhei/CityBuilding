@@ -661,7 +661,18 @@ def scroll_v3(img, box):
     return img
 
 
-def screen_a3(start_scale=1.0, start_glow=0.6):
+def start_layer(scale, angle):
+    """«Начать» on its own layer, scaled and turned round its centre (the pulse: no glow, the user 2026-11-17)."""
+    w, h = 290, 86
+    pad = 40
+    lay = Image.new('RGBA', (W, H), 0)
+    start_button(lay, (pad, pad, pad + w, pad + h), 54)
+    piece = lay.crop((0, 0, w + 2 * pad, h + 2 * pad + 14))
+    piece = piece.resize((round(piece.width * scale), round(piece.height * scale)), Image.LANCZOS)
+    return piece.rotate(angle, resample=Image.BICUBIC, expand=True)
+
+
+def screen_a3(start_scale=1.0, start_angle=0.0):
     img = background()
     frame = (60, 170, W - 60, H - 30)
     img = wood_frame(img, frame, 56)
@@ -687,11 +698,9 @@ def screen_a3(start_scale=1.0, start_glow=0.6):
     text(d, (box[2] - 145, y), 'По умолчанию', 22, stroke=3)
     saves_plaque(img, 1130, 962, 330)
     # «Начать» drawn at its pulse's scale, round its centre
-    sc = (1615, 1000)
-    glow(img, sc, int(520 * (0.9 + 0.3 * start_glow)), start_glow)
-    bw, bh = 290 * start_scale, 86 * start_scale
-    start_button(img, (sc[0] - bw / 2, sc[1] - bh / 2, sc[0] + bw / 2, sc[1] + bh / 2), int(54 * start_scale))
-    img = ribbon_joined(img, W / 2, 40, 132, 600, *WOOD_RIBBON, 'Песочница', 60)
+    sc = (1615, 1007)
+    put(img, start_layer(start_scale, start_angle), sc)
+    img = ribbon_joined(img, W / 2, 74, 166, 600, *WOOD_RIBBON, 'Песочница', 60)
     corner_buttons(img)
     return img
 
@@ -703,11 +712,14 @@ def concept_a3():
 def concept_a3_pulse():
     """«Начать» breathing (scale +-5 %, the glow with it): a GIF of the screen's corner."""
     frames = []
-    for i in range(14):
-        t = math.sin(2 * math.pi * i / 14)
-        img = screen_a3(1.0 + 0.05 * t, 0.55 + 0.35 * t)
+    n = 36
+    for i in range(n):
+        ph = 2 * math.pi * i / n
+        scale = 1.0 + 0.04 * math.sin(ph)
+        angle = 2.0 * math.sin(ph + math.pi / 2)
+        img = screen_a3(scale, angle)
         frames.append(img.crop((1100, 880, 1920, 1080)).convert('RGB'))
-    frames[0].save(OUT + 'SandboxHub_A3_StartPulse.gif', save_all=True, append_images=frames[1:], duration=80, loop=0)
+    frames[0].save(OUT + 'SandboxHub_A3_StartPulse.gif', save_all=True, append_images=frames[1:], duration=50, loop=0)
     return None
 
 
@@ -734,8 +746,8 @@ def bright_field(w, h, seed=7):
 
 
 def concept_a3_banner():
-    img = screen_a3()
-    img = Image.alpha_composite(img, Image.new('RGBA', (W, H), (10, 6, 2, 180)))
+    img = background()                                 # the menu's front hidden under the banner (the user)
+    img = Image.alpha_composite(img, Image.new('RGBA', (W, H), (10, 6, 2, 90)))
     X0, Y0, X1, Y1 = 60, 230, 1860, 1050
     # the window: wood frame, the bright chart field inside
     img = shadowed(img, (X0, Y0, X1, Y1), 50, blur=30, alpha=200, off=(0, 24))
@@ -748,7 +760,7 @@ def concept_a3_banner():
     # the figures: the King and the Queen at the sides
     from invasion_hub_concepts import figure
     img = figure(img, 'King', 640, 330, Y1 - 30)
-    img = figure(img, 'Queen', 620, W - 330, Y1 - 30, flip=True)
+    img = figure(img, 'Queen', 620, W - 330, Y1 - 30)
     # the parchment column
     pw0, pw1 = W / 2 - 330, W / 2 + 330
     img = parchment(img, (pw0, 330, pw1, 1010), 36)
@@ -772,8 +784,8 @@ def concept_a3_banner():
     d.rounded_rectangle((b[0] + 11, b[1] + 10, b[2] - 11, (b[1] + b[3]) / 2), 30, fill=(250, 206, 100))
     text(d, (W / 2, (b[1] + b[3]) / 2 + 2), 'Открыть за ' + PRICE, 50, stroke=6, stroke_fill=(110, 60, 10))
     text(d, (W / 2, 920), 'Закрыть', 40, fill=(140, 110, 70), stroke=0)
-    img = ribbon_joined(img, W / 2, 150, 330, 1000, (60, 140, 64), (40, 104, 46), (20, 60, 24), (14, 44, 18),
-                        (110, 190, 100), 'Свобода песочницы', 84)
+    img = ribbon_joined(img, W / 2, 150, 330, 1000, (28, 132, 150), (18, 98, 114), (8, 56, 68), (6, 40, 50),
+                        (100, 196, 210), 'Свобода песочницы', 84)
     return img
 
 
