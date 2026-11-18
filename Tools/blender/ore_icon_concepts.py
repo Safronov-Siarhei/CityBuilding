@@ -4,9 +4,12 @@ angle and light (render_icons.py), never saving the .blend:
 
     blender --background Buildings-Size1-Models.blend --python ore_icon_concepts.py -- <out_dir>
 
-A  «Глыба с жилами»  -- a grey crag with crystals of the ore in its faces (as the mines show ore on the map)
-B  «Самородки»       -- a small heap of faceted lumps of the ore itself, one grey stone among them
+Round 2 (the user: the first lumps looked like flat cakes -- «лепёшки»): every lump is now a SOLID chunk, a
+jittered icosphere with facets of a second colour (steel in iron, patina on copper, shine on gold).
+A  «Глыба с жилами»  -- a grey rock with chunks of the ore bursting out of it
+B  «Самородки»       -- a heap of solid lumps of the ore
 C  «Короб руды»      -- a wooden crate brim-full of lumps
+D  «Крупный кусок»   -- one big chunk with a small one beside it
 """
 import math
 import os
@@ -14,6 +17,7 @@ import random
 import sys
 
 import bpy
+from mathutils import Euler, Vector
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import detail  # noqa: E402
@@ -34,25 +38,70 @@ ORES = {
 }
 
 
-def lump(b, x, y, z, r, color, seed):
-    """A faceted lump: a squat blob turned a random way."""
+def _ico(subdiv):
+    """Unit icosahedron, optionally split once: (vertices, triangles)."""
+    t = (1 + 5 ** 0.5) / 2
+    vs = [(-1, t, 0), (1, t, 0), (-1, -t, 0), (1, -t, 0), (0, -1, t), (0, 1, t), (0, -1, -t), (0, 1, -t),
+          (t, 0, -1), (t, 0, 1), (-t, 0, -1), (-t, 0, 1)]
+    vs = [Vector(v).normalized() for v in vs]
+    fs = [(0, 11, 5), (0, 5, 1), (0, 1, 7), (0, 7, 10), (0, 10, 11), (1, 5, 9), (5, 11, 4), (11, 10, 2), (10, 7, 6),
+          (7, 1, 8), (3, 9, 4), (3, 4, 2), (3, 2, 6), (3, 6, 8), (3, 8, 9), (4, 9, 5), (2, 4, 11), (6, 2, 10),
+          (8, 6, 7), (9, 8, 1)]
+    for _ in range(subdiv):
+        mid = {}
+
+        def m(a, b):
+            k = (min(a, b), max(a, b))
+            if k not in mid:
+                vs.append((vs[a] + vs[b]).normalized())
+                mid[k] = len(vs) - 1
+            return mid[k]
+        nf = []
+        for a, b, c in fs:
+            ab, bc, ca = m(a, b), m(b, c), m(c, a)
+            nf += [(a, ab, ca), (b, bc, ab), (c, ca, bc), (ab, bc, ca)]
+        fs = nf
+    return vs, fs
+
+
+def nugget(b, x, y, z, r, color, seed, glint=None, share=0.0, squash=0.8, subdiv=1):
+    """A chunky, solid lump of ore: a jittered icosphere, flat-shaded, sitting with its bottom at z.
+    `glint` paints about `share` of its facets (steel in iron, patina on copper, shine on gold)."""
     rnd = random.Random(seed)
-    b.blob(x, y, z, r * rnd.uniform(0.9, 1.15), r * rnd.uniform(1.1, 1.5), color, sides=rnd.choice((4, 5, 6)))
+    vs, fs = _ico(subdiv)
+    sx, sy, sz = r * rnd.uniform(0.9, 1.2), r * rnd.uniform(0.8, 1.05), r * squash * rnd.uniform(0.9, 1.15)
+    turn = Euler((rnd.uniform(0, 6.3), rnd.uniform(0, 6.3), rnd.uniform(0, 6.3))).to_matrix()
+    pts = []
+    for v in vs:
+        k = rnd.uniform(0.82, 1.12)
+        w = turn @ (v * k)
+        pts.append(Vector((w.x * sx, w.y * sy, w.z * sz)))
+    low = min(p.z for p in pts)
+    verts = [b.bm.verts.new((x + p.x, y + p.y, z + p.z - low * 0.85)) for p in pts]
+    for a, bb, c in fs:
+        col = glint if glint and rnd.random() < share else color
+        b._face([verts[a], verts[bb], verts[c]], col)
 
 
 def look_a(b, main, second):
-    d.rock(b, 0, 0, 0.17, 0.15, 0.2, 'stone_mid', seed=4, rot=12, ore=main, veins=6)
-    d.ore_vein(b, 0.05, -0.12, 0.05, second, 0.035)
+    """A grey rock with chunks of the ore bursting out of it."""
+    nugget(b, 0, 0, 0, 0.16, 'stone_mid', seed=11, glint='stone_dark', share=0.25, squash=0.85)
+    # chunks sit ON the faces turned to the icon camera (it looks from -x, -y, above)
+    for i, (x, y, z, r) in enumerate(((-0.1, -0.13, 0.03, 0.07), (0.05, -0.16, 0.04, 0.065), (-0.04, -0.1, 0.13, 0.065),
+                                      (-0.15, -0.02, 0.1, 0.055), (0.1, -0.08, 0.14, 0.05))):
+        nugget(b, x, y, z, r, main, seed=20 + i, glint=second, share=0.3, squash=1.0, subdiv=0)
 
 
 def look_b(b, main, second):
-    pts = ((-0.08, -0.03, 0, 0.075, main), (0.07, -0.05, 0, 0.07, main), (0.0, 0.07, 0, 0.07, second),
-           (-0.01, -0.01, 0.07, 0.065, main), (0.11, 0.06, 0, 0.05, 'stone_dark'))
-    for i, (x, y, z, r, col) in enumerate(pts):
-        lump(b, x, y, z, r, col, seed=i + 3)
+    """A heap of solid lumps of the ore, one on top."""
+    pts = ((-0.08, -0.03, 0, 0.085), (0.08, -0.05, 0, 0.08), (0.0, 0.08, 0, 0.08), (0.0, -0.01, 0.09, 0.075))
+    for i, (x, y, z, r) in enumerate(pts):
+        nugget(b, x, y, z, r, main, seed=i + 3, glint=second, share=0.22)
+    nugget(b, 0.13, 0.07, 0, 0.05, 'stone_dark', seed=40)
 
 
 def look_c(b, main, second):
+    """A wooden crate brim-full of lumps."""
     w, dp, h = 0.17, 0.13, 0.1
     b.box(-w, w, -dp, dp, 0, h, 'wood_mid', bevel=0.008)
     for x in (-w, w):   # corner posts and a band
@@ -60,12 +109,18 @@ def look_c(b, main, second):
             b.box(x - 0.012, x + 0.012, y - 0.012, y + 0.012, 0, h + 0.01, 'wood_dark')
     b.box(-w - 0.004, w + 0.004, -dp - 0.004, dp + 0.004, h * 0.45, h * 0.6, 'wood_dark', skip=('-z', '+z'))
     rnd = random.Random(7)
-    for i in range(9):
-        x, y = rnd.uniform(-w + 0.04, w - 0.04), rnd.uniform(-dp + 0.04, dp - 0.04)
-        lump(b, x, y, h - 0.02, rnd.uniform(0.045, 0.06), second if i % 4 == 3 else main, seed=i)
+    for i, (x, y) in enumerate(((-0.1, -0.06), (0.0, -0.07), (0.1, -0.05), (-0.09, 0.05), (0.01, 0.05), (0.1, 0.06))):
+        nugget(b, x, y, h - 0.03, rnd.uniform(0.055, 0.065), main, seed=i + 50, glint=second, share=0.22)
+    nugget(b, 0.0, 0.0, h + 0.02, 0.06, main, seed=60, glint=second, share=0.22)
 
 
-LOOKS = {"A": look_a, "B": look_b, "C": look_c}
+def look_d(b, main, second):
+    """One big solid chunk of the ore, a small one leaning on it."""
+    nugget(b, 0, 0, 0, 0.16, main, seed=71, glint=second, share=0.25, squash=0.9)
+    nugget(b, 0.15, -0.08, 0, 0.06, main, seed=72, glint=second, share=0.25)
+
+
+LOOKS = {"A": look_a, "B": look_b, "C": look_c, "D": look_d}
 
 
 def stage():
