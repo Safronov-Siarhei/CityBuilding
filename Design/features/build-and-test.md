@@ -92,7 +92,7 @@ interface pictures to ASTC 4x4 on Android only; `ModelImportDefaults` compresses
 pieces at Medium. Both importers carry `GetVersion()` -- bump it when their rules change, or nothing
 already imported is redone. If the APK grows past 50 again, read the build log's "Uncompressed usage by
 category" and the APK's own entries (`data.unity3d`, `libil2cpp.so`, `libunity.so`) before guessing.
-`Tools/research/build_android.ps1 [-Development]` (`Editor/BuildAndroid.cs`) and `build_windows.ps1`
+`Tools/research/build_android.ps1 [-Development | -Release]` (-Release = a player build: no cheat window, no PerfProbe; without it the APK carries the cheats) (`Editor/BuildAndroid.cs`) and `build_windows.ps1`
 (`Editor/BuildWindows.cs`) → `D:\Builds CB` (previous build deleted first) → Telegram via
 `send_build_to_telegram.py` (token from `TELEGRAM_BOT_TOKEN`; 50 MB cap). Identifier
 `com.depigogames.citybuilding`. The repo is PUBLIC — nothing secret in it.
