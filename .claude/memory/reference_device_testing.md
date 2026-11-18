@@ -19,3 +19,5 @@ The user enables USB debugging and lets Claude play the build on their phone (fi
 - Release build: `logcat -s Unity` is nearly empty (logs stripped), so no exceptions show there.
 
 Related: [[feedback_build_to_telegram]], [[project_mobile_device_fleet]], [[project_orc_faction]].
+
+**Wireless adb (2026-11-18):** a USB cable to this PC knocks out the user's Bluetooth dongle (mouse/keyboard die), so the Pixel 6 Pro is driven over Wi-Fi debugging. This PC (DESKTOP-KO1JVM5) is already paired; only `adb connect <ip>:<port>` is needed, the port from «Адреса устройств и порт» on the phone's Отладка по Wi-Fi screen (it changes each time the toggle is switched; 2026-11-18: 192.168.100.224:36955). adb = Unity's platform-tools (D:/unity/6000.5.4f1-x86_64/.../platform-tools/adb.exe). Re-pairing an already paired PC gives «protocol fault» -- not an error to chase.
