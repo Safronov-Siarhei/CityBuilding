@@ -185,17 +185,25 @@ def main():
     mat = kit.ensure_material(img)
     atlas = detail.ensure_atlas(os.path.join(os.path.dirname(bpy.data.filepath), detail.ATLAS_FILE))
     detail.build_material_nodes(mat, img, atlas)
-    for look, build in LOOKS.items():
-        for ore, (main_col, second) in ORES.items():
-            b = Builder()
-            build(b, main_col, second)
-            name = f"{look}_{ore}"
-            me = b.to_mesh(name)
-            me.materials.append(mat)
-            detail.add_layers(me, kit.NAMES, kit.COLS, kit.ROWS)
-            obj = bpy.data.objects.new(name, me)
-            sc.collection.objects.link(obj)
-            shoot(sc, cam, cam_data, obj, name)
+    # `-- <out> D2`: look D only, the second colour of iron and copper tried in several colours
+    # (the user, 2026-11-18: D chosen, but not the grey and green facets)
+    jobs = [(look, ore, cols) for look in LOOKS for ore, cols in ORES.items()]
+    if "D2" in argv:
+        jobs = [("D", f"{ore}_{second}", (main_col, second)) for ore, main_col, seconds in (
+            ("Iron", "roof_red_dark", ("roof_orange_dark", "wood_dark", "iron", "roof_red")),
+            ("CopperOre", "roof_orange", ("roof_orange_dark", "roof_red", "roof_straw", "plaster_pink")))
+            for second in seconds]
+    for look, ore, (main_col, second) in jobs:
+        build = LOOKS[look]
+        b = Builder()
+        build(b, main_col, second)
+        name = f"{look}_{ore}"
+        me = b.to_mesh(name)
+        me.materials.append(mat)
+        detail.add_layers(me, kit.NAMES, kit.COLS, kit.ROWS)
+        obj = bpy.data.objects.new(name, me)
+        sc.collection.objects.link(obj)
+        shoot(sc, cam, cam_data, obj, name)
 
 
 main()

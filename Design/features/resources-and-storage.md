@@ -160,3 +160,5 @@ SANDBOX ONLY. Replaces the family pools with a cap PER RESOURCE.
 - Round 2 (the user: the lumps looked like flat cakes, «лепёшки»): every lump is a SOLID chunk now
   (`nugget`: jittered icosphere, flat facets, some facets in the second colour); D «Крупный кусок» added.
   Once one is chosen: put its builder into `render_icons.py` (Res_Iron, Res_CopperOre, Res_Gold, Res_Coal) and re-render.
+- The user chose D (2026-11-18) but not the grey (iron) and green (copper) facets: four facet colours each in
+  `Design/ui/OreIcons_D_Colours.png` (`ore_icon_concepts.py -- <out> D2`); waiting for the pick.
