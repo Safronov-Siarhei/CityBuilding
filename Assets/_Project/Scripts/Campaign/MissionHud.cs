@@ -209,7 +209,8 @@ namespace CityBuilder.Campaign
                 }),
             };
             var step = b * 0.9f + 12f;
-            for (var i = 0, row = 0; i < entries.Length; i++)
+            var row = 0;
+            for (var i = 0; i < entries.Length; i++)
             {
                 if (entries[i].glyph == _art.settingsGlyph && (_settings == null || _art.settingsGlyph == null)) continue;
                 MissionSkin.Round(_modal.transform, "Entry", "round", HudInk.OnRound, entries[i].glyph, new Vector2(0f, 1f),

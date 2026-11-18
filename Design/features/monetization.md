@@ -1,5 +1,7 @@
 # Monetization (direction decided 2026-11-11; the sandbox offer shop BUILT 2026-11-11)
 
+> **2026-11-18 phone playtest (BUILT, not seen):** main-menu shop scrolls from anywhere (the ScrollRect on the whole window, the list its viewport); the pack bonus sticker sits ABOVE the price button; cards LIVE (`UI/ShopCardLife.cs`): the gold rim overlay `CardRim`/`CardRimShort` pulses, each card its own period/phase, and the 4 sparkles are separate `Sparkle` pictures that twinkle (`menu_shop_art.py` grounds now drawn without sparkles, `sparkle_spots` = the code's spots). Daily bonus plays `Audio/Resources/Build/reward.wav` (coins + sparkle, `Tools/audio/build_sounds.py`, `BuildSound.Reward`). Open: the move price concept `Design/ui/MovePrice_Concepts.png` (A/B/C) waits for the user's pick.
+
 > **Status (2026-11-11):** the user settled the direction below and asked for the offer shop («Да,
 > делай»): built, see «Offer shop: how it is built». The daily login bonus is built too. No ads SDK, no IAP.
 > **Rule for the whole game (the user, 2026-11-11): an amount of crystals is the NUMBER LEFT, the icon

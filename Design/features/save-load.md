@@ -1,5 +1,7 @@
 # Save and load
 
+> **2026-11-18:** a save name keeps letters of ANY alphabet (a Russian name came out empty and the save was silently never written -- the user's «сохранение не сохранилось»); an empty name saves under the date-time. Test `SaveSystemSanitizeNameTests.KeepsCyrillic_ARussianNameIsAName`.
+
 > **Status (2026-10-21):** saves cover town, army (incl. selection and attack orders), hunger,
 > hazards, raids, portals, orc camps, prisoners, rocks. Autosave every 4 min real time + on
 > pause/quit. Old saves keep loading through legacy fields.

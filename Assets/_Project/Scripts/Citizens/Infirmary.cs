@@ -414,8 +414,11 @@ namespace CityBuilder.Citizens
             else
             {
                 var at = p.Figure != null ? p.Figure.transform.position : p.Home != null ? p.Home.transform.position : Vector3.zero;
-                log.Post(GameEvent.At(Localization.Get("#log_infirmary_full"), EventSeverity.Warning, EventGlyph.Sick, HealerId, at,
-                    p.Figure != null ? p.Figure.transform : null));
+                var notice = GameEvent.At(Localization.Get("#log_infirmary_full"), EventSeverity.Warning, EventGlyph.Sick, HealerId, at,
+                    p.Figure != null ? p.Figure.transform : null);
+                // a tap opens the build menu and points at the Healer, as the hints do (the user, 2026-11-18)
+                notice.Tapped = () => UI.BuildHints.LeadToBuild(HealerId);
+                log.Post(notice);
             }
         }
 

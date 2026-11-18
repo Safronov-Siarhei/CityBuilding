@@ -75,6 +75,9 @@ namespace CityBuilder.EditorTools
             logo.preserveAspect = true;
             logo.raycastTarget = false;
             Anchor(logo.rectTransform, new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -110f), new Vector2(638f, 170f));
+            // a little life (the user, 2026-11-18): the name floats, «Продолжить» breathes
+            CityBuilder.UI.MenuLife.Add(logo.gameObject, CityBuilder.UI.MenuLife.Kind.Float);
+            CityBuilder.UI.MenuLife.Add(play.gameObject, CityBuilder.UI.MenuLife.Kind.Pulse);
             BuildNewsButton(underShop);  // «Новости», right of the settings, under «Магазин» (the user, 2026-11-17)
             BuildLanguagePicker(main);   // alone in the top-left corner; last, so its open list lies over the rest
 

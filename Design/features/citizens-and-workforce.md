@@ -1,5 +1,7 @@
 # Citizens and workforce
 
+> **2026-11-18:** Farm renamed «Поле»/Field (sheet + CSV); the field worker now steps straight IN from the NavMesh edge to his spot inside the carved plot (`CitizenAgent._steppedIn`); a resident cannot be ordered onto a ship (`CitizenSelector`: red NO); a house's spawn bar hides while nothing is made (plague, hunger).
+
 > **2026-11-02 WORK LOOPS (round 9, the user) -- BUILT 9cd796d3, untested, not seen.** Workers act out
 > their trade: woodcutter axe at the tree, quarryman pick at the rock, ploughman hoe on the Farm's plot,
 > picker basket in the Orchard, swineherd pail in the Pig Farm (faces the pen centre), fisherman casts a

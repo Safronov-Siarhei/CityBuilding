@@ -246,6 +246,7 @@ namespace CityBuilder.Citizens
         private WorkKind _workKind;
         private System.Func<WorkSpot> _spots;
         private WorkSpot _spot;
+        private bool _steppedIn;
         private bool _headingToSpot;
         private const float SpotWorkSeconds = 6f;
         private CitizenWaddle _waddle;
@@ -306,6 +307,7 @@ namespace CityBuilder.Citizens
         {
             _spot = _spots();
             _headingToSpot = true;
+            _steppedIn = false;
             WalkTo(_spot.At);
         }
 
@@ -681,6 +683,21 @@ namespace CityBuilder.Citizens
             // Working at a spot of his own (a field, a shore): work there a while
             if (!_nodePos.HasValue && _spots != null)
             {
+                // the spot is inside the field's own carve, so the NavMesh route stops at its edge: the last
+                // steps go straight in (the user, 2026-11-18: «житель пашет рядом с фермой, а должен на ней»)
+                var off = _spot.At - transform.position;
+                off.y = 0f;
+                if (_headingToSpot && !_steppedIn && off.sqrMagnitude > 0.04f)
+                {
+                    _steppedIn = true;
+                    _fallbackRoute[0] = _spot.At;
+                    _route = _fallbackRoute;
+                    _routeIndex = 0;
+                    _target = _route[0];
+                    _isWalking = true;
+                    ResetStuckTracking();
+                    return;
+                }
                 BeginPause(_headingToSpot ? SpotWorkSeconds : BuildingRestSeconds);
                 if (_headingToSpot) Waddle?.Work(_workKind, _spot.Face);
                 _headingToSpot = false;

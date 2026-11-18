@@ -41,17 +41,19 @@ namespace CityBuilder.Saving
             if (nameInput == null || saveController == null) return;
 
             var name = SaveSystem.SanitizeName(nameInput.text);
-            if (string.IsNullOrEmpty(name)) return;
+            // nothing usable typed: the date and time, never a silent no-save
+            if (string.IsNullOrEmpty(name)) name = System.DateTime.Now.ToString("yyyy-MM-dd_HH-mm");
 
             saveController.SaveGame(name);
             CloseDialog();
         }
 
-        /// <summary>English letters/digits and space/-/_ only, matching SaveSystem.SanitizeName.</summary>
+        /// <summary>Letters/digits of any alphabet and space/-/_, matching SaveSystem.SanitizeName.</summary>
         private static char ValidateChar(string text, int charIndex, char addedChar)
         {
-            var isLetter = (addedChar >= 'a' && addedChar <= 'z') || (addedChar >= 'A' && addedChar <= 'Z');
-            var isDigit = addedChar >= '0' && addedChar <= '9';
+            // any alphabet (a Russian name came out empty and nothing was saved, the user 2026-11-18)
+            var isLetter = char.IsLetterOrDigit(addedChar);
+            var isDigit = false;
             var isAllowedSymbol = addedChar == ' ' || addedChar == '-' || addedChar == '_';
             return (isLetter || isDigit || isAllowedSymbol) ? addedChar : '\0';
         }

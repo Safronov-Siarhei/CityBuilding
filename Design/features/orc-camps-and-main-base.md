@@ -1,5 +1,7 @@
 # Orc camps (levels 1–3) and the main base
 
+> **2026-11-18:** crow v2 (`Tools/blender/crow2.py`: slim body, beak, fanned tail, broad wings in a V with five pointed primaries, 133 tris) rendered `Design/concepts/Crow_v2.png` for the user -- WAITS for approval; then it replaces `build_crow` in orcisland1.py as OrcCrow1 (the plague crows use the same model).
+
 > **2026-11-10 (the user):** crows over the main base REMOVED (CrowFlock no longer added). Camps, their buildings and orcs not drawn under the fog; patrols walk only on view (FogCulling, see performance-mobile).
 
 > **Status (2026-10-21):** walled camps L1–3, the main base (stone set, mountains, boss chief),

@@ -20,7 +20,7 @@ namespace CityBuilder.Saving
         private static string SavesFolder => Path.Combine(Application.persistentDataPath, SavesFolderName);
 
         /// <summary>
-        /// Keeps only ASCII letters/digits (English naming, as requested) plus space/-/_ (spaces
+        /// Keeps only letters/digits of any alphabet plus space/-/_ (spaces
         /// become underscores), so the result is always a safe file name.
         /// </summary>
         public static string SanitizeName(string rawName)
@@ -30,7 +30,9 @@ namespace CityBuilder.Saving
             var builder = new StringBuilder();
             foreach (var c in rawName.Trim())
             {
-                if (c < 128 && char.IsLetterOrDigit(c))
+                // any alphabet's letters, not English only: a Russian name came out empty and the save was never
+                // written (the user, 2026-11-18: «я создал своё сохранение, но оно не сохранилось»)
+                if (char.IsLetterOrDigit(c))
                 {
                     builder.Append(c);
                 }

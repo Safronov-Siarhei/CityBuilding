@@ -48,12 +48,10 @@ namespace CityBuilder.Tests.EditMode
         }
 
         [Test]
-        public void KeepsCyrillicOut_NonAsciiLettersAreDropped()
+        public void KeepsCyrillic_ARussianNameIsAName()
         {
-            // English-only naming, per SanitizeName's own doc comment -- Cyrillic input still
-            // resolves to a safe (if empty-ish) name instead of throwing or embedding raw Unicode
-            // into a file path.
-            Assert.AreEqual(string.Empty, SaveSystem.SanitizeName("Сохранение"));
+            // the user, 2026-11-18: a Russian name came out empty and the save was never written
+            Assert.AreEqual("Моё_сохранение", SaveSystem.SanitizeName("Моё сохранение!"));
         }
     }
 }

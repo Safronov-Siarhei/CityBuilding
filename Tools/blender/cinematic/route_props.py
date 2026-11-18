@@ -65,8 +65,8 @@ def fallen_tree():
     L = 1.5
     b.hcylinder('x', (0, 0, 0.1), L / 2, 0.1, 'wood_mid', sides=7)
     b.hcylinder('x', (0, 0, 0.1), L / 2 + 0.01, 0.075, 'wood_light', sides=7)             # the pale broken end
-    for x in (-0.45, -0.1, 0.3, 0.55):
-        b.box(x - 0.09, x + 0.09, -0.07, 0.07, 0.185, 0.205, 'grass_dark', bevel=0.01)     # moss on top
+    for k, x in enumerate((-0.45, -0.1, 0.3)):                                            # moss on top: low lumps, not slabs
+        d.ore_chunk(b, x, 0.0, 0.17, 0.07, 'grass_dark', seed=80 + k, glint='leaf', share=0.3, squash=0.55, subdiv=0)
     # the root plate, standing on edge with its earth
     b.prism([(-0.26, 0.0), (0.26, 0.0), (0.3, 0.2), (0.16, 0.36), (-0.14, 0.38), (-0.3, 0.2)],
             (-L / 2 - 0.06, 0, 0), (0, 1, 0), (0, 0, 1), 0.08, 'wood_dark', back_cap=True)
@@ -77,9 +77,14 @@ def fallen_tree():
     b.blob(-L / 2 + 0.08, 0.0, 0.0, 0.2, 0.06, 'wood_dark', sides=7)                      # the hole's spoil
     for x, s, up in ((0.1, 1, 0.22), (0.4, -1, 0.18), (-0.25, 1, 0.16)):
         b.rod((x, s * 0.07, 0.15), (x + 0.12, s * 0.28, 0.15 + up), 0.03, 'wood_mid')     # snapped branches
-    for x, y, r, h, c in ((0.62, 0.12, 0.22, 0.3, 'leaf'), (0.8, -0.12, 0.2, 0.26, 'grass_dark'),
-                          (0.95, 0.15, 0.18, 0.24, 'leaf'), (0.72, 0.3, 0.14, 0.2, 'grass_dark')):
-        b.blob(x, y, 0.02, r, h, c, sides=7)                                                # the crown, still green
+    # the crown, still green: solid faceted balls like the game's trees, two greens (the user, 2026-11-18: the old
+    # one was flat «pancakes» -- «крона блинами, сделай нормальную»)
+    for k, (x, y, z, r, c, g) in enumerate(((0.66, 0.02, -0.03, 0.26, 'leaf', 'grass_dark'),
+                                            (0.9, -0.14, -0.03, 0.22, 'grass_dark', 'leaf'),
+                                            (0.92, 0.17, -0.02, 0.21, 'leaf', 'grass_dark'),
+                                            (0.78, 0.04, 0.2, 0.2, 'leaf', 'grass_dark'),
+                                            (1.1, 0.0, -0.02, 0.17, 'grass_dark', 'leaf'))):
+        d.ore_chunk(b, x, y, z, r, c, seed=90 + k, glint=g, share=0.3, squash=0.85, subdiv=1)
     return b
 
 

@@ -1,5 +1,7 @@
 # Tutorial (обучение)
 
+> **2026-11-18:** the sandbox offer counts only the PLAYER's buildings (the bot's growing town kept resetting the stall clock), and rule 6: from game day `tutorial_offer_day` (3, tab Обучение) with nothing of his own past the start chain the banner opens.
+
 > Status 2026-11-06: DONE -- the user closed the tutorial after five playtests. Every tutorial number is on the sheet's own `tutorial` tab (gid 1105001,
 > `Balance/tutorial.csv`). OPEN, deliberately left for the final pre-release pass (the user): how the tutorial is
 > offered to the player (first launch, a menu entry, skip, etc.) -- do not decide it before then.

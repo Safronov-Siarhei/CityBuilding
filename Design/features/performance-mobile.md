@@ -1,5 +1,7 @@
 # Performance on mobile
 
+> **2026-11-18 (the user: menu 13 fps, film 25, mission 1 10-15 on a strong phone) -- levers BUILT, NOT MEASURED:** Auto High on a PHONE = 1080 short side + MSAA 2x (desktop keeps 1440/4x); no bloom in the main menu on phones; Gaussian DOF in the film on phones; bloom+DOF off once mission 1 play starts; mission 1 camera far 260 -> 45 (also clips URP's shadow distance). Measure on the phone next.
+
 > **2026-11-10 GRAPHICS SETTINGS: Auto / Manual (the user).** Settings → Graphics: **Авто | Ручная**.
 > Auto = the device's tier (line «Сейчас: Низкий»). Manual opens, each row with a «!» info window
 > (texts `#settings_gfx_*_info` in the sheet): **Уровень графики** Низкий/Средний/Высокий/Свой (a level

@@ -1,5 +1,7 @@
 # HUD and UI
 
+> **2026-11-18 phone playtest (BUILT, not seen):** EVERY banner x1.5 (`BannerScale` 0.9, `RateUsSize` 0.75, `DiplomacyBannerSize` 0.9); the event feed shows at most 3 icons (`EventFeedController.maxShown`), a 4th WAITS in a queue until one goes; boosters in «Запасы» start at the resource grid's left edge; tapping an ore deposit / fertile land glides the camera there; the «мест в лечебнице» notice leads to the Healer (`BuildHints.LeadToBuild`); main menu: `UI/MenuLife.cs` floats the CityCraft logo and pulses «Продолжить»; APK label CityCraft (`BuildAndroid.AppName`, Editor keeps CityBuilding), adaptive Android icon `UI/AppIconAdaptive.png` (`Tools/store/make_adaptive_icon.py`).
+
 > **2026-11-10 playtest (the user, phone):** a tapped event icon keeps its line up `event_caption_sec` (4, economy) -- a finger lifting no longer hides it (`EventIconView`); the HUD ignores the SIDE safe-area insets (`SafeAreaFitter`: left column to the screen edge; top/bottom still kept); the Day plaque sits UNDER the windows (sibling before BuildingInfoPanel); one round cancel button for every selection incl. a citizen (old «Выбран житель ✕» badge unused), pinned to the bottom-right corner; the new-squad button draws `Hud_Plus` (was a blank square); the food chip pulses red while hungry, faster while people leave. Built, not seen.
 
 > **2026-11-11:** left column = menu, citizens, sack, then the offer shop's stall icon with its timer (`ShopButtonTop`, sandbox only; see [monetization](monetization.md)); the event feed's `LeftColumnTop` moved down again.
