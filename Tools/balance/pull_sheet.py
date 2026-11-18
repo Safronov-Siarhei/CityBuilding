@@ -33,7 +33,8 @@ def merge(tabs):
     header = first_cell(tabs[0])
     for tab in tabs[1:]:
         tab = tab.rstrip('\r\n')
-        if first_cell(tab) == header:
+        # a building/unit table keeps its header (each sandbox tab has columns of its own), as BalanceImporter.Merge
+        if first_cell(tab) == header and header not in ('building', 'unit'):
             cut = tab.find('\n')
             if cut < 0:
                 continue

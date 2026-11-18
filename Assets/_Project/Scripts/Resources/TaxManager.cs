@@ -89,7 +89,8 @@ namespace CityBuilder.Resources
             // once a day: a scan is cheap enough
             foreach (var b in UnityEngine.Object.FindObjectsByType<Buildings.BuildingInstance>(FindObjectsSortMode.None))
             {
-                if (b == null || b.Data == null || b.Data.buildingName != Buildings.BuildingIds.TaxHouse || !b.IsOperational) continue;
+                if (b == null || b.Data == null || b.Data.buildingName != Buildings.BuildingIds.TaxHouse || !b.IsOperational
+                    || !Citizens.ProductionBuilding.Manned(b)) continue;   // no worker, no bonus (2026-11-18)
                 if (b.Level > best) best = b.Level;
             }
             return best;

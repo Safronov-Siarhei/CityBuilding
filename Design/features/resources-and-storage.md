@@ -151,3 +151,10 @@ SANDBOX ONLY. Replaces the family pools with a cap PER RESOURCE.
   `ResourceHUDController.Format`, used by `InventoryPanelController` too; EditMode ResourceHUDFormatTests updated.
 - A store card of ONE resource (Кладовая, Сокровищница) puts its icon and number in the card's middle
   (`StoreInventoryCard.Centre`); more resources keep the 3x3 grid.
+
+## Ore icons -- concepts (2026-11-18, waiting for the user)
+- The user: the ore icons look bad (flat coloured blobs from `render_icons.res_*_ore`). Concepts
+  `Design/ui/OreIcons_Concepts.png` (made by `Tools/blender/ore_icon_concepts.py`, the icon set's own angle/light):
+  A «Глыба с жилами» (grey crag with ore crystals, like the mines on the map), B «Самородки» (heap of lumps),
+  C «Короб руды» (wooden crate full of lumps); iron = rusty red + steel, copper = orange + green patina, gold, coal.
+  Once one is chosen: put its builder into `render_icons.py` (Res_Iron, Res_CopperOre, Res_Gold, Res_Coal) and re-render.

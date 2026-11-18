@@ -122,7 +122,8 @@ namespace CityBuilder.Diplomacy
         {
             var best = 1;
             foreach (var hall in UnityEngine.Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
-                if (!hall.IsBot && hall.Data != null && hall.Data.buildingName == BuildingIds.DiplomacyHall) best = Mathf.Max(best, hall.Level);
+                if (!hall.IsBot && hall.Data != null && hall.Data.buildingName == BuildingIds.DiplomacyHall
+                    && Citizens.ProductionBuilding.Manned(hall)) best = Mathf.Max(best, hall.Level);
             return best;
         }
 
@@ -133,7 +134,8 @@ namespace CityBuilder.Diplomacy
             {
                 if (!BuildingInstance.HasAny(BuildingIds.DiplomacyHall)) return false;
                 foreach (var hall in UnityEngine.Object.FindObjectsByType<BuildingInstance>(FindObjectsSortMode.None))
-                    if (!hall.IsBot && hall.Data != null && hall.Data.buildingName == BuildingIds.DiplomacyHall && hall.IsOperational) return true;
+                    if (!hall.IsBot && hall.Data != null && hall.Data.buildingName == BuildingIds.DiplomacyHall && hall.IsOperational
+                        && Citizens.ProductionBuilding.Manned(hall)) return true;   // its one worker (2026-11-18)
                 return false;
             }
         }

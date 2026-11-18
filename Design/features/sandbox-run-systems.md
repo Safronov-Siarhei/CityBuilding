@@ -33,6 +33,23 @@
 - A separate sheet tab `sandbox` with comments for all of it (prices, upgrades, build times,
   housing, hero/skill/people/repair/minimap keys).
 
+## Sandbox building tabs (the user, 2026-11-18)
+- Seven tabs «Песочница: Здания (Город/Склады/Производство/Еда/Оборона/Водные/Декор)», each laid over the
+  buildings tab on its own (`BalanceImporter.OverlayTab`, columns matched by HEADER NAME -- a new column needs no code).
+- The user's pattern (Город, Склады, Производство, by hand) and Claude's fill of the other four on it:
+  an upgrade = each L1 material +3 per level; coins from L2 when wood+stone >= 30 (25, then +5; a building that costs
+  coins at L1: that +5); a bar at L3/L4/L5 = copper/iron/gold, 1 (tiny) / 3 / 5 / 7 / 10 by size; an L1 ore/bar
+  extra (Stable, Workshop, Bastion, Barbican) is not repeated in upgrades; build time 20/30/40/50/60, tiny pieces
+  (decor, Bridge) 6/8/10/13/19, Fence 2/7/7/8/10; Fence, Bridge, Drawbridge: wood, then stone from L2/L3.
+- What an upgrade GIVES sits at the right end of each tab (max_workers, batches, interval, harvest/service radius,
+  beds, graves, happiness, max_health, defense, levels 1-5) -- copied from the buildings tab, so the numbers did not
+  change. Storage capacities stay on «Склады: лимиты».
+- Tax House, Diplomacy Hall, Cemetery: max_workers 1 at every level, and WITHOUT that worker they do nothing
+  (`ProductionBuilding.Manned`: TaxManager.TaxHouseLevel, BotRelations.HallLevel/Open, Remains' cemetery list).
+  The prefab gets its ProductionBuilding from the sheet (EmploysAtAnyLevel), so it needs setup x2.
+- `Tools/balance/pull_sheet.py` now keeps each `building` table's own header (it merged them under the first one,
+  shifting the Декор columns).
+
 ## How it works
 - `Balance/sandbox.csv` = the `invasion` tab's shape: notes in column A, a `building` table
   (cost_*, upN_*, build_sec(_N), housing_capacity(_N), comment), a `key` table. `BalanceImporter`

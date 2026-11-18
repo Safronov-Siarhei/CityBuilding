@@ -96,6 +96,17 @@ namespace CityBuilder.Citizens
         /// <summary>Worker slots at this building's current upgrade level -- an upgraded workshop can take on more hands the moment it finishes.</summary>
         public int MaxWorkers => Data != null ? Data.LevelStats(CurrentLevel).maxWorkers : 0;
 
+        /// <summary>
+        /// The building's work is done: it has no worker places at its level, or at least one worker. The Tax House,
+        /// the Diplomacy Hall and the Cemetery need their ONE worker (max_workers 1 on the sandbox sheet) or they do
+        /// nothing (the user, 2026-11-18).
+        /// </summary>
+        public static bool Manned(BuildingInstance building)
+        {
+            var work = building != null ? building.GetComponent<ProductionBuilding>() : null;
+            return work == null || work.MaxWorkers <= 0 || work.AssignedWorkers > 0;
+        }
+
         private int CurrentLevel => _buildingInstance != null ? _buildingInstance.Level : 1;
         public string DisplayName => Data != null ? Data.LocalizedName : "?";
 

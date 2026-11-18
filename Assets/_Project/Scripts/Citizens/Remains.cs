@@ -112,7 +112,7 @@ namespace CityBuilder.Citizens
 
             _cemeteries.Clear();
             foreach (var b in BuildingInstance.All)
-                if (IsCemetery(b) && b.IsOperational && b.CurrentHealth > 0) _cemeteries.Add(b);
+                if (IsCemetery(b) && b.IsOperational && b.CurrentHealth > 0 && ProductionBuilding.Manned(b)) _cemeteries.Add(b);   // its one worker (2026-11-18)
             Forget();
 
             // the bodies go to the nearest cemetery on their island with room

@@ -543,3 +543,7 @@ Not checked against the live Play Console -- re-read Google's pages before actin
   «Здания и постройки» row 45) and `ConstructionSite.Finish()`; short of crystals -> `OfferShopWindow.Show()`.
   Every building; hidden in the tutorial and for bot buildings. `UI/InstantBuildBar.cs`, built by
   `SetupProjectHud.BuildInstantBuildButton`.
+- PRICE BY TIME (the user, 2026-11-18): `instant_build_crystals` (1) for every started `instant_build_step_sec` (30) of
+  the construction's REMAINING seconds -- under 30 s 1 crystal, 30-60 s 2, 60-90 s 3... (`InstantBuildBar.PriceOf`,
+  `floor(Remaining / step) + 1`); the button's number follows it as the build runs. Keys on «Здания и постройки»
+  rows 45-46 (move_building_crystals moved to 47). Not built in Unity yet.
