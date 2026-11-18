@@ -367,6 +367,57 @@ def ore_heap(b, x, y, r=0.18, color='iron', second='stone_dark'):
     b.blob(x + r * 0.5, y - r * 0.3, 0, r * 0.55, r * 0.8, second, sides=5)
 
 
+# -- a solid chunk of ore (the resource icons; the user, 2026-11-18: the old heap read as a flat cake) --------
+
+def _ico(subdiv):
+    """Unit icosahedron, optionally split once: (vertices, triangles)."""
+    from mathutils import Vector
+    t = (1 + 5 ** 0.5) / 2
+    vs = [(-1, t, 0), (1, t, 0), (-1, -t, 0), (1, -t, 0), (0, -1, t), (0, 1, t), (0, -1, -t), (0, 1, -t),
+          (t, 0, -1), (t, 0, 1), (-t, 0, -1), (-t, 0, 1)]
+    vs = [Vector(v).normalized() for v in vs]
+    fs = [(0, 11, 5), (0, 5, 1), (0, 1, 7), (0, 7, 10), (0, 10, 11), (1, 5, 9), (5, 11, 4), (11, 10, 2), (10, 7, 6),
+          (7, 1, 8), (3, 9, 4), (3, 4, 2), (3, 2, 6), (3, 6, 8), (3, 8, 9), (4, 9, 5), (2, 4, 11), (6, 2, 10),
+          (8, 6, 7), (9, 8, 1)]
+    for _ in range(subdiv):
+        mid = {}
+
+        def m(a, b):
+            k = (min(a, b), max(a, b))
+            if k not in mid:
+                vs.append((vs[a] + vs[b]).normalized())
+                mid[k] = len(vs) - 1
+            return mid[k]
+        nf = []
+        for a, b, c in fs:
+            ab, bc, ca = m(a, b), m(b, c), m(c, a)
+            nf += [(a, ab, ca), (b, bc, ab), (c, ca, bc), (ab, bc, ca)]
+        fs = nf
+    return vs, fs
+
+
+def ore_chunk(b, x, y, z, r, color, seed, glint=None, share=0.0, squash=0.8, subdiv=1):
+    """A chunky, solid lump of ore: a jittered icosphere, flat-shaded, sitting with its bottom at z.
+    `glint` paints about `share` of its facets (steel in iron, patina on copper, shine on gold)."""
+    import random
+    from mathutils import Euler
+    rnd = random.Random(seed)
+    from mathutils import Vector
+    vs, fs = _ico(subdiv)
+    sx, sy, sz = r * rnd.uniform(0.9, 1.2), r * rnd.uniform(0.8, 1.05), r * squash * rnd.uniform(0.9, 1.15)
+    turn = Euler((rnd.uniform(0, 6.3), rnd.uniform(0, 6.3), rnd.uniform(0, 6.3))).to_matrix()
+    pts = []
+    for v in vs:
+        k = rnd.uniform(0.82, 1.12)
+        w = turn @ (v * k)
+        pts.append(Vector((w.x * sx, w.y * sy, w.z * sz)))
+    low = min(p.z for p in pts)
+    verts = [b.bm.verts.new((x + p.x, y + p.y, z + p.z - low * 0.85)) for p in pts]
+    for a, bb, c in fs:
+        col = glint if glint and rnd.random() < share else color
+        b._face([verts[a], verts[bb], verts[c]], col)
+
+
 def cart(b, x, y, load=None):
     """Hand cart along x with two wheels and shafts; `load` is drawn by the caller on top."""
     b.box(x - 0.2, x + 0.2, y - 0.12, y + 0.12, 0.1, 0.14, 'wood_mid')

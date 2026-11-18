@@ -9,6 +9,6 @@ metadata:
 - Upgrade gains (max_workers, hp, defense, radius, beds, graves, happiness...) moved to the right end of every tab.
 - Instant build: 1 crystal per started 30 s of the REMAINING build (instant_build_step_sec). Remaining, not total -- say so if the user meant total.
 - Tax House, Diplomacy Hall, Cemetery: 1 mandatory worker (ProductionBuilding.Manned). Needs setup x2 by the user (Unity was open).
-- Ore icons: concepts A/B/C in Design/ui/OreIcons_Concepts.png, NOT approved yet.
+- Ore icons: look D (solid chunk) chosen, iron red facets, copper dark-copper facets -- IN THE GAME (UI/Icons re-rendered).
 - Android module installed by hand 2026-11-18 (NDK r27c + SDK pieces from modules.json); Unity must be restarted to see it.
 Related: [[project-balance-pipeline]], [[feedback-approve-models-first]]

@@ -152,7 +152,7 @@ SANDBOX ONLY. Replaces the family pools with a cap PER RESOURCE.
 - A store card of ONE resource (Кладовая, Сокровищница) puts its icon and number in the card's middle
   (`StoreInventoryCard.Centre`); more resources keep the 3x3 grid.
 
-## Ore icons -- concepts (2026-11-18, waiting for the user)
+## Ore icons -- look D IN THE GAME (2026-11-18)
 - The user: the ore icons look bad (flat coloured blobs from `render_icons.res_*_ore`). Concepts
   `Design/ui/OreIcons_Concepts.png` (made by `Tools/blender/ore_icon_concepts.py`, the icon set's own angle/light):
   A «Глыба с жилами» (grey crag with ore crystals, like the mines on the map), B «Самородки» (heap of lumps),
@@ -162,3 +162,7 @@ SANDBOX ONLY. Replaces the family pools with a cap PER RESOURCE.
   Once one is chosen: put its builder into `render_icons.py` (Res_Iron, Res_CopperOre, Res_Gold, Res_Coal) and re-render.
 - The user chose D (2026-11-18) but not the grey (iron) and green (copper) facets: four facet colours each in
   `Design/ui/OreIcons_D_Colours.png` (`ore_icon_concepts.py -- <out> D2`); waiting for the pick.
+- CHOSEN and IN THE GAME 2026-11-18: look D (`details.ore_chunk`, `render_icons._ore`); facets: iron «4 алый»
+  (roof_red_dark + roof_red), copper «1 тёмная медь» (roof_orange + roof_orange_dark), gold + plaster_yellow, coal
+  iron + window. Res_Iron/Res_CopperOre/Res_Gold/Res_Coal.png re-rendered. The mines' ore heaps on the map are unchanged
+  (`ore_heap`, would need model approval + re-export).

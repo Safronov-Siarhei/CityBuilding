@@ -48,8 +48,15 @@ def _bars(b, top, side):
         b.zbox(x, y, z + 0.05, z + 0.055, 0.035, 0.1, a, top)
 
 
+def _ore(b, color, glint):
+    """Look D of Design/ui/OreIcons_Concepts.png (the user, 2026-11-18): one big solid chunk of the ore and a small
+    one beside it, some facets in a second colour."""
+    d.ore_chunk(b, 0, 0, 0, 0.16, color, seed=71, glint=glint, share=0.25, squash=0.9)
+    d.ore_chunk(b, 0.15, -0.08, 0, 0.06, color, seed=72, glint=glint, share=0.25)
+
+
 def res_iron_ore(b):
-    d.ore_heap(b, 0, 0, r=0.16, color='roof_slate', second='stone_dark')
+    _ore(b, 'roof_red_dark', 'roof_red')        # «4 алый» (the user, 2026-11-18)
 
 
 def res_iron_bar(b):
@@ -57,7 +64,7 @@ def res_iron_bar(b):
 
 
 def res_gold_ore(b):
-    d.ore_heap(b, 0, 0, r=0.16, color='gold', second='stone_mid')
+    _ore(b, 'gold', 'plaster_yellow')
 
 
 def res_gold_bar(b):
@@ -65,7 +72,7 @@ def res_gold_bar(b):
 
 
 def res_copper_ore(b):
-    d.ore_heap(b, 0, 0, r=0.16, color='roof_orange', second='roof_green')
+    _ore(b, 'roof_orange', 'roof_orange_dark')  # «1 тёмная медь» (the user, 2026-11-18)
 
 
 def res_copper_bar(b):
@@ -118,7 +125,7 @@ def res_grain(b):
 
 
 def res_coal(b):
-    d.ore_heap(b, 0, 0, r=0.16, color='window', second='iron')
+    _ore(b, 'iron', 'window')
 
 
 def res_people(b):
