@@ -17,7 +17,7 @@ The user's first test of the APK built on the new machine (2026-11-18). Status: 
 5. [x] shop: the bonus % badge overlaps the price button -- put it ABOVE the price
 6. [x] shop: sparkles on offers move; the gold frame of the mine and crystal offers pulses gently, each offer on its own timing
 7. [x] main menu: FPS drops to 13 on a strong phone -- optimise
-8. [x] main menu: the game title moves a little, «Продолжить» pulses slightly
+8. [ ] main menu: the game title moves a little, «Продолжить» pulses slightly
 9. [x] campaign cutscene ~25 FPS on a strong phone -- optimise
 10. [x] campaign: the joystick does not appear where the finger touches
 11. [x] mission 1 ~15 FPS, can drop to 10 -- optimise
