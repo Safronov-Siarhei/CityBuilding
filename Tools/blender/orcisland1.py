@@ -247,15 +247,9 @@ def build_wreck(lo, hi):
 
 
 def build_crow(lo, hi):
-    b = Builder()
-    lump(b, (0, 0, 0), (0.07, 0.17, 0.07), HOLLOW, seed=81, sides=5, rings=3)
-    lump(b, (0, 0.17, 0.03), (0.05, 0.06, 0.05), HOLLOW, seed=82, sides=5, rings=2)
-    o.tube(b, [Vector((0, 0.21, 0.03)), Vector((0, 0.29, 0.02))], [0.02, 0.0], 'iron', sides=3)
-    for s in (-1, 1):
-        b._face([b.bm.verts.new((s * 0.04, 0.08, 0.02)), b.bm.verts.new((s * 0.36, -0.02, 0.1)),
-                 b.bm.verts.new((s * 0.3, -0.12, 0.08)), b.bm.verts.new((s * 0.04, -0.08, 0.02))][::s], HOLLOW)
-    b._face([b.bm.verts.new((0, -0.15, 0.0)), b.bm.verts.new((-0.08, -0.32, 0.0)), b.bm.verts.new((0.08, -0.32, 0.0))], HOLLOW)
-    return b
+    """Crow v2 (approved 2026-11-18): Tools/blender/crow2.py -- a crow in flight, wings spread."""
+    import crow2
+    return crow2.build_crow()
 
 
 def main():

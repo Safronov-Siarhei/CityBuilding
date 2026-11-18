@@ -308,16 +308,19 @@ namespace CityBuilder.EditorTools
             movePrice.transform.SetParent(confirmButton.transform, false);
             var moveRect = (RectTransform)movePrice.transform;
             moveRect.anchorMin = moveRect.anchorMax = new Vector2(0.5f, 0f);
-            moveRect.sizeDelta = new Vector2(120f, 56f);
-            moveRect.anchoredPosition = new Vector2(0f, -6f);
+            moveRect.sizeDelta = new Vector2(132f, 60f);
+            moveRect.anchoredPosition = new Vector2(0f, -2f);
+            // look A (the user, 2026-11-18: under the button it read badly): a gold pill ON the button's lower rim,
+            // the number and the crystal inside it -- the crystal kept left of the pill's end so it never sticks out
+            CreateSkinImage(movePrice.transform, "Pill", "pill_gold", Vector2.zero, new Vector2(132f, 60f)).raycastTarget = false;
             var moveGem = CreateImage(movePrice.transform, "Crystal", Color.white);
             moveGem.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.IconsFolder}/Res_UpgradeCrystal.png");
             moveGem.preserveAspect = true;
             moveGem.raycastTarget = false;
             moveGem.rectTransform.anchorMin = moveGem.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            moveGem.rectTransform.sizeDelta = new Vector2(50f, 50f);
-            moveGem.rectTransform.anchoredPosition = new Vector2(24f, 0f);
-            var moveText = CreateText(movePrice.transform, "Amount", "1", 44, new Vector2(-22f, 0f), new Vector2(60f, 56f));
+            moveGem.rectTransform.sizeDelta = new Vector2(46f, 46f);
+            moveGem.rectTransform.anchoredPosition = new Vector2(18f, 2f);
+            var moveText = CreateText(movePrice.transform, "Amount", "1", 42, new Vector2(-24f, 0f), new Vector2(60f, 56f));
             moveText.font = UiTheme.Heavy;
             moveText.alignment = TextAnchor.MiddleRight;
             moveText.raycastTarget = false;

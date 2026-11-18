@@ -4,7 +4,7 @@ from above like the game sees it: a slim body, a head with a grey beak, a fanned
 in a shallow V whose tips split into five «fingers» -- the crow's own silhouette. Both wing sides drawn (the flock
 beats the wings by squashing the model across). Forward is +y, as the old one.
 
-FOR APPROVAL: renders only, never saves, nothing exported:
+APPROVED by the user 2026-11-18 («вороны - да»): orcisland1.build_crow builds OrcCrow1 from this. Renders:
     blender --background Buildings-Size1-Models.blend --python crow2.py -- <out_dir>
 """
 import math
@@ -50,13 +50,17 @@ def ellipsoid(b, centre, size, color, sides=6, rings=4, seed=0, jitter=0.06):
     b.bm.verts.remove(top)
     b.bm.verts.remove(bot)
     first, last = bands[0], bands[-1]
+    faces = []
     for i in range(sides):
-        b._face([front, first[(i + 1) % sides], first[i]], color)
-        b._face([back, last[i], last[(i + 1) % sides]], color)
+        faces.append(b._face([front, first[(i + 1) % sides], first[i]], color))
+        faces.append(b._face([back, last[i], last[(i + 1) % sides]], color))
     for k in range(len(bands) - 1):
         a, d = bands[k], bands[k + 1]
         for i in range(sides):
-            b._face([a[i], a[(i + 1) % sides], d[(i + 1) % sides], d[i]], color)
+            faces.append(b._face([a[i], a[(i + 1) % sides], d[(i + 1) % sides], d[i]], color))
+    # a closed lump: its faces turned outward whatever order they were made in (Unity culls back faces)
+    import bmesh
+    bmesh.ops.recalc_face_normals(b.bm, faces=faces)
 
 
 def plate(b, pts, color_top, color_under, thick=0.012):
@@ -99,8 +103,10 @@ def build_crow():
     # the beak: a stout grey wedge
     tip = b.bm.verts.new((0, 0.29, 0.015))
     base = [b.bm.verts.new(v) for v in ((-0.018, 0.21, 0.03), (0.018, 0.21, 0.03), (0.0, 0.21, 0.0))]
-    for i in range(3):
-        b._face([base[i], base[(i + 1) % 3], tip], BEAK)
+    beak = [b._face([base[i], base[(i + 1) % 3], tip], BEAK) for i in range(3)]
+    beak.append(b._face(base[::-1], BEAK))
+    import bmesh
+    bmesh.ops.recalc_face_normals(b.bm, faces=beak)
     # the tail: a wedge fan behind
     plate(b, [(-0.03, -0.13, 0.0), (0.03, -0.13, 0.0), (0.08, -0.31, -0.01), (0.0, -0.33, -0.01), (-0.08, -0.31, -0.01)][::-1],
           BLACK, SHEEN, thick=0.01)
@@ -163,4 +169,5 @@ def main():
         print("RENDERED", sc.render.filepath)
 
 
-main()
+if __name__ == "__main__":
+    main()
