@@ -15,7 +15,7 @@ MonoBehaviour:
   buildingName: DecGarden
   displayName: "\u0414\u0435\u043A\u043E\u0440\u0430\u0442\u0438\u0432\u043D\u044B\u0439
     \u0441\u0430\u0434"
-  prefab: {fileID: 1915777058596200691, guid: 5b07fba75721ee243b92a1e4209f6014, type: 3}
+  prefab: {fileID: 5338194622578571212, guid: 5b07fba75721ee243b92a1e4209f6014, type: 3}
   footprintSize: {x: 3, y: 1}
   cost:
   - type: 0
@@ -73,7 +73,7 @@ MonoBehaviour:
     residentCoins: 0.09
     intervalSeconds: 6
     happiness: 5
-    buildSeconds: 9
+    buildSeconds: 10
   - maxHealth: 216
     defense: 0
     housingCapacity: 0
@@ -87,7 +87,7 @@ MonoBehaviour:
     residentCoins: 0.12
     intervalSeconds: 6
     happiness: 7
-    buildSeconds: 11
+    buildSeconds: 13
   - maxHealth: 300
     defense: 0
     housingCapacity: 0
@@ -101,7 +101,7 @@ MonoBehaviour:
     residentCoins: 0.15
     intervalSeconds: 6
     happiness: 10
-    buildSeconds: 15
+    buildSeconds: 19
   recipes: []
   productionIntervalSeconds: 6
   storageGroup: 0
@@ -109,22 +109,28 @@ MonoBehaviour:
   - type: 0
     amount: 8
   - type: 1
-    amount: 3
+    amount: 5
   upgradeToLevel3Cost:
+  - type: 0
+    amount: 11
+  - type: 1
+    amount: 8
+  - type: 13
+    amount: 1
+  upgradeToLevel4Cost:
   - type: 0
     amount: 14
   - type: 1
-    amount: 6
-  upgradeToLevel4Cost:
-  - type: 0
-    amount: 24
-  - type: 1
-    amount: 10
+    amount: 11
+  - type: 12
+    amount: 1
   upgradeToLevel5Cost:
   - type: 0
-    amount: 43
+    amount: 17
   - type: 1
-    amount: 18
+    amount: 14
+  - type: 14
+    amount: 1
   fogRevealRadius: 4
   citizensOnBuild: 0
   maxCount: 0

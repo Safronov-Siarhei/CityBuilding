@@ -14,13 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Quarry
   displayName: "\u041A\u0430\u043C\u0435\u043D\u043E\u043B\u043E\u043C\u043D\u044F"
-  prefab: {fileID: 7805331327804051024, guid: 2316020fc28e3014eb0d5db281ac2734, type: 3}
+  prefab: {fileID: 3827767945752177018, guid: 2316020fc28e3014eb0d5db281ac2734, type: 3}
   footprintSize: {x: 2, y: 2}
   cost:
   - type: 0
-    amount: 8
+    amount: 4
   - type: 1
-    amount: 12
+    amount: 9
   category: 4
   isWaterCategory: 0
   isRoad: 0
@@ -44,7 +44,7 @@ MonoBehaviour:
     residentCoins: 0
     intervalSeconds: 6
     happiness: 0
-    buildSeconds: 7
+    buildSeconds: 20
   - maxHealth: 176
     defense: 0
     housingCapacity: 0
@@ -58,7 +58,7 @@ MonoBehaviour:
     residentCoins: 0
     intervalSeconds: 6
     happiness: 0
-    buildSeconds: 11
+    buildSeconds: 30
   - maxHealth: 275
     defense: 0
     housingCapacity: 0
@@ -72,7 +72,7 @@ MonoBehaviour:
     residentCoins: 0
     intervalSeconds: 6
     happiness: 0
-    buildSeconds: 14
+    buildSeconds: 40
   - maxHealth: 396
     defense: 0
     housingCapacity: 0
@@ -86,7 +86,7 @@ MonoBehaviour:
     residentCoins: 0
     intervalSeconds: 6
     happiness: 0
-    buildSeconds: 21
+    buildSeconds: 50
   - maxHealth: 550
     defense: 0
     housingCapacity: 0
@@ -100,7 +100,7 @@ MonoBehaviour:
     residentCoins: 0
     intervalSeconds: 6
     happiness: 0
-    buildSeconds: 32
+    buildSeconds: 60
   recipes:
   - id: stone
     displayName: "\u041A\u0430\u043C\u0435\u043D\u044C"
@@ -113,16 +113,30 @@ MonoBehaviour:
   storageGroup: 0
   upgradeToLevel2Cost:
   - type: 0
-    amount: 32
+    amount: 7
+  - type: 1
+    amount: 12
   upgradeToLevel3Cost:
   - type: 0
-    amount: 56
+    amount: 10
+  - type: 1
+    amount: 15
+  - type: 13
+    amount: 3
   upgradeToLevel4Cost:
   - type: 0
-    amount: 98
+    amount: 13
+  - type: 1
+    amount: 18
+  - type: 12
+    amount: 3
   upgradeToLevel5Cost:
   - type: 0
-    amount: 172
+    amount: 16
+  - type: 1
+    amount: 21
+  - type: 14
+    amount: 3
   fogRevealRadius: 14
   citizensOnBuild: 0
   maxCount: 0

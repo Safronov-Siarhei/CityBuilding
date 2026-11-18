@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: TownSquare
   displayName: "\u0413\u043E\u0440\u043E\u0434\u0441\u043A\u0430\u044F \u043F\u043B\u043E\u0449\u0430\u0434\u044C"
-  prefab: {fileID: 5548559732432074916, guid: 78e33cecd0fbd0d43897aaad90aa1b5b, type: 3}
+  prefab: {fileID: 8444208564329809476, guid: 78e33cecd0fbd0d43897aaad90aa1b5b, type: 3}
   footprintSize: {x: 2, y: 2}
   cost:
   - type: 0
@@ -44,7 +44,7 @@ MonoBehaviour:
     residentCoins: 0.08
     intervalSeconds: 6
     happiness: 5
-    buildSeconds: 10
+    buildSeconds: 20
   - maxHealth: 144
     defense: 0
     housingCapacity: 0
@@ -58,7 +58,7 @@ MonoBehaviour:
     residentCoins: 0.1
     intervalSeconds: 6
     happiness: 8
-    buildSeconds: 12
+    buildSeconds: 30
   - maxHealth: 225
     defense: 0
     housingCapacity: 0
@@ -72,7 +72,7 @@ MonoBehaviour:
     residentCoins: 0.13
     intervalSeconds: 6
     happiness: 13
-    buildSeconds: 16
+    buildSeconds: 40
   - maxHealth: 324
     defense: 0
     housingCapacity: 0
@@ -86,7 +86,7 @@ MonoBehaviour:
     residentCoins: 0.16
     intervalSeconds: 6
     happiness: 19
-    buildSeconds: 24
+    buildSeconds: 50
   - maxHealth: 450
     defense: 0
     housingCapacity: 0
@@ -100,7 +100,7 @@ MonoBehaviour:
     residentCoins: 0.2
     intervalSeconds: 6
     happiness: 26
-    buildSeconds: 38
+    buildSeconds: 60
   recipes: []
   productionIntervalSeconds: 6
   storageGroup: 0
@@ -108,22 +108,28 @@ MonoBehaviour:
   - type: 0
     amount: 8
   - type: 1
-    amount: 32
+    amount: 23
   upgradeToLevel3Cost:
+  - type: 0
+    amount: 11
+  - type: 1
+    amount: 26
+  - type: 13
+    amount: 5
+  upgradeToLevel4Cost:
   - type: 0
     amount: 14
   - type: 1
-    amount: 56
-  upgradeToLevel4Cost:
-  - type: 0
-    amount: 24
-  - type: 1
-    amount: 98
+    amount: 29
+  - type: 12
+    amount: 5
   upgradeToLevel5Cost:
   - type: 0
-    amount: 43
+    amount: 17
   - type: 1
-    amount: 172
+    amount: 32
+  - type: 14
+    amount: 5
   fogRevealRadius: 6
   citizensOnBuild: 0
   maxCount: 0

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Castle
   displayName: "\u0420\u0430\u0442\u0443\u0448\u0430"
-  prefab: {fileID: 3868689529280351430, guid: 12d3716eb21f17a42845a441d1e87861, type: 3}
+  prefab: {fileID: 2997197574750002002, guid: 12d3716eb21f17a42845a441d1e87861, type: 3}
   footprintSize: {x: 5, y: 5}
   cost: []
   category: 0
@@ -68,7 +68,7 @@ MonoBehaviour:
     residentCoins: 0
     intervalSeconds: 6
     happiness: 0
-    buildSeconds: 70
+    buildSeconds: 40
   - maxHealth: 1440
     defense: 72
     housingCapacity: 5
@@ -82,7 +82,7 @@ MonoBehaviour:
     residentCoins: 0
     intervalSeconds: 6
     happiness: 0
-    buildSeconds: 119
+    buildSeconds: 50
   - maxHealth: 2000
     defense: 100
     housingCapacity: 5
@@ -96,30 +96,44 @@ MonoBehaviour:
     residentCoins: 0
     intervalSeconds: 6
     happiness: 0
-    buildSeconds: 203
+    buildSeconds: 60
   recipes: []
   productionIntervalSeconds: 6
   storageGroup: 0
   upgradeToLevel2Cost:
   - type: 0
-    amount: 100
+    amount: 40
   - type: 1
-    amount: 60
+    amount: 40
+  - type: 7
+    amount: 50
   upgradeToLevel3Cost:
   - type: 0
-    amount: 220
+    amount: 60
   - type: 1
-    amount: 150
+    amount: 60
+  - type: 7
+    amount: 100
+  - type: 13
+    amount: 10
   upgradeToLevel4Cost:
   - type: 0
-    amount: 385
+    amount: 80
   - type: 1
-    amount: 262
+    amount: 80
+  - type: 7
+    amount: 250
+  - type: 12
+    amount: 10
   upgradeToLevel5Cost:
   - type: 0
-    amount: 674
+    amount: 100
   - type: 1
-    amount: 459
+    amount: 100
+  - type: 7
+    amount: 500
+  - type: 14
+    amount: 10
   fogRevealRadius: 20
   citizensOnBuild: 5
   maxCount: 0

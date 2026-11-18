@@ -14,13 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Granary
   displayName: "\u041A\u043B\u0430\u0434\u043E\u0432\u0430\u044F"
-  prefab: {fileID: 6520048272877429477, guid: 0560e55279295f14593433c1419fdeab, type: 3}
+  prefab: {fileID: 7985653288562150102, guid: 0560e55279295f14593433c1419fdeab, type: 3}
   footprintSize: {x: 2, y: 1}
   cost:
   - type: 0
-    amount: 15
+    amount: 8
   - type: 1
-    amount: 3
+    amount: 5
   category: 1
   isWaterCategory: 0
   isRoad: 0
@@ -44,7 +44,7 @@ MonoBehaviour:
     residentCoins: 0
     intervalSeconds: 6
     happiness: 0
-    buildSeconds: 8
+    buildSeconds: 20
   - maxHealth: 176
     defense: 0
     housingCapacity: 0
@@ -58,7 +58,7 @@ MonoBehaviour:
     residentCoins: 0
     intervalSeconds: 6
     happiness: 0
-    buildSeconds: 13
+    buildSeconds: 30
   - maxHealth: 275
     defense: 0
     housingCapacity: 0
@@ -72,7 +72,7 @@ MonoBehaviour:
     residentCoins: 0
     intervalSeconds: 6
     happiness: 0
-    buildSeconds: 19
+    buildSeconds: 40
   - maxHealth: 396
     defense: 0
     housingCapacity: 0
@@ -86,7 +86,7 @@ MonoBehaviour:
     residentCoins: 0
     intervalSeconds: 6
     happiness: 0
-    buildSeconds: 28
+    buildSeconds: 50
   - maxHealth: 550
     defense: 0
     housingCapacity: 0
@@ -100,30 +100,44 @@ MonoBehaviour:
     residentCoins: 0
     intervalSeconds: 6
     happiness: 0
-    buildSeconds: 45
+    buildSeconds: 60
   recipes: []
   productionIntervalSeconds: 6
   storageGroup: 2
   upgradeToLevel2Cost:
   - type: 0
-    amount: 40
+    amount: 11
   - type: 1
     amount: 8
+  - type: 7
+    amount: 10
   upgradeToLevel3Cost:
   - type: 0
-    amount: 70
-  - type: 1
     amount: 14
+  - type: 1
+    amount: 11
+  - type: 7
+    amount: 15
+  - type: 13
+    amount: 10
   upgradeToLevel4Cost:
   - type: 0
-    amount: 122
+    amount: 17
   - type: 1
-    amount: 24
+    amount: 14
+  - type: 7
+    amount: 20
+  - type: 12
+    amount: 10
   upgradeToLevel5Cost:
   - type: 0
-    amount: 214
+    amount: 20
   - type: 1
-    amount: 43
+    amount: 17
+  - type: 7
+    amount: 25
+  - type: 14
+    amount: 5
   fogRevealRadius: 8
   citizensOnBuild: 0
   maxCount: 0

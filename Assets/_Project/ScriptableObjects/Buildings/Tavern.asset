@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: Tavern
   displayName: "\u0422\u0430\u0432\u0435\u0440\u043D\u0430"
-  prefab: {fileID: 1805878015837082049, guid: f74cf7df0ae9b1c4fab1e66a7950fe39, type: 3}
+  prefab: {fileID: 5627482951888670024, guid: f74cf7df0ae9b1c4fab1e66a7950fe39, type: 3}
   footprintSize: {x: 2, y: 1}
   cost:
   - type: 0
@@ -44,7 +44,7 @@ MonoBehaviour:
     residentCoins: 0.12
     intervalSeconds: 6
     happiness: 10
-    buildSeconds: 16
+    buildSeconds: 20
   - maxHealth: 240
     defense: 0
     housingCapacity: 0
@@ -58,7 +58,7 @@ MonoBehaviour:
     residentCoins: 0.15
     intervalSeconds: 6
     happiness: 16
-    buildSeconds: 18
+    buildSeconds: 30
   - maxHealth: 375
     defense: 0
     housingCapacity: 0
@@ -72,7 +72,7 @@ MonoBehaviour:
     residentCoins: 0.2
     intervalSeconds: 6
     happiness: 25
-    buildSeconds: 27
+    buildSeconds: 40
   - maxHealth: 540
     defense: 0
     housingCapacity: 0
@@ -86,7 +86,7 @@ MonoBehaviour:
     residentCoins: 0.25
     intervalSeconds: 6
     happiness: 36
-    buildSeconds: 43
+    buildSeconds: 50
   - maxHealth: 750
     defense: 0
     housingCapacity: 0
@@ -100,30 +100,44 @@ MonoBehaviour:
     residentCoins: 0.3
     intervalSeconds: 6
     happiness: 50
-    buildSeconds: 70
+    buildSeconds: 60
   recipes: []
   productionIntervalSeconds: 6
   storageGroup: 0
   upgradeToLevel2Cost:
   - type: 0
-    amount: 56
+    amount: 38
   - type: 1
-    amount: 24
+    amount: 18
+  - type: 7
+    amount: 25
   upgradeToLevel3Cost:
   - type: 0
-    amount: 98
+    amount: 41
   - type: 1
-    amount: 42
+    amount: 21
+  - type: 7
+    amount: 30
+  - type: 13
+    amount: 7
   upgradeToLevel4Cost:
   - type: 0
-    amount: 172
+    amount: 44
   - type: 1
-    amount: 74
+    amount: 24
+  - type: 7
+    amount: 35
+  - type: 12
+    amount: 7
   upgradeToLevel5Cost:
   - type: 0
-    amount: 300
+    amount: 47
   - type: 1
-    amount: 129
+    amount: 27
+  - type: 7
+    amount: 40
+  - type: 14
+    amount: 7
   fogRevealRadius: 10
   citizensOnBuild: 0
   maxCount: 0

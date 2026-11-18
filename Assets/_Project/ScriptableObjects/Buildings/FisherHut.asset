@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: FisherHut
   displayName: "\u0420\u044B\u0431\u0430\u0446\u043A\u0430\u044F \u0445\u0438\u0436\u0438\u043D\u0430"
-  prefab: {fileID: 2349382175789799825, guid: 819a01bc2f70ada4da92380fc2e241a0, type: 3}
+  prefab: {fileID: 6636714569465940261, guid: 819a01bc2f70ada4da92380fc2e241a0, type: 3}
   footprintSize: {x: 1, y: 1}
   cost:
   - type: 0
@@ -42,7 +42,7 @@ MonoBehaviour:
     residentCoins: 0
     intervalSeconds: 24
     happiness: 0
-    buildSeconds: 6
+    buildSeconds: 20
   - maxHealth: 144
     defense: 0
     housingCapacity: 0
@@ -56,7 +56,7 @@ MonoBehaviour:
     residentCoins: 0
     intervalSeconds: 24
     happiness: 0
-    buildSeconds: 10
+    buildSeconds: 30
   - maxHealth: 225
     defense: 0
     housingCapacity: 0
@@ -70,7 +70,7 @@ MonoBehaviour:
     residentCoins: 0
     intervalSeconds: 24
     happiness: 0
-    buildSeconds: 12
+    buildSeconds: 40
   - maxHealth: 324
     defense: 0
     housingCapacity: 0
@@ -84,7 +84,7 @@ MonoBehaviour:
     residentCoins: 0
     intervalSeconds: 24
     happiness: 0
-    buildSeconds: 17
+    buildSeconds: 50
   - maxHealth: 450
     defense: 0
     housingCapacity: 0
@@ -98,7 +98,7 @@ MonoBehaviour:
     residentCoins: 0
     intervalSeconds: 24
     happiness: 0
-    buildSeconds: 25
+    buildSeconds: 60
   recipes:
   - id: fish
     displayName: "\u0415\u0434\u0430"
@@ -111,16 +111,22 @@ MonoBehaviour:
   storageGroup: 0
   upgradeToLevel2Cost:
   - type: 0
-    amount: 24
+    amount: 13
   upgradeToLevel3Cost:
   - type: 0
-    amount: 42
+    amount: 16
+  - type: 13
+    amount: 3
   upgradeToLevel4Cost:
   - type: 0
-    amount: 74
+    amount: 19
+  - type: 12
+    amount: 3
   upgradeToLevel5Cost:
   - type: 0
-    amount: 129
+    amount: 22
+  - type: 14
+    amount: 3
   fogRevealRadius: 12
   citizensOnBuild: 0
   maxCount: 0

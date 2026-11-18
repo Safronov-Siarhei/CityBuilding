@@ -953,6 +953,511 @@ MonoBehaviour:
     values:
     - "\u042D\u0444\u0444\u0435\u043A\u0442\u044B"
     - Sounds
+  - key: '#news_title'
+    values:
+    - "\u041D\u043E\u0432\u043E\u0441\u0442\u0438"
+    - News
+  - key: '#news_reward'
+    values:
+    - "\u041D\u0430\u0433\u0440\u0430\u0434\u0430:"
+    - 'Reward:'
+  - key: '#news_claim'
+    values:
+    - "\u0417\u0430\u0431\u0440\u0430\u0442\u044C"
+    - Claim
+  - key: '#news_claimed'
+    values:
+    - "\u041F\u043E\u043B\u0443\u0447\u0435\u043D\u043E"
+    - Claimed
+  - key: '#news_empty'
+    values:
+    - "\u041D\u043E\u0432\u043E\u0441\u0442\u0435\u0439 \u043F\u043E\u043A\u0430
+      \u043D\u0435\u0442"
+    - No news yet
+  - key: '#over_inv_points_caption'
+    values:
+    - "\u041E\u0447\u043A\u0438 \u0437\u0430 \u0437\u0430\u0431\u0435\u0433"
+    - Run points
+  - key: '#over_inv_row_waves'
+    values:
+    - "\u041E\u0442\u0431\u0438\u0442\u043E \u0432\u043E\u043B\u043D"
+    - Waves beaten off
+  - key: '#over_inv_row_giant'
+    values:
+    - "\u0412\u0435\u043B\u0438\u043A\u0430\u043D"
+    - The giant
+  - key: '#over_inv_row_camps'
+    values:
+    - "\u041B\u0430\u0433\u0435\u0440\u044F \u043E\u0440\u043A\u043E\u0432"
+    - Orc camps
+  - key: '#over_inv_today_short'
+    values:
+    - "\u0421\u0435\u0433\u043E\u0434\u043D\u044F: {0} \u043E\u0447\u043A\u043E\u0432,
+      \u0437\u0430\u0441\u0447\u0438\u0442\u0430\u043D\u043E \u0437\u0430\u0431\u0435\u0433\u043E\u0432"
+    - 'Today: {0} points, runs counted'
+  - key: '#over_inv_new_run'
+    values:
+    - "\u041D\u043E\u0432\u044B\u0439 \u0437\u0430\u0431\u0435\u0433"
+    - New run
+  - key: '#card_what_house'
+    values:
+    - "\u0414\u043E\u043C: \u0437\u0434\u0435\u0441\u044C \u0436\u0438\u0432\u0443\u0442
+      \u0436\u0438\u0442\u0435\u043B\u0438."
+    - 'A house: residents live here.'
+  - key: '#card_what_store'
+    values:
+    - "\u0425\u0440\u0430\u043D\u0438\u0442 \u0437\u0430\u043F\u0430\u0441\u044B
+      \u0433\u043E\u0440\u043E\u0434\u0430."
+    - Keeps the town's goods.
+  - key: '#card_what_decor'
+    values:
+    - "\u041F\u043B\u0430\u0442\u0438\u0442 \u0436\u0438\u0442\u0435\u043B\u044F\u043C
+      \u0434\u043E\u043C\u043E\u0432 \u0432\u043E\u043A\u0440\u0443\u0433."
+    - Pays the residents of the houses around it.
+  - key: '#card_what_food'
+    values:
+    - "\u0414\u0430\u0451\u0442 \u0435\u0434\u0443 \u0433\u043E\u0440\u043E\u0434\u0443
+      \u043A\u0430\u0436\u0434\u044B\u0439 \u0434\u0435\u043D\u044C."
+    - Gives the town food every day.
+  - key: '#card_what_food_boost'
+    values:
+    - "\u041F\u0440\u0438\u0431\u0430\u0432\u043B\u044F\u0435\u0442 \u0435\u0434\u044B
+      \u0444\u0435\u0440\u043C\u0430\u043C \u0438 \u0440\u044B\u0431\u0430\u043A\u0430\u043C
+      \u0440\u044F\u0434\u043E\u043C."
+    - Adds food to the farms and fishers nearby.
+  - key: '#card_what_gather'
+    values:
+    - "\u0420\u0430\u0431\u043E\u0447\u0438\u0435 \u0434\u043E\u0431\u044B\u0432\u0430\u044E\u0442:
+      {0}."
+    - 'Workers gather: {0}.'
+  - key: '#card_what_make'
+    values:
+    - "\u0420\u0430\u0431\u043E\u0447\u0438\u0435 \u0434\u0435\u043B\u0430\u044E\u0442:
+      {0}."
+    - 'Workers make: {0}.'
+  - key: '#card_what_defence'
+    values:
+    - "\u0421\u0442\u0440\u0435\u043B\u044F\u0435\u0442 \u043F\u043E \u0432\u0440\u0430\u0433\u0430\u043C
+      \u0432 \u0440\u0430\u0434\u0438\u0443\u0441\u0435."
+    - Shoots the enemies in reach.
+  - key: '#card_residents'
+    values:
+    - "\u0416\u0438\u0442\u0435\u043B\u0438"
+    - Residents
+  - key: '#card_workers'
+    values:
+    - "\u0420\u0430\u0431\u043E\u0447\u0438\u0435"
+    - Workers
+  - key: '#card_decor_house'
+    values:
+    - "\u0423\u043A\u0440\u0430\u0448\u0435\u043D\u0438\u044F \u0440\u044F\u0434\u043E\u043C
+      \u043F\u043B\u0430\u0442\u044F\u0442 \u043A\u0430\u0436\u0434\u043E\u043C\u0443
+      \u0436\u0438\u0442\u0435\u043B\u044E: +{0} \u043C\u043E\u043D\u0435\u0442\u044B
+      \u0432 \u0434\u0435\u043D\u044C"
+    - 'Decor nearby pays each resident: +{0} coins a day'
+  - key: '#card_no_decor'
+    values:
+    - "\u0420\u044F\u0434\u043E\u043C \u043D\u0435\u0442 \u0443\u043A\u0440\u0430\u0448\u0435\u043D\u0438\u0439:
+      \u043E\u043D\u0438 \u043F\u043B\u0430\u0442\u0438\u043B\u0438 \u0431\u044B
+      \u0436\u0438\u0442\u0435\u043B\u044F\u043C \u043C\u043E\u043D\u0435\u0442\u044B"
+    - 'No decor nearby: it would pay the residents coins'
+  - key: '#card_per_day'
+    values:
+    - "+{0} \u0432 \u0434\u0435\u043D\u044C"
+    - +{0} a day
+  - key: '#card_cells'
+    values:
+    - "{0} \u043A\u043B."
+    - '{0} cells'
+  - key: '#card_food_boost'
+    values:
+    - "\u0438\u0437 \u043D\u0438\u0445 +{0} \u043E\u0442 \u043F\u0435\u043A\u0430\u0440\u043D\u0438
+      \u0438 \u043A\u043E\u043F\u0442\u0438\u043B\u044C\u043D\u0438 \u0440\u044F\u0434\u043E\u043C"
+    - of it +{0} from a bakery and smokehouse nearby
+  - key: '#card_stores'
+    values:
+    - "\u0425\u0440\u0430\u043D\u0438\u0442"
+    - Holds
+  - key: '#card_store_full'
+    values:
+    - "\u041F\u043E\u043B\u043D\u044B\u0439 \u0441\u043A\u043B\u0430\u0434: \u0434\u043E\u0431\u044B\u0447\u0430
+      \u044D\u0442\u043E\u0433\u043E \u0440\u0435\u0441\u0443\u0440\u0441\u0430 \u0432\u0441\u0442\u0430\u0451\u0442"
+    - 'A full store: gathering of that resource stops'
+  - key: '#card_damage'
+    values:
+    - "\u0423\u0440\u043E\u043D"
+    - Damage
+  - key: '#card_range'
+    values:
+    - "\u0414\u0430\u043B\u044C\u043D\u043E\u0441\u0442\u044C"
+    - Range
+  - key: '#card_shots'
+    values:
+    - "\u0412\u044B\u0441\u0442\u0440\u0435\u043B\u043E\u0432 \u0432 \u043C\u0438\u043D\u0443\u0442\u0443"
+    - Shots a minute
+  - key: '#card_radius_shown'
+    values:
+    - "\u041F\u043E\u043A\u0430 \u043E\u043A\u043D\u043E \u043E\u0442\u043A\u0440\u044B\u0442\u043E,
+      \u0440\u0430\u0434\u0438\u0443\u0441 \u0432\u0438\u0434\u0435\u043D \u043D\u0430
+      \u043A\u0430\u0440\u0442\u0435"
+    - While this is open, the reach shows on the map
+  - key: '#card_decor_each'
+    values:
+    - "\u041A\u0430\u0436\u0434\u043E\u043C\u0443 \u0436\u0438\u0442\u0435\u043B\u044E
+      \u0434\u043E\u043C\u043E\u0432 \u0432 \u0440\u0430\u0434\u0438\u0443\u0441\u0435:"
+    - 'Each resident of the houses in reach:'
+  - key: '#card_decor_houses'
+    values:
+    - "\u0414\u043E\u043C\u043E\u0432 \u0432 \u0440\u0430\u0434\u0438\u0443\u0441\u0435"
+    - Houses in reach
+  - key: '#card_decor_people'
+    values:
+    - "\u0416\u0438\u0442\u0435\u043B\u0435\u0439 \u0432 \u043D\u0438\u0445"
+    - Residents in them
+  - key: '#card_decor_total'
+    values:
+    - "\u0418\u0442\u043E\u0433\u043E \u0433\u043E\u0440\u043E\u0434\u0443: +{0}
+      \u043C\u043E\u043D\u0435\u0442 \u0432 \u0434\u0435\u043D\u044C"
+    - 'For the town: +{0} coins a day'
+  - key: '#card_upgrade_title'
+    values:
+    - "\u0423\u043B\u0443\u0447\u0448\u0438\u0442\u044C \u0434\u043E \u0443\u0440.
+      {0}"
+    - Upgrade to lvl {0}
+  - key: '#card_price'
+    values:
+    - "\u0426\u0435\u043D\u0430"
+    - Price
+  - key: '#card_refund'
+    values:
+    - "\u0412\u0435\u0440\u043D\u0451\u0442\u0441\u044F"
+    - You get back
+  - key: '#card_build_time'
+    values:
+    - "\u0421\u0442\u0440\u043E\u0438\u0442\u0441\u044F {0}, \u0437\u0434\u0430\u043D\u0438\u0435
+      \u0432 \u044D\u0442\u043E \u0432\u0440\u0435\u043C\u044F \u043D\u0435 \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442"
+    - Builds in {0}; the building stops meanwhile
+  - key: '#card_what_hall'
+    values:
+    - "\u0421\u0435\u0440\u0434\u0446\u0435 \u0433\u043E\u0440\u043E\u0434\u0430:
+      \u0436\u0438\u043B\u044C\u0451, \u043E\u0431\u043E\u0440\u043E\u043D\u0430,
+      \u0433\u0435\u0440\u043E\u0438."
+    - 'The heart of the town: homes, defence, heroes.'
+  - key: '#card_what_barracks'
+    values:
+    - "\u041E\u0431\u0443\u0447\u0430\u0435\u0442 \u0441\u043E\u043B\u0434\u0430\u0442."
+    - Trains soldiers.
+  - key: '#card_what_stable'
+    values:
+    - "\u041E\u0431\u0443\u0447\u0430\u0435\u0442 \u0440\u044B\u0446\u0430\u0440\u0435\u0439."
+    - Trains knights.
+  - key: '#card_what_workshop'
+    values:
+    - "\u0421\u0442\u0440\u043E\u0438\u0442 \u043E\u0441\u0430\u0434\u043D\u044B\u0435
+      \u043C\u0430\u0448\u0438\u043D\u044B."
+    - Builds siege machines.
+  - key: '#card_what_shipyard'
+    values:
+    - "\u0421\u0442\u0440\u043E\u0438\u0442 \u0438 \u0447\u0438\u043D\u0438\u0442
+      \u043A\u043E\u0440\u0430\u0431\u043B\u0438."
+    - Builds and repairs ships.
+  - key: '#card_what_lighthouse'
+    values:
+    - "\u041E\u0441\u0432\u0435\u0449\u0430\u0435\u0442 \u043C\u043E\u0440\u0435
+      \u0432\u043E\u043A\u0440\u0443\u0433 \u043E\u0441\u0442\u0440\u043E\u0432\u0430."
+    - Lights the sea round the island.
+  - key: '#card_what_healer'
+    values:
+    - "\u041B\u0435\u0447\u0438\u0442 \u0431\u043E\u043B\u044C\u043D\u044B\u0445
+      \u0436\u0438\u0442\u0435\u043B\u0435\u0439 \u043E\u0441\u0442\u0440\u043E\u0432\u0430."
+    - Heals the island's sick residents.
+  - key: '#card_what_firebrigade'
+    values:
+    - "\u0422\u0443\u0448\u0438\u0442 \u043F\u043E\u0436\u0430\u0440\u044B \u043D\u0430
+      \u043E\u0441\u0442\u0440\u043E\u0432\u0435."
+    - Puts out fires on the island.
+  - key: '#card_what_taxhouse'
+    values:
+    - "\u041F\u043E\u0432\u044B\u0448\u0430\u0435\u0442 \u043D\u0430\u043B\u043E\u0433
+      \u0441 \u0436\u0438\u0442\u0435\u043B\u0435\u0439."
+    - Raises the tax on residents.
+  - key: '#card_what_cemetery'
+    values:
+    - "\u0425\u043E\u0440\u043E\u043D\u0438\u0442 \u0443\u043C\u0435\u0440\u0448\u0438\u0445,
+      \u0447\u0442\u043E\u0431\u044B \u043D\u0435 \u0431\u043E\u043B\u0435\u043B\u0438."
+    - Buries the dead so nobody falls ill.
+  - key: '#card_what_diplomacy'
+    values:
+    - "\u041E\u0442\u043D\u043E\u0448\u0435\u043D\u0438\u044F \u0441 \u0441\u043E\u0441\u0435\u0434\u043D\u0438\u043C
+      \u043A\u043E\u0440\u043E\u043B\u0435\u0432\u0441\u0442\u0432\u043E\u043C."
+    - Relations with the neighbouring kingdom.
+  - key: '#card_what_smelter'
+    values:
+    - "\u041F\u043B\u0430\u0432\u0438\u0442 \u0440\u0443\u0434\u0443 \u0432 \u0441\u043B\u0438\u0442\u043A\u0438."
+    - Smelts ore into bars.
+  - key: '#card_what_crystalmine'
+    values:
+    - "\u0414\u043E\u0431\u044B\u0432\u0430\u0435\u0442 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B\u044B
+      \u0441\u0430\u043C."
+    - Mines crystals by itself.
+  - key: '#card_hall_residents'
+    values:
+    - "\u0416\u0438\u0442\u0435\u043B\u0438 \u0440\u0430\u0442\u0443\u0448\u0438"
+    - Town Hall residents
+  - key: '#card_heroes'
+    values:
+    - "\u0413\u0435\u0440\u043E\u0438"
+    - Heroes
+  - key: '#card_heroes_note'
+    values:
+    - "\u0413\u0435\u0440\u043E\u0435\u0432 \u043F\u043E\u043A\u0443\u043F\u0430\u044E\u0442
+      \u043A\u043D\u043E\u043F\u043A\u0430\u043C\u0438 \u0443 \xAB!\xBB"
+    - "Heroes are bought with the buttons by \xAB!\xBB"
+  - key: '#card_hall_fall'
+    values:
+    - "\u041F\u0430\u0434\u0451\u0442 \u0440\u0430\u0442\u0443\u0448\u0430 \u2014
+      \u0438\u0433\u0440\u0430 \u043E\u043A\u043E\u043D\u0447\u0435\u043D\u0430"
+    - If the Town Hall falls, the game is over
+  - key: '#card_trains'
+    values:
+    - "\u041E\u0431\u0443\u0447\u0430\u0435\u0442"
+    - Trains
+  - key: '#card_builds_machines'
+    values:
+    - "\u0421\u0442\u0440\u043E\u0438\u0442 \u043C\u0430\u0448\u0438\u043D\u044B"
+    - Builds machines
+  - key: '#card_builds_ships'
+    values:
+    - "\u0421\u0442\u0440\u043E\u0438\u0442 \u043A\u043E\u0440\u0430\u0431\u043B\u0438"
+    - Builds ships
+  - key: '#card_army_count'
+    values:
+    - "\u0421\u043E\u043B\u0434\u0430\u0442 \u0432 \u0430\u0440\u043C\u0438\u0438"
+    - Soldiers in the army
+  - key: '#card_unit_places'
+    values:
+    - "\u0415\u0441\u0442\u044C / \u043C\u0435\u0441\u0442"
+    - Have / places
+  - key: '#card_each_level_soldier'
+    values:
+    - "\u041A\u0430\u0436\u0434\u044B\u0439 \u0443\u0440\u043E\u0432\u0435\u043D\u044C
+      \u043E\u0442\u043A\u0440\u044B\u0432\u0430\u0435\u0442 \u043D\u043E\u0432\u043E\u0433\u043E
+      \u0441\u043E\u043B\u0434\u0430\u0442\u0430"
+    - Each level opens a new soldier
+  - key: '#card_each_level_machine'
+    values:
+    - "\u041A\u0430\u0436\u0434\u044B\u0439 \u0443\u0440\u043E\u0432\u0435\u043D\u044C
+      \u043E\u0442\u043A\u0440\u044B\u0432\u0430\u0435\u0442 \u043D\u043E\u0432\u0443\u044E
+      \u043C\u0430\u0448\u0438\u043D\u0443"
+    - Each level opens a new machine
+  - key: '#card_each_level_place'
+    values:
+    - "\u041A\u0430\u0436\u0434\u044B\u0439 \u0443\u0440\u043E\u0432\u0435\u043D\u044C
+      \u0434\u0430\u0451\u0442 \u0435\u0449\u0451 \u043C\u0435\u0441\u0442\u0430"
+    - Each level gives more places
+  - key: '#card_hire_note'
+    values:
+    - "\u041D\u0430\u043D\u0438\u043C\u0430\u044E\u0442 \u043A\u043D\u043E\u043F\u043A\u0430\u043C\u0438
+      \u0443 \xAB!\xBB \u0432\u043D\u0438\u0437\u0443 \u044D\u043A\u0440\u0430\u043D\u0430"
+    - "Hired with the buttons by \xAB!\xBB at the bottom"
+  - key: '#card_ship_repair'
+    values:
+    - "\u041A\u043E\u0440\u0430\u0431\u043B\u0438 \u0447\u0438\u043D\u044F\u0442\u0441\u044F
+      \u0443 \u0432\u0435\u0440\u0444\u0438 \u0437\u0430 \u0434\u0435\u0440\u0435\u0432\u043E"
+    - Ships are repaired at the yard for wood
+  - key: '#card_shipyard_shallows'
+    values:
+    - "\u0412\u0435\u0440\u0444\u044C \u0441\u0442\u043E\u0438\u0442 \u043D\u0430
+      \u043C\u0435\u043B\u043A\u043E\u0432\u043E\u0434\u044C\u0435 \u0443 \u0431\u0435\u0440\u0435\u0433\u0430"
+    - The yard stands in the shallows by the shore
+  - key: '#card_light_caption'
+    values:
+    - "\u0421\u0432\u0435\u0442 \u043C\u0430\u044F\u043A\u0430 \u043E\u0442\u043A\u0440\u044B\u0432\u0430\u0435\u0442
+      \u043C\u043E\u0440\u0435 \u0432\u043E\u043A\u0440\u0443\u0433:"
+    - 'The light opens the sea around:'
+  - key: '#card_light_radius'
+    values:
+    - "\u0440\u0430\u0434\u0438\u0443\u0441 {0} \u043A\u043B\u0435\u0442\u043E\u043A"
+    - radius {0} cells
+  - key: '#card_next_level_cells'
+    values:
+    - "\u0443\u0440. {0}: {1} \u043A\u043B."
+    - 'lvl {0}: {1} cells'
+  - key: '#card_light_note'
+    values:
+    - "\u0421\u0442\u0430\u0432\u0438\u0442\u0441\u044F \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E
+      \u0438 \u0441\u0440\u0430\u0437\u0443; \u0443\u0440\u043E\u0432\u043D\u0438
+      \u2014 \u0432 \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u0438"
+    - Placed free and at once; levels in the Laboratory
+  - key: '#card_healers'
+    values:
+    - "\u041B\u0435\u043A\u0430\u0440\u0438"
+    - Healers
+  - key: '#card_beds'
+    values:
+    - "\u041A\u043E\u0439\u043A\u0438"
+    - Beds
+  - key: '#card_waiting_bed'
+    values:
+    - "\u0416\u0434\u0443\u0442 \u043A\u043E\u0439\u043A\u0443"
+    - Waiting for a bed
+  - key: '#card_healer_rule'
+    values:
+    - "\u041B\u0435\u0447\u0435\u043D\u0438\u0435 {0} \u0441; \u0431\u0435\u0437
+      \u043A\u043E\u0439\u043A\u0438 \u0431\u043E\u043B\u044C\u043D\u043E\u0439 \u0436\u0438\u0432\u0451\u0442
+      {1} \u0441"
+    - Treatment {0} s; without a bed a patient lives {1} s
+  - key: '#card_firefighters'
+    values:
+    - "\u041F\u043E\u0436\u0430\u0440\u043D\u044B\u0435"
+    - Firefighters
+  - key: '#card_fire_island'
+    values:
+    - "\u0422\u0443\u0448\u0438\u0442 \u043F\u043E\u0436\u0430\u0440\u044B \u043D\u0430
+      \u0432\u0441\u0451\u043C \u043E\u0441\u0442\u0440\u043E\u0432\u0435"
+    - Puts out fires on the whole island
+  - key: '#card_fire_l2'
+    values:
+    - "\u0411\u043E\u043B\u044C\u0448\u043E\u0435 \u0432\u0435\u0434\u0440\u043E:
+      \u0431\u043E\u043B\u044C\u0448\u0435 \u0432\u043E\u0434\u044B \u0437\u0430
+      \u0440\u0430\u0437"
+    - 'A big bucket: more water at once'
+  - key: '#card_fire_l3'
+    values:
+    - "\u0411\u043E\u0447\u043A\u0430 \u0441 \u0432\u043E\u0434\u043E\u0439 \u0443
+      \u043F\u043E\u0436\u0430\u0440\u043D\u043E\u0439"
+    - A water barrel at the station
+  - key: '#card_fire_l4'
+    values:
+    - "\u041F\u043E\u0436\u0430\u0440\u043D\u044B\u0435 \u0431\u0435\u0433\u0430\u044E\u0442
+      \u0431\u044B\u0441\u0442\u0440\u0435\u0435"
+    - Firefighters run faster
+  - key: '#card_fire_l5'
+    values:
+    - "\u041F\u043E\u0436\u0430\u0440\u043E\u0432 \u043D\u0430 \u043E\u0441\u0442\u0440\u043E\u0432\u0435
+      \u043C\u0435\u043D\u044C\u0448\u0435"
+    - Fewer fires on the island
+  - key: '#card_level_short'
+    values:
+    - "\u0443\u0440. {0}"
+    - lvl {0}
+  - key: '#card_tax_caption'
+    values:
+    - "\u041D\u0430\u043B\u043E\u0433 \u0441 \u043A\u0430\u0436\u0434\u043E\u0433\u043E
+      \u0436\u0438\u0442\u0435\u043B\u044F \u0432 \u0434\u0435\u043D\u044C:"
+    - 'Tax per resident a day:'
+  - key: '#card_tax_formula'
+    values:
+    - "{0} + {1} = {2} \u043C\u043E\u043D\u0435\u0442\u044B"
+    - '{0} + {1} = {2} coins'
+  - key: '#card_tax_per_level'
+    values:
+    - "+{0} \u0437\u0430 \u0443\u0440\u043E\u0432\u0435\u043D\u044C"
+    - +{0} per level
+  - key: '#card_town_people'
+    values:
+    - "\u0416\u0438\u0442\u0435\u043B\u0435\u0439 \u0432 \u0433\u043E\u0440\u043E\u0434\u0435"
+    - Residents in town
+  - key: '#card_tax_total'
+    values:
+    - "\u0418\u0442\u043E\u0433\u043E \u043D\u0430\u043B\u043E\u0433: +{0} \u043C\u043E\u043D\u0435\u0442
+      \u0432 \u0434\u0435\u043D\u044C"
+    - 'Total tax: +{0} coins a day'
+  - key: '#card_tax_best'
+    values:
+    - "\u0421\u0447\u0438\u0442\u0430\u0435\u0442\u0441\u044F \u0442\u043E\u043B\u044C\u043A\u043E
+      \u043B\u0443\u0447\u0448\u0438\u0439 \u043D\u0430\u043B\u043E\u0433\u043E\u0432\u044B\u0439
+      \u0434\u043E\u043C"
+    - Only the best Tax House counts
+  - key: '#card_tax_lab'
+    values:
+    - "\u0423\u0440\u043E\u0432\u043D\u0438 \u2014 \u0432 \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u0438
+      \u0437\u0430 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B\u044B"
+    - Levels in the Laboratory, for crystals
+  - key: '#card_graves'
+    values:
+    - "\u041C\u043E\u0433\u0438\u043B\u044B"
+    - Graves
+  - key: '#card_bodies'
+    values:
+    - "\u0422\u0435\u043B \u043D\u0430 \u043E\u0441\u0442\u0440\u043E\u0432\u0435
+      \u043D\u0435 \u0443\u0431\u0440\u0430\u043D\u043E"
+    - Bodies left on the island
+  - key: '#card_body_sickness'
+    values:
+    - "\u043A\u0430\u0436\u0434\u043E\u0435 +{0} % \u043A \u0431\u043E\u043B\u0435\u0437\u043D\u0438
+      \u043D\u0430 \u043E\u0441\u0442\u0440\u043E\u0432\u0435"
+    - each +{0} % to sickness on the island
+  - key: '#card_bodies_self'
+    values:
+    - "\u0422\u0435\u043B\u0430 \u0443\u043D\u043E\u0441\u044F\u0442 \u0441\u0430\u043C\u0438,
+      \u0440\u0430\u0431\u043E\u0447\u0438\u0435 \u043D\u0435 \u043D\u0443\u0436\u043D\u044B"
+    - Bodies are carried off by themselves, no workers
+  - key: '#card_cemetery_demolish'
+    values:
+    - "\u0421\u043D\u0435\u0441\u0442\u0438 \u043A\u043B\u0430\u0434\u0431\u0438\u0449\u0435
+      \u2014 {0} \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B\u043E\u0432"
+    - Demolishing the cemetery costs {0} crystals
+  - key: '#card_neighbour'
+    values:
+    - "\u0421\u043E\u0441\u0435\u0434\u043D\u0435\u0435 \u043A\u043E\u0440\u043E\u043B\u0435\u0432\u0441\u0442\u0432\u043E"
+    - The neighbouring kingdom
+  - key: '#card_neighbour_king'
+    values:
+    - "\u0421\u043E\u0441\u0435\u0434\u043D\u0438\u0439 \u043A\u043E\u0440\u043E\u043B\u044C"
+    - The neighbour king
+  - key: '#card_stance'
+    values:
+    - "\u041E\u0442\u043D\u043E\u0448\u0435\u043D\u0438\u044F: {0}"
+    - 'Relations: {0}'
+  - key: '#card_relations'
+    values:
+    - "\u041E\u0442\u043D\u043E\u0448\u0435\u043D\u0438\u044F"
+    - Relations
+  - key: '#card_trade_line'
+    values:
+    - "\u0422\u043E\u0440\u0433\u043E\u0432\u043B\u044F (\u043E\u0442 +{0}, \u0437\u0430\u043B
+      \u0443\u0440. 2)"
+    - Trade (from +{0}, hall lvl 2)
+  - key: '#card_trade_open'
+    values:
+    - "\u043E\u0442\u043A\u0440\u044B\u0442\u0430"
+    - open
+  - key: '#card_trade_closed'
+    values:
+    - "\u0437\u0430\u043A\u0440\u044B\u0442\u0430"
+    - closed
+  - key: '#card_open_diplomacy'
+    values:
+    - "\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0434\u0438\u043F\u043B\u043E\u043C\u0430\u0442\u0438\u044E"
+    - Open diplomacy
+  - key: '#card_what_to_smelt'
+    values:
+    - "\u0427\u0442\u043E \u043F\u043B\u0430\u0432\u0438\u0442\u044C"
+    - What to smelt
+  - key: '#card_mine_stored'
+    values:
+    - "\u041A\u0440\u0438\u0441\u0442\u0430\u043B\u043B\u044B \u0432 \u0440\u0443\u0434\u043D\u0438\u043A\u0435"
+    - Crystals in the mine
+  - key: '#card_mine_pace'
+    values:
+    - "1 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B \u043A\u0430\u0436\u0434\u044B\u0435
+      {0} \u0441"
+    - 1 crystal every {0} s
+  - key: '#card_next_level_sec'
+    values:
+    - "\u0443\u0440. {0}: {1} \u0441"
+    - 'lvl {0}: {1} s'
+  - key: '#card_mine_full_note'
+    values:
+    - "\u041F\u043E\u043B\u043D\u044B\u0439 \u0440\u0443\u0434\u043D\u0438\u043A
+      \u043D\u0435 \u043A\u043E\u043F\u0438\u0442 \u2014 \u0437\u0430\u0431\u0435\u0440\u0438\u0442\u0435
+      \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B\u044B"
+    - "A full mine stops \u2014 collect the crystals"
+  - key: '#card_mine_collect'
+    values:
+    - "\u0417\u0430\u0431\u0440\u0430\u0442\u044C {0}"
+    - Collect {0}
   - key: '#theme_spring'
     values:
     - "\u0412\u0435\u0441\u043D\u0430"
@@ -5163,511 +5668,6 @@ MonoBehaviour:
     - "\u0417\u0430\u0434\u0430\u043D\u0438\u0435 \xAB{0}\xBB \u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u043E:
       +{1} \u0432 \u043A\u043E\u043F\u0438\u043B\u043A\u0443"
     - "Task \u201C{0}\u201D done: +{1} to the piggy bank"
-  - key: '#over_inv_points_caption'
-    values:
-    - "\u041E\u0447\u043A\u0438 \u0437\u0430 \u0437\u0430\u0431\u0435\u0433"
-    - Run points
-  - key: '#over_inv_row_waves'
-    values:
-    - "\u041E\u0442\u0431\u0438\u0442\u043E \u0432\u043E\u043B\u043D"
-    - Waves beaten off
-  - key: '#over_inv_row_giant'
-    values:
-    - "\u0412\u0435\u043B\u0438\u043A\u0430\u043D"
-    - The giant
-  - key: '#over_inv_row_camps'
-    values:
-    - "\u041B\u0430\u0433\u0435\u0440\u044F \u043E\u0440\u043A\u043E\u0432"
-    - Orc camps
-  - key: '#over_inv_today_short'
-    values:
-    - "\u0421\u0435\u0433\u043E\u0434\u043D\u044F: {0} \u043E\u0447\u043A\u043E\u0432,
-      \u0437\u0430\u0441\u0447\u0438\u0442\u0430\u043D\u043E \u0437\u0430\u0431\u0435\u0433\u043E\u0432"
-    - 'Today: {0} points, runs counted'
-  - key: '#over_inv_new_run'
-    values:
-    - "\u041D\u043E\u0432\u044B\u0439 \u0437\u0430\u0431\u0435\u0433"
-    - New run
-  - key: '#card_what_house'
-    values:
-    - "\u0414\u043E\u043C: \u0437\u0434\u0435\u0441\u044C \u0436\u0438\u0432\u0443\u0442
-      \u0436\u0438\u0442\u0435\u043B\u0438."
-    - 'A house: residents live here.'
-  - key: '#card_what_store'
-    values:
-    - "\u0425\u0440\u0430\u043D\u0438\u0442 \u0437\u0430\u043F\u0430\u0441\u044B
-      \u0433\u043E\u0440\u043E\u0434\u0430."
-    - Keeps the town's goods.
-  - key: '#card_what_decor'
-    values:
-    - "\u041F\u043B\u0430\u0442\u0438\u0442 \u0436\u0438\u0442\u0435\u043B\u044F\u043C
-      \u0434\u043E\u043C\u043E\u0432 \u0432\u043E\u043A\u0440\u0443\u0433."
-    - Pays the residents of the houses around it.
-  - key: '#card_what_food'
-    values:
-    - "\u0414\u0430\u0451\u0442 \u0435\u0434\u0443 \u0433\u043E\u0440\u043E\u0434\u0443
-      \u043A\u0430\u0436\u0434\u044B\u0439 \u0434\u0435\u043D\u044C."
-    - Gives the town food every day.
-  - key: '#card_what_food_boost'
-    values:
-    - "\u041F\u0440\u0438\u0431\u0430\u0432\u043B\u044F\u0435\u0442 \u0435\u0434\u044B
-      \u0444\u0435\u0440\u043C\u0430\u043C \u0438 \u0440\u044B\u0431\u0430\u043A\u0430\u043C
-      \u0440\u044F\u0434\u043E\u043C."
-    - Adds food to the farms and fishers nearby.
-  - key: '#card_what_gather'
-    values:
-    - "\u0420\u0430\u0431\u043E\u0447\u0438\u0435 \u0434\u043E\u0431\u044B\u0432\u0430\u044E\u0442:
-      {0}."
-    - 'Workers gather: {0}.'
-  - key: '#card_what_make'
-    values:
-    - "\u0420\u0430\u0431\u043E\u0447\u0438\u0435 \u0434\u0435\u043B\u0430\u044E\u0442:
-      {0}."
-    - 'Workers make: {0}.'
-  - key: '#card_what_defence'
-    values:
-    - "\u0421\u0442\u0440\u0435\u043B\u044F\u0435\u0442 \u043F\u043E \u0432\u0440\u0430\u0433\u0430\u043C
-      \u0432 \u0440\u0430\u0434\u0438\u0443\u0441\u0435."
-    - Shoots the enemies in reach.
-  - key: '#card_residents'
-    values:
-    - "\u0416\u0438\u0442\u0435\u043B\u0438"
-    - Residents
-  - key: '#card_workers'
-    values:
-    - "\u0420\u0430\u0431\u043E\u0447\u0438\u0435"
-    - Workers
-  - key: '#card_decor_house'
-    values:
-    - "\u0423\u043A\u0440\u0430\u0448\u0435\u043D\u0438\u044F \u0440\u044F\u0434\u043E\u043C
-      \u043F\u043B\u0430\u0442\u044F\u0442 \u043A\u0430\u0436\u0434\u043E\u043C\u0443
-      \u0436\u0438\u0442\u0435\u043B\u044E: +{0} \u043C\u043E\u043D\u0435\u0442\u044B
-      \u0432 \u0434\u0435\u043D\u044C"
-    - 'Decor nearby pays each resident: +{0} coins a day'
-  - key: '#card_no_decor'
-    values:
-    - "\u0420\u044F\u0434\u043E\u043C \u043D\u0435\u0442 \u0443\u043A\u0440\u0430\u0448\u0435\u043D\u0438\u0439:
-      \u043E\u043D\u0438 \u043F\u043B\u0430\u0442\u0438\u043B\u0438 \u0431\u044B
-      \u0436\u0438\u0442\u0435\u043B\u044F\u043C \u043C\u043E\u043D\u0435\u0442\u044B"
-    - 'No decor nearby: it would pay the residents coins'
-  - key: '#card_per_day'
-    values:
-    - "+{0} \u0432 \u0434\u0435\u043D\u044C"
-    - +{0} a day
-  - key: '#card_cells'
-    values:
-    - "{0} \u043A\u043B."
-    - '{0} cells'
-  - key: '#card_food_boost'
-    values:
-    - "\u0438\u0437 \u043D\u0438\u0445 +{0} \u043E\u0442 \u043F\u0435\u043A\u0430\u0440\u043D\u0438
-      \u0438 \u043A\u043E\u043F\u0442\u0438\u043B\u044C\u043D\u0438 \u0440\u044F\u0434\u043E\u043C"
-    - of it +{0} from a bakery and smokehouse nearby
-  - key: '#card_stores'
-    values:
-    - "\u0425\u0440\u0430\u043D\u0438\u0442"
-    - Holds
-  - key: '#card_store_full'
-    values:
-    - "\u041F\u043E\u043B\u043D\u044B\u0439 \u0441\u043A\u043B\u0430\u0434: \u0434\u043E\u0431\u044B\u0447\u0430
-      \u044D\u0442\u043E\u0433\u043E \u0440\u0435\u0441\u0443\u0440\u0441\u0430 \u0432\u0441\u0442\u0430\u0451\u0442"
-    - 'A full store: gathering of that resource stops'
-  - key: '#card_damage'
-    values:
-    - "\u0423\u0440\u043E\u043D"
-    - Damage
-  - key: '#card_range'
-    values:
-    - "\u0414\u0430\u043B\u044C\u043D\u043E\u0441\u0442\u044C"
-    - Range
-  - key: '#card_shots'
-    values:
-    - "\u0412\u044B\u0441\u0442\u0440\u0435\u043B\u043E\u0432 \u0432 \u043C\u0438\u043D\u0443\u0442\u0443"
-    - Shots a minute
-  - key: '#card_radius_shown'
-    values:
-    - "\u041F\u043E\u043A\u0430 \u043E\u043A\u043D\u043E \u043E\u0442\u043A\u0440\u044B\u0442\u043E,
-      \u0440\u0430\u0434\u0438\u0443\u0441 \u0432\u0438\u0434\u0435\u043D \u043D\u0430
-      \u043A\u0430\u0440\u0442\u0435"
-    - While this is open, the reach shows on the map
-  - key: '#card_decor_each'
-    values:
-    - "\u041A\u0430\u0436\u0434\u043E\u043C\u0443 \u0436\u0438\u0442\u0435\u043B\u044E
-      \u0434\u043E\u043C\u043E\u0432 \u0432 \u0440\u0430\u0434\u0438\u0443\u0441\u0435:"
-    - 'Each resident of the houses in reach:'
-  - key: '#card_decor_houses'
-    values:
-    - "\u0414\u043E\u043C\u043E\u0432 \u0432 \u0440\u0430\u0434\u0438\u0443\u0441\u0435"
-    - Houses in reach
-  - key: '#card_decor_people'
-    values:
-    - "\u0416\u0438\u0442\u0435\u043B\u0435\u0439 \u0432 \u043D\u0438\u0445"
-    - Residents in them
-  - key: '#card_decor_total'
-    values:
-    - "\u0418\u0442\u043E\u0433\u043E \u0433\u043E\u0440\u043E\u0434\u0443: +{0}
-      \u043C\u043E\u043D\u0435\u0442 \u0432 \u0434\u0435\u043D\u044C"
-    - 'For the town: +{0} coins a day'
-  - key: '#card_upgrade_title'
-    values:
-    - "\u0423\u043B\u0443\u0447\u0448\u0438\u0442\u044C \u0434\u043E \u0443\u0440.
-      {0}"
-    - Upgrade to lvl {0}
-  - key: '#card_price'
-    values:
-    - "\u0426\u0435\u043D\u0430"
-    - Price
-  - key: '#card_refund'
-    values:
-    - "\u0412\u0435\u0440\u043D\u0451\u0442\u0441\u044F"
-    - You get back
-  - key: '#card_build_time'
-    values:
-    - "\u0421\u0442\u0440\u043E\u0438\u0442\u0441\u044F {0}, \u0437\u0434\u0430\u043D\u0438\u0435
-      \u0432 \u044D\u0442\u043E \u0432\u0440\u0435\u043C\u044F \u043D\u0435 \u0440\u0430\u0431\u043E\u0442\u0430\u0435\u0442"
-    - Builds in {0}; the building stops meanwhile
-  - key: '#card_what_hall'
-    values:
-    - "\u0421\u0435\u0440\u0434\u0446\u0435 \u0433\u043E\u0440\u043E\u0434\u0430:
-      \u0436\u0438\u043B\u044C\u0451, \u043E\u0431\u043E\u0440\u043E\u043D\u0430,
-      \u0433\u0435\u0440\u043E\u0438."
-    - 'The heart of the town: homes, defence, heroes.'
-  - key: '#card_what_barracks'
-    values:
-    - "\u041E\u0431\u0443\u0447\u0430\u0435\u0442 \u0441\u043E\u043B\u0434\u0430\u0442."
-    - Trains soldiers.
-  - key: '#card_what_stable'
-    values:
-    - "\u041E\u0431\u0443\u0447\u0430\u0435\u0442 \u0440\u044B\u0446\u0430\u0440\u0435\u0439."
-    - Trains knights.
-  - key: '#card_what_workshop'
-    values:
-    - "\u0421\u0442\u0440\u043E\u0438\u0442 \u043E\u0441\u0430\u0434\u043D\u044B\u0435
-      \u043C\u0430\u0448\u0438\u043D\u044B."
-    - Builds siege machines.
-  - key: '#card_what_shipyard'
-    values:
-    - "\u0421\u0442\u0440\u043E\u0438\u0442 \u0438 \u0447\u0438\u043D\u0438\u0442
-      \u043A\u043E\u0440\u0430\u0431\u043B\u0438."
-    - Builds and repairs ships.
-  - key: '#card_what_lighthouse'
-    values:
-    - "\u041E\u0441\u0432\u0435\u0449\u0430\u0435\u0442 \u043C\u043E\u0440\u0435
-      \u0432\u043E\u043A\u0440\u0443\u0433 \u043E\u0441\u0442\u0440\u043E\u0432\u0430."
-    - Lights the sea round the island.
-  - key: '#card_what_healer'
-    values:
-    - "\u041B\u0435\u0447\u0438\u0442 \u0431\u043E\u043B\u044C\u043D\u044B\u0445
-      \u0436\u0438\u0442\u0435\u043B\u0435\u0439 \u043E\u0441\u0442\u0440\u043E\u0432\u0430."
-    - Heals the island's sick residents.
-  - key: '#card_what_firebrigade'
-    values:
-    - "\u0422\u0443\u0448\u0438\u0442 \u043F\u043E\u0436\u0430\u0440\u044B \u043D\u0430
-      \u043E\u0441\u0442\u0440\u043E\u0432\u0435."
-    - Puts out fires on the island.
-  - key: '#card_what_taxhouse'
-    values:
-    - "\u041F\u043E\u0432\u044B\u0448\u0430\u0435\u0442 \u043D\u0430\u043B\u043E\u0433
-      \u0441 \u0436\u0438\u0442\u0435\u043B\u0435\u0439."
-    - Raises the tax on residents.
-  - key: '#card_what_cemetery'
-    values:
-    - "\u0425\u043E\u0440\u043E\u043D\u0438\u0442 \u0443\u043C\u0435\u0440\u0448\u0438\u0445,
-      \u0447\u0442\u043E\u0431\u044B \u043D\u0435 \u0431\u043E\u043B\u0435\u043B\u0438."
-    - Buries the dead so nobody falls ill.
-  - key: '#card_what_diplomacy'
-    values:
-    - "\u041E\u0442\u043D\u043E\u0448\u0435\u043D\u0438\u044F \u0441 \u0441\u043E\u0441\u0435\u0434\u043D\u0438\u043C
-      \u043A\u043E\u0440\u043E\u043B\u0435\u0432\u0441\u0442\u0432\u043E\u043C."
-    - Relations with the neighbouring kingdom.
-  - key: '#card_what_smelter'
-    values:
-    - "\u041F\u043B\u0430\u0432\u0438\u0442 \u0440\u0443\u0434\u0443 \u0432 \u0441\u043B\u0438\u0442\u043A\u0438."
-    - Smelts ore into bars.
-  - key: '#card_what_crystalmine'
-    values:
-    - "\u0414\u043E\u0431\u044B\u0432\u0430\u0435\u0442 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B\u044B
-      \u0441\u0430\u043C."
-    - Mines crystals by itself.
-  - key: '#card_hall_residents'
-    values:
-    - "\u0416\u0438\u0442\u0435\u043B\u0438 \u0440\u0430\u0442\u0443\u0448\u0438"
-    - Town Hall residents
-  - key: '#card_heroes'
-    values:
-    - "\u0413\u0435\u0440\u043E\u0438"
-    - Heroes
-  - key: '#card_heroes_note'
-    values:
-    - "\u0413\u0435\u0440\u043E\u0435\u0432 \u043F\u043E\u043A\u0443\u043F\u0430\u044E\u0442
-      \u043A\u043D\u043E\u043F\u043A\u0430\u043C\u0438 \u0443 \xAB!\xBB"
-    - "Heroes are bought with the buttons by \xAB!\xBB"
-  - key: '#card_hall_fall'
-    values:
-    - "\u041F\u0430\u0434\u0451\u0442 \u0440\u0430\u0442\u0443\u0448\u0430 \u2014
-      \u0438\u0433\u0440\u0430 \u043E\u043A\u043E\u043D\u0447\u0435\u043D\u0430"
-    - If the Town Hall falls, the game is over
-  - key: '#card_trains'
-    values:
-    - "\u041E\u0431\u0443\u0447\u0430\u0435\u0442"
-    - Trains
-  - key: '#card_builds_machines'
-    values:
-    - "\u0421\u0442\u0440\u043E\u0438\u0442 \u043C\u0430\u0448\u0438\u043D\u044B"
-    - Builds machines
-  - key: '#card_builds_ships'
-    values:
-    - "\u0421\u0442\u0440\u043E\u0438\u0442 \u043A\u043E\u0440\u0430\u0431\u043B\u0438"
-    - Builds ships
-  - key: '#card_army_count'
-    values:
-    - "\u0421\u043E\u043B\u0434\u0430\u0442 \u0432 \u0430\u0440\u043C\u0438\u0438"
-    - Soldiers in the army
-  - key: '#card_unit_places'
-    values:
-    - "\u0415\u0441\u0442\u044C / \u043C\u0435\u0441\u0442"
-    - Have / places
-  - key: '#card_each_level_soldier'
-    values:
-    - "\u041A\u0430\u0436\u0434\u044B\u0439 \u0443\u0440\u043E\u0432\u0435\u043D\u044C
-      \u043E\u0442\u043A\u0440\u044B\u0432\u0430\u0435\u0442 \u043D\u043E\u0432\u043E\u0433\u043E
-      \u0441\u043E\u043B\u0434\u0430\u0442\u0430"
-    - Each level opens a new soldier
-  - key: '#card_each_level_machine'
-    values:
-    - "\u041A\u0430\u0436\u0434\u044B\u0439 \u0443\u0440\u043E\u0432\u0435\u043D\u044C
-      \u043E\u0442\u043A\u0440\u044B\u0432\u0430\u0435\u0442 \u043D\u043E\u0432\u0443\u044E
-      \u043C\u0430\u0448\u0438\u043D\u0443"
-    - Each level opens a new machine
-  - key: '#card_each_level_place'
-    values:
-    - "\u041A\u0430\u0436\u0434\u044B\u0439 \u0443\u0440\u043E\u0432\u0435\u043D\u044C
-      \u0434\u0430\u0451\u0442 \u0435\u0449\u0451 \u043C\u0435\u0441\u0442\u0430"
-    - Each level gives more places
-  - key: '#card_hire_note'
-    values:
-    - "\u041D\u0430\u043D\u0438\u043C\u0430\u044E\u0442 \u043A\u043D\u043E\u043F\u043A\u0430\u043C\u0438
-      \u0443 \xAB!\xBB \u0432\u043D\u0438\u0437\u0443 \u044D\u043A\u0440\u0430\u043D\u0430"
-    - "Hired with the buttons by \xAB!\xBB at the bottom"
-  - key: '#card_ship_repair'
-    values:
-    - "\u041A\u043E\u0440\u0430\u0431\u043B\u0438 \u0447\u0438\u043D\u044F\u0442\u0441\u044F
-      \u0443 \u0432\u0435\u0440\u0444\u0438 \u0437\u0430 \u0434\u0435\u0440\u0435\u0432\u043E"
-    - Ships are repaired at the yard for wood
-  - key: '#card_shipyard_shallows'
-    values:
-    - "\u0412\u0435\u0440\u0444\u044C \u0441\u0442\u043E\u0438\u0442 \u043D\u0430
-      \u043C\u0435\u043B\u043A\u043E\u0432\u043E\u0434\u044C\u0435 \u0443 \u0431\u0435\u0440\u0435\u0433\u0430"
-    - The yard stands in the shallows by the shore
-  - key: '#card_light_caption'
-    values:
-    - "\u0421\u0432\u0435\u0442 \u043C\u0430\u044F\u043A\u0430 \u043E\u0442\u043A\u0440\u044B\u0432\u0430\u0435\u0442
-      \u043C\u043E\u0440\u0435 \u0432\u043E\u043A\u0440\u0443\u0433:"
-    - 'The light opens the sea around:'
-  - key: '#card_light_radius'
-    values:
-    - "\u0440\u0430\u0434\u0438\u0443\u0441 {0} \u043A\u043B\u0435\u0442\u043E\u043A"
-    - radius {0} cells
-  - key: '#card_next_level_cells'
-    values:
-    - "\u0443\u0440. {0}: {1} \u043A\u043B."
-    - 'lvl {0}: {1} cells'
-  - key: '#card_light_note'
-    values:
-    - "\u0421\u0442\u0430\u0432\u0438\u0442\u0441\u044F \u0431\u0435\u0441\u043F\u043B\u0430\u0442\u043D\u043E
-      \u0438 \u0441\u0440\u0430\u0437\u0443; \u0443\u0440\u043E\u0432\u043D\u0438
-      \u2014 \u0432 \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u0438"
-    - Placed free and at once; levels in the Laboratory
-  - key: '#card_healers'
-    values:
-    - "\u041B\u0435\u043A\u0430\u0440\u0438"
-    - Healers
-  - key: '#card_beds'
-    values:
-    - "\u041A\u043E\u0439\u043A\u0438"
-    - Beds
-  - key: '#card_waiting_bed'
-    values:
-    - "\u0416\u0434\u0443\u0442 \u043A\u043E\u0439\u043A\u0443"
-    - Waiting for a bed
-  - key: '#card_healer_rule'
-    values:
-    - "\u041B\u0435\u0447\u0435\u043D\u0438\u0435 {0} \u0441; \u0431\u0435\u0437
-      \u043A\u043E\u0439\u043A\u0438 \u0431\u043E\u043B\u044C\u043D\u043E\u0439 \u0436\u0438\u0432\u0451\u0442
-      {1} \u0441"
-    - Treatment {0} s; without a bed a patient lives {1} s
-  - key: '#card_firefighters'
-    values:
-    - "\u041F\u043E\u0436\u0430\u0440\u043D\u044B\u0435"
-    - Firefighters
-  - key: '#card_fire_island'
-    values:
-    - "\u0422\u0443\u0448\u0438\u0442 \u043F\u043E\u0436\u0430\u0440\u044B \u043D\u0430
-      \u0432\u0441\u0451\u043C \u043E\u0441\u0442\u0440\u043E\u0432\u0435"
-    - Puts out fires on the whole island
-  - key: '#card_fire_l2'
-    values:
-    - "\u0411\u043E\u043B\u044C\u0448\u043E\u0435 \u0432\u0435\u0434\u0440\u043E:
-      \u0431\u043E\u043B\u044C\u0448\u0435 \u0432\u043E\u0434\u044B \u0437\u0430
-      \u0440\u0430\u0437"
-    - 'A big bucket: more water at once'
-  - key: '#card_fire_l3'
-    values:
-    - "\u0411\u043E\u0447\u043A\u0430 \u0441 \u0432\u043E\u0434\u043E\u0439 \u0443
-      \u043F\u043E\u0436\u0430\u0440\u043D\u043E\u0439"
-    - A water barrel at the station
-  - key: '#card_fire_l4'
-    values:
-    - "\u041F\u043E\u0436\u0430\u0440\u043D\u044B\u0435 \u0431\u0435\u0433\u0430\u044E\u0442
-      \u0431\u044B\u0441\u0442\u0440\u0435\u0435"
-    - Firefighters run faster
-  - key: '#card_fire_l5'
-    values:
-    - "\u041F\u043E\u0436\u0430\u0440\u043E\u0432 \u043D\u0430 \u043E\u0441\u0442\u0440\u043E\u0432\u0435
-      \u043C\u0435\u043D\u044C\u0448\u0435"
-    - Fewer fires on the island
-  - key: '#card_level_short'
-    values:
-    - "\u0443\u0440. {0}"
-    - lvl {0}
-  - key: '#card_tax_caption'
-    values:
-    - "\u041D\u0430\u043B\u043E\u0433 \u0441 \u043A\u0430\u0436\u0434\u043E\u0433\u043E
-      \u0436\u0438\u0442\u0435\u043B\u044F \u0432 \u0434\u0435\u043D\u044C:"
-    - 'Tax per resident a day:'
-  - key: '#card_tax_formula'
-    values:
-    - "{0} + {1} = {2} \u043C\u043E\u043D\u0435\u0442\u044B"
-    - '{0} + {1} = {2} coins'
-  - key: '#card_tax_per_level'
-    values:
-    - "+{0} \u0437\u0430 \u0443\u0440\u043E\u0432\u0435\u043D\u044C"
-    - +{0} per level
-  - key: '#card_town_people'
-    values:
-    - "\u0416\u0438\u0442\u0435\u043B\u0435\u0439 \u0432 \u0433\u043E\u0440\u043E\u0434\u0435"
-    - Residents in town
-  - key: '#card_tax_total'
-    values:
-    - "\u0418\u0442\u043E\u0433\u043E \u043D\u0430\u043B\u043E\u0433: +{0} \u043C\u043E\u043D\u0435\u0442
-      \u0432 \u0434\u0435\u043D\u044C"
-    - 'Total tax: +{0} coins a day'
-  - key: '#card_tax_best'
-    values:
-    - "\u0421\u0447\u0438\u0442\u0430\u0435\u0442\u0441\u044F \u0442\u043E\u043B\u044C\u043A\u043E
-      \u043B\u0443\u0447\u0448\u0438\u0439 \u043D\u0430\u043B\u043E\u0433\u043E\u0432\u044B\u0439
-      \u0434\u043E\u043C"
-    - Only the best Tax House counts
-  - key: '#card_tax_lab'
-    values:
-    - "\u0423\u0440\u043E\u0432\u043D\u0438 \u2014 \u0432 \u043B\u0430\u0431\u043E\u0440\u0430\u0442\u043E\u0440\u0438\u0438
-      \u0437\u0430 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B\u044B"
-    - Levels in the Laboratory, for crystals
-  - key: '#card_graves'
-    values:
-    - "\u041C\u043E\u0433\u0438\u043B\u044B"
-    - Graves
-  - key: '#card_bodies'
-    values:
-    - "\u0422\u0435\u043B \u043D\u0430 \u043E\u0441\u0442\u0440\u043E\u0432\u0435
-      \u043D\u0435 \u0443\u0431\u0440\u0430\u043D\u043E"
-    - Bodies left on the island
-  - key: '#card_body_sickness'
-    values:
-    - "\u043A\u0430\u0436\u0434\u043E\u0435 +{0} % \u043A \u0431\u043E\u043B\u0435\u0437\u043D\u0438
-      \u043D\u0430 \u043E\u0441\u0442\u0440\u043E\u0432\u0435"
-    - each +{0} % to sickness on the island
-  - key: '#card_bodies_self'
-    values:
-    - "\u0422\u0435\u043B\u0430 \u0443\u043D\u043E\u0441\u044F\u0442 \u0441\u0430\u043C\u0438,
-      \u0440\u0430\u0431\u043E\u0447\u0438\u0435 \u043D\u0435 \u043D\u0443\u0436\u043D\u044B"
-    - Bodies are carried off by themselves, no workers
-  - key: '#card_cemetery_demolish'
-    values:
-    - "\u0421\u043D\u0435\u0441\u0442\u0438 \u043A\u043B\u0430\u0434\u0431\u0438\u0449\u0435
-      \u2014 {0} \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B\u043E\u0432"
-    - Demolishing the cemetery costs {0} crystals
-  - key: '#card_neighbour'
-    values:
-    - "\u0421\u043E\u0441\u0435\u0434\u043D\u0435\u0435 \u043A\u043E\u0440\u043E\u043B\u0435\u0432\u0441\u0442\u0432\u043E"
-    - The neighbouring kingdom
-  - key: '#card_neighbour_king'
-    values:
-    - "\u0421\u043E\u0441\u0435\u0434\u043D\u0438\u0439 \u043A\u043E\u0440\u043E\u043B\u044C"
-    - The neighbour king
-  - key: '#card_stance'
-    values:
-    - "\u041E\u0442\u043D\u043E\u0448\u0435\u043D\u0438\u044F: {0}"
-    - 'Relations: {0}'
-  - key: '#card_relations'
-    values:
-    - "\u041E\u0442\u043D\u043E\u0448\u0435\u043D\u0438\u044F"
-    - Relations
-  - key: '#card_trade_line'
-    values:
-    - "\u0422\u043E\u0440\u0433\u043E\u0432\u043B\u044F (\u043E\u0442 +{0}, \u0437\u0430\u043B
-      \u0443\u0440. 2)"
-    - Trade (from +{0}, hall lvl 2)
-  - key: '#card_trade_open'
-    values:
-    - "\u043E\u0442\u043A\u0440\u044B\u0442\u0430"
-    - open
-  - key: '#card_trade_closed'
-    values:
-    - "\u0437\u0430\u043A\u0440\u044B\u0442\u0430"
-    - closed
-  - key: '#card_open_diplomacy'
-    values:
-    - "\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0434\u0438\u043F\u043B\u043E\u043C\u0430\u0442\u0438\u044E"
-    - Open diplomacy
-  - key: '#card_what_to_smelt'
-    values:
-    - "\u0427\u0442\u043E \u043F\u043B\u0430\u0432\u0438\u0442\u044C"
-    - What to smelt
-  - key: '#card_mine_stored'
-    values:
-    - "\u041A\u0440\u0438\u0441\u0442\u0430\u043B\u043B\u044B \u0432 \u0440\u0443\u0434\u043D\u0438\u043A\u0435"
-    - Crystals in the mine
-  - key: '#card_mine_pace'
-    values:
-    - "1 \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B \u043A\u0430\u0436\u0434\u044B\u0435
-      {0} \u0441"
-    - 1 crystal every {0} s
-  - key: '#card_next_level_sec'
-    values:
-    - "\u0443\u0440. {0}: {1} \u0441"
-    - 'lvl {0}: {1} s'
-  - key: '#card_mine_full_note'
-    values:
-    - "\u041F\u043E\u043B\u043D\u044B\u0439 \u0440\u0443\u0434\u043D\u0438\u043A
-      \u043D\u0435 \u043A\u043E\u043F\u0438\u0442 \u2014 \u0437\u0430\u0431\u0435\u0440\u0438\u0442\u0435
-      \u043A\u0440\u0438\u0441\u0442\u0430\u043B\u043B\u044B"
-    - "A full mine stops \u2014 collect the crystals"
-  - key: '#card_mine_collect'
-    values:
-    - "\u0417\u0430\u0431\u0440\u0430\u0442\u044C {0}"
-    - Collect {0}
-  - key: '#news_title'
-    values:
-    - "\u041D\u043E\u0432\u043E\u0441\u0442\u0438"
-    - News
-  - key: '#news_reward'
-    values:
-    - "\u041D\u0430\u0433\u0440\u0430\u0434\u0430:"
-    - 'Reward:'
-  - key: '#news_claim'
-    values:
-    - "\u0417\u0430\u0431\u0440\u0430\u0442\u044C"
-    - Claim
-  - key: '#news_claimed'
-    values:
-    - "\u041F\u043E\u043B\u0443\u0447\u0435\u043D\u043E"
-    - Claimed
-  - key: '#news_empty'
-    values:
-    - "\u041D\u043E\u0432\u043E\u0441\u0442\u0435\u0439 \u043F\u043E\u043A\u0430
-      \u043D\u0435\u0442"
-    - No news yet
   - key: '#bundle_builder'
     values:
     - "\u041D\u0430\u0431\u043E\u0440 \u0441\u0442\u0440\u043E\u0438\u0442\u0435\u043B\u044F"

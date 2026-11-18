@@ -14,13 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingData
   buildingName: TaxHouse
   displayName: "\u041D\u0430\u043B\u043E\u0433\u043E\u0432\u044B\u0439 \u0434\u043E\u043C"
-  prefab: {fileID: 1101086097092431493, guid: bec69183ba4a90940aa7942d01111a99, type: 3}
+  prefab: {fileID: 2403448936932079187, guid: bec69183ba4a90940aa7942d01111a99, type: 3}
   footprintSize: {x: 2, y: 2}
   cost:
   - type: 0
-    amount: 150
+    amount: 50
   - type: 1
-    amount: 200
+    amount: 70
   category: 0
   isWaterCategory: 0
   isRoad: 0
@@ -34,7 +34,7 @@ MonoBehaviour:
   - maxHealth: 160
     defense: 0
     housingCapacity: 0
-    maxWorkers: 0
+    maxWorkers: 1
     beds: 0
     graves: 0
     batchesPerWorkerPerTick: 0
@@ -48,49 +48,7 @@ MonoBehaviour:
   - maxHealth: 256
     defense: 0
     housingCapacity: 0
-    maxWorkers: 0
-    beds: 0
-    graves: 0
-    batchesPerWorkerPerTick: 0
-    storageCapacity: 0
-    harvestRadius: 0
-    serviceRadius: 0
-    residentCoins: 0
-    intervalSeconds: 6
-    happiness: 0
-    buildSeconds: 15
-  - maxHealth: 400
-    defense: 0
-    housingCapacity: 0
-    maxWorkers: 0
-    beds: 0
-    graves: 0
-    batchesPerWorkerPerTick: 0
-    storageCapacity: 0
-    harvestRadius: 0
-    serviceRadius: 0
-    residentCoins: 0
-    intervalSeconds: 6
-    happiness: 0
-    buildSeconds: 20
-  - maxHealth: 576
-    defense: 0
-    housingCapacity: 0
-    maxWorkers: 0
-    beds: 0
-    graves: 0
-    batchesPerWorkerPerTick: 0
-    storageCapacity: 0
-    harvestRadius: 0
-    serviceRadius: 0
-    residentCoins: 0
-    intervalSeconds: 6
-    happiness: 0
-    buildSeconds: 25
-  - maxHealth: 800
-    defense: 0
-    housingCapacity: 0
-    maxWorkers: 0
+    maxWorkers: 1
     beds: 0
     graves: 0
     batchesPerWorkerPerTick: 0
@@ -101,13 +59,77 @@ MonoBehaviour:
     intervalSeconds: 6
     happiness: 0
     buildSeconds: 30
+  - maxHealth: 400
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 1
+    beds: 0
+    graves: 0
+    batchesPerWorkerPerTick: 0
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 0
+    residentCoins: 0
+    intervalSeconds: 6
+    happiness: 0
+    buildSeconds: 40
+  - maxHealth: 576
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 1
+    beds: 0
+    graves: 0
+    batchesPerWorkerPerTick: 0
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 0
+    residentCoins: 0
+    intervalSeconds: 6
+    happiness: 0
+    buildSeconds: 50
+  - maxHealth: 800
+    defense: 0
+    housingCapacity: 0
+    maxWorkers: 1
+    beds: 0
+    graves: 0
+    batchesPerWorkerPerTick: 0
+    storageCapacity: 0
+    harvestRadius: 0
+    serviceRadius: 0
+    residentCoins: 0
+    intervalSeconds: 6
+    happiness: 0
+    buildSeconds: 60
   recipes: []
   productionIntervalSeconds: 6
   storageGroup: 0
-  upgradeToLevel2Cost: []
-  upgradeToLevel3Cost: []
-  upgradeToLevel4Cost: []
-  upgradeToLevel5Cost: []
+  upgradeToLevel2Cost:
+  - type: 0
+    amount: 53
+  - type: 1
+    amount: 73
+  upgradeToLevel3Cost:
+  - type: 0
+    amount: 56
+  - type: 1
+    amount: 76
+  - type: 13
+    amount: 10
+  upgradeToLevel4Cost:
+  - type: 0
+    amount: 59
+  - type: 1
+    amount: 79
+  - type: 12
+    amount: 10
+  upgradeToLevel5Cost:
+  - type: 0
+    amount: 62
+  - type: 1
+    amount: 82
+  - type: 14
+    amount: 10
   fogRevealRadius: 8
   citizensOnBuild: 0
   maxCount: 0
