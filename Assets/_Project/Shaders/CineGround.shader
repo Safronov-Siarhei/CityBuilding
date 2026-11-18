@@ -66,19 +66,13 @@ Shader "CityBuilder/CineGround"
             float Hash(float2 p) { return frac(sin(dot(p, float2(127.1, 311.7))) * 43758.5453); }
             float2 Hash2(float2 p) { return frac(sin(float2(dot(p, float2(127.1, 311.7)), dot(p, float2(269.5, 183.3)))) * 43758.5453); }
 
-            float Noise(float2 p)
-            {
-                float2 i = floor(p);
-                float2 f = frac(p);
-                f = f * f * (3.0 - 2.0 * f);
-                return lerp(lerp(Hash(i), Hash(i + float2(1, 0)), f.x), lerp(Hash(i + float2(0, 1)), Hash(i + float2(1, 1)), f.x), f.y);
-            }
-
+            // four octaves of value noise, baked once into a tiling texture by CineGroundNoise (period 64 cells): one
+            // sample instead of ~16 sine hashes. Computed per pixel it was most of the frame on a Mali-G57 (2026-11-18)
+            TEXTURE2D(_CineFbm);
+            SAMPLER(sampler_CineFbm);
             float Fbm(float2 p)
             {
-                float v = 0.0, a = 0.5;
-                for (int k = 0; k < 4; k++) { v += a * Noise(p); p = p * 2.07 + 13.7; a *= 0.5; }
-                return v;
+                return SAMPLE_TEXTURE2D(_CineFbm, sampler_CineFbm, p / 64.0).r;
             }
 
             // the palette is written in sRGB; the project renders in linear space

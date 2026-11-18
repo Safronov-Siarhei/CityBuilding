@@ -75,6 +75,9 @@ namespace CityBuilder.EditorTools
             }
             // the CPU/GPU frame times Cheats/PerfProbe logs (FrameTimingManager) -- the development build only
             PlayerSettings.enableFrameTimingStats = development;
+            // no Vulkan pre-transform: on the Samsung A71 (Adreno 618) the frame came out squeezed into the left part of
+            // the landscape screen, the rest left black (the user, 2026-11-18)
+            PlayerSettings.vulkanEnablePreTransform = false;
 
             var buildPlayerOptions = new BuildPlayerOptions
             {

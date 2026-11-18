@@ -137,6 +137,10 @@ namespace CityBuilder.Campaign
                     PartsByMesh[mesh] = parts;
                 }
                 var bones = smr.bones;
+                // a phone: only the biggest few parts cast a shadow (Pixel 6 Pro, 2026-11-18: the film's 700-900 shadow
+                // casters, mostly figure parts, were what kept it at ~50 fps; shadows off gave 57-60). A hand's or a
+                // forearm's shadow is a few pixels on the ground
+                var casterFloor = Application.isMobilePlatform ? ShadowFloor(parts) : 0f;
                 foreach (var (bone, part) in parts)
                 {
                     if (bone < 0 || bone >= bones.Length || bones[bone] == null) continue;
@@ -145,10 +149,22 @@ namespace CityBuilder.Campaign
                     go.GetComponent<MeshFilter>().sharedMesh = part;
                     var r = go.GetComponent<MeshRenderer>();
                     r.sharedMaterials = smr.sharedMaterials;
-                    r.shadowCastingMode = smr.shadowCastingMode;
+                    r.shadowCastingMode = part.bounds.size.sqrMagnitude >= casterFloor ? smr.shadowCastingMode : UnityEngine.Rendering.ShadowCastingMode.Off;
                 }
                 smr.enabled = false;
             }
+        }
+
+        private const int PhoneShadowParts = 3;
+
+        /// <summary>The size (squared bounds diagonal) a part needs to be among the biggest PhoneShadowParts.</summary>
+        private static float ShadowFloor((int bone, Mesh part)[] parts)
+        {
+            if (parts.Length <= PhoneShadowParts) return 0f;
+            var sizes = new List<float>(parts.Length);
+            foreach (var (_, part) in parts) sizes.Add(part.bounds.size.sqrMagnitude);
+            sizes.Sort();
+            return sizes[sizes.Count - PhoneShadowParts];
         }
 
         /// <summary>The mesh split by the bone that carries each vertex, every piece in its bone's own space.</summary>

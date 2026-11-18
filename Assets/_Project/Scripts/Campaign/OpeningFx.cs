@@ -136,7 +136,9 @@ namespace CityBuilder.Campaign
             StepTitle(time);
             if (_dof != null)
             {
-                _dof.active = shallow && !_playLight;
+                // never on a phone: the blur needs the depth copy, which on a Mali GPU with MSAA cost the film
+                // ~10-20 fps by itself (Pixel 6 Pro, 2026-11-18: the same copy took mission 1 down to a third)
+                _dof.active = shallow && !_playLight && !Application.isMobilePlatform;
                 _dof.focusDistance.value = Vector3.Distance(camFrom, camAt);
                 _dof.focalLength.value = lens;
             }
@@ -507,6 +509,7 @@ namespace CityBuilder.Campaign
         /// the film's look, not the run's, and two full-screen passes every frame.</summary>
         public void LightenForPlay()
         {
+            ReleaseShadowCap();
             if (!Application.isMobilePlatform) return;
             if (_bloom != null) _bloom.active = false;
             if (_dof != null) _dof.active = false;
@@ -515,8 +518,31 @@ namespace CityBuilder.Campaign
 
         private bool _playLight;
 
+        // the film's shadow reach on a phone, in metres: its camera stays near the figures (see GraphicsQuality.ShadowDistanceCap)
+        private const float PhoneFilmShadowReach = 30f;
+        private bool _shadowCapped;
+
+        private void CapShadows()
+        {
+            if (!Application.isMobilePlatform || NoBloom) return;   // NoBloom: the main menu, which holds 60 without it
+            GraphicsQuality.ShadowDistanceCap = PhoneFilmShadowReach;
+            GraphicsQuality.Apply();
+            _shadowCapped = true;
+        }
+
+        private void ReleaseShadowCap()
+        {
+            if (!_shadowCapped) return;
+            _shadowCapped = false;
+            GraphicsQuality.ShadowDistanceCap = 0f;
+            GraphicsQuality.Apply();
+        }
+
+        private void OnDestroy() => ReleaseShadowCap();
+
         private void Post()
         {
+            CapShadows();
             if (volume == null || volume.sharedProfile == null) return;
             volume.sharedProfile = Instantiate(volume.sharedProfile);
             var p = volume.sharedProfile;
@@ -532,10 +558,11 @@ namespace CityBuilder.Campaign
                 ca.contrast.value = _c.contrast;
             }
             // a phone in the main menu draws no bloom (the user, 2026-11-18: 13 fps there on a strong phone)
-            if (_bloom != null && NoBloom && Application.isMobilePlatform) _bloom.active = false;
+            // and none in the film either (Pixel 6 Pro, 2026-11-18: the film's post effects cost ~5 fps of the last ten)
+            if (_bloom != null && Application.isMobilePlatform) _bloom.active = false;
             if (p.TryGet(out _dof))
             {
-                // Bokeh is the costliest pass URP has; a phone gets the cheap Gaussian blur on the close shots
+                // Bokeh is the costliest pass URP has (a phone draws no depth of field at all, see Step)
                 _dof.mode.value = Application.isMobilePlatform ? DepthOfFieldMode.Gaussian : DepthOfFieldMode.Bokeh;
                 _dof.aperture.value = _c.dofAperture;
                 _dof.active = false;

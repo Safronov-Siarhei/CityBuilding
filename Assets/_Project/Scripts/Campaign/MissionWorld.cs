@@ -303,8 +303,11 @@ namespace CityBuilder.Campaign
             tex.Apply();
             var cam = Camera.main;
             if (cam == null) return;
-            UnityEngine.Rendering.Universal.CameraExtensions.GetUniversalAdditionalCameraData(cam).requiresDepthTexture = true;
+            // no depth texture: the village is flat, so the shader finds each pixel's ground point by its view
+            // ray. The depth copy cost the phone two thirds of its frames (Pixel 6 Pro, 2026-11-18)
             var m = new Material(source) { name = "CorridorDark (runtime)" };
+            m.SetFloat("_NoDepth", 1f);
+            m.SetFloat("_GroundY", 0f);
             _darkMat = m;
             m.SetTexture("_DarkMask", tex);
             Mask = tex;

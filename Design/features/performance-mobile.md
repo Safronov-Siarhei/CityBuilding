@@ -1,5 +1,26 @@
 # Performance on mobile
 
+> **2026-11-18 evening, "дожимай" -- MEASURED on three devices (dev APK + PERF lines, PerfProbe toggles):**
+> - **The big one: the film/menu/mission GROUND shader** (`CineGround.shader`) computed four-octave value noise per pixel
+>   (up to five Fbm calls, ~80 sine hashes a pixel). Redmi Pad: GPU 60 ms -> ~28 ms in the main menu (16 -> 31-36 fps);
+>   Pixel 6 Pro mission 1: 21-27 -> **57-60 fps** standing and running. Now `CineGroundNoise` bakes a tiling 512² R8
+>   fbm texture once (global `_CineFbm`, period 64 cells, octaves at 2x not 2.07x) and `Fbm()` is one sample. Same look.
+>   RULE: no per-pixel procedural noise in a shader that covers the screen -- bake it.
+> - Mission 1 darkness (`DungeonDark`, `_NoDepth 1`): finds each pixel's ground point by its view ray on the flat village,
+>   so the camera needs no depth texture (the depth copy with MSAA is a tile-flush on Mali). Mission 2 / dungeon still use depth.
+> - Film on a phone: no depth of field, no bloom, shadow reach capped to 30 m while the film runs
+>   (`GraphicsQuality.ShadowDistanceCap`, released by `LightenForPlay`/OnDestroy), and only the 3 biggest parts of each
+>   figure cast shadows (`CineFigure.ShadowFloor`). Pixel film: ~50 -> ~53 fps before the bloom change (bloom-off build NOT measured).
+>   Shadows OFF entirely gave 57-60 in the film -- the remaining lever, a look decision for the user.
+> - Whole skinned figures (KeepSkinned for all) were TRIED and REVERTED: mission 1 got worse (GPU skinning on Vulkan).
+> - Auto on an **Adreno** GPU: no MSAA (A71 menu 25 -> 34 fps with 2x off; Mali pays nothing for 2x).
+> - **Samsung A71 drew the game squeezed into the left ~45 % of the screen** (rest black): Vulkan pre-transform.
+>   `PlayerSettings.vulkanEnablePreTransform = false` (BuildAndroid + ProjectSettings) fixed it. GameActivity was NOT the cause.
+> - Measuring on a device: `Core/PerfProbe.cs` (in every build; a file `perf.txt` pushed to the app's files dir switches parts
+>   off: `post|dark|particles|skinned|figures|shadows|ui|sky off`, `shader <name> off`, `scale x`, `msaa n`, `census` -> perf_out.txt).
+>   The dev build's `Cheats/PerfProbe` logs `PERF` lines (cpu/render/gpu ms) to logcat. A 120 Hz Pixel quantises: a frame just
+>   over 16.6 ms shows as 40 fps, so 40/52 readings mean "slightly over budget", not "twice too slow".
+
 > **2026-11-18 (the user: menu 13 fps, film 25, mission 1 10-15 on a strong phone) -- levers BUILT, NOT MEASURED:** Auto High on a PHONE = 1080 short side + MSAA 2x (desktop keeps 1440/4x); no bloom in the main menu on phones; Gaussian DOF in the film on phones; bloom+DOF off once mission 1 play starts; mission 1 camera far 260 -> 45 (also clips URP's shadow distance). MEASURED on the Pixel 6 Pro the same day (release APK, Wi-Fi adb, SurfaceFlinger timestats): **main menu 60.4 fps** (was 13), 0 frames over 34 ms; **mission 1 in the village 40 fps standing, 38.5 running** (was 10-15). The village is the film's whole village with figures cut into ~10 parts each (CineFigure.Rigidify) -- the next lever if 60 is wanted there (KeepSkinned like the menu needs the torches/sack/mage staff moved off the parts). Threads while running: render thread ~45 %, main ~38 % of a core, GPU at 510 of 848 MHz -- no single wall, measure with a development build before pulling the next lever.
 
 > **2026-11-10 GRAPHICS SETTINGS: Auto / Manual (the user).** Settings → Graphics: **Авто | Ручная**.

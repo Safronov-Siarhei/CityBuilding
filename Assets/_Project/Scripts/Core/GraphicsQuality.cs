@@ -215,6 +215,11 @@ namespace CityBuilder.Core
         public static int OverrideMsaa;
         public static UpscalingFilterSelection? OverrideFilter;
 
+        /// <summary>A scene's cap on the shadow reach in metres (0 = none): the campaign film on a phone, whose camera stays
+        /// close -- the shadow map of every house within the tier's 60 m held the film at ~50 fps on a Pixel 6 Pro
+        /// (2026-11-18, shadows off: 57-60). Set it, then Apply().</summary>
+        public static float ShadowDistanceCap;
+
         /// <summary>The render scale last applied (for the cheat window's readout).</summary>
         public static float AppliedScale => _copy != null ? _copy.renderScale : 1f;
         public static int AppliedMsaa => _copy != null ? _copy.msaaSampleCount : 1;
@@ -248,6 +253,10 @@ namespace CityBuilder.Core
                     tier.shortSideCap = 1080;
                     tier.msaa = Mathf.Min(tier.msaa, 2);
                 }
+                // an Adreno GPU pays for MSAA where a Mali does not (2026-11-10: 2x took the A71 from 54 to 39; 2026-11-18,
+                // the A71's main menu: 25 fps with 2x, 34 without), so Auto gives it none
+                if (Application.isMobilePlatform && SystemInfo.graphicsDeviceName.IndexOf("Adreno", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    tier.msaa = 1;
                 // a 1440p phone at full scale would pay for pixels nobody sees: the short side is capped
                 var shortSide = Mathf.Max(1, Mathf.Min(Screen.width, Screen.height));
                 _copy.renderScale = Mathf.Clamp(Mathf.Min(tier.scale, tier.shortSideCap / (float)shortSide), 0.5f, 1f);
@@ -268,6 +277,7 @@ namespace CityBuilder.Core
             Application.targetFrameRate = FrameRate;
             // no post effects in the game: HDR buys nothing but bandwidth
             _copy.supportsHDR = false;
+            if (ShadowDistanceCap > 0f && _copy.shadowDistance > ShadowDistanceCap) _copy.shadowDistance = ShadowDistanceCap;
             if (OverrideScale > 0f) _copy.renderScale = Mathf.Clamp(OverrideScale, 0.3f, 1f);
             if (OverrideMsaa > 0) _copy.msaaSampleCount = OverrideMsaa;
             if (OverrideFilter.HasValue) _copy.upscalingFilter = OverrideFilter.Value;

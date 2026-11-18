@@ -17,6 +17,11 @@ Shader "CityBuilder/DungeonDark"
         // the camp lies ~7 cells from the south edge: the band (with its wobble) must stop short of it
         _MapEdge ("Darkness eating into the map's edge (cells)", Float) = 1
         _SkyOpen ("Sky left clear (0 dark, 1 clear)", Float) = 0
+        // 1: no depth texture -- each pixel's world point is where its view ray meets the flat ground at
+        // _GroundY (mission 1's village is flat). On a phone the depth copy the other path needs cut the
+        // frame rate to a third (Pixel 6 Pro, 2026-11-18: 14 fps native, the cost growing with the pixels)
+        _NoDepth ("Ground plane instead of depth", Float) = 0
+        _GroundY ("Ground height", Float) = 0
     }
 
     SubShader
@@ -49,6 +54,8 @@ Shader "CityBuilder/DungeonDark"
                 float _Wobble;
                 float _MapEdge;
                 float _SkyOpen;
+                float _NoDepth;
+                float _GroundY;
             CBUFFER_END
 
             struct Attributes
@@ -94,18 +101,31 @@ Shader "CityBuilder/DungeonDark"
             half4 Frag(Varyings input) : SV_Target
             {
                 float2 screen = input.positionCS.xy / _ScaledScreenParams.xy;
-                float depth = SampleSceneDepth(screen);
-                #if UNITY_REVERSED_Z
-                    bool sky = depth <= 0.0;
-                #else
-                    bool sky = depth >= 1.0;
-                #endif
+                bool sky;
+                float3 world;
+                if (_NoDepth > 0.5)
+                {
+                    // any depth inside the frustum lies on the pixel's view ray
+                    float3 along = ComputeWorldSpacePosition(screen, 0.5, UNITY_MATRIX_I_VP);
+                    float3 dir = along - _WorldSpaceCameraPos;
+                    sky = dir.y > -1e-4;
+                    world = _WorldSpaceCameraPos + dir * ((_GroundY - _WorldSpaceCameraPos.y) / min(dir.y, -1e-4));
+                }
+                else
+                {
+                    float depth = SampleSceneDepth(screen);
+                    #if UNITY_REVERSED_Z
+                        sky = depth <= 0.0;
+                    #else
+                        sky = depth >= 1.0;
+                    #endif
+                    world = ComputeWorldSpacePosition(screen, depth, UNITY_MATRIX_I_VP);
+                }
                 // the sky: dark in a dungeon; mission 2 leaves it clear (its opening scene looks up at it,
                 // the user 2026-11-15: «небо чёрное»)
                 float open = sky ? _SkyOpen : 0.0;
                 if (!sky)
                 {
-                    float3 world = ComputeWorldSpacePosition(screen, depth, UNITY_MATRIX_I_VP);
                     float2 uv = (world.xz - _DarkRect.xy) * _DarkRect.zw;
                     float2 t = _DarkMask_TexelSize.xy * _Soft;
                     // as the parchment's edge (the user, 2026-11-01: «темнота квадратами ... сделай
