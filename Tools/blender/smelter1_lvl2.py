@@ -89,9 +89,9 @@ def build(lo, hi):
 
     # coal, ores and bars
     d.ore_heap(b, -0.62, -0.9, r=0.18, color='window', second='iron')
-    d.ore_heap(b, -0.1, -1.18, r=0.12, color='roof_slate', second='stone_dark')
-    d.ore_heap(b, 0.22, -1.25, r=0.1, color='roof_orange', second='roof_green')
-    d.ore_heap(b, -0.33, -1.3, r=0.09, color='gold', second='stone_mid')
+    d.ore_heap(b, -0.1, -1.18, r=0.12, color='roof_red_dark', second='roof_red')
+    d.ore_heap(b, 0.22, -1.25, r=0.1, color='roof_orange', second='roof_orange_dark')
+    d.ore_heap(b, -0.33, -1.3, r=0.09, color='gold', second='plaster_yellow')
     px, py = 0.6, -0.95
     b.box(px - 0.24, px + 0.24, py - 0.18, py + 0.18, 0, 0.04, 'wood_mid')
     ingots(b, px, py - 0.08, 'iron')

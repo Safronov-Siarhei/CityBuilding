@@ -14,7 +14,7 @@ from kit import Builder  # noqa: E402
 
 OBJ = "CopperMine1-lvl1"
 ORE = 'roof_orange'            # copper
-PATINA = 'roof_green'
+PATINA = 'roof_orange_dark'    # dark copper like its icon (the user, 2026-11-18; was green)
 
 
 def build(lo, hi):
@@ -26,7 +26,7 @@ def build(lo, hi):
     d.rock(b, s, 0.1, 0.48, 0.32, 0.84, 'stone_mid', seed=4)
     d.adit(b, s, yf)
     d.rails(b, s, -0.98, yf)
-    d.minecart(b, s, -0.6, ORE)
+    d.minecart(b, s, -0.6, ORE, glint=PATINA)
 
     # washing sluice: a trough falling towards the front on two trestles, a butt at its head
     x = -0.58

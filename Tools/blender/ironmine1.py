@@ -13,7 +13,8 @@ import kit  # noqa: E402
 from kit import Builder, Facade  # noqa: E402
 
 OBJ = "IronMine1-lvl1"
-ORE = 'roof_slate'             # iron ore: blue-grey metal, lighter than coal
+ORE = 'roof_red_dark'          # iron ore: rusty red like its icon (the user, 2026-11-18; was blue-grey)
+GLINT = 'roof_red'
 
 
 def build(lo, hi):
@@ -24,8 +25,8 @@ def build(lo, hi):
     d.adit(b, s, yf)
 
     d.rails(b, s, -0.98, yf)
-    d.minecart(b, s, -0.62, ORE)
-    d.ore_heap(b, -0.68, -0.62, r=0.17, color=ORE, second='stone_dark')
+    d.minecart(b, s, -0.62, ORE, glint=GLINT)
+    d.ore_heap(b, -0.68, -0.62, r=0.17, color=ORE, second=GLINT)
 
     # tool shed against the hill on the right
     x0, x1, y0, y1 = 0.42, 0.92, -0.62, -0.18

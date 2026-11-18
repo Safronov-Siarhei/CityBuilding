@@ -45,7 +45,7 @@ def build(lo, hi):
         d.lamp(b, s + k * 0.3, yf - 0.1, h=0.55)
 
     d.rails(b, s, -0.98, yf)
-    d.minecart(b, s, -0.64, ORE)
+    d.minecart(b, s, -0.64, ORE, glint='plaster_yellow')
 
     # strongbox heaped with nuggets
     cx, cy = -0.6, -0.62
@@ -53,7 +53,7 @@ def build(lo, hi):
     for t in (-0.09, 0.09):
         b.zbox(cx + t * 0.99, cy + t * 0.14, 0, 0.165, 0.018, 0.105, 8, 'iron')
     b.blob(cx, cy, 0.15, 0.12, 0.09, ORE, sides=5)
-    d.ore_heap(b, -0.75, -0.3, r=0.11, color=ORE, second='stone_mid')
+    d.ore_heap(b, -0.75, -0.3, r=0.11, color=ORE, second='plaster_yellow')
     cx, cy = -0.32, -0.86   # a second strongbox
     b.zbox(cx, cy, 0, 0.13, 0.12, 0.08, -10, 'wood_mid', bevel=0.01)
     b.zbox(cx, cy, 0.0, 0.135, 0.014, 0.085, -10, 'iron')

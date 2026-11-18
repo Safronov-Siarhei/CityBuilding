@@ -166,3 +166,7 @@ SANDBOX ONLY. Replaces the family pools with a cap PER RESOURCE.
   (roof_red_dark + roof_red), copper «1 тёмная медь» (roof_orange + roof_orange_dark), gold + plaster_yellow, coal
   iron + window. Res_Iron/Res_CopperOre/Res_Gold/Res_Coal.png re-rendered. The mines' ore heaps on the map are unchanged
   (`ore_heap`, would need model approval + re-export).
+- MAP HEAPS (2026-11-18, the user asked for renders): `details.ore_heap` and the minecart load are solid chunks now
+  (`ore_chunk`, subdiv 0 = 20 tris each); iron ORE red (roof_red_dark + roof_red, was blue-grey roof_slate), copper
+  PATINA dark copper (was green), gold glint plaster_yellow -- mines lvl1/2 scripts (3-5 borrow them), Smelter, Warehouses.
+  Renders `Design/ui/OreHeaps_Review.png` (`render_ore_review.py`); WAITING FOR APPROVAL, NOT re-exported to FBX yet.

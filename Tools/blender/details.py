@@ -362,9 +362,13 @@ def stone_pile(b, x, y, size=0.13):
                'stone_light' if i % 2 else 'stone_mid', bevel=0.01)
 
 
-def ore_heap(b, x, y, r=0.18, color='iron', second='stone_dark'):
-    b.blob(x, y, 0, r, r * 1.2, color, sides=6)
-    b.blob(x + r * 0.5, y - r * 0.3, 0, r * 0.55, r * 0.8, second, sides=5)
+def ore_heap(b, x, y, r=0.18, color='iron', second='window', seed=0):
+    """A heap of solid chunks of ore -- the new ore icons' look (the user, 2026-11-18; it was two flat blobs), some
+    facets in `second`. Plain icosahedra (20 tris a chunk) at map scale."""
+    for i, (dx, dy, dz, k) in enumerate(((-0.42, 0.1, 0, 0.55), (0.4, 0.14, 0, 0.52), (0.02, -0.38, 0, 0.5),
+                                         (0.0, 0.08, 0.42, 0.55), (0.55, -0.4, 0, 0.32))):
+        ore_chunk(b, x + dx * r, y + dy * r, dz * r, r * k, color, seed=seed * 10 + i, glint=second, share=0.3,
+                  squash=0.9, subdiv=0)
 
 
 # -- a solid chunk of ore (the resource icons; the user, 2026-11-18: the old heap read as a flat cake) --------
@@ -656,13 +660,17 @@ def rails(b, s, y0, y1, gauge=0.16):
         b.box(x - 0.012, x + 0.012, y0, y1, 0.02, 0.04, 'iron')
 
 
-def minecart(b, x, y, load, angle=0.0, gauge=0.16):
-    """An ore cart on the track, heaped with `load` (the ore's colour)."""
+def minecart(b, x, y, load, angle=0.0, gauge=0.16, glint=None):
+    """An ore cart on the track, heaped with solid chunks of `load` (the ore's colour; `glint` on some facets)."""
     b.zbox(x, y, 0.07, 0.2, gauge / 2 + 0.03, 0.14, angle, 'wood_mid', bevel=0.01)
     b.zbox(x, y, 0.13, 0.15, gauge / 2 + 0.045, 0.155, angle, 'iron')
     for k in (-1, 1):
         b.hcylinder('x', (x, y + k * 0.08, 0.06), gauge / 2 + 0.02, 0.045, 'iron', sides=6)
-    b.blob(x, y, 0.17, 0.11, 0.12, load, sides=5)
+    import math
+    a = math.radians(angle)
+    for i, (u, v, z, r) in enumerate(((-0.05, -0.03, 0.15, 0.06), (0.05, 0.03, 0.15, 0.06), (0.0, 0.0, 0.2, 0.055))):
+        ore_chunk(b, x + u * math.cos(a) - v * math.sin(a), y + u * math.sin(a) + v * math.cos(a), z, r, load,
+                  seed=90 + i, glint=glint, share=0.3, squash=0.9, subdiv=0)
 
 
 def pickaxe(b, x, y, lean_to_y=None):

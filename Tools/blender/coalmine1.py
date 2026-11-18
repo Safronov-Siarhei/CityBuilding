@@ -60,7 +60,7 @@ def build(lo, hi):
 
     # track out of the shaft, a cart of coal, the coal heap, pit props
     d.rails(b, sx, -0.98, sy - r)
-    d.minecart(b, sx, -0.66, ORE)
+    d.minecart(b, sx, -0.66, ORE, glint='iron')
     d.ore_heap(b, 0.3, -0.78, r=0.2, color=ORE, second='iron')
     d.log_pile(b, -0.82, -0.55, length=0.36, rows=(2, 1), r=0.045, axis='y')
     d.lamp(b, 0.05, -0.34)
