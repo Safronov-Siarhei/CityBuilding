@@ -12,3 +12,4 @@ metadata:
 - Ore icons: look D (solid chunk) chosen, iron red facets, copper dark-copper facets -- IN THE GAME (UI/Icons re-rendered).
 - Android module installed by hand 2026-11-18 (NDK r27c + SDK pieces from modules.json); Unity must be restarted to see it.
 Related: [[project-balance-pipeline]], [[feedback-approve-models-first]]
+- Ore heaps/cart loads on the 4 mines, Smelter, Warehouse, BigWarehouse (all 5 levels): solid chunks, iron red, copper dark-copper -- approved and FBX re-exported 2026-11-18.
