@@ -98,6 +98,9 @@ category" and the APK's own entries (`data.unity3d`, `libil2cpp.so`, `libunity.s
 `com.depigogames.citybuilding`. The repo is PUBLIC — nothing secret in it.
 **This machine (2026-11-12): Unity 6000.5.4f1 with Android Build Support is in
 `C:\Program Files\Unity\Hub\Editor\6000.5.4f1`** (build_android.ps1 finds it); a release APK takes ~4.5 min.
+**2026-11-18 (this machine, G:/D:):** Android module installed by hand into `D:\unity\6000.5.4f1-x86_64` (NDK r27c
++ SDK pieces from modules.json, the Hub kept timing out); `D:\Builds CB` did not exist (created); python lacked `requests`,
+so `send_build_to_telegram.py` failed -- moot anyway: the release APK is **227,4 MB** now (6 min build).
 **APK size audit 2026-11-12: 193,3 MB** (from 46 in October; Telegram refuses it; Google Play's base
 module limit is 200 MB). `data.unity3d` 170 MB of it, engine + code ~20 MB. Build log «Uncompressed
 usage»: meshes 242 MB (73 %), textures 64, other 19, audio 2,6. Meshes by folder: Models/Dungeon* 147 MB
