@@ -32,7 +32,7 @@ namespace CityBuilder.Campaign
 
         [Serializable] public struct Art
         {
-            public Sprite disc, rim, mask, panel, pillParchment, pillWood, menuGlyph, closeGlyph, portrait, playGlyph, restartGlyph, homeGlyph;
+            public Sprite disc, rim, mask, panel, pillParchment, pillWood, menuGlyph, closeGlyph, portrait, playGlyph, restartGlyph, homeGlyph, settingsGlyph;
         }
 
         private readonly Config _c;
@@ -41,6 +41,10 @@ namespace CityBuilder.Campaign
         private readonly RectTransform _safe;
         private readonly Text _objective, _clock, _split;
         private GameObject _modal;
+        // everything but the menu button: hidden while a window is open (the user, 2026-11-18: «открытие меню не
+        // скрывает игровой интерфейс»)
+        private readonly RectTransform _bits;
+        private readonly SettingsPanelController _settings;
         private int _stage = -1;
         private float _splitT = -1f;
 
@@ -52,10 +56,11 @@ namespace CityBuilder.Campaign
 
         public bool Paused => _modal != null;
 
-        public MissionHud(Config c, Art art, Transform parent)
+        public MissionHud(Config c, Art art, Transform parent, SettingsPanelController settings = null)
         {
             _c = c;
             _art = art;
+            _settings = settings;
             var go = new GameObject("MissionHud", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             go.transform.SetParent(parent, false);
             _canvas = go.GetComponent<Canvas>();
@@ -74,14 +79,19 @@ namespace CityBuilder.Campaign
             MissionSkin.Round(_safe, "Menu", "round_main", HudInk.OnMain, art.menuGlyph, new Vector2(0f, 1f),
                 new Vector2(c.margin + b * 0.5f, -c.margin - b * 0.5f), b).onClick.AddListener(OpenPause);
 
+            _bits = (RectTransform)new GameObject("Bits", typeof(RectTransform)).transform;
+            _bits.SetParent(_safe, false);
+            _bits.SetAsFirstSibling();
+            Fill(_bits);
+
             // the objective, top right, on a plaque
-            var plaque = MissionSkin.Image(_safe, "Objective", "plaque", new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-c.margin, -c.margin), new Vector2(380f, 70f));
+            var plaque = MissionSkin.Image(_bits, "Objective", "plaque", new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-c.margin, -c.margin), new Vector2(380f, 70f));
             MissionSkin.Label(plaque.transform, Localization.Get(c.objectiveKey), UiTheme.Bold, 17, UiTheme.InkSoft, TextAnchor.MiddleCenter, new Vector2(0f, 0.56f), new Vector2(1f, 0.95f), new Vector2(14f, 0f));
             _objective = MissionSkin.Label(plaque.transform, "", UiTheme.Bold, 22, UiTheme.Ink, TextAnchor.MiddleCenter, new Vector2(0f, 0.08f), new Vector2(1f, 0.62f), new Vector2(14f, 0f));
 
             // Ардан, top centre, in the King's frame
             var p = c.portrait;
-            var frame = MissionSkin.Image(_safe, "Ardan", "round_value", new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -c.margin - p * 0.5f), new Vector2(p, p));
+            var frame = MissionSkin.Image(_bits, "Ardan", "round_value", new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -c.margin - p * 0.5f), new Vector2(p, p));
             frame.type = Image.Type.Simple;
             var face = frame.gameObject.AddComponent<Button>();
             var mask = new GameObject("Mask", typeof(RectTransform), typeof(Image), typeof(Mask));
@@ -101,14 +111,14 @@ namespace CityBuilder.Campaign
             pic.GetComponent<Image>().preserveAspect = true;
             pic.GetComponent<Image>().raycastTarget = false;
             face.onClick.AddListener(OpenStory);
-            var tag = MissionSkin.Image(_safe, "Name", "plaque", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -c.margin - p - 2f), new Vector2(150f, 40f));
+            var tag = MissionSkin.Image(_bits, "Name", "plaque", new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -c.margin - p - 2f), new Vector2(150f, 40f));
             MissionSkin.Label(tag.transform, Localization.Get(c.nameKey), UiTheme.Bold, 22, UiTheme.Ink, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, Vector2.zero);
 
             // the run's clock, bottom centre, and the stretch's time over it at a checkpoint
-            var clock = MissionSkin.Image(_safe, "Clock", "plaque", new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, c.margin), new Vector2(c.timerWidth, 52f));
+            var clock = MissionSkin.Image(_bits, "Clock", "plaque", new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, c.margin), new Vector2(c.timerWidth, 52f));
             _clockPlaque = clock.gameObject;
             _clock = MissionSkin.Label(clock.transform, MissionSkin.Clock(0f), UiTheme.Heavy, 28, UiTheme.Ink, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, Vector2.zero);
-            _split = MissionSkin.Label(_safe, "", UiTheme.Bold, 22, Color.clear, TextAnchor.MiddleCenter, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), Vector2.zero);
+            _split = MissionSkin.Label(_bits, "", UiTheme.Bold, 22, Color.clear, TextAnchor.MiddleCenter, new Vector2(0.5f, 0f), new Vector2(0.5f, 0f), Vector2.zero);
             var sr = (RectTransform)_split.transform;
             sr.sizeDelta = new Vector2(600f, 34f);
             sr.anchoredPosition = new Vector2(0f, c.margin + 52f + 22f);
@@ -191,6 +201,7 @@ namespace CityBuilder.Campaign
                     MissionOne.SkipFilm = true;
                     LoadingScreen.IntoGame(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
                 }),
+                (_art.settingsGlyph, OpenSettings),
                 (_art.homeGlyph, () =>
                 {
                     Close();
@@ -198,9 +209,19 @@ namespace CityBuilder.Campaign
                 }),
             };
             var step = b * 0.9f + 12f;
-            for (var i = 0; i < entries.Length; i++)
+            for (var i = 0, row = 0; i < entries.Length; i++)
+            {
+                if (entries[i].glyph == _art.settingsGlyph && (_settings == null || _art.settingsGlyph == null)) continue;
                 MissionSkin.Round(_modal.transform, "Entry", "round", HudInk.OnRound, entries[i].glyph, new Vector2(0f, 1f),
-                    new Vector2(c.margin + b * 0.5f, -c.margin - b - 12f - step * 0.5f - i * step), b * 0.9f).onClick.AddListener(entries[i].act);
+                    new Vector2(c.margin + b * 0.5f, -c.margin - b - 12f - step * 0.5f - row * step), b * 0.9f).onClick.AddListener(entries[i].act);
+                row++;
+            }
+        }
+
+        /// <summary>The game's settings card (the same as on the campaign map) over the menu; the menu stays under it.</summary>
+        private void OpenSettings()
+        {
+            if (_settings != null) _settings.OpenPanel();
         }
 
         private void OpenStory()
@@ -241,6 +262,8 @@ namespace CityBuilder.Campaign
         private void Dim()
         {
             Time.timeScale = 0f;
+            _bits.gameObject.SetActive(false);
+            PauseChanged?.Invoke(true);
             _modal = new GameObject("Modal", typeof(RectTransform));
             _modal.transform.SetParent(_safe, false);
             Fill((RectTransform)_modal.transform);
@@ -261,7 +284,12 @@ namespace CityBuilder.Campaign
             if (_modal != null) UnityEngine.Object.Destroy(_modal);
             _modal = null;
             Time.timeScale = 1f;
+            if (_bits != null) _bits.gameObject.SetActive(true);
+            PauseChanged?.Invoke(false);
         }
+
+        /// <summary>A window opened (true) or closed: the mission hides its stick under it.</summary>
+        public event Action<bool> PauseChanged;
 
         // ------------------------------------------------------------ helpers
 

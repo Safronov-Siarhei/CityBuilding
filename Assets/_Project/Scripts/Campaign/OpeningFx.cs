@@ -136,7 +136,7 @@ namespace CityBuilder.Campaign
             StepTitle(time);
             if (_dof != null)
             {
-                _dof.active = shallow;
+                _dof.active = shallow && !_playLight;
                 _dof.focusDistance.value = Vector3.Distance(camFrom, camAt);
                 _dof.focalLength.value = lens;
             }
@@ -500,6 +500,21 @@ namespace CityBuilder.Campaign
             RenderSettings.ambientGroundColor = Color.Lerp(_gnd0, Col(_c.ambientGround), w);
         }
 
+        /// <summary>Set by the main menu (MenuVillageQuality) for its life: no bloom on a phone.</summary>
+        public static bool NoBloom;
+
+        /// <summary>Play has begun (mission 1 after the film): a phone drops the bloom and the depth of field --
+        /// the film's look, not the run's, and two full-screen passes every frame.</summary>
+        public void LightenForPlay()
+        {
+            if (!Application.isMobilePlatform) return;
+            if (_bloom != null) _bloom.active = false;
+            if (_dof != null) _dof.active = false;
+            _playLight = true;
+        }
+
+        private bool _playLight;
+
         private void Post()
         {
             if (volume == null || volume.sharedProfile == null) return;
@@ -516,9 +531,12 @@ namespace CityBuilder.Campaign
                 ca.saturation.value = _c.saturation;
                 ca.contrast.value = _c.contrast;
             }
+            // a phone in the main menu draws no bloom (the user, 2026-11-18: 13 fps there on a strong phone)
+            if (_bloom != null && NoBloom && Application.isMobilePlatform) _bloom.active = false;
             if (p.TryGet(out _dof))
             {
-                _dof.mode.value = DepthOfFieldMode.Bokeh;
+                // Bokeh is the costliest pass URP has; a phone gets the cheap Gaussian blur on the close shots
+                _dof.mode.value = Application.isMobilePlatform ? DepthOfFieldMode.Gaussian : DepthOfFieldMode.Bokeh;
                 _dof.aperture.value = _c.dofAperture;
                 _dof.active = false;
             }

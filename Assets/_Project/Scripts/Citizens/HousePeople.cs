@@ -241,6 +241,12 @@ namespace CityBuilder.Citizens
             }
 
             if (!paused) house.Timer += Time.deltaTime;
+            // nothing being made (plague, hunger...): no bar at all -- a frozen one hung over the hovel (the user, 2026-11-18)
+            if (paused)
+            {
+                if (house.Bar != null) house.Bar.Hide();
+                return;
+            }
             if (showBar)
             {
                 if (house.Bar == null) house.Bar = HarvestProgressBar.CreateFor(house.Building.transform, ResourceType.Population);

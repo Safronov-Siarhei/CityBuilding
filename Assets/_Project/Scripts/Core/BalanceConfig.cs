@@ -657,6 +657,7 @@ namespace CityBuilder.Core
         [SerializeField] private float tutorialOfferWindowSeconds = 1200f;
         [SerializeField] private float tutorialOfferHallSeconds = 60f;
         [SerializeField] private float tutorialOfferStallSeconds = 180f;
+        [SerializeField] private int tutorialOfferDay = 3;
         [SerializeField] private float tutorialOfferIdleSeconds = 60f;
         [SerializeField] private float tutorialOfferRaidSeconds = 60f;
         [SerializeField] private int tutorialOfferLowResource = 10;
@@ -1529,6 +1530,8 @@ namespace CityBuilder.Core
         public float TutorialOfferWindowSeconds => tutorialOfferWindowSeconds;
         public float TutorialOfferHallSeconds => tutorialOfferHallSeconds;
         public float TutorialOfferStallSeconds => tutorialOfferStallSeconds;
+        /// <summary>The tutorial offer: from this game day on, a player with nothing of their own built (only the start chain) is offered it.</summary>
+        public int TutorialOfferDay => tutorialOfferDay;
         public float TutorialOfferIdleSeconds => tutorialOfferIdleSeconds;
         public float TutorialOfferRaidSeconds => tutorialOfferRaidSeconds;
         public int TutorialOfferLowResource => tutorialOfferLowResource;
@@ -2853,6 +2856,7 @@ namespace CityBuilder.Core
             tutorialOfferWindowSeconds = Read(economy, "tutorial_offer_window_sec", tutorialOfferWindowSeconds);
             tutorialOfferHallSeconds = Read(economy, "tutorial_offer_hall_sec", tutorialOfferHallSeconds);
             tutorialOfferStallSeconds = Read(economy, "tutorial_offer_stall_sec", tutorialOfferStallSeconds);
+            tutorialOfferDay = (int)Read(economy, "tutorial_offer_day", tutorialOfferDay);
             tutorialOfferIdleSeconds = Read(economy, "tutorial_offer_idle_sec", tutorialOfferIdleSeconds);
             tutorialOfferRaidSeconds = Read(economy, "tutorial_offer_raid_sec", tutorialOfferRaidSeconds);
             tutorialOfferLowResource = (int)Read(economy, "tutorial_offer_low_res", tutorialOfferLowResource);

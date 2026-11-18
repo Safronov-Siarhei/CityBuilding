@@ -53,6 +53,7 @@ namespace CityBuilder.Campaign
         [SerializeField] private AudioClip music;
         [SerializeField] private AudioClip roar;
         [SerializeField] private MissionHud.Art hudArt;
+        [SerializeField] private UI.SettingsPanelController settings;
 
         private MissionWorld _world;
         private MissionHud _hud;
@@ -143,7 +144,10 @@ namespace CityBuilder.Campaign
             cam.fieldOfView = _fromFov;
             // a deeper near plane: the film's 0.25 m made the gate's coat of arms flicker on its wall
             if (_c.camera.near > 0f) cam.nearClipPlane = _c.camera.near;
+            // the game's view from above sees ~15 m of ground: 45 m (was 260) also clips the shadow pass, which
+            // follows the far plane (the user, 2026-11-18: 10-15 fps in mission 1 on a strong phone)
             if (_c.camera.far > 0f) cam.farClipPlane = _c.camera.far;
+            if (fx != null) fx.LightenForPlay();
             _blend = 0f;
 
             var j = _c.joystick;
@@ -165,7 +169,13 @@ namespace CityBuilder.Campaign
                 _world = new MissionWorld(_c.world, village, transform, darkMaterial, fx != null ? fx.SparkMaterial : null,
                     _c.chase?.checkpoints, finish, director.Member, director.Release);
             }
-            if (_c.hud != null) _hud = new MissionHud(_c.hud, hudArt, transform);
+            if (_c.hud != null)
+            {
+                _hud = new MissionHud(_c.hud, hudArt, transform, settings);
+                // the stick is drawn under no open window (the user, 2026-11-18)
+                var stickCanvas = _stick.GetComponent<Canvas>();
+                _hud.PauseChanged += paused => { if (stickCanvas != null) stickCanvas.enabled = !paused; };
+            }
             if (_c.reinforce != null && director.Life != null) director.Life.Reinforce(_c.reinforce.torch, _c.reinforce.spear, _c.reinforce.every);
             Sound();
             if (_c.mage != null && fx != null)

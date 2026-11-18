@@ -191,7 +191,12 @@ namespace CityBuilder.UI
             _list.anchorMin = new Vector2(0.5f, 1f);
             _list.anchorMax = new Vector2(0.5f, 1f);
             _list.pivot = new Vector2(0.5f, 1f);
-            var scroll = view.gameObject.AddComponent<ScrollRect>();
+            // the scroll hangs on the WHOLE window, the list is its viewport: a drag anywhere on the screen moves the
+            // list (the user, 2026-11-18: «скролл работает только при нажатии на предложения, сделай по всему»)
+            var anywhere = _shopView.gameObject.AddComponent<Image>();
+            anywhere.color = new Color(0f, 0f, 0f, 0f);
+            var scroll = _shopView.gameObject.AddComponent<ScrollRect>();
+            scroll.viewport = view;
             scroll.content = _list;
             scroll.horizontal = false;
             scroll.movementType = ScrollRect.MovementType.Elastic;
@@ -326,6 +331,7 @@ namespace CityBuilder.UI
             bg.rectTransform.sizeDelta = new Vector2(CardW, CardH);
             bg.name = "MineCard";
             var card = bg.rectTransform;
+            Alive(card, CardH, 0);
             var mine = Icon(card, "Mine", new Vector2(-360f, 10f), 304f);
             mine.preserveAspect = true;
             mine.rectTransform.sizeDelta = new Vector2(420f, 304f);
@@ -374,6 +380,7 @@ namespace CityBuilder.UI
             bg.rectTransform.sizeDelta = new Vector2(CardW, h);
             bg.name = "PackOfferCard";
             var card = bg.rectTransform;
+            Alive(card, h, index + 1);
             const float gx = -CardW / 2f + 300f;   // the ground's glow centre
             var geode = Icon(card, "Geode" + (index + 1), new Vector2(gx, low ? 0f : 12f), 10f);
             geode.preserveAspect = true;
@@ -399,9 +406,30 @@ namespace CityBuilder.UI
                 return card;
             }
             var bonus = config != null ? config.MenuShopPackBonusPercent(index) : 0;
-            if (bonus > 0) Sticker(card, new Vector2(CardW / 2f - 26f, h / 2f - 26f), 112f, Localization.Format("#shop_bonus", bonus), 34);
+            // ABOVE the price button, not in the corner over it (the user, 2026-11-18: «процент выгоды уходит под цену»)
+            if (bonus > 0) Sticker(card, new Vector2(buttonAt.x, h / 2f - 4f), 96f, Localization.Format("#shop_bonus", bonus), 30);
             PriceButton(card, buttonAt, new Vector2(270f, 100f), Store.PackId(index), 48);
             return card;
+        }
+
+        /// <summary>
+        /// The card's life (the user, 2026-11-18): the gold rim laid over the ground and pulsed, the four sparkles of the
+        /// ground as separate pictures that twinkle (ShopCardLife). Spots as Tools/store/menu_shop_art.py sparkle_spots.
+        /// </summary>
+        private static void Alive(RectTransform card, float h, int seed)
+        {
+            var rim = Icon(card, h < CardH ? "CardRimShort" : "CardRim", Vector2.zero, CardW);
+            rim.rectTransform.sizeDelta = new Vector2(CardW + 48f, h + 48f);
+            rim.color = new Color(1f, 0.9f, 0.45f, 0f);
+            var spots = new[] { new Vector3(150f, 70f, 16f), new Vector3(470f, 90f, 12f), new Vector3(420f, h - 60f, 14f), new Vector3(110f, h - 90f, 10f) };
+            var sparkles = new RectTransform[spots.Length];
+            for (var i = 0; i < spots.Length; i++)
+            {
+                var sp = spots[i];
+                var star = Icon(card, "Sparkle", new Vector2(sp.x - CardW / 2f, h / 2f - sp.y), sp.z * 2.8f);
+                sparkles[i] = star.rectTransform;
+            }
+            card.gameObject.AddComponent<ShopCardLife>().Init(rim, sparkles, seed);
         }
 
         /// <summary>The full price struck out over the button and the discount sticker in the corner.</summary>

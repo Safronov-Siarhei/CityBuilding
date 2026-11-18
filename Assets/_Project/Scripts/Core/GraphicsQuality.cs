@@ -240,6 +240,14 @@ namespace CityBuilder.Core
             if (!Manual)
             {
                 var tier = Tiers[Mathf.Clamp((int)Detect() - 1, 0, Tiers.Length - 1)];
+                // a PHONE on High: 1080 on the short side and 2x MSAA (the user, 2026-11-18: the main menu at 13 fps,
+                // the film at 25, mission 1 at 15 on a strong phone -- 1440p x 4x MSAA with the menu's/film's post
+                // effects is the whole frame on a Mali GPU, as the A71 and Redmi measured); the desktop keeps 1440/4x
+                if (Application.isMobilePlatform && tier.shortSideCap > 1080)
+                {
+                    tier.shortSideCap = 1080;
+                    tier.msaa = Mathf.Min(tier.msaa, 2);
+                }
                 // a 1440p phone at full scale would pay for pixels nobody sees: the short side is capped
                 var shortSide = Mathf.Max(1, Mathf.Min(Screen.width, Screen.height));
                 _copy.renderScale = Mathf.Clamp(Mathf.Min(tier.scale, tier.shortSideCap / (float)shortSide), 0.5f, 1f);

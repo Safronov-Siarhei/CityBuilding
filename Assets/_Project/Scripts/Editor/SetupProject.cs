@@ -319,6 +319,17 @@ namespace CityBuilder.EditorTools
             if (icon != null)
             {
                 PlayerSettings.SetIcons(NamedBuildTarget.Unknown, new[] { icon }, IconKind.Any);
+                // Android 8+ launchers draw the legacy icon as a small square inside a white circle
+                // (the user, 2026-11-18: «иконка в виде маленького квадрата, а не по всему кругу»).
+                // The ADAPTIVE icon fills the launcher's mask: AppIconAdaptive.png (Tools/store/
+                // make_adaptive_icon.py) is the art at 76 % with its edges stretched to the border.
+                var layer = AssetDatabase.LoadAssetAtPath<Texture2D>(AppIconAdaptivePath);
+                if (layer != null)
+                {
+                    SetAndroidIcons(UnityEditor.Android.AndroidPlatformIconKind.Adaptive, layer, layer);
+                    SetAndroidIcons(UnityEditor.Android.AndroidPlatformIconKind.Round, layer, null);
+                    SetAndroidIcons(UnityEditor.Android.AndroidPlatformIconKind.Legacy, icon, null);
+                }
             }
             else
             {
@@ -327,6 +338,21 @@ namespace CityBuilder.EditorTools
         }
 
         private const string AppIconPath = "Assets/_Project/UI/AppIcon.png";
+        private const string AppIconAdaptivePath = "Assets/_Project/UI/AppIconAdaptive.png";
+
+        /// <summary>Every size of one Android icon kind gets the same texture(s); Unity scales them.</summary>
+        private static void SetAndroidIcons(PlatformIconKind kind, Texture2D first, Texture2D second)
+        {
+            var icons = PlayerSettings.GetPlatformIcons(NamedBuildTarget.Android, kind);
+            foreach (var i in icons)
+            {
+                // the adaptive kind has two layers: [0] background, [1] foreground; the art is opaque,
+                // so the foreground is the same picture (a transparent one would need its own file)
+                if (i.maxLayerCount > 1 && second != null) i.SetTextures(first, second);
+                else i.SetTexture(first);
+            }
+            PlayerSettings.SetPlatformIcons(NamedBuildTarget.Android, kind, icons);
+        }
 
         /// <summary>
         /// Puts the shaders that only runtime code asks for into every build.

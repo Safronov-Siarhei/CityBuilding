@@ -17,7 +17,7 @@ namespace CityBuilder.EditorTools
     {
         private const string RateUsPrefabPath = "Assets/_Project/Resources/RateUsWindow.prefab";
         // the window at half the art's reference size (the user, 2026-11-10: «уменьши окно оценки в 2 раза»)
-        private const float RateUsSize = 0.5f;
+        private const float RateUsSize = 0.75f;   // x1.5 (the user, 2026-11-18; was 0.5)
 
         [Serializable] private class RateUsRect { public string name; public float[] rect; }
         [Serializable] private class RateUsLayout { public float[] reference; public float[] frame; public RateUsRect[] pieces; public RateUsRect[] texts; }

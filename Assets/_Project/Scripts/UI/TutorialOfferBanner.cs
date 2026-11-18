@@ -18,7 +18,9 @@ namespace CityBuilder.UI
     ///   3. no touch at all for tutorial_offer_idle_sec;
     ///   4. tutorial_offer_raid_sec before the first raid with no Barracks and no soldier;
     ///   5. wood or stone short (under tutorial_offer_low_res, or a build refused for it) and neither has grown
-    ///      for tutorial_offer_no_gain_sec.
+    ///      for tutorial_offer_no_gain_sec;
+    ///   6. game day tutorial_offer_day reached with nothing of the player's own past the start chain (2026-11-18).
+    /// Only the player's buildings count (never the neighbour bot's).
     /// It waits for a free screen (nothing in hand, no window, the game running). Seconds are real play seconds.
     /// </summary>
     public class TutorialOfferBanner : MonoBehaviour
@@ -35,6 +37,7 @@ namespace CityBuilder.UI
         private float _stall;
         private float _noGain;
         private int _buildings = -1;
+        private int _chainCount = -1;
         private int _wood = -1;
         private int _stone = -1;
         private bool _raidCame;
@@ -84,10 +87,19 @@ namespace CityBuilder.UI
 
             // 2: the chain done, then nothing new placed (any new building -- roads included -- resets it)
             var chainDone = hall && _placer != null && !_placer.IsPlacingMandatoryBuilding;
-            var count = BuildingInstance.All.Count;
+            // the PLAYER's buildings only: the neighbour bot's town grows by itself and kept resetting the clock
+            // (the user, 2026-11-18: day 4, nothing built but the mandatory ones, and no banner)
+            var count = 0;
+            foreach (var b in BuildingInstance.All)
+                if (b != null && !b.IsBot) count++;
             if (count > _buildings || !chainDone) _stall = 0f;
             else _stall += dt;
             _buildings = count;
+            // 6: by game day tutorial_offer_day still nothing of his own past the start chain
+            if (chainDone && _chainCount < 0) _chainCount = count;
+            var calendar = GameCalendar.Instance;
+            var nothingOwn = chainDone && _chainCount >= 0 && count <= _chainCount
+                             && calendar != null && calendar.CurrentDay >= config.TutorialOfferDay;
 
             // 5: wood or stone short and neither growing
             var resources = ResourceManager.Instance;
@@ -121,6 +133,7 @@ namespace CityBuilder.UI
                        || _stall >= config.TutorialOfferStallSeconds
                        || _idle >= config.TutorialOfferIdleSeconds
                        || raidSoon
+                       || nothingOwn
                        || (short_ && _noGain >= config.TutorialOfferNoGainSeconds);
             if (!lost) return;
             // a free screen only: nothing in hand (the Town Hall's own placement is the hand at the start), no window

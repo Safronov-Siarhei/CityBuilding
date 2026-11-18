@@ -105,3 +105,4 @@
 - [Building relocation (2026-11-17)](project_building_relocation.md) — «Перенести здание» BUILT, not seen: button right of «!», 1 crystal, same island, sandbox only; card building-relocation.md.
 - [News in the main menu (2026-11-17)](project_news.md) — BUILT, not seen: sheet tab «Новости» (numbers, 10 newest, rewards), letter button, scroll window with seals, auto-open after 6 h play.
 - [Sandbox balance 2026-11-18](project_sandbox_balance_2026_11_18.md) — sandbox tabs filled on the user's pattern, instant build by time, 1 worker for Tax/Diplomacy/Cemetery, ore icon concepts waiting, Android module installed
+- [Playtest list 2026-11-18 (phone)](project_pending_2026_11_18.md) — 29 items from the first new-machine APK; 22 in code NOT BUILT, 7 open; read before continuing.

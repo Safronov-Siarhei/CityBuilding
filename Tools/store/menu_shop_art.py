@@ -54,7 +54,13 @@ def mine():
 PACK_COLOURS = [((40, 92, 150), (70, 130, 190)), ((36, 110, 120), (64, 150, 150)), ((120, 70, 30), (170, 110, 44))]
 
 
-def mine_card_bg(w=1320, h=330, c0=(70, 36, 118), c1=(120, 56, 158), ray=(210, 160, 255, 90)):
+# the four sparkles of a card (x, y from the top, r) -- drawn by the window as moving pictures since 2026-11-18
+# (the user: «звёздочкам нужно добавить движение»); MenuShopWindow.CardSparkles keeps the same numbers
+def sparkle_spots(h):
+    return ((150, 70, 16), (470, 90, 12), (420, h - 60, 14), (110, h - 90, 10))
+
+
+def mine_card_bg(w=1320, h=330, c0=(70, 36, 118), c1=(120, 56, 158), ray=(210, 160, 255, 90), sparkles=False):
     card = Image.new('RGBA', (w, h))
     cd = ImageDraw.Draw(card)
     for y in range(h):
@@ -68,9 +74,33 @@ def mine_card_bg(w=1320, h=330, c0=(70, 36, 118), c1=(120, 56, 158), ray=(210, 1
     d = ImageDraw.Draw(card)
     d.rounded_rectangle((8, 8, w - 9, h - 9), 24, outline=mk.GOLD, width=10)
     d.rounded_rectangle((3, 3, w - 4, h - 4), 28, outline=INK, width=5)
-    for sx, sy, r in ((150, 70, 16), (470, 90, 12), (420, h - 60, 14), (110, h - 90, 10)):
-        mk.sparkle(d, sx, sy, r)
+    if sparkles:
+        for sx, sy, r in sparkle_spots(h):
+            mk.sparkle(d, sx, sy, r)
     return card
+
+
+def card_rim(w=1320, h=330):
+    """The gold rim alone, white with a soft glow round it: laid over a card and pulsed by the window (the user,
+    2026-11-18: «жёлтая обводка ... должна немного пульсировать»). Same box as mine_card_bg's rim."""
+    pad = 24
+    im = Image.new('RGBA', (w + 2 * pad, h + 2 * pad))
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle((pad + 6, pad + 6, pad + w - 7, pad + h - 7), 26, outline=(255, 255, 255, 255), width=16)
+    glow = im.filter(ImageFilter.GaussianBlur(9))
+    d.rounded_rectangle((pad + 8, pad + 8, pad + w - 9, pad + h - 9), 24, outline=(255, 255, 255, 255), width=10)
+    out = Image.alpha_composite(glow, im)
+    return out
+
+
+def sparkle_sprite(s=64):
+    im = Image.new('RGBA', (s, s))
+    glow = Image.new('RGBA', (s, s))
+    ImageDraw.Draw(glow).ellipse((s * .3, s * .3, s * .7, s * .7), fill=(255, 250, 220, 150))
+    glow = glow.filter(ImageFilter.GaussianBlur(s * .08))
+    d = ImageDraw.Draw(im)
+    mk.sparkle(d, s / 2, s / 2, s * 0.46)
+    return Image.alpha_composite(glow, im)
 
 
 def sandbox_mark():
@@ -130,6 +160,9 @@ def main():
         save(mine_card_bg(c0=c0, c1=c1, ray=(255, 236, 170, 80)), 'PackCardBg%d' % (i + 1))
         # the shop list's lower pack cards (the user, 2026-11-15: 40 % lower, little text on them)
         save(mine_card_bg(h=200, c0=c0, c1=c1, ray=(255, 236, 170, 80)), 'PackCardBgShort%d' % (i + 1))
+    save(card_rim(), 'CardRim')
+    save(card_rim(h=200), 'CardRimShort')
+    save(sparkle_sprite(), 'Sparkle')
     save(sandbox_mark(), 'SandboxMark')
     save(sticker(), 'Sticker')
     mid, tail = ribbon_pieces()

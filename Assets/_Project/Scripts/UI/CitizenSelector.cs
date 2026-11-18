@@ -219,6 +219,15 @@ namespace CityBuilder.UI
                 return true;
             }
 
+            // A ship is no destination for a resident (the user, 2026-11-18: «почему я могу указать жителю идти на
+            // корабль? жители на острове появляются только после постройки дома»): refused, the red NO on the ship.
+            var ship = Ships.ShipInput.ShipAt(screenPosition, targetCamera);
+            if (ship != null)
+            {
+                OrderMarker.ShowRefused(ship.transform.position);
+                return true;
+            }
+
             // A building is not a destination. Ordering someone to walk into a wall is what the
             // old code did here -- the tap fell through to the ground branch, landed on the
             // building's collider and resolved to the NavMesh next to its wall -- and it was

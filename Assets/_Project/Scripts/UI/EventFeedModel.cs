@@ -111,6 +111,9 @@ namespace CityBuilder.UI
             return count;
         }
 
+        /// <summary>True when an icon drawing the same picture is already up (the event would count into it).</summary>
+        public bool HasSameIcon(GameEvent gameEvent) => gameEvent != null && FindSameIcon(gameEvent) != null;
+
         public void Remove(EventFeedSlot slot)
         {
             if (slot == null || !_slots.Remove(slot)) return;

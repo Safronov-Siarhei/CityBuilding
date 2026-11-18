@@ -19,7 +19,7 @@ namespace CityBuilder.EditorTools
     /// </summary>
     public static partial class SetupProject
     {
-        private const float DiplomacyBannerSize = 0.6f;
+        private const float DiplomacyBannerSize = 0.9f;   // x1.5 like every banner (the user, 2026-11-18; was 0.6)
 
         [Serializable]
         private class BakedItem

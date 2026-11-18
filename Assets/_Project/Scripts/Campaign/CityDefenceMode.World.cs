@@ -21,7 +21,9 @@ namespace CityBuilder.Campaign
         private void OnCameraRendering(UnityEngine.Rendering.ScriptableRenderContext context, Camera cam)
         {
             // not while scene 2 plays far from the land: its world places would read as all dark (black screen, 2026-11-16)
-            if (_darkRenderer != null) _darkRenderer.enabled = cam == _darkCamera && (_capital == null || (_capital.inTown && !_capital.away));
+            // nor in the opening film «У ворот»: the orcs coming out of the forest before the horn were lost in it
+            // (the user, 2026-11-18)
+            if (_darkRenderer != null) _darkRenderer.enabled = cam == _darkCamera && _intro == null && (_capital == null || (_capital.inTown && !_capital.away));
         }
 
         private void ForgetDarkness()

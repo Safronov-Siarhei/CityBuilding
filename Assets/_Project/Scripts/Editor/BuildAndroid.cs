@@ -28,6 +28,7 @@ namespace CityBuilder.EditorTools
     public static class BuildAndroid
     {
         private const string OutputFolder = "Builds/Android";
+        private const string AppName = "CityCraft";
 
         /// <summary>Entry point for -executeMethod. Pass -development on the same command line for the profiler-carrying build.</summary>
         public static void Run()
@@ -92,7 +93,20 @@ namespace CityBuilder.EditorTools
                       $"backend={PlayerSettings.GetScriptingBackend(NamedBuildTarget.Android)} " +
                       $"architectures={PlayerSettings.Android.targetArchitectures} minSdk={PlayerSettings.Android.minSdkVersion}");
 
-            var report = BuildPipeline.BuildPlayer(buildPlayerOptions);
+            // The name under the icon on the phone is the product name (the user, 2026-11-18: «название игры
+            // должно быть CityCraft у апк»). Only for the APK: the Editor keeps «CityBuilding», because the
+            // Editor's PlayerPrefs and persistentDataPath are keyed by it (saves, account switcher).
+            var editorName = PlayerSettings.productName;
+            PlayerSettings.productName = AppName;
+            BuildReport report;
+            try
+            {
+                report = BuildPipeline.BuildPlayer(buildPlayerOptions);
+            }
+            finally
+            {
+                PlayerSettings.productName = editorName;
+            }
             var summary = report.summary;
 
             if (summary.result != BuildResult.Succeeded)

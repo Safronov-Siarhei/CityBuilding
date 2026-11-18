@@ -210,6 +210,16 @@ namespace CityBuilder.EditorTools
             var mission = new GameObject("MissionOne").AddComponent<MissionOne>();
             var mso = new SerializedObject(mission);
             mso.FindProperty("director").objectReferenceValue = director;
+            // the game's settings card for the mission's menu (the user, 2026-11-18: «слева сверху нет кнопки
+            // настроек»), on its own canvas above the mission HUD (55) -- the campaign map's card
+            var settingsCanvas = new GameObject("SettingsCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            var settingsC = settingsCanvas.GetComponent<Canvas>();
+            settingsC.renderMode = RenderMode.ScreenSpaceOverlay;
+            settingsC.sortingOrder = 60;
+            ConfigureScaler(settingsCanvas.GetComponent<CanvasScaler>());
+            var settingsPanel = BuildSettingsPanel(settingsCanvas.transform, CreatePanelSprite(), null);
+            ApplyTheme(settingsCanvas.transform);
+            mso.FindProperty("settings").objectReferenceValue = settingsPanel;
             mso.FindProperty("village").objectReferenceValue = village;
             mso.FindProperty("cam").objectReferenceValue = cam;
             mso.FindProperty("configFile").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>(Mission1Path);
@@ -235,6 +245,7 @@ namespace CityBuilder.EditorTools
             ArtSprite("playGlyph", UiTextureImport.GlyphsFolder + "/Hud_Play.png");
             ArtSprite("restartGlyph", UiTextureImport.GlyphsFolder + "/Hud_Rotate.png");
             ArtSprite("homeGlyph", UiTextureImport.GlyphsFolder + "/Hud_Home.png");
+            ArtSprite("settingsGlyph", UiTextureImport.GlyphsFolder + "/Hud_Settings.png");
             mso.FindProperty("guardModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Soldiers/SoldierSpearman-lvl3.fbx");
             mso.FindProperty("fx").objectReferenceValue = fx;
             mso.ApplyModifiedPropertiesWithoutUndo();

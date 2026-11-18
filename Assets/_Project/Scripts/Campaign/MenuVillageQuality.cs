@@ -27,6 +27,7 @@ namespace CityBuilder.Campaign
             CineFigure.KeepSkinned = true;
             CineFigure.NoShadows = low;
             CineFigure.HideParts = new[] { "CineArdanSack" };
+            OpeningFx.NoBloom = true;
             var config = BalanceConfig.Instance;
             if (config == null) return;
             if (life != null) life.FolkShare = low ? config.MenuLowFolkShare : 1f;
@@ -40,6 +41,7 @@ namespace CityBuilder.Campaign
             CineFigure.KeepSkinned = false;
             CineFigure.NoShadows = false;
             CineFigure.HideParts = null;
+            OpeningFx.NoBloom = false;
         }
     }
 }

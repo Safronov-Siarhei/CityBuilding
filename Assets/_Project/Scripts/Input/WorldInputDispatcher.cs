@@ -159,6 +159,8 @@ namespace CityBuilder.InputControl
             Core.EventLogManager.Instance?.Post(Core.GameEvent.At(
                 string.Format(Core.Localization.Get("#log_deposit_found"), ore), Core.EventSeverity.Good, Core.EventGlyph.Star,
                 deposit.Kind + "Mine", deposit.transform.position));
+            // the camera comes to it, as to a tapped building (the user, 2026-11-18)
+            CameraControl.RTSCameraController.Instance?.FocusOn(deposit.transform.position);
             return true;
         }
 
@@ -178,6 +180,7 @@ namespace CityBuilder.InputControl
             Maps.Archipelago.FertileLand.Flash(patch, map);
             Core.EventLogManager.Instance?.Post(Core.GameEvent.At(
                 Core.Localization.Get("#log_fertile_found"), Core.EventSeverity.Good, Core.EventGlyph.Star, "Farm", hit.point));
+            CameraControl.RTSCameraController.Instance?.FocusOn(hit.point);
             return true;
         }
 

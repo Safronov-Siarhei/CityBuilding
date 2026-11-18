@@ -44,6 +44,12 @@ namespace CityBuilder.Campaign
             var disc = Circle(64, 0f, 1f);
             j._stick = new GameObject("Stick", typeof(RectTransform), typeof(CanvasGroup)).GetComponent<CanvasGroup>();
             j._stick.transform.SetParent(go.transform, false);
+            // the stick's frame fills the screen, so the ring's bottom-left anchor IS the screen's corner: left at
+            // the default 100 x 100 in the middle, the ring came up off the finger (the user, 2026-11-18)
+            var frame = (RectTransform)j._stick.transform;
+            frame.anchorMin = Vector2.zero;
+            frame.anchorMax = Vector2.one;
+            frame.offsetMin = frame.offsetMax = Vector2.zero;
             j._stick.alpha = 0f;
             j._stick.blocksRaycasts = false;
             j._base = Image(j._stick.transform, "Ring", ring, radius * 2f, new Color(1f, 0.97f, 0.88f, 0.55f));

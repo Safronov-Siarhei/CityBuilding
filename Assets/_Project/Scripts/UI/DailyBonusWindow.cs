@@ -148,6 +148,7 @@ namespace CityBuilder.UI
         {
             if (_closing || _busy) return;
             DailyBonus.Claim(twice);
+            CityBuilder.Buildings.BuildSound.Reward();
             StartCoroutine(TickAndClose());
         }
 

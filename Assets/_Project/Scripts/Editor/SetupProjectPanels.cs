@@ -231,7 +231,10 @@ namespace CityBuilder.EditorTools
                 var row = i / tilesPerRow;
                 var back = CreateImage(card.transform, "Booster" + (i + 1), Color.white);
                 back.sprite = tileSprite;
-                SetRect(back.rectTransform, new Vector2((column - (tilesPerRow - 1) * 0.5f) * tileStep, -(tilesTop + tileStep * 0.5f + row * tileStep)), new Vector2(tileSize, tileSize));
+                // from the left edge of the resource cells, not centred on the card (the user, 2026-11-18: «бустеры
+                // начинаются не с самого левого края окна как иконки ресурсов»)
+                var gridLeft = -perRow * columnWidth * 0.5f + 6f;
+                SetRect(back.rectTransform, new Vector2(gridLeft + tileSize * 0.5f + column * tileStep, -(tilesTop + tileStep * 0.5f + row * tileStep)), new Vector2(tileSize, tileSize));
                 TopPin(back.rectTransform);
                 var button = back.gameObject.AddComponent<Button>();
                 button.targetGraphic = back;
@@ -1605,7 +1608,7 @@ namespace CityBuilder.EditorTools
         /// one number -- so all banners are the same size and stand in the same place. Never place a banner's pieces
         /// at scale 1. Rule written in Design/WORKING_RULES.md and Design/features/hud-and-ui.md.
         /// </summary>
-        public const float BannerScale = 0.6f;
+        public const float BannerScale = 0.9f;   // x1.5 (the user, 2026-11-18: «все баннеры слишком маленькие»; was 0.6)
 
         private static void BuildDisasterBanner<T>(Transform uiRoot, string folder, string stem, string name) where T : PauseBanner
         {

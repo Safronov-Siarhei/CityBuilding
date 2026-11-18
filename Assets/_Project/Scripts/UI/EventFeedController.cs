@@ -43,6 +43,11 @@ namespace CityBuilder.UI
         /// <summary>Icons hang from the feed's top edge by their centres: the first row sits half an icon down.</summary>
         private float _firstRowOffset;
         private readonly List<EventFeedSlot> _expired = new List<EventFeedSlot>();
+        // at most this many icons at once; a further event WAITS until one goes (the user, 2026-11-18: four at once
+        // ran over the minimap -- «жди пока закончится первое уведомление, а потом только показывай четвёртое»)
+        [SerializeField] private int maxShown = 3;
+        private readonly Queue<GameEvent> _waiting = new Queue<GameEvent>();
+        private const int MaxWaiting = 12;
         private bool _subscribed;
 
         public EventFeedModel Model => _model;
@@ -132,6 +137,13 @@ namespace CityBuilder.UI
 
         private void HandleEventPosted(GameEvent gameEvent)
         {
+            if (gameEvent == null || gameEvent.Severity == EventSeverity.LogOnly) return;
+            if (maxShown > 0 && _model.Slots.Count >= maxShown && !_model.HasSameIcon(gameEvent))
+            {
+                if (_waiting.Count >= MaxWaiting) _waiting.Dequeue();
+                _waiting.Enqueue(gameEvent);
+                return;
+            }
             var slot = _model.Add(gameEvent, out var evictedView);
             if (evictedView >= 0 && evictedView < views.Length) views[evictedView].Hide();
             if (slot == null) return;
@@ -160,6 +172,7 @@ namespace CityBuilder.UI
                 _columnCheckIn = 0.25f;
                 FollowColumn();
             }
+            while (_waiting.Count > 0 && (maxShown <= 0 || _model.Slots.Count < maxShown)) HandleEventPosted(_waiting.Dequeue());
             var slots = _model.Slots;
             if (slots.Count == 0) return;
 

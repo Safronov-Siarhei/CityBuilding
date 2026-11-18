@@ -117,6 +117,27 @@ def built_poof():
     return s
 
 
+def reward():
+    """A reward taken (the daily bonus, 2026-11-18: «при заборе ежедневной награды должен быть какой-то звук получения»):
+    a handful of coins clinking down, then a bright rising sparkle."""
+    rng = np.random.default_rng(31)
+    total = 1.3
+    s = np.zeros(int(RATE * total))
+    for k, at in enumerate((0.0, 0.07, 0.12, 0.2, 0.26, 0.31)):
+        f = rng.uniform(2600, 3600)
+        t = t_of(0.25)
+        c = (np.sin(2 * np.pi * f * t) + 0.6 * np.sin(2 * np.pi * f * 1.48 * t) + 0.3 * np.sin(2 * np.pi * f * 2.2 * t))
+        c *= np.exp(-t / 0.05) * (0.9 - 0.08 * k)
+        i = int(at * RATE)
+        s[i:i + len(c)] += c[:len(s) - i]
+    for at, f, level in ((0.3, 1047.0, 0.55), (0.38, 1319.0, 0.6), (0.46, 1568.0, 0.65), (0.54, 2093.0, 0.7)):
+        n = chime_note(f, total - at, level)
+        i = int(at * RATE)
+        n = n[:len(s) - i]
+        s[i:i + len(n)] += n
+    return s
+
+
 def write(name, s):
     s = s / np.abs(s).max() * 0.85
     os.makedirs(OUT, exist_ok=True)
@@ -143,3 +164,4 @@ if __name__ == '__main__':
         # «place» is Kenney drop_003 (place.ogg) since 2026-11-17, round 3 -- not written here any more
         write('built', built_poof())
         write('upgraded', upgraded())
+        write('reward', reward())

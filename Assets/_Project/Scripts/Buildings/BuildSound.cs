@@ -15,7 +15,7 @@ namespace CityBuilder.Buildings
     public static class BuildSound
     {
         private static AudioSource _source;
-        private static AudioClip _place, _upgraded, _built;
+        private static AudioClip _place, _upgraded, _built, _reward;
         private static float _lastPlace = -1f;
 
         public static void Placed()
@@ -31,6 +31,9 @@ namespace CityBuilder.Buildings
         /// <summary>A new building done on its timer, with the dust of BuildFinishEffect (the user, 2026-11-17).</summary>
         public static void Built() => Play(ref _built, "Build/built", 1f);
 
+        /// <summary>A reward taken -- the daily bonus (the user, 2026-11-18): coins clinking and a rising sparkle.</summary>
+        public static void Reward() => Play(ref _reward, "Build/reward", 1f);
+
         private static void Play(ref AudioClip clip, string path, float pitch)
         {
             var volume = BalanceConfig.Instance != null ? BalanceConfig.Instance.BuildSfxVolume : 0.7f;
@@ -44,6 +47,7 @@ namespace CityBuilder.Buildings
                 _source = host.AddComponent<AudioSource>();
                 _source.playOnAwake = false;
                 _source.spatialBlend = 0f;
+                _source.ignoreListenerPause = true;   // the reward windows open over a paused game
             }
             _source.pitch = pitch;
             _source.PlayOneShot(clip, volume * GameSettings.SfxVolume);
