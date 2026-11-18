@@ -4,7 +4,7 @@ param(
 
 # Builds the Windows 64-bit player through CityBuilder.EditorTools.BuildWindows into the user's
 # build folder, zips it (an .exe alone does not run -- it needs CityBuilding_Data next to it) and
-# sends the zip to the same Telegram topic as the APKs. The zip must stay under the Bot API's 50 MB.
+# leaves the zip in the build folder (Telegram sending dropped 2026-11-18).
 #
 # The user's rule (2026-10-13): every build goes to D:\Builds CB, and the previous build there is
 # deleted first -- the folder only ever holds the latest one.
@@ -51,8 +51,5 @@ if ($p.ExitCode -ne 0) {
     $mb = [math]::Round((Get-Item -LiteralPath $zipPath).Length / 1MB, 1)
     Write-Output "player: $playerFolder"
     Write-Output "zip: $zipPath, $mb MB"
-
-    Write-Output '--- sending to Telegram ---'
-    $label = if ($Development) { 'Windows development build (profiler)' } else { 'Windows build' }
-    python "$project/Tools/research/send_build_to_telegram.py" $zipPath $label
+    # no Telegram any more (the user, 2026-11-18)
 }

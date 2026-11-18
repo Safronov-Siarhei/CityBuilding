@@ -59,8 +59,8 @@ see the map at the bottom.
 - A test that never failed proves nothing: for a bug's regression test, break the fix once, see it go
   red with the right message, restore.
 - **Never build an APK/Windows build unless the user asks in that message.** Builds go to `D:\Builds CB`
-  (previous build deleted first) and are sent to Telegram by the build scripts automatically
-  (token from the `TELEGRAM_BOT_TOKEN` environment variable — never in files).
+  (previous build deleted first) and are installed on the user's phone over adb (Wi-Fi debugging: a USB cable
+  kills the user's Bluetooth). NOT sent to Telegram any more (the user, 2026-11-18).
 - **After every commit, push to `origin master` at once** (no need to ask). Before work: `git fetch`;
   the project is worked on from two devices (`git config core.safecrlf false` once per device).
   On a pull conflict in a generated file (prefabs, BalanceConfig.asset…), take upstream.

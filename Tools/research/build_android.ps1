@@ -63,10 +63,6 @@ if ($p.ExitCode -ne 0) {
         Copy-Item $apkPath $deliver
         Write-Output "copied to $deliver"
     }
-
-    if (Test-Path $apkPath) {
-        Write-Output '--- sending to Telegram ---'
-        $label = if ($Development) { 'development build (profiler)' } else { 'release build' }
-        python "$project/Tools/research/send_build_to_telegram.py" $apkPath $label
-    }
+    # no Telegram any more (the user, 2026-11-18: «исключи отправку в телеграмм, она больше не нужна»):
+    # the APK goes to D:\Builds CB and onto the phone over adb
 }

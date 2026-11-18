@@ -259,8 +259,9 @@ namespace CityBuilder.Campaign
         {
             Debug.Log($"[CampaignMap] play {(_picked >= 0 ? _levels[_picked].id : "-")}");
             if (_picked < 0 || !Playable(_picked)) return;
-            // level 1: the film the first time; after that straight into the mission (the film has its own «Пропустить»)
-            if (_picked == 0) MissionOne.SkipFilm = CampaignProgress.FilmSeen;
+            // level 1: the film EVERY time it is started from the map (the user, 2026-11-18: «катсцена проигрывается
+            // всегда при старте уровня»); it has its own «Пропустить», and only a restart from inside skips it
+            if (_picked == 0) MissionOne.SkipFilm = false;
             // level 2 is played on the gameplay scene, on its own map (CityDefenceMode)
             if (_levels[_picked].id == CityDefenceMode.LevelId)
             {

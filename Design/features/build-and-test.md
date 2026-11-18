@@ -3,7 +3,7 @@
 > **Status (2026-10-21):** Unity **6000.5.4f1**. Full run 2026-10-21 after splitting the generator:
 > EditMode 443/443, PlayMode 253 passed + 9 skipped (graphics-only under `-nographics`), 0 failed.
 > The project is worked on from TWO devices: `git fetch` before starting, pull before pushing.
-> Builds only when the user asks; they go to `D:\Builds CB` and to Telegram automatically.
+> Builds only when the user asks; they go to `D:\Builds CB` and onto the phone over Wi-Fi adb. **No Telegram since 2026-11-18** (the user): the send step is gone from both build scripts.
 > **Read with:** nothing — this is the plumbing card.
 
 ## The generator
