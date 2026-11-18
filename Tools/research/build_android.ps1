@@ -1,5 +1,7 @@
-param(
-    [switch]$Development
+﻿param(
+    [switch]$Development,
+    # a build for players: no cheat window, no PerfProbe (BuildAndroid's -release -> CB_RELEASE)
+    [switch]$Release
 )
 
 # Builds the Android APK through CityBuilder.EditorTools.BuildAndroid.
@@ -36,8 +38,9 @@ $unityArgs = @(
 )
 
 if ($Development) { $unityArgs += '-development' }
+if ($Release) { $unityArgs += '-release' }
 
-Write-Output "=== android build ($(if ($Development) { 'development' } else { 'release' })) : $(Get-Date -Format o) ==="
+Write-Output "=== android build ($(if ($Development) { 'development' } elseif ($Release) { 'release, no cheats' } else { 'release' })) : $(Get-Date -Format o) ==="
 # WaitForExit, not -Wait: -Wait waits on Unity's helper processes too, which can outlive it and
 # leave this script hanging over a finished build.
 $p = Start-Process -FilePath $unity -ArgumentList $unityArgs -PassThru

@@ -24,11 +24,16 @@ namespace CityBuilder.Core
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Boot()
         {
+#if CB_RELEASE
+            return;   // a build for players carries no probe
+#endif
+#pragma warning disable CS0162
             if (!Application.isMobilePlatform) return;
             var go = new GameObject("PerfProbe");
             DontDestroyOnLoad(go);
             go.hideFlags = HideFlags.HideInHierarchy;
             go.AddComponent<PerfProbe>();
+#pragma warning restore CS0162
         }
 
         private void Awake()
