@@ -32,7 +32,7 @@ The user's Pixel playtest of 2026-11-19 had 27 items. They first sent the list, 
 - 27: why the tutorial offer did not show — probably the tutorial was already won on the Pixel.
 
 **Open:**
-- On the sheet the Quarry's harvest_radius_5 is still 55; the other levels are 6/8/10/12, likely a forgotten cell.
+- Quarry harvest_radius_5: the sheet says 14 (the user fixed it, or my first read caught it mid-edit). sandbox.csv re-pulled with 14; BalanceConfig.asset still holds 55 until the next setup.
 - A cleared ruin of a start-chain link is offered again for free.
 
 Related: [[project_pending_2026_11_18]], [[project_ruins]], [[project_tutorial]]
