@@ -563,3 +563,4 @@ Not checked against the live Play Console -- re-read Google's pages before actin
   - golden ribbon «Подарок!», a warm field of gift boxes + resources, the King and the Queen at the sides;
   - «Тяжёлые времена? Мы поможем отстроиться!», a plaque «Подарок от разработчиков:» with number + icon 4 to a row;
   - one green «Забрать».
+  - v2 (the user): at most THREE resources to a row, two rows; the icons spaced by their real width (they ran into each other); «Забрать» at the foot of the parchment.

@@ -184,7 +184,7 @@ def button(d, box, colour, light, out):
 
 CX = (pw0 + pw1) / 2
 g_out = (28, 84, 18)
-b1 = (CX - 270, 690, CX + 270, 802)
+b1 = (CX - 270, 846, CX + 270, 958)   # at the foot of the parchment (the user, 2026-11-19)
 btn = layer()
 button(ImageDraw.Draw(btn), b1, (70, 170, 44), (118, 214, 72), g_out)
 
@@ -199,23 +199,32 @@ d.text((CX, (ry0 + ry1) / 2 + 6), 'Подарок!', font=font(78), fill=(255, 2
 d.multiline_text((CX, 430), 'Тяжёлые времена?' + chr(10) + 'Мы поможем отстроиться!',
                  font=font(38, 'Rubik-Medium.ttf'), fill=(60, 52, 24), anchor='mm', align='center', spacing=14)
 # the gift: a plaque like the fire banner's compensation -- a label line, then number + icon, 4 to a row
-items = [(60, 'Res_Wood'), (40, 'Res_Stone'), (30, 'Res_Food'), (50, 'Res_Coins')]
-lab_f, num_f, IC = font(28, 'Rubik-Bold.ttf'), font(34), 40
+items = [(60, 'Res_Wood'), (40, 'Res_Stone'), (30, 'Res_Food'), (50, 'Res_Coins'), (5, 'Res_UpgradeCrystal')]
+PER = 3   # at most three to a row (the user, 2026-11-19: the icons ran into each other)
+lab_f, num_f, IC, GAP_IN, GAP_OUT, ROW_H = font(28, 'Rubik-Bold.ttf'), font(34), 44, 8, 34, 58
 label = 'Подарок от разработчиков:'
-row_w = sum(d.textlength(str(n), font=num_f) + 5 + IC * 1.1 for n, _ in items) + 22 * (len(items) - 1)
-pw = max(row_w, d.textlength(label, font=lab_f)) + 56
-sx0, sx1, sy0, sy1 = CX - pw / 2, CX + pw / 2, 500, 610
-d.rounded_rectangle((sx0, sy0, sx1, sy1), 22, fill=(232, 212, 166, 255), outline=(176, 140, 80, 255), width=3)
-d.text((CX, sy0 + 26), label, font=lab_f, fill=(60, 110, 25), anchor='mm')
-x, y = CX - row_w / 2, sy0 + 76
-for n, name in items:
-    d.text((x, y), str(n), font=num_f, fill=(70, 48, 22), anchor='lm')
-    x += d.textlength(str(n), font=num_f) + 5
+icons = {}
+for _, name in items:
     ic = load_icon(name)
-    ic = ic.resize((round(ic.width * IC / ic.height), IC), Image.LANCZOS)
-    img.alpha_composite(ic, (round(x), round(y - IC / 2)))
-    x += IC * 1.1 + 22
-    d = ImageDraw.Draw(img)
+    icons[name] = ic.resize((round(ic.width * IC / ic.height), IC), Image.LANCZOS)
+rows = [items[i:i + PER] for i in range(0, len(items), PER)]
+def row_width(row):
+    return sum(d.textlength(str(n), font=num_f) + GAP_IN + icons[name].width for n, name in row) + GAP_OUT * (len(row) - 1)
+pw = max(max(row_width(r) for r in rows), d.textlength(label, font=lab_f)) + 64
+sx0, sx1, sy0 = CX - pw / 2, CX + pw / 2, 500
+sy1 = sy0 + 54 + ROW_H * len(rows) + 8
+d.rounded_rectangle((sx0, sy0, sx1, sy1), 22, fill=(232, 212, 166, 255), outline=(176, 140, 80, 255), width=3)
+d.text((CX, sy0 + 28), label, font=lab_f, fill=(60, 110, 25), anchor='mm')
+for k, row in enumerate(rows):
+    y = sy0 + 54 + ROW_H * (k + 0.5)
+    x = CX - row_width(row) / 2
+    for n, name in row:
+        d.text((x, y), str(n), font=num_f, fill=(70, 48, 22), anchor='lm')
+        x += d.textlength(str(n), font=num_f) + GAP_IN
+        ic = icons[name]
+        img.alpha_composite(ic, (round(x), round(y - ic.height / 2)))
+        x += ic.width + GAP_OUT
+        d = ImageDraw.Draw(img)
 d.text((CX, (b1[1] + b1[3]) / 2), 'Забрать', font=font(48), fill=(255, 255, 255), anchor='mm',
        stroke_width=4, stroke_fill=g_out)
 img.convert('RGB').save(OUT, optimize=True)
