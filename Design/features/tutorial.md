@@ -366,3 +366,7 @@ joins a squad, not the Garrison (army control by squads, [army-control](army-con
 - A citizen sent to a tree/rock by hand swings his axe/pick (the within-reach branch of `CitizenAgent.Update` never called `CitizenWaddle.Work`).
 
 **2026-11-19 (the user: chain placed, waited 5 min, no offer):** the offer needs ALL of: the world's clock >= 0 (a NEW world; saves from before 2026-11-17 never offer), the tutorial never won on this device (PlayerPrefs `tutorial.rewarded`), fewer than tutorial_offer_max_declines «Позже», inside tutorial_offer_window; then the first trigger. Most likely cause on the Pixel: the tutorial was won there in an earlier playtest. Discussed with the user, nothing changed yet.
+
+**2026-11-19 (playtest):**
+- The wood/stone step picks a node on the person's own island; a boulder also needs a NavMesh way there (`TutorialDirector.Reachable`), chosen only once the person is picked. The boulder had been offered on an islet.
+- During the Hovel/Barracks/Shipyard steps a held building is let go (`Steady`). A double tap on the hall had put its buttons where the build menu is.

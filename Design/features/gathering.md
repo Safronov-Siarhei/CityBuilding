@@ -76,3 +76,7 @@ EditMode `ResourceNodeYieldTests`, `HarvestRadiusOverlayTests`.
 ## Open
 No in-world radius feedback while a gatherer works; gathering income never retuned against the sheet's
 `per_day`.
+
+**2026-11-19 (the user):**
+- SANDBOX boulders come back: every `rock_respawn_sec` 180 of game time one boulder appears while fewer stand than `rock_respawn_share` 0,5 of the first stock. It appears on the start island on the archipelago, or in the stony clearings (`RockSpawner.Update`). Other modes keep stone finite.
+- A Sawmill/Quarry with nothing left in its radius sends all its workers home and stops staffing itself: `ProductionBuilding.StandDownForEmptyRadius`, run from `CitizenVisualsManager.ReportRadiusEmpty` in LateUpdate, only when `NothingLeftInReach`. The player puts people back with «+». Log `#log_nothing_in_radius` now says the workers were taken off.

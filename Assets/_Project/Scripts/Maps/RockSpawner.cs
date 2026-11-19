@@ -9,7 +9,8 @@ namespace CityBuilder.Maps
 {
     /// <summary>
     /// Scatters harvestable stone boulders across a mesh map's dry land. The Stone counterpart to
-    /// TreesAreaSpawner with one decisive difference: a worked-out boulder is never replaced. The
+    /// TreesAreaSpawner with one decisive difference: a worked-out boulder is never replaced -- except in the
+    /// SANDBOX since 2026-11-19 (Update: one comes back now and then while the stock is low). The
     /// map is made with a fixed amount of stone in it and that is all it will ever have.
     ///
     /// Which is why the boulders are in the save file. They are scattered by unseeded Random, so
@@ -58,6 +59,9 @@ namespace CityBuilder.Maps
         private Material _rockMaterial;
         private Material _rockShadeMaterial;
         private bool _initialized;
+        private List<Vector2Int> _homeCells;
+        private int _target;
+        private float _respawnIn = -1f;
 
         /// <summary>Every boulder standing, with its cell and what is left in it -- what the save writes down.</summary>
         public IEnumerable<(Vector2Int cell, int remaining)> LiveRocks
@@ -163,6 +167,8 @@ namespace CityBuilder.Maps
             if (count > 0) _count = count;
             _scattered = Mathf.Clamp01(scattered);
             _rockPrefabs = rockPrefabs ?? new GameObject[0];
+            _homeCells = extraCells != null && extraCells.Count > 0 ? extraCells : null;
+            _target = _count + (_homeCells != null ? extraCount : 0);
             if (_pendingRestore != null)
             {
                 // a loaded game: its own boulders, not a fresh scatter
@@ -205,6 +211,26 @@ namespace CityBuilder.Maps
             }
 
             Destroy(rockInstance);
+        }
+
+        /// <summary>
+        /// The SANDBOX only (the user, 2026-11-19: without it a player can be left with no free stone at all): every
+        /// rock_respawn_sec of game time, while fewer boulders stand than rock_respawn_share of the map's first stock, one
+        /// comes back -- on the start island (the archipelago) or the stony clearings, never in the water. Elsewhere the
+        /// stone stays finite, as below.
+        /// </summary>
+        private void Update()
+        {
+            if (!_initialized || _target <= 0 || !PiggyTasks.InSandbox) return;
+            var config = BalanceConfig.Instance;
+            if (config == null || config.RockRespawnSeconds <= 0f) return;
+            if (_respawnIn < 0f) _respawnIn = config.RockRespawnSeconds;
+            _respawnIn -= Time.deltaTime;
+            if (_respawnIn > 0f) return;
+            _respawnIn = config.RockRespawnSeconds;
+            if (_rockCells.Count >= Mathf.CeilToInt(_target * Mathf.Clamp01(config.RockRespawnShare))) return;
+            if (_homeCells != null) SpawnOneRockOn(_homeCells);
+            else SpawnOneRock();
         }
 
         /// <summary>One boulder on a free dry cell of `cells`, spaced from the rest.</summary>

@@ -603,6 +603,19 @@ namespace CityBuilder.Citizens
             return true;
         }
 
+        /// <summary>
+        /// A Sawmill or Quarry with nothing left in its radius (the user, 2026-11-19): every worker goes back to the
+        /// town, and it no longer staffs itself -- the player puts people back with «+» once it is moved or the forest
+        /// has grown back.
+        /// </summary>
+        public void StandDownForEmptyRadius()
+        {
+            while (LayOffWorker()) { }
+            _wanted = 0;
+            _scientistsSetByHand = true;
+            if (AutoStaffed) WorkersCapped = true;
+        }
+
         /// <summary>A worker taken off without the player's say (the town ran short of people): the place stays wanted.</summary>
         public bool LayOffWorker()
         {

@@ -73,6 +73,15 @@ namespace CityBuilder.Citizens
 
         /// <summary>Gatherers already told, once, that there is nothing left inside their radius -- see ReportRadiusEmpty.</summary>
         private readonly HashSet<ProductionBuilding> _reportedEmptyRadius = new HashSet<ProductionBuilding>();
+        private readonly List<ProductionBuilding> _standDown = new List<ProductionBuilding>();
+
+        private void LateUpdate()
+        {
+            if (_standDown.Count == 0) return;
+            for (var i = 0; i < _standDown.Count; i++)
+                if (_standDown[i] != null) _standDown[i].StandDownForEmptyRadius();
+            _standDown.Clear();
+        }
 
         private Material[] _clothingMaterials;
         private Material _skinMaterial;
@@ -397,6 +406,9 @@ namespace CityBuilder.Citizens
 
             if (wasEmpty) return;
             _reportedEmptyRadius.Add(building);
+            // the workers go home -- after this pass over the agents, not inside it; and only when the radius is truly
+            // bare, not when the others' workers hold every node (the user, 2026-11-19)
+            if (building.NothingLeftInReach) _standDown.Add(building);
             EventLogManager.Instance?.Post(GameEvent.About(building.GetComponent<BuildingInstance>(), Localization.Format("#log_nothing_in_radius", building.DisplayName), EventSeverity.Warning, EventGlyph.Alert));
         }
 

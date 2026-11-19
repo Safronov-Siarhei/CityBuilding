@@ -47,6 +47,25 @@ namespace CityBuilder.UI
         /// <summary>A research not done yet: to its button in the Laboratory.</summary>
         public static void LeadToResearch(string topicId) => LeadToResearch(ResearchCatalog.ById(topicId), 0);
 
+        /// <summary>
+        /// What a building's locked next level waits on, in the words of what will open it (the user, 2026-11-19: the Town
+        /// Hall said «лаборатория 2 уровня» with the Laboratory at 2 already, and its tap opened the Laboratory's upgrade):
+        /// no Laboratory -> «Нужна лаборатория»; one too small -> «Нужна лаборатория N уровня»; otherwise -> «Изучите N
+        /// уровень в лаборатории». The tap (LeadToResearch) goes to the same thing.
+        /// </summary>
+        public static string UpgradeLockText(BuildingInstance building)
+        {
+            var level = building != null ? building.Level + 1 : 2;
+            var research = ResearchManager.Instance;
+            var topic = building != null && building.Data != null ? ResearchCatalog.ById(ResearchTopic.BuildingLevelId(building.Data.buildingName, level)) : null;
+            if (research != null && topic != null)
+            {
+                if (research.Laboratory == null) return Localization.Get("#research_blocked_no_lab");
+                if (research.LabLevel < topic.RequiredLabLevel) return Localization.Format("#research_blocked_lab_level", topic.RequiredLabLevel);
+            }
+            return Localization.Format("#building_upgrade_locked", level);
+        }
+
         private static void LeadToBuild(BuildingData data, int step)
         {
             if (data == null || step > MaxSteps || !Allowed) return;

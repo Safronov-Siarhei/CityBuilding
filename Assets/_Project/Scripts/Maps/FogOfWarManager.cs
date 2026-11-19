@@ -430,14 +430,18 @@ namespace CityBuilder.Maps
 
             var fresh = _citizenRevealedScratch;
             Array.Clear(fresh, 0, fresh.Length);
+            var mapApplierForFog = MeshMapApplier.Instance;
 
             var agents = citizenVisualsManager != null ? citizenVisualsManager.AllAgents : null;
             if (agents != null)
             {
                 foreach (var agent in agents)
                 {
-                    if (agent == null) continue;
+                    // a citizen put away (aboard, parked, despawning) sees nothing: one left active-off at sea kept a
+                    // clear circle in the middle of the fogged sea (the user, 2026-11-19)
+                    if (agent == null || !agent.gameObject.activeInHierarchy) continue;
                     var cell = grid.WorldToCell(agent.transform.position);
+                    if (mapApplierForFog != null && mapApplierForFog.IsWaterCell(cell) && !mapApplierForFog.IsWaterPlacementZone(cell)) continue;
                     RevealCircleInto(fresh, cell, CitizenRevealRadiusCells, _width, _depth);
                 }
             }

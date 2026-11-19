@@ -417,3 +417,5 @@ Wake (2026-11-06): spawned at the stern, drifting back and out (`ShipWake.Sail`)
 2026-11-06: boarding a ship that is not at the troops' beach -- it sails in to the sea nearest them
 (`ShipManager.TryMeetingPoint`; the boarding waits while it sails, `Boarding.Meeting`); a landing spreads the men
 1.4 m apart (golden angle) and lets the ship go.
+
+**2026-11-19 (playtest):** an orc fleet lands only on a beach with a way on foot to the Town Hall (`ShipManagerOrcs.WalksTo`, NavMesh path, ends within 6 m of the hall's carve); none such -> the nearest beach as before. They had landed under cliffs and stood there.

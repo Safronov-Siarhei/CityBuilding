@@ -272,8 +272,9 @@ namespace CityBuilder.Tutorial
         /// <summary>He was sent to a node of this kind and has come back from it.</summary>
         private bool Gathered(ResourceType type)
         {
-            if (_node == null || !_node) _node = NearestNode(type, _person != null ? _person.transform.position : Vector3.zero);
             if (_person == null) return false;
+            // chosen from where HE stands (the island check needs him)
+            if (_node == null || !_node) _node = NearestNode(type, _person.transform.position);
             var target = _person.GatherTarget;
             if (target != null && target.ResourceType == type) _sent = true;
             // sent, and back to idling: the tree is down / the stone is in
@@ -451,6 +452,11 @@ namespace CityBuilder.Tutorial
             TutorialRules.WantedNode = (Current == Step.WoodSend || Current == Step.StoneSend) && !_sent && _node != null && _node ? _node : null;
             var hideLine = (Current == Step.WoodSend || Current == Step.StoneSend) && _sent;
             if (_panel != null && hideLine && _panel.activeSelf) _panel.SetActive(false);
+            // a building step needs the build menu at the foot of the screen: a building held (a double tap on the
+            // Town Hall) puts its own buttons there instead, and the player was lost (the user, 2026-11-19) -- let go
+            var focus = BuildingFocus.Instance;
+            if ((Current == Step.Hovel || Current == Step.Barracks || Current == Step.Shipyard)
+                && focus != null && focus.Current != null && !BuildingInstance.HasAny(WantedAt(Current))) focus.Clear();
         }
 
         // ------------------------------------------------------------ the fight runs itself
@@ -776,6 +782,9 @@ namespace CityBuilder.Tutorial
             foreach (var node in ResourceNode.All)
             {
                 if (node == null || node.ResourceType != type) continue;
+                // never one across the water (the user, 2026-11-19: the boulder offered stood on an islet, and the tap
+                // sent nobody): on the person's own island, and a way there on foot
+                if (!Reachable(from, node.transform.position, type == ResourceType.Stone)) continue;
                 var d = (node.transform.position - from).sqrMagnitude;
                 // a stone among trees counts as much further: the clear one wins unless there is none
                 if (type == ResourceType.Stone && TreeNear(node.transform.position)) d += 10000f;
@@ -786,6 +795,27 @@ namespace CityBuilder.Tutorial
                 }
             }
             return best;
+        }
+
+        private static UnityEngine.AI.NavMeshPath _reachPath;
+
+        /// <summary>On the same island; for a boulder also a way there on foot (a tree carves the NavMesh round itself, so trees are only asked the island).</summary>
+        private static bool Reachable(Vector3 from, Vector3 to, bool walk)
+        {
+            if (from == Vector3.zero) return true;   // no person yet: nothing to measure from
+            var map = MeshMapApplier.Instance;
+            if (map != null && !map.SameIsland(from, to)) return false;
+            if (!walk) return true;
+            if (!UnityEngine.AI.NavMesh.SamplePosition(from, out var a, 3f, UnityEngine.AI.NavMesh.AllAreas)) return true;
+            if (!UnityEngine.AI.NavMesh.SamplePosition(to, out var b, 3f, UnityEngine.AI.NavMesh.AllAreas)) return false;
+            _reachPath ??= new UnityEngine.AI.NavMeshPath();
+            if (!UnityEngine.AI.NavMesh.CalculatePath(a.position, b.position, UnityEngine.AI.NavMesh.AllAreas, _reachPath)) return false;
+            if (_reachPath.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) return true;
+            var corners = _reachPath.corners;
+            if (corners.Length == 0) return false;
+            var end = corners[corners.Length - 1] - b.position;
+            end.y = 0f;
+            return end.magnitude <= 2f;
         }
 
         private static bool TreeNear(Vector3 at)

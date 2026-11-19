@@ -341,7 +341,14 @@ namespace CityBuilder.UI
             if (_lab != null)
             {
                 if (_dialogKind == DialogKind.Repair) _lab.TryRepair();
-                else if (!_lab.TryUpgrade() && _lab.NextLevelResearched && _lab.IsOperational && _lab.Site == null
+                else if (_lab.TryUpgrade())
+                {
+                    // the upgrade under way: the Laboratory's window goes too, like any building's (the user, 2026-11-19)
+                    if (dialog != null) dialog.SetActive(false);
+                    Close();
+                    return;
+                }
+                else if (_lab.NextLevelResearched && _lab.IsOperational && _lab.Site == null
                          && Shop.OfferShop.Instance != null)
                 {
                     // too poor (the user, 2026-11-17): the «Не хватает ресурсов» offer, coins for crystals or an ad

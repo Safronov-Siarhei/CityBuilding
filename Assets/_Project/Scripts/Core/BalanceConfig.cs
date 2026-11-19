@@ -651,6 +651,9 @@ namespace CityBuilder.Core
         [SerializeField] private float drawbridgeRaiseSeconds = 1.5f;
         // boulders laid on the archipelago's start island on top of its share (island_start_rocks)
         [SerializeField] private int islandStartRocks = 40;
+        // sandbox: a worked-out boulder comes back now and then (the user, 2026-11-19), on the Town Hall's island
+        [SerializeField] private float rockRespawnSeconds = 180f;
+        [SerializeField] private float rockRespawnShare = 0.5f;
         // crystals for finishing the tutorial, shown on its menu tag (tutorial_reward_crystals)
         [SerializeField] private int tutorialRewardCrystals = 25;
         // the tutorial offered inside a sandbox game (UI/TutorialOfferBanner; tutorial_offer_*)
@@ -1571,6 +1574,8 @@ namespace CityBuilder.Core
         public float DecorGiftCrystalChance => decorGiftCrystalChance;
         public int DecorGiftCrystals => decorGiftCrystals;
         public int IslandStartRocks => islandStartRocks;
+        public float RockRespawnSeconds => rockRespawnSeconds;
+        public float RockRespawnShare => rockRespawnShare;
         public int TutorialRewardCrystals => tutorialRewardCrystals;
         public float TutorialOfferWindowSeconds => tutorialOfferWindowSeconds;
         public float TutorialOfferHallSeconds => tutorialOfferHallSeconds;
@@ -2923,6 +2928,8 @@ namespace CityBuilder.Core
                 menuShopPackBonusPercent[p] = (int)Read(economy, $"menu_shop_pack_bonus_pct_{p + 1}", menuShopPackBonusPercent[p]);
             }
             islandStartRocks = (int)Read(economy, "island_start_rocks", islandStartRocks);
+            rockRespawnSeconds = Read(economy, "rock_respawn_sec", rockRespawnSeconds);
+            rockRespawnShare = Read(economy, "rock_respawn_share", rockRespawnShare);
             loadingSecondsEnter = Read(economy, "loading_seconds_enter", loadingSecondsEnter);
             loadingSecondsExit = Read(economy, "loading_seconds_exit", loadingSecondsExit);
             loadingSecondsCampaignMap = Read(economy, "loading_seconds_campaign_map", loadingSecondsCampaignMap);

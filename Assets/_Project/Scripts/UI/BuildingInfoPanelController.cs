@@ -406,7 +406,7 @@ namespace CityBuilder.UI
             {
                 upgradeLockLabel.gameObject.SetActive(!open);
                 if (site != null) upgradeLockLabel.text = Localization.Format(site.IsUpgrade ? "#building_upgrading" : "#building_constructing", Clock(site.Remaining));
-                else if (!researched) upgradeLockLabel.text = Localization.Format("#building_upgrade_locked", _currentInstance.Level + 1);
+                else if (!researched) upgradeLockLabel.text = BuildHints.UpgradeLockText(_currentInstance);
                 LockLeadsToLab(site == null && !researched);
             }
             BuildCostRow(upgradeCostRow, open ? upgradeCost : null);

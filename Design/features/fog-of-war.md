@@ -28,3 +28,5 @@ under the blanket; grass tufts show through the thin edge.
 - 2026-11-02: the cheat «Вернуть туман» (ConcealAll) no longer drops the walkers (ships, heroes) and
   every building (`BuildingInstance.RevealOwnFog`) clears its own circle again -- after it, only the
   citizens used to clear the fog.
+
+**2026-11-19 (playtest, «открытая точка посреди моря»):** citizen reveal skips agents that are inactive or stand on deep water (`FogOfWarManager.UpdateCitizenReveal`). Probable cause, not confirmed: nothing else permanent reveals open sea. If it comes back, ask what stood there.

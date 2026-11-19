@@ -212,6 +212,21 @@ namespace CityBuilder.Ships
                 {
                     var a = k * Mathf.PI * 2f / steps;
                     var probe = from + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * r;
+                    if (TrySampleSea(probe, 1.5f, out var p) && TryFindLandingAt(p, out var beach) && WalksTo(beach, from))
+                    {
+                        sea = p;
+                        return true;
+                    }
+                }
+            }
+            // no beach with a way on foot: the nearest beach of any kind, as before
+            for (var r = 8f; r <= 220f; r += 4f)
+            {
+                var steps = Mathf.Clamp(Mathf.RoundToInt(r * 0.5f), 12, 48);
+                for (var k = 0; k < steps; k++)
+                {
+                    var a = k * Mathf.PI * 2f / steps;
+                    var probe = from + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * r;
                     if (TrySampleSea(probe, 1.5f, out var p) && TryFindLandingAt(p, out _))
                     {
                         sea = p;
@@ -220,6 +235,26 @@ namespace CityBuilder.Ships
                 }
             }
             return false;
+        }
+
+        private static UnityEngine.AI.NavMeshPath _landingPath;
+
+        /// <summary>
+        /// A beach the orcs can walk from to the Town Hall (the user, 2026-11-19: they landed under cliffs, the relief
+        /// shut them in, and they only stood there). The hall carves the NavMesh, so the route counts as arriving when it
+        /// ends within a few cells of the hall.
+        /// </summary>
+        private static bool WalksTo(Vector3 beach, Vector3 hall)
+        {
+            if (!UnityEngine.AI.NavMesh.SamplePosition(hall, out var goal, 10f, UnityEngine.AI.NavMesh.AllAreas)) return true;   // nothing to test against
+            if (_landingPath == null) _landingPath = new UnityEngine.AI.NavMeshPath();
+            if (!UnityEngine.AI.NavMesh.CalculatePath(beach, goal.position, UnityEngine.AI.NavMesh.AllAreas, _landingPath)) return false;
+            if (_landingPath.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) return true;
+            var corners = _landingPath.corners;
+            if (corners.Length == 0) return false;
+            var end = corners[corners.Length - 1] - goal.position;
+            end.y = 0f;
+            return end.magnitude <= 6f;
         }
 
         /// <summary>The tutorial's barge while it waits by the orcs' island (no Steer: it holds there).</summary>

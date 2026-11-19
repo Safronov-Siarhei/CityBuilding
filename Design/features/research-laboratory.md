@@ -99,3 +99,5 @@ does not scroll through everything. Concepts (`Tools/ui/lab_concepts.py`): Desig
 - 2026-11-17: the «!» card's health bar fill is a plain UISprite (the stretched round knob made an oval).
 
 **2026-11-19:** the Town Hall's levels are researched but it had NO row in the Laboratory (it is not in the build menu): `ResearchPanelController.BuildMenuOrder`/`CategoryOf` add `BuildingPlacer.MandatoryFirstBuilding` first. Checked: every other building with topics is in the menu (hidden ones have none). «Уровень N ещё не изучен» on a building card leads here (`BuildHints.LeadToResearch`; no Laboratory -> the way to build it).
+
+**2026-11-19 (playtest):** a locked level's label says what opens it (`BuildHints.UpgradeLockText`): no Laboratory -> `#research_blocked_no_lab`; Laboratory too small -> `#research_blocked_lab_level`; otherwise «Изучите {0} уровень в лаборатории» (`#building_upgrade_locked`, reworded). The tap leads to the same thing. A started Laboratory upgrade closes the Laboratory's window too, like any building's card.

@@ -222,7 +222,7 @@ namespace CityBuilder.UI
             {
                 upgradeLock.gameObject.SetActive(!open && (site != null || hasNext));
                 if (site != null) upgradeLock.text = Localization.Format(site.IsUpgrade ? "#building_upgrading" : "#building_constructing", Clock(site.Remaining));
-                else if (hasNext) upgradeLock.text = Localization.Format("#building_upgrade_locked", b.Level + 1);
+                else if (hasNext) upgradeLock.text = BuildHints.UpgradeLockText(b);
                 LockLeadsToLab(upgradeLock, site == null && hasNext && !b.NextLevelResearched);
             }
             if (repairButton != null) repairButton.interactable = b.GetRepairCost() != null;
