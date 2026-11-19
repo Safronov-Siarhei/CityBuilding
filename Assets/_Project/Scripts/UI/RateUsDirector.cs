@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CityBuilder.Buildings;
 using CityBuilder.Core;
 using UnityEngine;
@@ -54,6 +55,8 @@ namespace CityBuilder.UI
         public static void Note(string key, bool menu = false)
         {
             if (_instance == null || string.IsNullOrEmpty(key) || Tutorial.TutorialMode.IsActive) return;
+            // never inside an Invasion run (the user, 2026-11-19): its own happy moments wait for the main menu
+            if (!menu && Invasion.InvasionMode.IsActive) return;
             var config = BalanceConfig.Instance;
             if (config != null && !config.RateUsEventOn(key)) return;
             if (menu)
@@ -71,6 +74,7 @@ namespace CityBuilder.UI
             CountLoginDay();
             SceneManager.sceneLoaded += OnSceneLoaded;
             Combat.OrcCampBuilding.OnDestroyed += Camp;
+            BuildingInstance.OnDestroyedInCombat += Lost;
             Combat.OrcPortal.OnPortalDestroyed += Portal;
             OnSceneLoaded(SceneManager.GetActiveScene(), LoadSceneMode.Single);
         }
@@ -78,6 +82,7 @@ namespace CityBuilder.UI
         private void OnDestroy()
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
+            BuildingInstance.OnDestroyedInCombat -= Lost;
             Combat.OrcCampBuilding.OnDestroyed -= Camp;
             Combat.OrcPortal.OnPortalDestroyed -= Portal;
             if (_instance == this) _instance = null;
@@ -194,10 +199,52 @@ namespace CityBuilder.UI
             if (Shop.OfferShopWindow.IsOpen) return false;
             if (Time.timeScale <= 0f) return false;
             if (_menuScene) return true;
+            // not in a run nor the tutorial at all (the user, 2026-11-19)
+            if (Invasion.InvasionMode.IsActive || Tutorial.TutorialMode.IsActive) return false;
+            if (Shop.OfferShop.Allowed && Troubled()) return false;
             if (_placer != null && _placer.IsSelecting) return false;
             var over = GameOverManager.Instance;
             if (over != null && over.IsGameOver) return false;
             return _watch == null || !_watch.Fighting;
+        }
+
+        // ---------------------------------------------------------------- the sandbox's bad moments (the user, 2026-11-19)
+
+        private float _hazardUntil = -1f;    // unscaled time: a plague or a fire and rateus_after_hazard_sec after it
+        private readonly List<float> _lost = new List<float>();   // unscaled times the player's buildings fell to enemies
+
+        private void Lost(BuildingInstance building)
+        {
+            if (building == null || building.IsBot) return;
+            _lost.Add(Time.unscaledTime);
+        }
+
+        /// <summary>
+        /// The sandbox town is in trouble: a plague or a fire now or less than rateus_after_hazard_sec ago, short of food,
+        /// people leaving (starving, homeless, the migration going away), or enemies took more than rateus_loss_share of
+        /// its buildings in the last rateus_loss_window_sec.
+        /// </summary>
+        private bool Troubled()
+        {
+            var config = BalanceConfig.Instance;
+            var now = Time.unscaledTime;
+            var burning = Buildings.FireManager.Instance != null && Buildings.FireManager.Instance.Burning > 0;
+            if (Citizens.Plague.Anywhere || burning) _hazardUntil = now + config.RateUsAfterHazardSeconds;
+            if (now < _hazardUntil) return true;
+            var food = CityBuilder.Resources.FoodConsumptionManager.Instance;
+            if (food != null && (food.Hungry || food.Starving)) return true;
+            var homes = Citizens.HousePeople.Instance;
+            if (homes != null && homes.Overcrowded > 0) return true;
+            var migration = Citizens.MigrationManager.Instance;
+            if (migration != null && (migration.State == Citizens.MigrationManager.MigrationState.Leaving
+                                      || migration.State == Citizens.MigrationManager.MigrationState.Deserted)) return true;
+            var window = config.RateUsLossWindowSeconds;
+            for (var i = _lost.Count - 1; i >= 0; i--) if (now - _lost[i] > window) _lost.RemoveAt(i);   // no closure: this runs every frame while an event waits
+            if (_lost.Count == 0) return false;
+            var standing = 0;
+            foreach (var b in BuildingInstance.All)
+                if (b != null && !b.IsBot && b.CurrentHealth > 0) standing++;
+            return _lost.Count > config.RateUsLossShare * (standing + _lost.Count);
         }
 
         private void Show()

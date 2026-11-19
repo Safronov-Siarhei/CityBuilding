@@ -53,6 +53,9 @@ namespace CityBuilder.Citizens
         /// <summary>The plague is on this island now.</summary>
         public static bool On(int island) => Active && Instance != null && Instance._on.ContainsKey(island);
 
+        /// <summary>A plague on any island now.</summary>
+        public static bool Anywhere => Active && Instance != null && Instance._on.Count > 0;
+
         public IEnumerable<Outbreak> Outbreaks => _on.Values;
 
         private void Awake() => Instance = this;

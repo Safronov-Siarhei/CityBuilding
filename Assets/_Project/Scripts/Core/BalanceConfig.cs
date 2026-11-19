@@ -742,6 +742,10 @@ namespace CityBuilder.Core
         [SerializeField] private int[] dailyBonusCrystals = { 10, 10, 10, 10, 50, 10, 10, 10, 10, 99 };
         [SerializeField] private float dailyBonusAdMultiplier = 2f;
         [SerializeField] private int dailyBonusFirst = 25;
+        // the rate-us window keeps off a sandbox town in trouble (the user, 2026-11-19)
+        [SerializeField] private float rateUsAfterHazardSeconds = 300f;
+        [SerializeField] private float rateUsLossWindowSeconds = 120f;
+        [SerializeField] private float rateUsLossShare = 0.1f;
         [SerializeField] private float tutorialRaidCameraSeconds = 3f;
         [SerializeField] private float victoryDelaySeconds = 3f;
         [SerializeField] private float decayPerDayAtLevel1 = 0.02f;
@@ -1644,6 +1648,12 @@ namespace CityBuilder.Core
         public float DailyBonusAdMultiplier => dailyBonusAdMultiplier;
         /// <summary>The first login reward ever (daily_bonus_first).</summary>
         public int DailyBonusFirst => dailyBonusFirst;
+        /// <summary>Rate-us: no window during a plague or a fire and this long after it (rateus_after_hazard_sec).</summary>
+        public float RateUsAfterHazardSeconds => rateUsAfterHazardSeconds;
+        /// <summary>Rate-us: the window over which buildings lost to enemies are counted (rateus_loss_window_sec).</summary>
+        public float RateUsLossWindowSeconds => rateUsLossWindowSeconds;
+        /// <summary>Rate-us: the share of the town's buildings lost in that window that keeps it off (rateus_loss_share).</summary>
+        public float RateUsLossShare => rateUsLossShare;
 
         /// <summary>The tutorial's camera goes to the orcs this long after the soldier is hired (`tutorial_raid_camera_sec`; the user, 2026-11-06: 3).</summary>
         public float TutorialRaidCameraSeconds => tutorialRaidCameraSeconds;
@@ -2965,6 +2975,9 @@ namespace CityBuilder.Core
                 dailyBonusCrystals[i] = (int)Read(economy, $"daily_bonus_{i + 1}", dailyBonusCrystals[i]);
             dailyBonusAdMultiplier = Read(economy, "daily_bonus_ad_mult", dailyBonusAdMultiplier);
             dailyBonusFirst = Mathf.RoundToInt(Read(economy, "daily_bonus_first", dailyBonusFirst));
+            rateUsAfterHazardSeconds = Read(economy, "rateus_after_hazard_sec", rateUsAfterHazardSeconds);
+            rateUsLossWindowSeconds = Read(economy, "rateus_loss_window_sec", rateUsLossWindowSeconds);
+            rateUsLossShare = Read(economy, "rateus_loss_share", rateUsLossShare);
             tutorialRaidCameraSeconds = Read(economy, "tutorial_raid_camera_sec", tutorialRaidCameraSeconds);
             victoryDelaySeconds = Read(economy, "victory_delay_sec", victoryDelaySeconds);
             tutorialRaidOrcs = (int)Read(economy, "tutorial_raid_orcs", tutorialRaidOrcs);

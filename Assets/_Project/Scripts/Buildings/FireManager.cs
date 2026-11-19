@@ -62,6 +62,17 @@ namespace CityBuilder.Buildings
 
         private readonly List<Crew> _crews = new List<Crew>();
         private readonly List<BuildingFire> _fires = new List<BuildingFire>();
+
+        /// <summary>Fires burning now (the rate-us window waits while any burns).</summary>
+        public int Burning
+        {
+            get
+            {
+                var n = 0;
+                foreach (var f in _fires) if (f != null) n++;
+                return n;
+            }
+        }
         private readonly List<CitizenAgent> _workers = new List<CitizenAgent>();
         private readonly List<float> _burnt = new List<float>();
         private readonly Dictionary<int, float> _told = new Dictionary<int, float>();

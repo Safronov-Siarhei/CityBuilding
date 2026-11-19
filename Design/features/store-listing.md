@@ -103,3 +103,13 @@ user) and as a 3D render from the game's models; waiting for the user's correcti
 - The user's corrections to both icons.
 - The king is not a character in the game yet (if he wins, he may need to appear in the menu/tutorial).
 - Feature graphic 1024x500 and screenshots.
+
+**Rate-us timing v2 (the user, 2026-11-19), in the code, NOT through setup yet, not seen:**
+- Never inside an Invasion run or the tutorial (`RateUsDirector.Note` drops a run's in-game events; `Calm()` false there). A run's record still waits for the main menu, as before.
+- The game is PAUSED under the window (`RateUsWindow.Pause/Unpause`; not in the main menu). The HUD behind was already hidden (`HideTheInterfaceBehind`).
+- Sandbox: the window keeps off a town in trouble (`RateUsDirector.Troubled`):
+  - a plague (`Plague.Anywhere`) or a fire (`FireManager.Burning`), now or less than `rateus_after_hazard_sec` 300 ago;
+  - short of food (`FoodConsumptionManager.Hungry/Starving`);
+  - people leaving (`HousePeople.Overcrowded`, migration Leaving/Deserted);
+  - enemies took more than `rateus_loss_share` 0.1 of its buildings in the last `rateus_loss_window_sec` 120 (`BuildingInstance.OnDestroyedInCombat`, the player's only).
+- The keys are on «Наборы: настройки».

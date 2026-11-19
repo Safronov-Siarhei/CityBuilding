@@ -80,6 +80,7 @@ namespace CityBuilder.UI
             group.alpha = 0f;
             window.localScale = Vector3.one * (PopFromScale * size);
             HideTheInterfaceBehind();
+            Pause();
             if (picture != null) picture.sprite = UnityEngine.Resources.Load<Sprite>("RateUs/Window_" + ThemeId());
             // after «Оценить» once: «Уже оценил» instead of «Позже» (the user, 2026-11-11) -- it closes the same way
             if (Rated)
@@ -114,6 +115,23 @@ namespace CityBuilder.UI
                 canvas.enabled = false;
                 _hidden.Add(canvas);
             }
+        }
+
+        // the game stands still under it (the user, 2026-11-19); the main menu has no game to stop
+        private float _timeScale = -1f;
+
+        private void Pause()
+        {
+            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "MainMenu" || Time.timeScale <= 0f) return;
+            _timeScale = Time.timeScale;
+            Time.timeScale = 0f;
+        }
+
+        private void Unpause()
+        {
+            if (_timeScale < 0f) return;
+            Time.timeScale = _timeScale;
+            _timeScale = -1f;
         }
 
         private void ShowTheInterfaceBehind()
@@ -169,11 +187,13 @@ namespace CityBuilder.UI
             _t = 0f;
             group.interactable = false;
             ShowTheInterfaceBehind();
+            Unpause();
         }
 
         private void OnDestroy()
         {
             ShowTheInterfaceBehind();
+            Unpause();
             if (_current != this) return;
             _current = null;
             // the window's big pictures go with it

@@ -25,10 +25,11 @@ The user's Pixel playtest of 2026-11-19 had 27 items. They first sent the list, 
   - Idle workers are hidden inside.
   - A road can go under a gate.
 
+- 26 (rate-us timing) DONE in the code: never in a run or the tutorial, pauses the game, sandbox keeps off plague/fire (+5 min), hunger, people leaving, >10% buildings lost in 2 min; NOT through setup yet.
+
 **WAITING for the user:**
 - 15: fire compensation (1/2 of the restore price) — free or for an ad?
 - 17: «подарок разработчика» — concept of the conditions and the banner.
-- 26: when the rate-us window comes up — proposal to tighten it.
 - 27: why the tutorial offer did not show — probably the tutorial was already won on the Pixel.
 
 **Open:**
