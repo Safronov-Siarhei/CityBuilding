@@ -80,15 +80,24 @@ namespace CityBuilder.Core
             if (population > 0)
             {
                 _hadCitizens = true;
+                if (population > PeakPopulation) PeakPopulation = population;
                 return;
             }
 
             if (IsGameOver || !_hadCitizens) return;
 
+            LostByEmptyTown = true;
             EndGame(victory: false, Localization.Get("#log_defeat_empty"));
         }
 
         private bool _hadCitizens;
+
+        /// <summary>The most people the town had this session (the sandbox defeat window's row).</summary>
+        public int PeakPopulation { get; private set; }
+
+        /// <summary>The town emptied (true) or its Town Hall fell (false): the defeat window says which (the user, 2026-11-19:
+        /// with 0 people it said «Ратуша разрушена»).</summary>
+        public bool LostByEmptyTown { get; private set; }
 
         private void HandleBuildingDestroyed(BuildingInstance instance)
         {

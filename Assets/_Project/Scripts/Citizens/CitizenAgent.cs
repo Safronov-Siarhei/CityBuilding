@@ -227,6 +227,7 @@ namespace CityBuilder.Citizens
         /// <summary>Moves him at once (a figure re-homed to another island, which he could not walk to).</summary>
         public void Teleport(Vector3 at)
         {
+            SetInside(false);
             var controller = GetComponent<CharacterController>();
             if (controller != null) controller.enabled = false;
             transform.position = at;
@@ -706,7 +707,23 @@ namespace CityBuilder.Citizens
 
             // Working: pause at whichever end was just reached before looping to the other.
             BeginPause(_headingToNode ? HarvestSecondsFor(_workNode) : BuildingRestSeconds);
+            // nothing to go out for (no tree or rock, no field or shore -- the Laboratory's scientists, an office): he goes
+            // in and is not seen till he has somewhere to walk (the user, 2026-11-19: «работники лаборатории просто стоят»)
+            if (!_nodePos.HasValue && _spots == null) SetInside(true);
             if (_headingToNode && _nodePos.HasValue) Waddle?.Work(_workKind, _nodePos.Value);
+        }
+
+        private bool _inside;
+
+        /// <summary>In his workplace with nothing to do outside: his figure is not drawn (WalkTo brings him out).</summary>
+        public bool Inside => _inside;
+
+        private void SetInside(bool inside)
+        {
+            if (_inside == inside) return;
+            _inside = inside;
+            var figure = Waddle != null ? Waddle.Figure : null;
+            if (figure != null) figure.gameObject.SetActive(!inside);
         }
 
         /// <summary>Starts a timed pause and remembers how long it was, which is the only way the harvest bar can report a fraction rather than a countdown.</summary>
@@ -836,6 +853,8 @@ namespace CityBuilder.Citizens
 
         private void WalkTo(Vector3 target)
         {
+            // out of the building again (Inside) the moment he has somewhere to go
+            SetInside(false);
             // the tool goes away as he sets off
             Waddle?.StopWork();
             BuildRoute(transform.position, target);

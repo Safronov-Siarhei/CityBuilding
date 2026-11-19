@@ -197,3 +197,5 @@ EditMode `SicknessAndFireTests`; PlayMode `HazardTests`.
   so BuildingPlacer / BuildingFocus / BuildingInfoPanelController needed no new calls
   (the info panel now passes RadiusOf(data, level) instead of HarvestRadius).
 - Trap: earlier notes called 14/18/24 "cells" -- they were METRES (7-17 cells).
+
+**2026-11-19:** the fire bucket's WATER floated off the bucket: the FBX gives the grandchild `ToolFireBucket-Water` (and `ToolRod-Catch`) a stray turn+offset (checked by importing the FBX in Blender); `FireManager.Bucket` / `CitizenWaddle.Tool` reset its local transform to identity (its mesh is pivoted like the Swing's). Not seen.

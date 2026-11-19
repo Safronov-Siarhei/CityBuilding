@@ -53,6 +53,14 @@ namespace CityBuilder.UI
         public void Restore()
         {
             if (_shown == null) return;
+            // short of it: the shop's «Не хватает ресурсов» with exactly the shortfall, as Upgrade does (the user, 2026-11-19);
+            // after buying the player presses «Восстановить» again
+            var resources = ResourceManager.Instance;
+            if (resources != null && !resources.HasEnough(_shown.RestoreCost()) && Shop.OfferShop.Instance != null)
+            {
+                Shop.OfferShopWindow.ShowShortage(Shop.OfferShop.Instance.ShortageFor(_shown.RestoreCost()));
+                return;
+            }
             if (_shown.TryRestore() != null) Close();
         }
 
@@ -80,7 +88,10 @@ namespace CityBuilder.UI
         private void UpdateAffordable()
         {
             if (restoreButton == null || _shown == null) return;
-            restoreButton.interactable = ResourceManager.Instance == null || ResourceManager.Instance.HasEnough(_shown.RestoreCost());
+            // pressable even when short (it offers the shop then); short shows as a dimmed button
+            var enough = ResourceManager.Instance == null || ResourceManager.Instance.HasEnough(_shown.RestoreCost());
+            restoreButton.interactable = enough || Shop.OfferShop.Instance != null;
+            if (restoreButton.targetGraphic != null) restoreButton.targetGraphic.color = enough ? Color.white : new Color(1f, 1f, 1f, 0.6f);
         }
     }
 }

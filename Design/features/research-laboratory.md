@@ -97,3 +97,5 @@ does not scroll through everything. Concepts (`Tools/ui/lab_concepts.py`): Desig
 - Test: `ResearchGateTests` walks every category (>20 rows in all, >=4 categories filled) and checks ShowInfo vs Show.
 - NEXT (the user): the same v2 card for EVERY building, each shown for approval first.
 - 2026-11-17: the «!» card's health bar fill is a plain UISprite (the stretched round knob made an oval).
+
+**2026-11-19:** the Town Hall's levels are researched but it had NO row in the Laboratory (it is not in the build menu): `ResearchPanelController.BuildMenuOrder`/`CategoryOf` add `BuildingPlacer.MandatoryFirstBuilding` first. Checked: every other building with topics is in the menu (hidden ones have none). «Уровень N ещё не изучен» on a building card leads here (`BuildHints.LeadToResearch`; no Laboratory -> the way to build it).

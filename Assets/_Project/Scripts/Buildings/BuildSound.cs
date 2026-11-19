@@ -15,7 +15,7 @@ namespace CityBuilder.Buildings
     public static class BuildSound
     {
         private static AudioSource _source;
-        private static AudioClip _place, _upgraded, _built, _reward;
+        private static AudioClip _place, _upgraded, _built, _reward, _roar;
         private static float _lastPlace = -1f;
 
         public static void Placed()
@@ -34,9 +34,15 @@ namespace CityBuilder.Buildings
         /// <summary>A reward taken -- the daily bonus (the user, 2026-11-18): coins clinking and a rising sparkle.</summary>
         public static void Reward() => Play(ref _reward, "Build/reward", 1f);
 
-        private static void Play(ref AudioClip clip, string path, float pitch)
+        /// <summary>The orcs' roar as an Invasion wave comes out of the portals (the user, 2026-11-19; mission 2's sfx_roar), volume inv_roar_volume.</summary>
+        public static void WaveRoar() =>
+            Play(ref _roar, "Invasion/roar", Random.Range(0.92f, 1.06f), BalanceConfig.Instance != null ? BalanceConfig.Instance.InvasionRoarVolume : 0.8f);
+
+        private static void Play(ref AudioClip clip, string path, float pitch) =>
+            Play(ref clip, path, pitch, BalanceConfig.Instance != null ? BalanceConfig.Instance.BuildSfxVolume : 0.7f);
+
+        private static void Play(ref AudioClip clip, string path, float pitch, float volume)
         {
-            var volume = BalanceConfig.Instance != null ? BalanceConfig.Instance.BuildSfxVolume : 0.7f;
             if (volume <= 0f) return;
             if (clip == null) clip = UnityEngine.Resources.Load<AudioClip>(path);
             if (clip == null) return;

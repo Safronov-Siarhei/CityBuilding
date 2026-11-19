@@ -228,7 +228,9 @@ namespace CityBuilder.Citizens
             var paused = PausedByHunger;
             // a plague island makes no one (the user, 2026-11-13; Plague)
             foreach (var house in _houses) Grow(house, seconds, paused || Plague.On(house.Island), true);
-            if (_hall != null) Grow(_hall, seconds, paused || Plague.On(_hall.Island), false);
+            // the hall makes its own residents only where its room counts (the sandbox): in a run it grew 5 past
+            // the houses' room -- «23/18» (the user, 2026-11-19, asked twice)
+            if (_hall != null && HallRoomCounts) Grow(_hall, seconds, paused || Plague.On(_hall.Island), false);
         }
 
         private void Grow(House house, float seconds, bool paused, bool showBar)

@@ -741,6 +741,7 @@ namespace CityBuilder.Core
         // the daily login bonus (DailyBonus): crystals per day of the 10-day chain
         [SerializeField] private int[] dailyBonusCrystals = { 10, 10, 10, 10, 50, 10, 10, 10, 10, 99 };
         [SerializeField] private float dailyBonusAdMultiplier = 2f;
+        [SerializeField] private int dailyBonusFirst = 25;
         [SerializeField] private float tutorialRaidCameraSeconds = 3f;
         [SerializeField] private float victoryDelaySeconds = 3f;
         [SerializeField] private float decayPerDayAtLevel1 = 0.02f;
@@ -849,6 +850,7 @@ namespace CityBuilder.Core
         [SerializeField] private int fireSmallIsland = 15;
         [SerializeField] private float fireSmallIslandMult = 0.3f;
         [SerializeField] private int stormFromHallLevel = 2;
+        [SerializeField] private float invasionRoarVolume = 0.8f;
         [SerializeField] private float fireBannerWindowSeconds = 300f;
         [SerializeField] private float fireShieldSeconds = 420f;
         [SerializeField] private int fireEndCrystals = 30;
@@ -1417,6 +1419,8 @@ namespace CityBuilder.Core
         public int FireSmallIsland => fireSmallIsland;
         public float FireSmallIslandMultiplier => fireSmallIslandMult;
         public int StormFromHallLevel => stormFromHallLevel;
+        /// <summary>Invasion: the roar each wave comes out with (inv_roar_volume).</summary>
+        public float InvasionRoarVolume => invasionRoarVolume;
         /// <summary>Sandbox: the window those losses count over.</summary>
         public float FireBannerWindowSeconds => fireBannerWindowSeconds;
         /// <summary>Sandbox: after the banner put the fires out, no fire starts for so long.</summary>
@@ -1638,6 +1642,8 @@ namespace CityBuilder.Core
         public int[] RateUsPeopleSteps => rateUsPeopleSteps;
         public int[] DailyBonusCrystals => dailyBonusCrystals;
         public float DailyBonusAdMultiplier => dailyBonusAdMultiplier;
+        /// <summary>The first login reward ever (daily_bonus_first).</summary>
+        public int DailyBonusFirst => dailyBonusFirst;
 
         /// <summary>The tutorial's camera goes to the orcs this long after the soldier is hired (`tutorial_raid_camera_sec`; the user, 2026-11-06: 3).</summary>
         public float TutorialRaidCameraSeconds => tutorialRaidCameraSeconds;
@@ -2727,6 +2733,7 @@ namespace CityBuilder.Core
             fireSmallIsland = Mathf.RoundToInt(Read(economy, "fire_small_island", fireSmallIsland));
             fireSmallIslandMult = Read(economy, "fire_small_island_mult", fireSmallIslandMult);
             stormFromHallLevel = Mathf.RoundToInt(Read(economy, "storm_from_hall_level", stormFromHallLevel));
+            invasionRoarVolume = Read(economy, "inv_roar_volume", invasionRoarVolume);
             fireBannerWindowSeconds = Read(economy, "fire_banner_window_sec", fireBannerWindowSeconds);
             fireShieldSeconds = Read(economy, "fire_shield_sec", fireShieldSeconds);
             fireEndCrystals = (int)Read(economy, "fire_end_crystals", fireEndCrystals);
@@ -2957,6 +2964,7 @@ namespace CityBuilder.Core
             for (var i = 0; i < dailyBonusCrystals.Length; i++)
                 dailyBonusCrystals[i] = (int)Read(economy, $"daily_bonus_{i + 1}", dailyBonusCrystals[i]);
             dailyBonusAdMultiplier = Read(economy, "daily_bonus_ad_mult", dailyBonusAdMultiplier);
+            dailyBonusFirst = Mathf.RoundToInt(Read(economy, "daily_bonus_first", dailyBonusFirst));
             tutorialRaidCameraSeconds = Read(economy, "tutorial_raid_camera_sec", tutorialRaidCameraSeconds);
             victoryDelaySeconds = Read(economy, "victory_delay_sec", victoryDelaySeconds);
             tutorialRaidOrcs = (int)Read(economy, "tutorial_raid_orcs", tutorialRaidOrcs);

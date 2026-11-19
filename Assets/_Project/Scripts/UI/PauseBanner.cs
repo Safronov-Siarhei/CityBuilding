@@ -51,6 +51,8 @@ namespace CityBuilder.UI
             Time.timeScale = 0f;
             root.SetActive(true);
             root.transform.SetAsLastSibling();
+            // the HUD round it goes (the user, 2026-11-19: the fire banner left the buttons and an offer over it)
+            HudHider.Instance?.Hide(this);
             Refresh();
         }
 
@@ -108,6 +110,7 @@ namespace CityBuilder.UI
         {
             _adLeft = -1f;
             if (root != null) root.SetActive(false);
+            HudHider.Instance?.Show(this);
             Time.timeScale = _timeScale;
         }
     }

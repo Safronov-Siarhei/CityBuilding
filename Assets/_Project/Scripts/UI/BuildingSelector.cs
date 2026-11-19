@@ -171,7 +171,10 @@ namespace CityBuilder.UI
         }
 
         /// <summary>Whether a tap here would open a building's card.</summary>
-        public bool HasBuildingAt(Vector2 screenPosition) => targetCamera != null && !Campaign.CityDefenceMode.IsActive && FindBuilding(screenPosition) != null;
+        /// <summary>A building -- or a player's ruin (the user, 2026-11-19: a ruin on fertile land or an ore vein could not be
+        /// picked, the land's own tap took it) -- under this screen point: the dispatcher then leaves the tap to the selector.</summary>
+        public bool HasBuildingAt(Vector2 screenPosition) => targetCamera != null && !Campaign.CityDefenceMode.IsActive
+            && (FindBuilding(screenPosition) != null || FindRuin(screenPosition) != null);
 
         /// <summary>The nearest standing building of another side (an orc camp's) along the ray.</summary>
         private Combat.OrcCampBuilding FindForeign(Vector2 screenPosition)

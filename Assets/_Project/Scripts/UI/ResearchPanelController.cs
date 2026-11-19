@@ -551,9 +551,12 @@ namespace CityBuilder.UI
             var all = new List<BuildingData>();
             if (placer != null)
             {
+                // the Town Hall first: it is never in the build menu, but its levels are researched here (the user,
+                // 2026-11-19: «не изучено в лаборатории», and no row for it in the Laboratory)
+                if (placer.MandatoryFirstBuilding != null) all.Add(placer.MandatoryFirstBuilding);
                 foreach (var data in placer.AvailableBuildings)
                 {
-                    if (data != null) all.Add(data);
+                    if (data != null && !all.Contains(data)) all.Add(data);
                 }
             }
             _dataById = new Dictionary<string, BuildingData>();
@@ -868,8 +871,12 @@ namespace CityBuilder.UI
                 _categoryById = new Dictionary<string, int>();
                 var placer = FindAnyObjectByType<BuildingPlacer>();
                 if (placer != null)
+                {
                     foreach (var data in placer.AvailableBuildings)
                         if (data != null) _categoryById[data.buildingName] = (int)data.category;
+                    var hall = placer.MandatoryFirstBuilding;
+                    if (hall != null) _categoryById[hall.buildingName] = (int)hall.category;
+                }
             }
             return buildingId != null && _categoryById.TryGetValue(buildingId, out var c) ? c : 0;
         }

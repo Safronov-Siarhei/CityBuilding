@@ -34,6 +34,15 @@ namespace CityBuilder.UI
         [SerializeField] private Image[] runSeals = new Image[0];
         [SerializeField] private Sprite sealOn;
         [SerializeField] private Sprite sealOff;
+        // the same window for the SANDBOX's defeat (the user, 2026-11-19: «по аналогии с нашествием»): its words and row
+        // pictures swapped, the seals and «Новый забег» hidden, «В главное меню» in the middle
+        [SerializeField] private LocalizedText runTitle;
+        [SerializeField] private LocalizedText runCaption;
+        [SerializeField] private LocalizedText[] runRowLabels = new LocalizedText[0];
+        [SerializeField] private Image[] runRowIcons = new Image[0];
+        [SerializeField] private Sprite[] sandboxRowGlyphs = new Sprite[0];
+        [SerializeField] private GameObject runNewRunButton;
+        [SerializeField] private RectTransform runMenuButton;
 
         private void Start()
         {
@@ -47,6 +56,11 @@ namespace CityBuilder.UI
                 ShowRunEnd();
                 return;
             }
+            if (!victory && Shop.OfferShop.Allowed && runEndRoot != null)
+            {
+                ShowSandboxEnd();
+                return;
+            }
             if (titleLabel != null)
             {
                 titleLabel.text = Localization.Get(victory ? "#over_victory" : "#over_defeat");
@@ -57,13 +71,15 @@ namespace CityBuilder.UI
                 var won = victory && GameOverManager.Instance != null && GameOverManager.Instance.WonByMainPortal
                     ? "#over_victory_reason_main"
                     : "#over_victory_reason";
-                reasonLabel.text = Localization.Get(victory ? won : "#over_defeat_reason");
+                var lost = GameOverManager.Instance != null && GameOverManager.Instance.LostByEmptyTown ? "#over_defeat_reason_empty" : "#over_defeat_reason";
+                reasonLabel.text = Localization.Get(victory ? won : lost);
             }
             if (continueButton != null) continueButton.SetActive(victory && !Tutorial.TutorialMode.IsActive);
             if (victory && Tutorial.TutorialMode.IsActive) ShowTutorialReward();
 
             if (panelRoot != null) panelRoot.SetActive(true);
             ModalGate.SetBlocked(true);
+            HideTheRest();
             Time.timeScale = 0f;
         }
 
@@ -139,6 +155,7 @@ namespace CityBuilder.UI
                 }
                 runEndRoot.SetActive(true);
                 ModalGate.SetBlocked(true);
+                HideTheRest();
                 Time.timeScale = 0f;
                 return;
             }
@@ -161,6 +178,47 @@ namespace CityBuilder.UI
             if (continueButton != null) continueButton.SetActive(false);
             if (panelRoot != null) panelRoot.SetActive(true);
             ModalGate.SetBlocked(true);
+            HideTheRest();
+            Time.timeScale = 0f;
+        }
+
+        /// <summary>
+        /// The end window stands alone (the user, 2026-11-19): the HUD round it goes -- the minimap and the event feed by it
+        /// too, whose queued notices used to play out one after another over the defeat (EventFeedController drops them).
+        /// </summary>
+        private void HideTheRest() => HudHider.Instance?.Hide(this);
+
+        /// <summary>
+        /// The sandbox lost (the user, 2026-11-19): the run's window -- «Город пал», the days the town stood as the big
+        /// number, its buildings, its most people and its strength, why it fell on the foot line; one button, the menu.
+        /// </summary>
+        private void ShowSandboxEnd()
+        {
+            var over = GameOverManager.Instance;
+            if (runTitle != null) runTitle.SetKey("#over_sb_defeat");
+            if (runCaption != null) runCaption.SetKey("#over_sb_days_caption");
+            var keys = new[] { "#over_sb_row_buildings", "#over_sb_row_people", "#over_sb_row_power" };
+            for (var i = 0; i < runRowLabels.Length && i < keys.Length; i++)
+                if (runRowLabels[i] != null) runRowLabels[i].SetKey(keys[i]);
+            for (var i = 0; i < runRowIcons.Length && i < sandboxRowGlyphs.Length; i++)
+                if (runRowIcons[i] != null && sandboxRowGlyphs[i] != null) runRowIcons[i].sprite = sandboxRowGlyphs[i];
+
+            var buildings = 0;
+            foreach (var b in Buildings.BuildingInstance.All)
+                if (b != null && !b.IsBot && b.CurrentHealth > 0) buildings++;
+            var people = Citizens.CitizenManager.Instance != null ? Citizens.CitizenManager.Instance.TotalPopulation : 0;
+            var values = new[] { buildings, Mathf.Max(people, over != null ? over.PeakPopulation : 0), Combat.PlayerProgression.Score() };
+            for (var i = 0; i < runRowValues.Length && i < values.Length; i++)
+                if (runRowValues[i] != null) runRowValues[i].text = values[i].ToString();
+            if (runPoints != null) runPoints.text = (GameCalendar.Instance != null ? GameCalendar.Instance.CurrentDay : 1).ToString();
+            if (runToday != null)
+                runToday.text = Localization.Get(over != null && over.LostByEmptyTown ? "#over_defeat_reason_empty" : "#over_defeat_reason");
+            foreach (var seal in runSeals) if (seal != null) seal.gameObject.SetActive(false);
+            if (runNewRunButton != null) runNewRunButton.SetActive(false);
+            if (runMenuButton != null) runMenuButton.anchoredPosition = new Vector2(0f, runMenuButton.anchoredPosition.y);
+            runEndRoot.SetActive(true);
+            ModalGate.SetBlocked(true);
+            HideTheRest();
             Time.timeScale = 0f;
         }
 
@@ -169,6 +227,7 @@ namespace CityBuilder.UI
         {
             GameOverManager.Instance?.ContinueInFreeMode();
             if (panelRoot != null) panelRoot.SetActive(false);
+            HudHider.Instance?.Show(this);
             ModalGate.SetBlocked(false);
             Time.timeScale = 1f;
         }

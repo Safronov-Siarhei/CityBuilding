@@ -242,7 +242,14 @@ namespace CityBuilder.UI
             // the button keeps no pressed look after the click
             if (UnityEngine.EventSystems.EventSystem.current != null) UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(null);
             if (_currentInstance == null) return;
-            if (!_currentInstance.TryUpgrade() && _currentInstance.NextLevelResearched && _currentInstance.IsOperational
+            var started = _currentInstance.TryUpgrade();
+            // the upgrade under way: the panel goes (the user, 2026-11-19)
+            if (started)
+            {
+                Close();
+                return;
+            }
+            if (_currentInstance.NextLevelResearched && _currentInstance.IsOperational
                 && _currentInstance.Site == null && Shop.OfferShop.Instance != null)
             {
                 // too poor for it (sandbox only): «Не хватает ресурсов» with exactly the shortfall; after
@@ -250,6 +257,31 @@ namespace CityBuilder.UI
                 Shop.OfferShopWindow.ShowShortage(Shop.OfferShop.Instance.ShortageFor(_currentInstance.GetUpgradeCost()));
             }
             Refresh();
+        }
+
+        /// <summary>«Уровень N ещё не изучен» pressable: to that research in the Laboratory (the user, 2026-11-19; see BuildingInfoCard).</summary>
+        private void LockLeadsToLab(bool locked)
+        {
+            var label = upgradeLockLabel;
+            if (label == null) return;
+            var button = label.GetComponent<Button>();
+            if (button == null)
+            {
+                button = label.gameObject.AddComponent<Button>();
+                button.transition = Selectable.Transition.None;
+                button.onClick.AddListener(() =>
+                {
+                    var b = _currentInstance;
+                    if (b == null || b.Data == null || !BuildHints.Allowed) return;
+                    var topic = Research.ResearchTopic.BuildingLevelId(b.Data.buildingName, b.Level + 1);
+                    Close();
+                    BuildHints.LeadToResearch(topic);
+                });
+            }
+            var on = locked && BuildHints.Allowed;
+            button.enabled = on;
+            label.raycastTarget = on;
+            label.fontStyle = on ? FontStyle.Bold : FontStyle.Normal;
         }
 
         public void Repair()
@@ -375,6 +407,7 @@ namespace CityBuilder.UI
                 upgradeLockLabel.gameObject.SetActive(!open);
                 if (site != null) upgradeLockLabel.text = Localization.Format(site.IsUpgrade ? "#building_upgrading" : "#building_constructing", Clock(site.Remaining));
                 else if (!researched) upgradeLockLabel.text = Localization.Format("#building_upgrade_locked", _currentInstance.Level + 1);
+                LockLeadsToLab(site == null && !researched);
             }
             BuildCostRow(upgradeCostRow, open ? upgradeCost : null);
 

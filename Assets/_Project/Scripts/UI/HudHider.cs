@@ -25,6 +25,16 @@ namespace CityBuilder.UI
 
         public bool IsHidden => _owners.Count > 0;
 
+        /// <summary>The game scene's one (on the safe-area root): the banners and the end windows hide the HUD through it.</summary>
+        public static HudHider Instance { get; private set; }
+
+        private void Awake() => Instance = this;
+
+        private void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
+        }
+
         public void Hide(Object owner)
         {
             if (owner == null || !_owners.Add(owner) || _owners.Count > 1) return;

@@ -1003,6 +1003,8 @@ namespace CityBuilder.EditorTools
             var rowKeys = new[] { "#over_inv_row_waves", "#over_inv_row_giant", "#over_inv_row_camps" };
             var rowGlyphs = new[] { "Swords", "Skull", "Portal" };
             var values = new Object[3];
+            var rowLabels = new Object[3];
+            var rowIcons = new Object[3];
             for (var i = 0; i < 3; i++)
             {
                 var icon = CreateImage(window, $"Row{i}Icon", ink);
@@ -1013,6 +1015,8 @@ namespace CityBuilder.EditorTools
                 var label = Words(window, $"Row{i}Label", rowKeys[i], 34, UiTheme.Regular, ink);
                 label.alignment = TextAnchor.MiddleLeft;
                 Place(label.rectTransform, TextRect($"Row{i}Label"));
+                rowLabels[i] = label.GetComponent<LocalizedText>();
+                rowIcons[i] = icon;
                 var value = Words(window, $"Row{i}Value", rowKeys[i], 40, UiTheme.Heavy, ink);
                 Object.DestroyImmediate(value.GetComponent<LocalizedText>());
                 value.alignment = TextAnchor.MiddleRight;
@@ -1056,6 +1060,19 @@ namespace CityBuilder.EditorTools
             WriteObjects(so.FindProperty("runRowValues"), values);
             so.FindProperty("runToday").objectReferenceValue = today;
             WriteObjects(so.FindProperty("runSeals"), seals);
+            // the sandbox's defeat in the same window (GameOverController.ShowSandboxEnd, the user 2026-11-19)
+            so.FindProperty("runTitle").objectReferenceValue = title.GetComponent<LocalizedText>();
+            so.FindProperty("runCaption").objectReferenceValue = caption.GetComponent<LocalizedText>();
+            WriteObjects(so.FindProperty("runRowLabels"), rowLabels);
+            WriteObjects(so.FindProperty("runRowIcons"), rowIcons);
+            WriteObjects(so.FindProperty("sandboxRowGlyphs"), new Object[]
+            {
+                AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/Hud_Home.png"),
+                AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/Hud_People.png"),
+                AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.GlyphsFolder}/Hud_Trophy.png"),
+            });
+            so.FindProperty("runNewRunButton").objectReferenceValue = images["NewRunButton"].gameObject;
+            so.FindProperty("runMenuButton").objectReferenceValue = images["MenuButton"].rectTransform;
             so.FindProperty("sealOn").objectReferenceValue = sealOn;
             so.FindProperty("sealOff").objectReferenceValue = sealOff;
             so.ApplyModifiedPropertiesWithoutUndo();

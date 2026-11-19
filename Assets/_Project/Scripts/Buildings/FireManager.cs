@@ -407,7 +407,16 @@ namespace CityBuilder.Buildings
             go.transform.localScale = Vector3.one;
             foreach (var r in go.GetComponentsInChildren<Renderer>()) r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             foreach (var t in go.GetComponentsInChildren<Transform>(true))
-                if (t.name.EndsWith("Water")) crew.Water = t.gameObject;
+                if (t.name.EndsWith("Water"))
+                {
+                    crew.Water = t.gameObject;
+                    // the FBX gives the bucket's grandchild a stray turn and offset (tools.py's nesting; checked in Blender
+                    // 2026-11-19): its mesh is pivoted like the Swing's, so it belongs at the Swing's origin (the user:
+                    // «вода от вёдер передвигается отдельно чуть дальше их самих»)
+                    t.localPosition = Vector3.zero;
+                    t.localRotation = Quaternion.identity;
+                    t.localScale = Vector3.one;
+                }
             if (crew.Water != null) crew.Water.SetActive(crew.Full);
             crew.Bucket = go;
         }

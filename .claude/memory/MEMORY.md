@@ -106,3 +106,4 @@
 - [News in the main menu (2026-11-17)](project_news.md) — BUILT, not seen: sheet tab «Новости» (numbers, 10 newest, rewards), letter button, scroll window with seals, auto-open after 6 h play.
 - [Sandbox balance 2026-11-18](project_sandbox_balance_2026_11_18.md) — sandbox tabs filled on the user's pattern, instant build by time, 1 worker for Tax/Diplomacy/Cemetery, ore icon concepts waiting, Android module installed
 - [Playtest 2026-11-18 (phone)](project_pending_2026_11_18.md) — 29 items, all built; FPS not measured
+- [Playtest 2026-11-19 (Pixel)](project_pending_2026_11_19.md) — 27 items: 23 built (not seen); fire compensation, developer gift, rate-us timing, tutorial offer wait for the user

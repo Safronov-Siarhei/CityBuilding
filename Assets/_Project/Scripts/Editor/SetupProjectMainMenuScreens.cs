@@ -35,7 +35,6 @@ namespace CityBuilder.EditorTools
         private const float SmallMenuButton = 94f;
         private const float SmallMenuGap = 26f;
         private const float SmallMenuY = 82f;
-        private static readonly Color BadgeColour = new Color(0.94f, 0.54f, 0.17f);
 
         private static void BuildMainMenu(Transform canvas, Sprite panelSprite)
         {
@@ -256,20 +255,14 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>The orange «!» on a button's top-right (top-left if <paramref name="left"/>), until its place is first opened (MainMenuController).</summary>
+        // the sandbox shop's red dot instead of an orange «!» (the user, 2026-11-19), at the target's top corner
         private static GameObject Badge(Transform target, bool left = false)
         {
-            var badge = CreateImage(target, "Badge", BadgeColour);
-            badge.sprite = SkinSprite("circle_mask");
+            var badge = CreateImage(target, "Badge", Color.white);
+            badge.sprite = ShopSprite("Dot");
             badge.raycastTarget = false;
             var size = ((RectTransform)target).sizeDelta;
-            Anchor(badge.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2((size.x * 0.5f - 14f) * (left ? -1f : 1f), size.y * 0.5f - 14f), new Vector2(56f, 56f));
-            var outline = badge.gameObject.AddComponent<Outline>();
-            outline.effectColor = new Color(0.35f, 0.15f, 0.03f, 0.9f);
-            outline.effectDistance = new Vector2(2f, -2f);
-            var mark = CreateText(badge.transform, "Mark", "!", 40, new Vector2(0f, 1f), new Vector2(56f, 56f), Color.white);
-            mark.font = UiTheme.Heavy;
-            mark.alignment = TextAnchor.MiddleCenter;
-            mark.raycastTarget = false;
+            Anchor(badge.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2((size.x * 0.5f - 12f) * (left ? -1f : 1f), size.y * 0.5f - 12f), new Vector2(40f, 40f));
             return badge.gameObject;
         }
 

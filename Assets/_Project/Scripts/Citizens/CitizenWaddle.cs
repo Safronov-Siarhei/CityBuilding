@@ -102,7 +102,14 @@ namespace CityBuilder.Citizens
             foreach (var t in tool.GetComponentsInChildren<Transform>(true))
             {
                 if (t.name.EndsWith("Swing")) _swings[i] = t;
-                else if (t.name.EndsWith("Catch")) _catch = t.gameObject;
+                else if (t.name.EndsWith("Catch"))
+                {
+                    _catch = t.gameObject;
+                    // the same stray FBX offset as the fire bucket's water (FireManager.Bucket): back onto the Swing
+                    t.localPosition = Vector3.zero;
+                    t.localRotation = Quaternion.identity;
+                    t.localScale = Vector3.one;
+                }
             }
             if (_swings[i] != null) _swingRest[i] = _swings[i].localRotation;
             if (_catch != null) _catch.SetActive(false);

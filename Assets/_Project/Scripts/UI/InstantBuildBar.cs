@@ -10,7 +10,7 @@ namespace CityBuilder.UI
     /// construction (a new one or an upgrade), a round button with a crystal and its price stands LEFT of the
     /// «!» in the focus row (the row centres both); a tap pays instant_build_crystals (1) for every started
     /// instant_build_step_sec (30) of the seconds left -- under 30 s 1, 30-60 s 2, ... (the user, 2026-11-18) -- and the construction
-    /// finishes now. Short of crystals: the shop opens. Every building alike; not in the tutorial.
+    /// finishes now. Short of crystals: the shop opens. Every building alike; not in the tutorial, not in an Invasion run.
     /// </summary>
     public class InstantBuildBar : MonoBehaviour
     {
@@ -34,7 +34,8 @@ namespace CityBuilder.UI
         {
             get
             {
-                if (Tutorial.TutorialMode.IsActive) return null;
+                // not in the tutorial, not in an Invasion run (the user, 2026-11-19: crystals would change the run's balance)
+                if (Tutorial.TutorialMode.IsActive || Invasion.InvasionMode.IsActive) return null;
                 var focus = BuildingFocus.Instance != null && BuildingFocus.Instance.ButtonsShown ? BuildingFocus.Instance.Current : null;
                 return focus != null && !focus.IsBot && focus.Site != null && focus.CurrentHealth > 0 ? focus : null;
             }

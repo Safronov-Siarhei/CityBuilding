@@ -72,3 +72,5 @@
   SFX volume multiplies BuildSound, CombatSound, UiClickSound, the roar, the cutscenes' crowd/horn and OpeningSound's
   non-«mus_» cues; music volume multiplies MusicPlayer and the campaign's music (CityDefence, Capital, MissionOne,
   mus_* cues). A NEW sound source must multiply by one of the two.
+
+**2026-11-19:** the build/upgrade FINISH sounds are off (the user: «бесит»; `ConstructionSite` no longer calls `BuildSound.Built/Upgraded`, the place thud stays); the Invasion wave roar is `BuildSound.WaveRoar` (inv_roar_volume).

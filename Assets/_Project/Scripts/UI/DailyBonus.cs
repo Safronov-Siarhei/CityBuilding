@@ -39,6 +39,10 @@ namespace CityBuilder.UI
 
         public static int Reward(int index)
         {
+            // the very first claim ever is bigger (daily_bonus_first, the user 2026-11-19: «пусть он попробует и поймёт,
+            // что с ними играть легче»); a chain started again later begins with daily_bonus_1
+            if (index == 0 && string.IsNullOrEmpty(Last) && BalanceConfig.Sandbox != null && BalanceConfig.Sandbox.DailyBonusFirst > 0)
+                return BalanceConfig.Sandbox.DailyBonusFirst;
             var list = BalanceConfig.Sandbox != null ? BalanceConfig.Sandbox.DailyBonusCrystals : null;
             return list != null && index >= 0 && index < list.Length ? list[index] : 0;
         }

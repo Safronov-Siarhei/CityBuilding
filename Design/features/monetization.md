@@ -549,3 +549,5 @@ Not checked against the live Play Console -- re-read Google's pages before actin
   the construction's REMAINING seconds -- under 30 s 1 crystal, 30-60 s 2, 60-90 s 3... (`InstantBuildBar.PriceOf`,
   `floor(Remaining / step) + 1`); the button's number follows it as the build runs. Keys on «Здания и постройки»
   rows 45-46 (move_building_crystals moved to 47). Not built in Unity yet.
+
+**2026-11-19 (Pixel playtest):** the very first login reward ever is `daily_bonus_first` 25 crystals (then the chain as before, `DailyBonus.Reward`); shop goods past the stores' ceiling are no longer lost -- `OfferShop.Give` uses `AddOverCapacity` (they lie in the Town Hall = StoreLedger overflow); booster hints never come up while the foot of the screen is in use (a building held, a build tab open, placing, a window, a paused banner) and one up goes away (`BoosterHints.BusyBelow`). Concepts asked by the user, NOT built: compensation after a fire (1/2 of the burnt buildings' restore price) and a «developer's gift» when the town is stuck.

@@ -551,7 +551,7 @@ namespace CityBuilder.Buildings
         }
 
         /// <summary>The gates standing -- few enough to look through when a road is knocked out from under one.</summary>
-        private static readonly List<BuildingInstance> GatesStanding = new List<BuildingInstance>();
+        internal static readonly List<BuildingInstance> GatesStanding = new List<BuildingInstance>();
 
         /// <summary>
         /// This building's footprint as it actually lies on the grid, with X and Z swapped when it

@@ -172,6 +172,8 @@ namespace CityBuilder.UI
                 _columnCheckIn = 0.25f;
                 FollowColumn();
             }
+            // the game is over: nothing more comes in (the user, 2026-11-19: queued notices played out over the defeat window)
+            if (GameOverManager.Instance != null && GameOverManager.Instance.IsGameOver && !GameOverManager.Instance.IsFreeMode) _waiting.Clear();
             while (_waiting.Count > 0 && (maxShown <= 0 || _model.Slots.Count < maxShown)) HandleEventPosted(_waiting.Dequeue());
             var slots = _model.Slots;
             if (slots.Count == 0) return;

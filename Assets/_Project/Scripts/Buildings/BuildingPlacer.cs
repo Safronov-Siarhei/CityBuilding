@@ -297,6 +297,17 @@ namespace CityBuilder.Buildings
             if (!Tutorial.TutorialMode.IsActive) Ships.ShipManager.Instance?.GiveStartScout(hall.transform.position);
         }
 
+        /// <summary>
+        /// The player's ruin of this building stands: the link was built once and has burnt -- it is restored from the
+        /// ruin, never offered again (the user, 2026-11-19: a save with the burnt start stores offered to build them anew).
+        /// </summary>
+        private static bool HasRuinOf(string id)
+        {
+            foreach (var ruin in BuildingRuin.All)
+                if (ruin != null && !ruin.IsBot && ruin.Data != null && ruin.Data.buildingName == id) return true;
+            return false;
+        }
+
         /// <summary>The next link of the start chain into the hand, or -- none left -- the chain's reward (a new game only).</summary>
         private void TryBeginChain()
         {
@@ -310,7 +321,7 @@ namespace CityBuilder.Buildings
             {
                 if (id == BuildingIds.Lighthouse && !archipelago) continue;
                 if (id == BuildingIds.CrystalMine && !Wallet.CrystalMineOwned) continue;
-                if (BuildingInstance.HasAny(id)) continue;
+                if (BuildingInstance.HasAny(id) || HasRuinOf(id)) continue;
                 BuildingData link = null;
                 foreach (var data in availableBuildings)
                     if (data != null && data.buildingName == id) { link = Resolve(data); break; }
@@ -938,6 +949,21 @@ namespace CityBuilder.Buildings
                 }
                 return true;
             }
+            if (data != null && data.isRoad)
+            {
+                // a road may go UNDER a standing gate's way through -- a gate's one cell, a barbican's middle one -- as a
+                // gate may go onto a road (the user, 2026-11-19)
+                var roadNet = RoadNetwork.Instance;
+                for (var x = 0; x < footprint.x; x++)
+                for (var z = 0; z < footprint.y; z++)
+                {
+                    var c = cell + new Vector2Int(x, z);
+                    if (grid.IsAreaFree(c, Vector2Int.one)) continue;
+                    if (IsGatewayOfStandingGate(c) && (roadNet == null || !roadNet.IsRoad(c))) continue;
+                    return false;
+                }
+                return true;
+            }
             if (data == null || !data.isGate) return grid.IsAreaFree(cell, footprint);
 
             // Only the way through may sit on the road; the walls either side need clear ground.
@@ -954,6 +980,14 @@ namespace CityBuilder.Buildings
                 }
             }
             return true;
+        }
+
+        /// <summary>A standing gate's (the player's or the bot's) way-through cell.</summary>
+        private static bool IsGatewayOfStandingGate(Vector2Int c)
+        {
+            foreach (var gate in BuildingInstance.GatesStanding)
+                if (gate != null && BuildingData.GatewayCell(gate.OriginCell, gate.RotatedFootprint()) == c) return true;
+            return false;
         }
 
         /// <summary>A mine fits only exactly over a vein of its own ore that no mine stands on yet (the user, 2026-10-21).</summary>

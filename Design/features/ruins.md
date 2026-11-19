@@ -41,3 +41,5 @@ Status: BUILT 2026-11-05 (look A approved by the user). No tests yet, the user h
 - The user has not seen it; break height (0.30–0.42 of the height) and char strength may need tuning.
 - Where repair (`repair_cost_fraction` 0.4) and restore meet is moot now: a damaged building repairs, a destroyed one restores.
 - Tests: a check in the general run (destroy → ruin → restore/clear, save/load).
+
+**2026-11-19:** «Восстановить» is pressable when short (dimmed): it opens the shop's «Не хватает ресурсов» with the exact shortfall (`RuinCard.Restore`); a player's ruin wins the tap over fertile land / an ore vein (`BuildingSelector.HasBuildingAt` counts ruins); a start-chain link standing as a ruin is not offered again (`BuildingPlacer.HasRuinOf`). Open: a CLEARED ruin of a chain link is offered again for free.

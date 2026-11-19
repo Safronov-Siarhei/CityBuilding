@@ -100,12 +100,12 @@ namespace CityBuilder.Buildings
             {
                 if (!IsUpgrade)
                 {
-                    BuildSound.Built();
+                    // no sound when the timer ends (the user, 2026-11-19: «бесит»); the dust stays
                     Core.PiggyTasks.Built(Building.Data);
                 }
                 else
                 {
-                    BuildSound.Upgraded();
+                    // no chime either (the user, 2026-11-19)
                     Core.PiggyTasks.Report(Core.PiggyTasks.Upgrade);
                     Core.PiggyTasks.ReportMax(Core.PiggyTasks.BuildingLevel, Building.Level);
                 }

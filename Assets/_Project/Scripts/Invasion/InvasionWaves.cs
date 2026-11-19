@@ -185,6 +185,7 @@ namespace CityBuilder.Invasion
             _waveSeconds = 0f;
             Current = Phase.Underway;
             WaveSent?.Invoke(Wave);
+            Buildings.BuildSound.WaveRoar();
             Core.PiggyTasks.ReportMax(Core.PiggyTasks.InvasionWave, Wave);
             EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_inv_wave", Wave, _waveOrcs.Count),
                 EventSeverity.Danger, EventGlyph.Swords, null, _laneStarts[_lastLanes[0]], leader != null ? leader.transform : null));

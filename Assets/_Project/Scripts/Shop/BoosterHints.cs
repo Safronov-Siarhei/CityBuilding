@@ -81,6 +81,21 @@ namespace CityBuilder.Shop
             if (Instance == this) Instance = null;
         }
 
+        private BuildingPlacer _placer;
+        private UI.BuildingCategoryPanel[] _tabs;
+
+        /// <summary>Something stands at the foot of the screen where the banner would come up.</summary>
+        private bool BusyBelow()
+        {
+            if (ModalGate.IsBlocked || Time.timeScale <= 0f) return true;   // a window, a paused banner
+            if (UI.BuildingFocus.Instance != null && UI.BuildingFocus.Instance.Current != null) return true;
+            if (_placer == null) _placer = FindAnyObjectByType<BuildingPlacer>();
+            if (_placer != null && _placer.IsSelecting) return true;
+            if (_tabs == null) _tabs = FindObjectsByType<UI.BuildingCategoryPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var tab in _tabs) if (tab != null && tab.IsOpen) return true;
+            return false;
+        }
+
         /// <summary>A moment the game itself knows of (the hire row opened): offer this booster if the rules allow.</summary>
         public static void Offer(string id)
         {
@@ -95,6 +110,13 @@ namespace CityBuilder.Shop
                 return;
             }
             _play += Time.deltaTime;
+            // the foot of the screen in use (a building held, a build tab open, placing, a window): no banner over it
+            // (the user, 2026-11-19: the offers came up over the bottom-centre controls); one up goes, not as ignored
+            if (BusyBelow())
+            {
+                if (_id != null) Hide(false);
+                return;
+            }
             if (_id != null) Animate();
             _checkIn -= Time.unscaledDeltaTime;
             if (_checkIn > 0f) return;
@@ -193,7 +215,7 @@ namespace CityBuilder.Shop
         {
             var config = Config;
             var def = Boosters.Def(id);
-            if (config == null || def == null || _id != null || !Boosters.Here) return false;
+            if (config == null || def == null || _id != null || !Boosters.Here || BusyBelow()) return false;
             if (_play < config.HintGraceSeconds || OfferShopWindow.IsOpen) return false;
             if (def.durationSeconds > 0f && Boosters.Left(id) > 0f) return false;
             if (_lastShown.TryGetValue(id, out var last) && _play - last < config.HintRepeatSeconds) return false;

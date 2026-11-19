@@ -383,7 +383,9 @@ namespace CityBuilder.Combat
             {
                 _retargetTimer = RetargetIntervalSeconds;
                 Group.ClearFinishedAttackOrder();
-                _target = AcquireTarget();
+                // a fighter keeps the one he picked till it falls (the user, 2026-11-19: defenders and heroes in a run
+                // swung from orc to orc every 0.4 s, the nearest each time, and walked to and fro striking none)
+                _target = KeptTarget() ?? AcquireTarget();
                 // on the way to it, hemmed in by others: a melee fighter cuts down the one at hand
                 // instead of pushing past (the King in a crowd stood not striking, playtest 2026-10-25)
                 _targetBody = BodyRadius(_target);
@@ -459,6 +461,22 @@ namespace CityBuilder.Combat
         /// so a group set to Structures walks past the defenders to the portal, and one set to
         /// Units clears them first.
         /// </summary>
+        /// <summary>
+        /// The target he already has, if he should stay on it: alive, still strikable, no other order given (an attack
+        /// order, a march), and not drawn off too far from his place (1.5 x his engage radius). Null to pick anew.
+        /// </summary>
+        private IDamageTarget KeptTarget()
+        {
+            var t = _target;
+            if (t == null || !t.IsAlive || t.Transform == null || Marching || Group.IsGarrison) return null;
+            if (Group.AttackTarget != null && Group.AttackTarget.IsAlive && Group.AttackTarget != t) return null;
+            if (t is OrcPortal portal && portal.IsShielded) return null;
+            if (!CanStrike(t)) return null;
+            if (Group.AttackTarget == t) return t;
+            if (Pen.width > 0f && !InReachOfPen(t.Transform.position)) return null;
+            return HorizontalDistance(t.Transform.position, Group.SlotPositionFor(this)) <= EngageRadius * 1.5f ? t : null;
+        }
+
         private IDamageTarget AcquireTarget()
         {
             if (Group.AttackTarget != null && Group.AttackTarget.IsAlive && CanStrike(Group.AttackTarget)) return Group.AttackTarget;

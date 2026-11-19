@@ -1631,6 +1631,7 @@ namespace CityBuilder.EditorTools
 
             var holder = new GameObject(name, typeof(RectTransform));
             holder.transform.SetParent(uiRoot, false);
+            holder.AddComponent<HudOverlay>();   // stays while it hides the HUD round it (the user, 2026-11-19)
             StretchFull(holder.GetComponent<RectTransform>());
             var root = new GameObject("Window", typeof(RectTransform));
             root.transform.SetParent(holder.transform, false);

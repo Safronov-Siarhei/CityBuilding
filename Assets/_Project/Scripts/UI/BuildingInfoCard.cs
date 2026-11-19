@@ -84,6 +84,8 @@ namespace CityBuilder.UI
         private static readonly Color BarGood = new Color(0.36f, 0.7f, 0.26f);
         private static readonly Color BarFull = new Color(0.86f, 0.56f, 0.2f);
         private static readonly Color Empty = new Color(0.27f, 0.16f, 0.07f, 0.22f);
+        // the confirm button's light green, white words (the user, 2026-11-19: the dark green read badly; like the game's other green buttons)
+        private static readonly Color ConfirmGreen = new Color(0.45f, 0.75f, 0.35f);
         private const float BodyWidth = 740f;
 
         private enum DialogKind { Upgrade, Repair, Demolish }
@@ -221,9 +223,37 @@ namespace CityBuilder.UI
                 upgradeLock.gameObject.SetActive(!open && (site != null || hasNext));
                 if (site != null) upgradeLock.text = Localization.Format(site.IsUpgrade ? "#building_upgrading" : "#building_constructing", Clock(site.Remaining));
                 else if (hasNext) upgradeLock.text = Localization.Format("#building_upgrade_locked", b.Level + 1);
+                LockLeadsToLab(upgradeLock, site == null && hasNext && !b.NextLevelResearched);
             }
             if (repairButton != null) repairButton.interactable = b.GetRepairCost() != null;
             if (demolishButton != null) demolishButton.interactable = b.CanDemolish;
+        }
+
+        /// <summary>
+        /// «Уровень N ещё не изучен» is pressable (the user, 2026-11-19): the card closes and the Laboratory's window opens on
+        /// that research -- no Laboratory: the way to build one (BuildHints.LeadToResearch). A sandbox thing (BuildHints.Allowed).
+        /// </summary>
+        private void LockLeadsToLab(Text label, bool locked)
+        {
+            if (label == null) return;
+            var button = label.GetComponent<Button>();
+            if (button == null)
+            {
+                button = label.gameObject.AddComponent<Button>();
+                button.transition = Selectable.Transition.None;
+                button.onClick.AddListener(() =>
+                {
+                    var b = _building;
+                    if (b == null || b.Data == null || !BuildHints.Allowed) return;
+                    var topic = Research.ResearchTopic.BuildingLevelId(b.Data.buildingName, b.Level + 1);
+                    owner.Close();
+                    BuildHints.LeadToResearch(topic);
+                });
+            }
+            var on = locked && BuildHints.Allowed;
+            button.enabled = on;
+            label.raycastTarget = on;
+            label.fontStyle = on ? FontStyle.Bold : FontStyle.Normal;
         }
 
         private static string Clock(float seconds)
@@ -487,7 +517,7 @@ namespace CityBuilder.UI
             CostRowBuilder.Build(dialogCostRow, b.GetUpgradeCost(), iconLibrary);
             dialogTime.gameObject.SetActive(true);
             dialogTime.text = Localization.Format("#card_build_time", Clock(b.Data.BuildSeconds(next)));
-            Confirm("#building_upgrade", Good);
+            Confirm("#building_upgrade", ConfirmGreen);
         }
 
         /// <summary>The hammer: the repair's price.</summary>
@@ -505,7 +535,7 @@ namespace CityBuilder.UI
             dialogPriceCaption.text = Localization.Get("#card_price");
             CostRowBuilder.Build(dialogCostRow, b.GetRepairCost(), iconLibrary);
             dialogTime.gameObject.SetActive(false);
-            Confirm("#building_repair", Good);
+            Confirm("#building_repair", ConfirmGreen);
         }
 
         /// <summary>The bin: what comes back, and what is lost (a store's goods, a cemetery's crystals).</summary>
@@ -554,6 +584,13 @@ namespace CityBuilder.UI
         private void Confirm(string key, Color colour)
         {
             dialogConfirmLabel.text = Localization.Get(key);
+            dialogConfirmLabel.color = Color.white;
+            if (dialogConfirmLabel.GetComponent<Outline>() == null)
+            {
+                var edge = dialogConfirmLabel.gameObject.AddComponent<Outline>();
+                edge.effectColor = new Color(0.12f, 0.22f, 0.06f, 0.85f);
+                edge.effectDistance = new Vector2(2f, -2f);
+            }
             if (dialogConfirmImage != null) dialogConfirmImage.color = colour;
             dialog.SetActive(true);
         }
@@ -570,9 +607,22 @@ namespace CityBuilder.UI
             Chip(peopleGlyph, then.maxWorkers - now.maxWorkers);
             var harvest = Mathf.RoundToInt((then.harvestRadius - now.harvestRadius) / Cell);
             Chip(radiusGlyph, Mathf.Max(harvest, then.serviceRadius - now.serviceRadius));
+            // a store: what more it will hold, by resource (the user, 2026-11-19: the Кладовая's upgrade showed only its health)
+            if (iconLibrary == null) return;
+            var shown = 0;
+            foreach (ResourceType type in System.Enum.GetValues(typeof(ResourceType)))
+            {
+                if (shown >= 3 || !StoreLedger.Keeps(type)) continue;   // the plate fits four chips with the heart
+                var more = StoreLedger.CapOf(data.buildingName, type, next) - StoreLedger.CapOf(data.buildingName, type, next - 1);
+                if (more <= 0) continue;
+                Chip(iconLibrary.GetIcon(type), more, Color.white);
+                shown++;
+            }
         }
 
-        private void Chip(Sprite glyph, int amount)
+        private void Chip(Sprite glyph, int amount) => Chip(glyph, amount, new Color(1f, 0.9f, 0.7f));
+
+        private void Chip(Sprite glyph, int amount, Color tint)
         {
             if (amount <= 0) return;
             var plate = NewImage(dialogGains, "Gain", rowSprite, new Color(0.43f, 0.29f, 0.16f, 0.95f));
@@ -580,7 +630,8 @@ namespace CityBuilder.UI
             var layout = plate.gameObject.AddComponent<LayoutElement>();
             layout.preferredWidth = 124f;
             layout.preferredHeight = 48f;
-            var icon = NewImage(plate.transform, "Icon", glyph, new Color(1f, 0.9f, 0.7f));
+            var icon = NewImage(plate.transform, "Icon", glyph, tint);
+            icon.preserveAspect = true;
             icon.rectTransform.anchorMin = icon.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
             icon.rectTransform.anchoredPosition = new Vector2(-32f, 0f);
             icon.rectTransform.sizeDelta = new Vector2(32f, 32f);

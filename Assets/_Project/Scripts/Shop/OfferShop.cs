@@ -221,7 +221,6 @@ namespace CityBuilder.Shop
         private void Give(OfferSlot slot, int index)
         {
             slot.Taken = true;
-            var lost = false;
             foreach (var good in slot.Bundle.goods)
             {
                 if (good.resource == CrystalsResource)
@@ -230,9 +229,10 @@ namespace CityBuilder.Shop
                     continue;
                 }
                 if (!Enum.TryParse<ResourceType>(good.resource, out var type) || ResourceManager.Instance == null) continue;
-                if (ResourceManager.Instance.Add(type, good.amount) < good.amount) lost = true;
+                // bonus goods are never taken away (the user, 2026-11-19): past the stores' ceiling they lie in the
+                // Town Hall (StoreLedger's overflow), spent first
+                ResourceManager.Instance.AddOverCapacity(type, good.amount);
             }
-            if (lost) Feed("#shop_storage_full");
             Given?.Invoke(index, slot.Bundle);
             Changed?.Invoke();
         }

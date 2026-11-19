@@ -149,3 +149,5 @@ EditMode `CitizenManagerTests`, `SettlementTierManagerTests`, `CitizenNamesTests
   did NOTHING in the sandbox -- `HousePeople.SyncCapacity` overwrites the cap every frame with the houses' places only.
   Now the cap = houses' places + `HallPlaces(TownHall)` (citizens_on_build). SandboxRulesTests
   .TheHouses_MakeThePeople_NotTheTownHall checks cap = places + hall and people <= cap (the hall regrows beside a house).
+
+**2026-11-19 (the user):** a worker with nothing to do outside (no tree/rock, no field/shore -- the Laboratory's scientists, offices, a gatherer whose radius is empty) goes INTO his workplace: `CitizenAgent.SetInside` hides his figure when he arrives at the building; any walk (`WalkTo`, `Teleport`) brings him out. Not seen.

@@ -241,3 +241,5 @@ Trap (2026-10-25): `OrcsFightBack_AndAKilledSoldierCostsAPermanentCitizen` faile
 on the Models .blend (every root Soldier*/Siege* object, `-size` boxes skipped) -- re-run after soldiers.py or a
 siege model changes; machines have one model for all levels. A new unit: a row in `ARMY` in
 `Tools/docs/reference.py` + a note in `Design/reference/units.tsv`.
+
+**2026-11-19:** a soldier/hero keeps the target he picked till it falls (`SoldierUnit.KeptTarget`; before, every 0.4 s the nearest one -> to-and-fro in runs). SANDBOX heroes let go on the Town Hall's island (King included) go for an enemy on that island (no islands: within king_guard_radius of the hall) and stroll on after (`Hero.TickDefendHome`). Not seen.

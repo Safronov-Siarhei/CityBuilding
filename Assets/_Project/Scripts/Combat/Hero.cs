@@ -394,6 +394,7 @@ namespace CityBuilder.Combat
             TickReturn();
             TickStroll();
             TickFlee();
+            TickDefendHome();
             if (!Guarding || _unit.Group == null || HoldWhereLeft) return;
 
             _guardScan -= Time.deltaTime;
@@ -499,6 +500,46 @@ namespace CityBuilder.Combat
             if (!_revealing) return;
             CityBuilder.Maps.FogOfWarManager.Instance?.RemoveWalker(transform);
             _revealing = false;
+        }
+
+        private float _homeScan;
+
+        /// <summary>
+        /// The sandbox (the user, 2026-11-19): a hero let go on the Town Hall's island -- the King and the others -- goes for an
+        /// enemy that comes onto it (on a map without islands: within king_guard_radius of the Town Hall), and once it is
+        /// down strolls on where he was. Not while the player holds him or walks him somewhere.
+        /// </summary>
+        private void TickDefendHome()
+        {
+            if (!StrollsWhenLetGo || Guarding || IsFallen || _unit.Group == null || _onMoveOrder) return;
+            _homeScan -= Time.deltaTime;
+            if (_homeScan > 0f) return;
+            _homeScan = GuardScanSeconds;
+            var army = ArmyManager.Instance;
+            if (army != null && army.SelectedGroup == _unit.Group) return;
+            var group = _unit.Group;
+            if (group.AttackTarget != null && group.AttackTarget.IsAlive) return;
+            var hall = Buildings.BuildingInstance.TownHall;
+            if (hall == null) return;
+            var island = Citizens.HousePeople.IslandOf(hall);
+            var radius = BalanceConfig.Instance.KingGuardRadius;
+            var hallAt = hall.transform.position;
+            // he is home himself
+            if (island >= 0 ? Citizens.HousePeople.IslandOf(transform.position) != island
+                            : Flat(transform.position - hallAt).sqrMagnitude > 4f * radius * radius) return;
+            OrcUnit nearest = null;
+            var best = float.MaxValue;
+            foreach (var orc in OrcUnit.All)
+            {
+                if (orc == null || orc.CurrentHealth <= 0) continue;
+                var at = orc.transform.position;
+                if (island >= 0 ? Citizens.HousePeople.IslandOf(at) != island : Flat(at - hallAt).sqrMagnitude > radius * radius) continue;
+                var d = Flat(at - transform.position).sqrMagnitude;
+                if (d >= best) continue;
+                best = d;
+                nearest = orc;
+            }
+            if (nearest != null) group.OrderAttack(nearest);
         }
 
         /// <summary>The enemy nearest the castle among those inside the guard radius, or null.</summary>
