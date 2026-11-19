@@ -120,7 +120,7 @@ SANDBOX ONLY (other modes: no fires at all).
 - Never burn: Road, Square, TownSquare, Moat, Bridge, Well, Castle (town hall), FortifiedTower
   (Бастион), FortifiedGate (Барбакан), Lighthouse, Cemetery, Quarry, the mines. Fence, Gate and Tower
   burn only at levels 1-2 (stone from 3). EVERYTHING ELSE burns, Flag and decor (tree, bush, garden) too.
-- Burning: 1.5% of max hp per second (~65 s to nothing untended); a fire STRENGTH 0..100 grows
+- Burning: 0.7% of max hp per second (~150 s to nothing untended; the user 2026-11-19: was 1.5% ~73 s, too short for a brigade with several fires); a fire STRENGTH 0..100 grows
   +2/s, damage scales with it; each bucket takes 25 off; 0 = out. Destroyed -> ruins (existing rule).
 - Orc raids: 1-2 TORCHBEARERS per raid, only from the player's Town Hall level 2: run to the nearest
   burnable building, 3 s to light it (killable meanwhile), then the next (variant A). Model to approve.
