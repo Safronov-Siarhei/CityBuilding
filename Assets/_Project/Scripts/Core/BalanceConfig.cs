@@ -800,6 +800,12 @@ namespace CityBuilder.Core
         [SerializeField] private int cemeteryDemolishCrystals = 50;
         [SerializeField] private float plagueDeathShare = 0.1f;
         [SerializeField] private float plagueWindowSeconds = 300f;
+        // a small island never gets the plague (the user, 2026-11-19: one death on a 10-person island started it)
+        [SerializeField] private int plagueMinResidents = 30;
+        [SerializeField] private int plagueMinDeaths = 7;
+        // a small island's sick live longer without a bed (the user, 2026-11-19)
+        [SerializeField] private int infirmarySmallIsland = 30;
+        [SerializeField] private float infirmaryWaitSmallSeconds = 150f;
         [SerializeField] private float plagueBannerShare = 0.4f;
         [SerializeField] private float plagueCalmSeconds = 180f;
         [SerializeField] private float plagueShieldSeconds = 420f;
@@ -1326,6 +1332,10 @@ namespace CityBuilder.Core
         public int CemeteryDemolishCrystals => cemeteryDemolishCrystals;
         public float PlagueDeathShare => plagueDeathShare;
         public float PlagueWindowSeconds => plagueWindowSeconds;
+        public int PlagueMinResidents => plagueMinResidents;
+        public int PlagueMinDeaths => plagueMinDeaths;
+        public int InfirmarySmallIsland => infirmarySmallIsland;
+        public float InfirmaryWaitSmallSeconds => infirmaryWaitSmallSeconds;
         public float PlagueBannerShare => plagueBannerShare;
         public float PlagueCalmSeconds => plagueCalmSeconds;
         /// <summary>After the banner ended a plague: no plague breaks out anywhere for so long (the user, 2026-11-13: 7 minutes).</summary>
@@ -2655,6 +2665,10 @@ namespace CityBuilder.Core
             cemeteryDemolishCrystals = (int)Read(economy, "cemetery_demolish_crystals", cemeteryDemolishCrystals);
             plagueDeathShare = Read(economy, "plague_death_share", plagueDeathShare);
             plagueWindowSeconds = Read(economy, "plague_window_sec", plagueWindowSeconds);
+            plagueMinResidents = Mathf.RoundToInt(Read(economy, "plague_min_residents", plagueMinResidents));
+            plagueMinDeaths = Mathf.RoundToInt(Read(economy, "plague_min_deaths", plagueMinDeaths));
+            infirmarySmallIsland = Mathf.RoundToInt(Read(economy, "infirmary_small_island", infirmarySmallIsland));
+            infirmaryWaitSmallSeconds = Read(economy, "infirmary_wait_small_sec", infirmaryWaitSmallSeconds);
             plagueBannerShare = Read(economy, "plague_banner_share", plagueBannerShare);
             plagueCalmSeconds = Read(economy, "plague_calm_sec", plagueCalmSeconds);
             plagueShieldSeconds = Read(economy, "plague_shield_sec", plagueShieldSeconds);

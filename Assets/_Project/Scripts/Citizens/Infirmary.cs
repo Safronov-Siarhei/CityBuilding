@@ -154,7 +154,7 @@ namespace CityBuilder.Citizens
         {
             if (!Active || !IsHealer(building)) return null;
             var taken = Instance.InBed(building, Instance._scratch).Count;
-            return Localization.Format("#healer_card", taken, BedsOf(building), Mathf.RoundToInt(TreatSeconds), Mathf.RoundToInt(WaitSeconds));
+            return Localization.Format("#healer_card", taken, BedsOf(building), Mathf.RoundToInt(TreatSeconds), Mathf.RoundToInt(WaitFor(HousePeople.IslandOf(building))));
         }
 
         // ---------------------------------------------------------------- the frame
@@ -216,8 +216,9 @@ namespace CityBuilder.Citizens
                 }
                 else
                 {
-                    p.Waited += dt;
-                    if (p.Waited >= WaitSeconds)
+                    // the clock stands while a healer is going up on his island (the user, 2026-11-19)
+                    if (!HealerRising(p.Island)) p.Waited += dt;
+                    if (p.Waited >= WaitFor(p.Island))
                     {
                         Die(p, citizens);
                         continue;
@@ -305,6 +306,24 @@ namespace CityBuilder.Citizens
             p.Home = figure.Home;
             p.Island = figure.Home != null ? HousePeople.IslandOf(figure.Home) : HousePeople.IslandOf(figure.transform.position);
             if (p.Bed != null) figure.MoveTo(Door(p.Bed));
+        }
+
+        /// <summary>How long a sick resident of this island lives without a bed: longer on a small island
+        /// (under infirmary_small_island residents, the user 2026-11-19), so a young town has time to build a healer.</summary>
+        private static float WaitFor(int island)
+        {
+            var config = BalanceConfig.Instance;
+            var residents = HousePeople.Instance != null ? HousePeople.Instance.CitizensOn(island) : 0;
+            return residents < config.InfirmarySmallIsland ? Mathf.Max(WaitSeconds, config.InfirmaryWaitSmallSeconds) : WaitSeconds;
+        }
+
+        /// <summary>A healer being built (not upgraded) on this island.</summary>
+        private bool HealerRising(int island)
+        {
+            foreach (var healer in _healers)
+                if (healer != null && healer.Site != null && !healer.Site.IsUpgrade && HousePeople.Same(HousePeople.IslandOf(healer), island))
+                    return true;
+            return false;
         }
 
         private void CollectHealers()
@@ -449,7 +468,7 @@ namespace CityBuilder.Citizens
             }
             if (!p.Mark.activeSelf) p.Mark.SetActive(true);
             p.Block.SetFloat("_Size", MarkSize);
-            p.Block.SetFloat("_Ring", p.Bed == null ? 1f - Mathf.Clamp01(p.Waited / WaitSeconds) : -1f);
+            p.Block.SetFloat("_Ring", p.Bed == null ? 1f - Mathf.Clamp01(p.Waited / WaitFor(p.Island)) : -1f);
             p.Mark.GetComponent<MeshRenderer>().SetPropertyBlock(p.Block);
         }
 

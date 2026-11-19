@@ -26,6 +26,9 @@ The user's rules, SANDBOX ONLY (other modes keep the radius healer above):
   treatment counts from then (he is on the healer's list). In a bed = never dies. Without a bed a sick resident lives 30 s (the walk counts); a bed freed in time
   goes to whoever fell ill FIRST. No healer on the island = he dies.
 - Treatment 60 s per patient, in queue order; as many at once as healers assigned.
+- **Easier for a young town (the user, 2026-11-19):** on an island with fewer than `infirmary_small_island` 30 residents a
+  sick resident without a bed lives `infirmary_wait_small_sec` 150 s (not `infirmary_wait_sec` 30); and while a healer is
+  being BUILT on his island (not upgraded) his clock stands (`Infirmary.WaitFor`, `HealerRising`; the card shows the island's wait).
 - A healer with no worker takes nobody (no-worker mark + notice «Назначьте рабочего лечебницы»);
   beds short: notice «На острове не хватает мест в лечебнице».
 - Bottom bar on tap: 6 bed slots (empty = a plus / portrait / portrait in a 60 s ring; locked «Ур. N»), no captions under them; sickness mark = a GREEN SKULL + «!» 7th. No bar over the building.
@@ -63,6 +66,9 @@ The user's rules, SANDBOX ONLY (other modes keep the radius healer above):
 
 ## Plague + Cemetery -- DECIDED 2026-11-13 (the user), BUILT 2026-11-13 (not seen, untested)
 Plague (sandbox, per island, never spreads to other islands) -- `Citizens/Plague.cs`:
+- **Small islands spared (the user, 2026-11-19):** no outbreak unless the island had at least `plague_min_residents` 30
+  people (living + this window's dead) AND at least `plague_min_deaths` 7 illness deaths in the window -- before this one
+  death on a 10-person island started a plague and stopped its houses.
 - Starts when illness killed `plague_death_share` 10% of an island's people within `plague_window_sec`
   300 (Infirmary.Die -> Plague.RecordIllnessDeath).
 - While it lasts the island's houses make NO new residents (HousePeople.Update); the rest of the harm

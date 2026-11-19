@@ -15,3 +15,5 @@ Plague, cemetery and bodies of the dead: decided and BUILT 2026-11-13 (setup gre
 
 **Why:** the user's design; [[project-sandbox-healer-v2]] is the infirmary half of the same system.
 **How to apply:** read the hazards card before touching illness/plague/cemetery.
+
+**2026-11-19 (the user):** small islands spared -- plague needs >= 30 people AND >= 7 illness deaths in the window; on islands under 30 residents a sick resident without a bed lives 150 s, and his clock stands while a healer is being built there. Sheet tab «Жители и настроение» synced. Note: UNITY_EXE in this shell pointed at the user's other project's Unity 6000.1 -- run setup with $env:UNITY_EXE = D:\unity\6000.5.4f1-x86_64\Editor\Unity.exe.

@@ -87,6 +87,9 @@ namespace CityBuilder.Citizens
             var residents = HousePeople.Instance != null ? HousePeople.Instance.CitizensOn(island) : 0;
             // of the people the island had over the window: the living and these dead
             var people = residents + times.Count;
+            // a small or young island is spared (the user, 2026-11-19): at least plague_min_residents people and
+            // plague_min_deaths deaths in the window, besides the share
+            if (people < config.PlagueMinResidents || times.Count < config.PlagueMinDeaths) return;
             if (times.Count >= config.PlagueDeathShare * Mathf.Max(1, people)) BreakOut(island, residents);
         }
 
