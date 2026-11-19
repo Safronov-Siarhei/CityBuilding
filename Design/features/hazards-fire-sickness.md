@@ -116,7 +116,7 @@ SANDBOX ONLY (other modes: no fires at all).
   BANNER needs `fire_banner_min_buildings` 20 buildings (standing + burnt in the window) AND `fire_banner_min_burnt` 3
   burnt, besides the 15% share -- before, one burnt house in a town of six paused the game.
 - Spread ONLY to a burnable building TOUCHING it (no gap); a 1-cell gap stops it. Every 10 s of
-  burning, 30% per touching neighbour.
+  burning, 15% per touching neighbour (was 30%; halved 2026-11-19 with the slower burn so a fire spreads as often as before).
 - Never burn: Road, Square, TownSquare, Moat, Bridge, Well, Castle (town hall), FortifiedTower
   (Бастион), FortifiedGate (Барбакан), Lighthouse, Cemetery, Quarry, the mines. Fence, Gate and Tower
   burn only at levels 1-2 (stone from 3). EVERYTHING ELSE burns, Flag and decor (tree, bush, garden) too.
