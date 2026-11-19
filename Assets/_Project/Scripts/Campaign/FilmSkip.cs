@@ -43,6 +43,11 @@ namespace CityBuilder.Campaign
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1280f, 720f);
             scaler.matchWidthOrHeight = 1f;
+            // a tap needs an EventSystem with the Input System's module: a scene that came without one
+            // (the user's Windows build 2026-11-19: «кнопка пропустить не работает») gets one here
+            if (UnityEngine.EventSystems.EventSystem.current == null
+                && Object.FindAnyObjectByType<UnityEngine.EventSystems.EventSystem>() == null)
+                new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
             var skip = go.AddComponent<FilmSkip>();
             skip._director = director;
             skip.Build(go.transform);
@@ -98,6 +103,11 @@ namespace CityBuilder.Campaign
             var show = !LoadingScreen.Busy && _director.Playing;
             _button.alpha = Mathf.MoveTowards(_button.alpha, show ? 1f : 0f, Time.unscaledDeltaTime * 4f);
             _button.blocksRaycasts = show;
+            // on a computer the keyboard skips too: Escape, Space or Enter while the button shows
+            var kb = UnityEngine.InputSystem.Keyboard.current;
+            if (show && _button.alpha > 0.5f && kb != null
+                && (kb.escapeKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame))
+                Skip();
         }
 
         private void OnDestroy() => FilmShowing = false;
@@ -106,6 +116,7 @@ namespace CityBuilder.Campaign
         {
             if (_skipping || _director == null || !_director.Playing) return;
             _skipping = true;
+            Debug.Log("[FilmSkip] skip");
             _button.alpha = 0f;
             _button.blocksRaycasts = false;
             StartCoroutine(Run());

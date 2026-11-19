@@ -62,11 +62,11 @@ namespace CityBuilder.EditorTools
             var offers = MenuTextButton(main, "OffersButton", "plaque", "#menu_offers", HudInk.OnMenuPlaque, Vector2.zero, new Vector2(440f, 110f), 38);
             Anchor((RectTransform)offers.transform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 195f), new Vector2(440f, 110f));
             ShopStall(offers.transform);
-            shopBadges.Add(Badge(offers.transform, left: true));
+            shopBadges.Add(Badge(offers.transform));
             var discord = BrandCorner(main, "DiscordButton", "Discord", new Vector2(0.5f, 0f), new Vector2(-340f, 120f), CornerButton, DiscordColour);
-            discordBadges.Add(Badge(discord.transform));
+            discordBadges.Add(Badge(discord.transform, round: true));
             var youTube = BrandCorner(main, "YouTubeButton", "YouTube", new Vector2(0.5f, 0f), new Vector2(340f, 120f), CornerButton, YouTubeColour);
-            youTubeBadges.Add(Badge(youTube.transform));
+            youTubeBadges.Add(Badge(youTube.transform, round: true));
             // the game's name over the village (concept 1, the user 2026-11-17: gold letters, a dark rim, a soft
             // shadow; Tools/ui/main_menu_village_mockup.py draws it), at the mock-up's place and size
             var logo = CreateImage(main, "Logo", Color.white);
@@ -88,9 +88,9 @@ namespace CityBuilder.EditorTools
             var modesBack = Corner(modes, "BackButton", "Back", new Vector2(0f, 1f), new Vector2(CornerInset, -CornerInset), CornerButton);
             var modesSettings = Corner(modes, "SettingsButton", "Settings", new Vector2(1f, 1f), new Vector2(-CornerInset, -CornerInset), CornerButton);
             var modesDiscord = BrandCorner(modes, "DiscordButton", "Discord", new Vector2(0f, 0f), new Vector2(CornerInset, CornerInset), CornerButton, DiscordColour);
-            discordBadges.Add(Badge(modesDiscord.transform));
+            discordBadges.Add(Badge(modesDiscord.transform, round: true));
             var modesYouTube = BrandCorner(modes, "YouTubeButton", "YouTube", new Vector2(1f, 0f), new Vector2(-CornerInset, CornerInset), CornerButton, YouTubeColour);
-            youTubeBadges.Add(Badge(modesYouTube.transform));
+            youTubeBadges.Add(Badge(modesYouTube.transform, round: true));
             // the hall of banners (the user, 2026-11-10, «Зал знамён»): Tutorial, Sandbox, Invasion,
             // Campaign, drawn in the HUD's Classic kit by Tools/ui/make_mode_banners.py
             BuildModeBanners(modes, controller);
@@ -194,7 +194,7 @@ namespace CityBuilder.EditorTools
             var dot = CreateImage(button.transform, "Dot", new Color(0.86f, 0.16f, 0.13f));
             dot.sprite = SkinSprite("circle_mask");
             dot.raycastTarget = false;
-            Anchor(dot.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(size * 0.5f - 12f, size * 0.5f - 12f), new Vector2(30f, 30f));
+            Anchor(dot.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(size * 0.35f, size * 0.35f), new Vector2(30f, 30f));   // on the ring, not the empty corner
             var rim = dot.gameObject.AddComponent<Outline>();
             rim.effectColor = Color.white;
             rim.effectDistance = new Vector2(3f, -3f);
@@ -256,13 +256,17 @@ namespace CityBuilder.EditorTools
 
         /// <summary>The orange «!» on a button's top-right (top-left if <paramref name="left"/>), until its place is first opened (MainMenuController).</summary>
         // the sandbox shop's red dot instead of an orange «!» (the user, 2026-11-19), at the target's top corner
-        private static GameObject Badge(Transform target, bool left = false)
+        // a ROUND button's dot sits ON its ring at 45 degrees, not at the square's empty corner (the user, 2026-11-19:
+        // «красные пимпы не на кнопке»); the shop plaque's on its top-right (it was on the left, the wrong side)
+        private static GameObject Badge(Transform target, bool left = false, bool round = false)
         {
             var badge = CreateImage(target, "Badge", Color.white);
             badge.sprite = ShopSprite("Dot");
             badge.raycastTarget = false;
             var size = ((RectTransform)target).sizeDelta;
-            Anchor(badge.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2((size.x * 0.5f - 12f) * (left ? -1f : 1f), size.y * 0.5f - 12f), new Vector2(40f, 40f));
+            var at = round ? new Vector2(size.x * 0.35f, size.y * 0.35f) : new Vector2(size.x * 0.5f - 12f, size.y * 0.5f - 12f);
+            if (left) at.x = -at.x;
+            Anchor(badge.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), at, new Vector2(40f, 40f));
             return badge.gameObject;
         }
 

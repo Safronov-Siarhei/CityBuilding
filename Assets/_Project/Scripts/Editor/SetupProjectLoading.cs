@@ -73,11 +73,11 @@ namespace CityBuilder.EditorTools
             ship.sprite = LoadingArt("Ship");
             ship.raycastTarget = false;
             // the sprite is 340 x 240 with its waterline 30 px up at x 160 (loading_maps.py ship_sprite)
-            Anchor(ship.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(160f / 340f, 30f / 240f), Vector2.zero, new Vector2(204f, 144f));
+            Anchor(ship.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(160f / 340f, 30f / 240f), Vector2.zero, new Vector2(122f, 86f));   // 0.6 of the old 204x144: it sailed under the tip (the user, 2026-11-19)
 
             // ---- the tip, in ink over the sea above the course, a paper rim so it reads over land too
             var tip = CreateText(root.transform, "Tip", string.Empty, 34, Vector2.zero, new Vector2(1600f, 64f), UiTheme.Ink);
-            Anchor(tip.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 196f), new Vector2(1600f, 64f));
+            Anchor(tip.rectTransform, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 212f), new Vector2(1600f, 64f));
             tip.font = UiTheme.Bold;
             tip.resizeTextForBestFit = true;
             tip.resizeTextMinSize = 22;

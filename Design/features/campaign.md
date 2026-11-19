@@ -1120,3 +1120,5 @@ Commands:
   - Not built yet: the route past the village (TRAP: the film's tree ring at r 48-93 covers where the wheat field goes -- the south sector must be cleared), orcs that chase/catch, checkpoints, the bridge/mage scene, the gates. Not seen on a phone. New models (renders first): tall wheat, forest trees/bushes/fallen tree, river + bridge, town wall + gate + houses, the mage.
 - The video: the user chose «Сначала в Blender» (2026-11-10). The film is approved in Blender first and then moved into Unity.
 - The level structure beyond mission 1.
+
+**2026-11-19 (Windows playtest):** the film's subtitle had an Outline AND a Shadow (the Shadow copied the outline's four copies 3-4 px off = a doubled shadow) -> one thin Outline (black 0.8, 1.2 px; `SetupProjectCampaign` «Line»). «Пропустить» did not respond on Windows (cause not proven): `FilmSkip.Attach` now makes an EventSystem + InputSystemUIInputModule if the scene has none, Esc/Space/Enter skip while the button shows, and a tap logs `[FilmSkip] skip` -- look for it in Player.log if it fails again. The film's missing houses were the Windows PC quality level (build-and-test card).

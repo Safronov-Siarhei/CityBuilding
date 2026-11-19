@@ -177,7 +177,7 @@ namespace CityBuilder.Cheats
             Header("Лагеря");
             if (camps.Count == 0)
             {
-                Label("Лагерей нет: поставьте Ратушу.");
+                Label("Лагерей нет: поставьте Замок.");
                 return;
             }
             _campIndex = Mathf.Clamp(_campIndex, 0, camps.Count - 1);

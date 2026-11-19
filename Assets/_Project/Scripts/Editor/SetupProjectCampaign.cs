@@ -135,7 +135,7 @@ namespace CityBuilder.EditorTools
             scaler.matchWidthOrHeight = 1f;
             // the line at the bottom middle, white with a soft shadow, kept to the middle half of the
             // screen so a long line wraps instead of running edge to edge (the user, 2026-11-11)
-            var textGO = new GameObject("Line", typeof(RectTransform), typeof(Text), typeof(Outline), typeof(Shadow));
+            var textGO = new GameObject("Line", typeof(RectTransform), typeof(Text), typeof(Outline));
             textGO.transform.SetParent(canvasGO.transform, false);
             var rect = (RectTransform)textGO.transform;
             rect.anchorMin = new Vector2(0.22f, 0f);
@@ -151,12 +151,11 @@ namespace CityBuilder.EditorTools
             line.supportRichText = true;
             line.horizontalOverflow = HorizontalWrapMode.Wrap;
             line.raycastTarget = false;
+            // ONE thin dark outline: an Outline under a Shadow copied the outline's four copies a second
+            // time 3-4 px off, which read as a doubled shadow (the user, 2026-11-19)
             var outline = textGO.GetComponent<Outline>();
-            outline.effectColor = new Color(0f, 0f, 0f, 0.55f);
-            outline.effectDistance = new Vector2(1.5f, -1.5f);
-            var shadow = textGO.GetComponent<Shadow>();
-            shadow.effectColor = new Color(0f, 0f, 0f, 0.7f);
-            shadow.effectDistance = new Vector2(3f, -4f);
+            outline.effectColor = new Color(0f, 0f, 0f, 0.8f);
+            outline.effectDistance = new Vector2(1.2f, -1.2f);
 
             // the title over the first wide shot
             var titleGO = new GameObject("Title", typeof(RectTransform), typeof(Text), typeof(Outline));

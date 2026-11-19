@@ -93,7 +93,7 @@ namespace CityBuilder.Cheats
             {
                 // The portal only appears once the Town Hall is placed (see OrcRaidManager), so
                 // this is the expected message when cheating before the game has really started.
-                Debug.LogWarning("OrcSpawnCheat: на карте нет ни одного портала. Портал появляется после постановки Ратуши.");
+                Debug.LogWarning("OrcSpawnCheat: на карте нет ни одного портала. Портал появляется после постановки Замка.");
                 position = default;
                 return false;
             }
