@@ -205,4 +205,4 @@ EditMode `SicknessAndFireTests`; PlayMode `HazardTests`.
   - Episode = burn-downs each within `fire_banner_window_sec` of the one before (`FireManager._episode`, `Compensation()`).
   - Paid in `EndByBanner` via AddOverCapacity, log `#log_fire_comp`.
 - In the game for now: a text line under the banner's words, `#fire_banner_comp` «+ на отстройку: {0}» (words), with the text auto-fitting (`PauseBanner` best fit).
-- Mock-up of the wanted look: `Design/ui/Fire_Banner_Comp.png` — a plaque «+ на отстройку:» with numbers and resource icons under the text. WAITING for the user's approval; then the plaque gets built in the banner prefab.
+- Mock-up of the wanted look (the user picked variant 1, 2026-11-19): `Design/ui/Fire_Banner_Comp.png` — under the text a plaque, «+ на отстройку:» on its own line, then the numbers and resource icons 4 to a row, wrapping (up to 7 kinds: wood, stone, coins, the three bars...). WAITING for the user's approval; then the plaque gets built in the banner prefab.
