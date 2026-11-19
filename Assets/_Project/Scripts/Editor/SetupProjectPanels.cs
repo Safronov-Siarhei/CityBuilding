@@ -1720,6 +1720,33 @@ namespace CityBuilder.EditorTools
             so.FindProperty("adLabel").objectReferenceValue = adLabel;
             so.FindProperty("crystalsButton").objectReferenceValue = pay;
             so.FindProperty("crystalsLabel").objectReferenceValue = payLabel;
+            if (banner is FireBanner)
+            {
+                // the compensation plaque (the user approved Design/ui/Fire_Banner_Comp.png, 2026-11-19): under the words,
+                // its top at y 456 of the reference; FireBanner.OnShown sizes it, fills it and moves the words up to 384..446
+                var plaque = CreateImage(window, "Compensation", new Color(0.91f, 0.83f, 0.65f));
+                plaque.sprite = SkinSprite("card");
+                plaque.type = Image.Type.Sliced;
+                plaque.raycastTarget = false;
+                var rim = plaque.gameObject.AddComponent<Outline>();
+                rim.effectColor = new Color(0.69f, 0.55f, 0.31f);
+                rim.effectDistance = new Vector2(3f, -3f);
+                Place(plaque.rectTransform, new[] { 760f, 456f, 1160f, 578f });
+                var compLabel = Words(plaque.transform, "Label", "#fire_banner_comp", 26, UiTheme.Bold, new Color(0.24f, 0.43f, 0.1f));
+                Object.DestroyImmediate(compLabel.GetComponent<LocalizedText>());   // FireBanner writes it
+                compLabel.alignment = TextAnchor.MiddleCenter;
+                compLabel.horizontalOverflow = HorizontalWrapMode.Overflow;
+                compLabel.rectTransform.anchorMin = compLabel.rectTransform.anchorMax = compLabel.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                compLabel.rectTransform.sizeDelta = new Vector2(400f, 40f);
+                plaque.gameObject.SetActive(false);
+                float[] with = { 690f, 384f, 1230f, 446f };
+                so.FindProperty("compPlaque").objectReferenceValue = plaque.rectTransform;
+                so.FindProperty("compLabel").objectReferenceValue = compLabel;
+                so.FindProperty("iconLibrary").objectReferenceValue = ShopIcons();
+                so.FindProperty("bodyRect").objectReferenceValue = body.rectTransform;
+                so.FindProperty("bodyPosWithComp").vector2Value = new Vector2((with[0] + with[2]) / 2f - refW / 2f, refH / 2f - (with[1] + with[3]) / 2f);
+                so.FindProperty("bodySizeWithComp").vector2Value = new Vector2(with[2] - with[0], with[3] - with[1]);
+            }
             so.ApplyModifiedPropertiesWithoutUndo();
             UnityEventTools.AddPersistentListener(ad.onClick, banner.WatchAd);
             UnityEventTools.AddPersistentListener(pay.onClick, banner.PayCrystals);

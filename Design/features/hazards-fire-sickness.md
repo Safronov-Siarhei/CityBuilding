@@ -204,5 +204,9 @@ EditMode `SicknessAndFireTests`; PlayMode `HazardTests`.
 - The «Пожар!» banner, once paid for (ad or crystals), also gives back `fire_comp_share` 0.5 of the restore price (`BuildingRuin.RestoreCostOf`) of every building THIS fire took down.
   - Episode = burn-downs each within `fire_banner_window_sec` of the one before (`FireManager._episode`, `Compensation()`).
   - Paid in `EndByBanner` via AddOverCapacity, log `#log_fire_comp`.
-- In the game for now: a text line under the banner's words, `#fire_banner_comp` «+ на отстройку: {0}» (words), with the text auto-fitting (`PauseBanner` best fit).
+- In the game: the PLAQUE (mock-up APPROVED «Утверждаю», 2026-11-19).
+  - `SetupProjectPanels.BuildDisasterBanner` builds an empty «Compensation» plaque for the FireBanner only: card sprite tinted, outline, top at y 456 of the reference.
+  - `FireBanner.OnShown` fills it: the label = `#fire_banner_comp` formatted empty; then the numbers + `ResourceIconLibrary` icons, 4 to a row, wrapping.
+  - The plaque grows down from its top, and the banner's words move up to 384..446 while it shows.
+  - No compensation: no plaque, and the words stay where they were.
 - Mock-up of the wanted look (the user picked variant 1, 2026-11-19): `Design/ui/Fire_Banner_Comp.png` — under the text a plaque, «+ на отстройку:» on its own line, then the numbers and resource icons 4 to a row, wrapping (up to 7 kinds: wood, stone, coins, the three bars...). WAITING for the user's approval; then the plaque gets built in the banner prefab.

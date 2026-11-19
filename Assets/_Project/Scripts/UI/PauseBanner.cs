@@ -63,8 +63,12 @@ namespace CityBuilder.UI
             root.transform.SetAsLastSibling();
             // the HUD round it goes (the user, 2026-11-19: the fire banner left the buttons and an offer over it)
             HudHider.Instance?.Hide(this);
+            OnShown();
             Refresh();
         }
+
+        /// <summary>Just put up (the game already paused): a banner lays out its extras here.</summary>
+        protected virtual void OnShown() { }
 
         private void Refresh()
         {

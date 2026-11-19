@@ -25,10 +25,12 @@ The user's Pixel playtest of 2026-11-19 had 27 items. They first sent the list, 
   - Idle workers are hidden inside.
   - A road can go under a gate.
 
-- 26 (rate-us timing) DONE in the code: never in a run or the tutorial, pauses the game, sandbox keeps off plague/fire (+5 min), hunger, people leaving, >10% buildings lost in 2 min; NOT through setup yet.
+- 26 (rate-us timing) DONE in the code: never in a run or the tutorial, pauses the game, sandbox keeps off plague/fire (+5 min), hunger, people leaving, >10% buildings lost in 2 min; through setup 2026-11-19.
+
+- 15 DONE: the fire banner also pays 1/2 of the burnt buildings' restore price; icon plaque (mock-up approved) BUILT, setup x2 green, not seen.
+- 26 went through setup too.
 
 **WAITING for the user:**
-- 15: the EXISTING fire banner also pays 1/2 of the burnt buildings' restore price (the user's meaning) -- logic in the code (text line); mock-up Design/ui/Fire_Banner_Comp.png (icon plaque) waits for approval.
 - 17: «подарок разработчика» — concept of the conditions and the banner.
 - 27: why the tutorial offer did not show — probably the tutorial was already won on the Pixel.
 
