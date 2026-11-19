@@ -551,3 +551,15 @@ Not checked against the live Play Console -- re-read Google's pages before actin
   rows 45-46 (move_building_crystals moved to 47). Not built in Unity yet.
 
 **2026-11-19 (Pixel playtest):** the very first login reward ever is `daily_bonus_first` 25 crystals (then the chain as before, `DailyBonus.Reward`); shop goods past the stores' ceiling are no longer lost -- `OfferShop.Give` uses `AddOverCapacity` (they lie in the Town Hall = StoreLedger overflow); booster hints never come up while the foot of the screen is in use (a building held, a build tab open, placing, a window, a paused banner) and one up goes away (`BoosterHints.BusyBelow`). Concepts asked by the user, NOT built: compensation after a fire (1/2 of the burnt buildings' restore price) and a «developer's gift» when the town is stuck.
+
+**«Подарок от разработчиков» (the user liked the plan, 2026-11-19), CONCEPT drawn, waiting for approval; nothing built:**
+- Rules (proposed, the user agreed to the plan): every 30 s the sandbox checks whether the town is STUCK:
+  - no store standing;
+  - or food at 0 and no food building;
+  - or wood/stone short of the cheapest needed building and neither growing for 2 min.
+- Held for 2 min -> a free banner, the game paused: a set to climb out (restore a store, a Sawmill + Quarry, some food); goods past the cap go to the Town Hall.
+- Limits: at most once per 2 h of play, at most 3 per world. Numbers to the sheet.
+- Mock-up `Design/ui/DevGift_Banner.png` (`Tools/ui/dev_gift_concept.py`, built like the plague/fire/tutorial banners):
+  - golden ribbon «Подарок!», a warm field of gift boxes + resources, the King and the Queen at the sides;
+  - «Тяжёлые времена? Мы поможем отстроиться!», a plaque «Подарок от разработчиков:» with number + icon 4 to a row;
+  - one green «Забрать».

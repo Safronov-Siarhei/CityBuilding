@@ -31,8 +31,8 @@ The user's Pixel playtest of 2026-11-19 had 27 items. They first sent the list, 
 - 26 went through setup too.
 
 **WAITING for the user:**
-- 17: «подарок разработчика» — concept of the conditions and the banner.
-- 27: why the tutorial offer did not show — probably the tutorial was already won on the Pixel.
+- 17: «подарок разработчика» — the user liked the plan; mock-up Design/ui/DevGift_Banner.png sent, waiting for approval.
+- 27 CLOSED: the user said leave the tutorial offer as it is.
 
 **Open:**
 - Quarry harvest_radius_5: the sheet says 14 (the user fixed it, or my first read caught it mid-edit). sandbox.csv re-pulled with 14; BalanceConfig.asset still holds 55 until the next setup.
