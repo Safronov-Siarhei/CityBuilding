@@ -103,6 +103,8 @@ namespace CityBuilder.Saving
                 // a new world takes the sandbox screen's settings (the defaults for every other game)
                 Core.WorldSettings.Current = GameSessionIntent.NewGameWorld != null ? GameSessionIntent.NewGameWorld.Clone() : new Core.WorldSettings();
                 Tutorial.TutorialOffer.Clock = 0f;
+                UI.DevGiftBanner.Count = 0;
+                UI.DevGiftBanner.Wait = 0f;
                 GameSessionIntent.NewGameWorld = null;
                 Dungeon.DungeonRecord.Load(null);
                 Maps.Archipelago.TideCaches.LoadLooted(null);
@@ -113,6 +115,8 @@ namespace CityBuilder.Saving
             GameSessionIntent.NewGameWorld = null;
             Core.WorldSettings.Current = _pendingLoad?.worldSettings != null ? _pendingLoad.worldSettings.Clone() : new Core.WorldSettings();
             Tutorial.TutorialOffer.Clock = _pendingLoad != null ? _pendingLoad.tutorialOfferClock : -1f;
+            UI.DevGiftBanner.Count = _pendingLoad != null ? _pendingLoad.devGiftCount : 0;
+            UI.DevGiftBanner.Wait = _pendingLoad != null ? _pendingLoad.devGiftWait : 0f;
             if (_pendingLoad == null) return;
             Dungeon.DungeonRecord.Load(_pendingLoad.dungeonBossesSlain, _pendingLoad.dungeonCrystalsTaken, _pendingLoad.dungeonHirelings, _pendingLoad.dungeonPotions);
             Maps.Archipelago.TideCaches.LoadLooted(_pendingLoad.tideCachesLooted);
@@ -813,6 +817,8 @@ namespace CityBuilder.Saving
             }
             if (Buildings.FireManager.Instance != null) data.fireShield = Buildings.FireManager.Instance.ShieldLeft;
             data.tutorialOfferClock = Tutorial.TutorialOffer.Clock;
+            data.devGiftCount = UI.DevGiftBanner.Count;
+            data.devGiftWait = UI.DevGiftBanner.Wait;
 
             var rocks = Maps.RockSpawner.Instance;
             if (rocks != null)

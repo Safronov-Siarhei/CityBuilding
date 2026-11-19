@@ -550,9 +550,9 @@ Not checked against the live Play Console -- re-read Google's pages before actin
   `floor(Remaining / step) + 1`); the button's number follows it as the build runs. Keys on «Здания и постройки»
   rows 45-46 (move_building_crystals moved to 47). Not built in Unity yet.
 
-**2026-11-19 (Pixel playtest):** the very first login reward ever is `daily_bonus_first` 25 crystals (then the chain as before, `DailyBonus.Reward`); shop goods past the stores' ceiling are no longer lost -- `OfferShop.Give` uses `AddOverCapacity` (they lie in the Town Hall = StoreLedger overflow); booster hints never come up while the foot of the screen is in use (a building held, a build tab open, placing, a window, a paused banner) and one up goes away (`BoosterHints.BusyBelow`). Concepts asked by the user, NOT built: compensation after a fire (1/2 of the burnt buildings' restore price) and a «developer's gift» when the town is stuck.
+**2026-11-19 (Pixel playtest):** the very first login reward ever is `daily_bonus_first` 25 crystals (then the chain as before, `DailyBonus.Reward`); shop goods past the stores' ceiling are no longer lost -- `OfferShop.Give` uses `AddOverCapacity` (they lie in the Town Hall = StoreLedger overflow); booster hints never come up while the foot of the screen is in use (a building held, a build tab open, placing, a window, a paused banner) and one up goes away (`BoosterHints.BusyBelow`). The fire compensation and the developer's gift were built later the same day (below and hazards-fire-sickness.md).
 
-**«Подарок от разработчиков» (the user liked the plan, 2026-11-19), CONCEPT drawn, waiting for approval; nothing built:**
+**«Подарок от разработчиков» (mock-up v2 APPROVED 2026-11-19, BUILT the same day, setup x2; not seen):**
 - Rules (proposed, the user agreed to the plan): every 30 s the sandbox checks whether the town is STUCK:
   - no store standing;
   - or food at 0 and no food building;
@@ -564,3 +564,10 @@ Not checked against the live Play Console -- re-read Google's pages before actin
   - «Тяжёлые времена? Мы поможем отстроиться!», a plaque «Подарок от разработчиков:» with number + icon 4 to a row;
   - one green «Забрать».
   - v2 (the user): at most THREE resources to a row, two rows; the icons spaced by their real width (they ran into each other); «Забрать» at the foot of the parchment.
+- **As built:**
+  - `UI/DevGiftBanner.cs` -- the check, the set, the plaque, «Забрать». Sandbox only (`PiggyTasks.InSandbox`, `OfferShop.Allowed`, not the dungeon, not after game over). Every `devgift_check_sec` 30 of play, after the start chain: stuck = no store of the player's (`StoreLedger.All`, bots skipped) OR food 0 and no food producer (`FoodOutput.IsProducer`) OR wood or stone under `devgift_low_res` 15 with neither grown since the last check. Held `devgift_hold_sec` 120 -> shown on a free screen (no `ModalGate`, nothing in hand); pause + `HudHider`.
+  - The set: `devgift_wood/stone/food/coins/crystals` 60/40/30/50/5, plus the CHEAPEST store's price (`StoreLedger.IsStore` among the placer's buildings) when no store stands; resources via `AddOverCapacity` (past the cap into the Town Hall), crystals into `Wallet`; journal line `#log_devgift`.
+  - Limits per WORLD, saved: `GameSaveData.devGiftCount` (max `devgift_max_per_world` 3), `devGiftWait` (play seconds left of `devgift_gap_sec` 7200 after a gift). A new world starts at 0/0.
+  - Art: `Tools/ui/dev_gift_concept.py` writes the mock-up AND the pieces + layout.json into `Assets/_Project/UI/DevGift/` (`UiTextureImport.DevGiftFolder`); `SetupProject.BuildDevGiftBanner` (SetupProjectTutorialOffer.cs) builds it; the plaque is the fire plaque's card look, its rows laid out at Show (3 to a row, real icon widths).
+  - Sheet: keys in «Наборы: настройки» rows 119-128; texts `#devgift_title/text/label/claim` («Тексты: интерфейс и меню»), `#log_devgift` («Тексты: журнал событий»).
+  - Cheat: Читы -> «Подарок от разработчиков» (shows it now, counts as given when claimed).

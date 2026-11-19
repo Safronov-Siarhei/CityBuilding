@@ -1,6 +1,6 @@
 ---
 name: project_pending_2026_11_19
-description: "Pixel playtest list 2026-11-19 (27 items): 23 BUILT (setup run, not seen); 15 & 17 concepts and 26 & 27 discussion waiting for the user"
+description: "Pixel playtest list 2026-11-19 (27 items): ALL done (not seen on a phone); 17 developer gift BUILT after mock-up approval; 27 left as is"
 metadata:
   node_type: memory
   type: project
@@ -30,8 +30,7 @@ The user's Pixel playtest of 2026-11-19 had 27 items. They first sent the list, 
 - 15 DONE: the fire banner also pays 1/2 of the burnt buildings' restore price; icon plaque (mock-up approved) BUILT, setup x2 green, not seen.
 - 26 went through setup too.
 
-**WAITING for the user:**
-- 17: «подарок разработчика» — the user liked the plan; mock-up Design/ui/DevGift_Banner.png sent, waiting for approval.
+- 17 DONE: «Подарок от разработчиков» mock-up v2 approved, BUILT (UI/DevGiftBanner.cs, card monetization.md), setup x2, not seen; cheat in Читы.
 - 27 CLOSED: the user said leave the tutorial offer as it is.
 
 **Open:**

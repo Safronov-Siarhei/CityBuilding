@@ -4,7 +4,8 @@ gain -- for 2 minutes, a free set to climb out of it; at most once per 2 h of pl
 Built like the plague/fire/tutorial banners (the user: those are the best): wood window, a warm field of gift boxes and
 the game's resources, the King left and the Queen right, a golden ribbon «Подарок!», parchment with short lines and
 the gift as a plaque (number + icon, 4 to a row, like the fire banner's compensation), ONE green button «Забрать».
-Mock-up only; nothing of the game is written.
+Approved 2026-11-19 (v2). Also writes the game's pieces + layout.json into Assets/_Project/UI/DevGift/
+(SetupProject.BuildDevGiftBanner); the plaque and its rows are the game's (UI/DevGiftBanner.cs).
 
     python Tools/ui/dev_gift_concept.py      ->  Design/ui/DevGift_Banner.png
 """
@@ -25,7 +26,7 @@ X0, Y0, X1, Y1 = 60, 230, 1860, 1050
 IX0, IY0, IX1, IY1 = X0 + 34, Y0 + 34, X1 - 34, Y1 - 34
 # the figures stand BELOW the field's edge and are cut by the frame (the user, 2026-11-17: a gap under them)
 FLOOR = IY1 + 70
-ART = R + 'Assets/_Project/UI/TutorialOffer/'
+ART = R + 'Assets/_Project/UI/DevGift/'
 FIELD_ICONS = ['Res_Wood', 'Res_Stone', 'Res_Food', 'Res_Coins', 'Res_Bread', 'Res_UpgradeCrystal']
 GIFT_COLOURS = [((200, 52, 48), (255, 214, 80)), ((52, 120, 200), (255, 236, 150)), ((70, 160, 70), (250, 220, 90)),
                 ((150, 70, 180), (255, 210, 120)), ((230, 140, 40), (200, 40, 40))]
@@ -187,6 +188,21 @@ g_out = (28, 84, 18)
 b1 = (CX - 270, 846, CX + 270, 958)   # at the foot of the parchment (the user, 2026-11-19)
 btn = layer()
 button(ImageDraw.Draw(btn), b1, (70, 170, 44), (118, 214, 72), g_out)
+
+# ---------------------------------------------------------------- the game's pieces + layout.json
+# (rects in the 1920 x 1080 reference, y down; the plaque's rect gives its TOP and width, the game sizes it down)
+texts = {'Title': (rx0 + 40, ry0 + 24, rx1 - 40, ry1 - 10), 'Body': (pw0 + 50, 372, pw1 - 50, 488),
+         'Plaque': (CX - 250, 500, CX + 250, 620), 'ClaimLabel': (b1[0] + 24, b1[1] + 8, b1[2] - 24, b1[3] - 4)}
+os.makedirs(ART, exist_ok=True)
+layout = {'reference': [W, H], 'frame': [X0, Y0, X1, Y1], 'pieces': [], 'texts': []}
+for name, lay in (('Window', win), ('Figures', figures), ('Band', band), ('ClaimButton', btn)):
+    bb = lay.getbbox()
+    lay.crop(bb).save(ART + name + '.png')
+    layout['pieces'].append({'name': name, 'rect': list(bb)})
+for name, rect in texts.items():
+    layout['texts'].append({'name': name, 'rect': [round(v) for v in rect]})
+with open(ART + 'layout.json', 'w', encoding='utf-8') as f:
+    json.dump(layout, f, indent=1)
 
 # ---------------------------------------------------------------- the mock-up
 img = Image.open(R + 'Design/store/RateWindow_Mockup.png').convert('RGBA')   # stands in for the dimmed game

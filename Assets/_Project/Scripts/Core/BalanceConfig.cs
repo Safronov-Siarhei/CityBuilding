@@ -742,6 +742,17 @@ namespace CityBuilder.Core
         [SerializeField] private int[] dailyBonusCrystals = { 10, 10, 10, 10, 50, 10, 10, 10, 10, 99 };
         [SerializeField] private float dailyBonusAdMultiplier = 2f;
         [SerializeField] private int dailyBonusFirst = 25;
+        // «Подарок от разработчиков» (the user, 2026-11-19; UI/DevGiftBanner): a stuck sandbox town gets a free set
+        [SerializeField] private float devGiftCheckSeconds = 30f;
+        [SerializeField] private float devGiftHoldSeconds = 120f;
+        [SerializeField] private float devGiftGapSeconds = 7200f;
+        [SerializeField] private int devGiftMaxPerWorld = 3;
+        [SerializeField] private int devGiftLowResource = 15;
+        [SerializeField] private int devGiftWood = 60;
+        [SerializeField] private int devGiftStone = 40;
+        [SerializeField] private int devGiftFood = 30;
+        [SerializeField] private int devGiftCoins = 50;
+        [SerializeField] private int devGiftCrystals = 5;
         // the rate-us window keeps off a sandbox town in trouble (the user, 2026-11-19)
         [SerializeField] private float rateUsAfterHazardSeconds = 300f;
         [SerializeField] private float rateUsLossWindowSeconds = 120f;
@@ -1652,6 +1663,16 @@ namespace CityBuilder.Core
         public float DailyBonusAdMultiplier => dailyBonusAdMultiplier;
         /// <summary>The first login reward ever (daily_bonus_first).</summary>
         public int DailyBonusFirst => dailyBonusFirst;
+        public float DevGiftCheckSeconds => devGiftCheckSeconds;
+        public float DevGiftHoldSeconds => devGiftHoldSeconds;
+        public float DevGiftGapSeconds => devGiftGapSeconds;
+        public int DevGiftMaxPerWorld => devGiftMaxPerWorld;
+        public int DevGiftLowResource => devGiftLowResource;
+        public int DevGiftWood => devGiftWood;
+        public int DevGiftStone => devGiftStone;
+        public int DevGiftFood => devGiftFood;
+        public int DevGiftCoins => devGiftCoins;
+        public int DevGiftCrystals => devGiftCrystals;
         /// <summary>Rate-us: no window during a plague or a fire and this long after it (rateus_after_hazard_sec).</summary>
         public float RateUsAfterHazardSeconds => rateUsAfterHazardSeconds;
         /// <summary>Rate-us: the window over which buildings lost to enemies are counted (rateus_loss_window_sec).</summary>
@@ -2980,6 +3001,16 @@ namespace CityBuilder.Core
                 dailyBonusCrystals[i] = (int)Read(economy, $"daily_bonus_{i + 1}", dailyBonusCrystals[i]);
             dailyBonusAdMultiplier = Read(economy, "daily_bonus_ad_mult", dailyBonusAdMultiplier);
             dailyBonusFirst = Mathf.RoundToInt(Read(economy, "daily_bonus_first", dailyBonusFirst));
+            devGiftCheckSeconds = Read(economy, "devgift_check_sec", devGiftCheckSeconds);
+            devGiftHoldSeconds = Read(economy, "devgift_hold_sec", devGiftHoldSeconds);
+            devGiftGapSeconds = Read(economy, "devgift_gap_sec", devGiftGapSeconds);
+            devGiftMaxPerWorld = Mathf.RoundToInt(Read(economy, "devgift_max_per_world", devGiftMaxPerWorld));
+            devGiftLowResource = Mathf.RoundToInt(Read(economy, "devgift_low_res", devGiftLowResource));
+            devGiftWood = Mathf.RoundToInt(Read(economy, "devgift_wood", devGiftWood));
+            devGiftStone = Mathf.RoundToInt(Read(economy, "devgift_stone", devGiftStone));
+            devGiftFood = Mathf.RoundToInt(Read(economy, "devgift_food", devGiftFood));
+            devGiftCoins = Mathf.RoundToInt(Read(economy, "devgift_coins", devGiftCoins));
+            devGiftCrystals = Mathf.RoundToInt(Read(economy, "devgift_crystals", devGiftCrystals));
             rateUsAfterHazardSeconds = Read(economy, "rateus_after_hazard_sec", rateUsAfterHazardSeconds);
             rateUsLossWindowSeconds = Read(economy, "rateus_loss_window_sec", rateUsLossWindowSeconds);
             rateUsLossShare = Read(economy, "rateus_loss_share", rateUsLossShare);

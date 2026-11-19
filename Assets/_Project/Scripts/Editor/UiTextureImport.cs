@@ -53,6 +53,7 @@ namespace CityBuilder.EditorTools
         /// <summary>The invasion's defeat window (Tools/ui/invasion_defeat_art.py), placed by SetupProjectGameplayUI.BuildRunEndWindow.</summary>
         public const string InvasionDefeatFolder = "Assets/_Project/UI/InvasionDefeat";
         public const string TutorialOfferFolder = "Assets/_Project/UI/TutorialOffer";
+        public const string DevGiftFolder = "Assets/_Project/UI/DevGift";
         /// <summary>The Diplomacy Hall's windows and banners (Tools/ui/diplomacy_game_art.py), placed by SetupProjectDiplomacy.</summary>
         public const string DiplomacyFolder = "Assets/_Project/UI/Diplomacy";
 
@@ -60,7 +61,7 @@ namespace CityBuilder.EditorTools
         {
             var isHudSkin = assetPath.StartsWith(HudSkinsFolder + "/") || assetPath.StartsWith(MenuSkinsFolder + "/");
             var isSkin = assetPath.StartsWith(SkinFolder + "/") || isHudSkin;
-            var isArt = assetPath.StartsWith(MenuArtFolder + "/") || assetPath.StartsWith(LoadingFolder + "/") || assetPath.StartsWith(CampaignFolder + "/") || assetPath.StartsWith(RateUsFolder + "/") || assetPath.StartsWith(ShopFolder + "/") || assetPath.StartsWith(DailyBonusFolder + "/") || assetPath.StartsWith(PlagueFolder + "/") || assetPath.StartsWith(FireFolder + "/") || assetPath.StartsWith(InvasionDefeatFolder + "/") || assetPath.StartsWith(TutorialOfferFolder + "/") || assetPath.StartsWith(DiplomacyFolder + "/");
+            var isArt = assetPath.StartsWith(MenuArtFolder + "/") || assetPath.StartsWith(LoadingFolder + "/") || assetPath.StartsWith(CampaignFolder + "/") || assetPath.StartsWith(RateUsFolder + "/") || assetPath.StartsWith(ShopFolder + "/") || assetPath.StartsWith(DailyBonusFolder + "/") || assetPath.StartsWith(PlagueFolder + "/") || assetPath.StartsWith(FireFolder + "/") || assetPath.StartsWith(InvasionDefeatFolder + "/") || assetPath.StartsWith(TutorialOfferFolder + "/") || assetPath.StartsWith(DevGiftFolder + "/") || assetPath.StartsWith(DiplomacyFolder + "/");
             var isIcon = assetPath.StartsWith(IconsFolder + "/") || assetPath.StartsWith(GlyphsFolder + "/") || isArt;
             if (!isSkin && !isIcon) return;
             if (!(assetImporter is TextureImporter importer)) return;
@@ -86,7 +87,7 @@ namespace CityBuilder.EditorTools
                 format = TextureImporterFormat.ASTC_4x4,
                 // the rate-us window shows its art at half size: half the texture is enough
                 // (the campaign's support banner is drawn at full size: its window keeps 2048)
-                maxTextureSize = assetPath.StartsWith(RateUsFolder + "/") || (assetPath.StartsWith(ShopFolder + "/") && !assetPath.Contains("/Support/") && !assetPath.Contains("/Piggy/")) || assetPath.StartsWith(DailyBonusFolder + "/") || assetPath.StartsWith(PlagueFolder + "/") || assetPath.StartsWith(FireFolder + "/") || assetPath.StartsWith(InvasionDefeatFolder + "/") || assetPath.StartsWith(TutorialOfferFolder + "/") || assetPath.StartsWith(DiplomacyFolder + "/Banner") ? 1024 : 2048,
+                maxTextureSize = assetPath.StartsWith(RateUsFolder + "/") || (assetPath.StartsWith(ShopFolder + "/") && !assetPath.Contains("/Support/") && !assetPath.Contains("/Piggy/")) || assetPath.StartsWith(DailyBonusFolder + "/") || assetPath.StartsWith(PlagueFolder + "/") || assetPath.StartsWith(FireFolder + "/") || assetPath.StartsWith(InvasionDefeatFolder + "/") || assetPath.StartsWith(TutorialOfferFolder + "/") || assetPath.StartsWith(DevGiftFolder + "/") || assetPath.StartsWith(DiplomacyFolder + "/Banner") ? 1024 : 2048,
                 compressionQuality = 100,
             });
 
