@@ -370,3 +370,5 @@ joins a squad, not the Garrison (army control by squads, [army-control](army-con
 **2026-11-19 (playtest):**
 - The wood/stone step picks a node on the person's own island; a boulder also needs a NavMesh way there (`TutorialDirector.Reachable`), chosen only once the person is picked. The boulder had been offered on an islet.
 - During the Hovel/Barracks/Shipyard steps a held building is let go (`Steady`). A double tap on the hall had put its buttons where the build menu is.
+
+**2026-11-19 (found in the Windows player's log):** `TutorialOfferBanner` read the old `UnityEngine.Input` class. The project is «Input System only», so it threw every frame in the sandbox and the in-game tutorial offer NEVER came. That is probably why it did not show on the Pixel either. It now reads the Input System devices. `NewsWindow`'s Escape had the same problem and is fixed too.

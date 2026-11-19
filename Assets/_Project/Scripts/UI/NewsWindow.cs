@@ -92,7 +92,9 @@ namespace CityBuilder.UI
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Escape)) Close();
+            // the Input System (the old Input class throws under «Input System only»)
+            var keyboard = UnityEngine.InputSystem.Keyboard.current;
+            if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame) Close();
         }
 
         // ------------------------------------------------------------ building

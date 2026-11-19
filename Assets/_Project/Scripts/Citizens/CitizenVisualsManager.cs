@@ -658,6 +658,9 @@ namespace CityBuilder.Citizens
                 _claimedNodes.Remove(agent);
             }
 
+            // the scene going (back to the menu): the figure may be destroyed before its workplace -- nothing to send
+            // anywhere (an exception per building in the player's log, 2026-11-19)
+            if (agent == null) return;
             var center = agent.Home != null && agent.Home.CurrentHealth > 0 ? CentreOf(agent.Home) : (_townCenter ?? agent.transform.position);
             agent.SetIdleWander(center);
             _idleAgents.Add(agent);

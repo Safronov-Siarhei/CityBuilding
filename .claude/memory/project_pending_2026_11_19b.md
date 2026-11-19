@@ -1,6 +1,6 @@
 ---
 name: project_pending_2026_11_19b
-description: "Playtest list 2026-11-19 round 2 (9 items; the user said no tests/builds, more items coming): 8 done in code, not built; menu village houses missing on re-entry NOT FOUND (asked the user)"
+description: "Playtest list 2026-11-19 round 2 (9 items, no tests/builds): 8 done in code; menu village houses invisible after sandbox->menu NOT FOUND; tutorial offer never worked (old Input class) FIXED"
 metadata:
   type: project
 ---
@@ -25,6 +25,23 @@ Sheet synced: 2 economy keys and 2 reworded texts. Cards: archipelago-and-ships,
 - no LOD;
 - no global shader state found.
 
-Asked the user which buildings and from which mode they came back. Next step if needed: a batchmode load of menu → game → menu that counts the houses.
+The user said they came back FROM THE SANDBOX.
+
+The Windows player's log (LocalLow/Depigo Games/CityBuilding/Player-prev.log) shows the village built identically both times (the same «no room for house» lines), so the houses ARE created but not drawn. One difference: on the return, «Unloading 1832 unused Assets» runs after the village is built; on the first entry it does not.
+
+Checked and ruled out:
+- shader globals;
+- shared-material and shared-mesh edits;
+- the season swaps;
+- LOD;
+- layer masks;
+- timeScale.
+
+Next: see it (Windows build or a PlayMode probe that counts enabled house renderers).
+
+Found in the same log and FIXED:
+- `TutorialOfferBanner` used the old `Input` class and threw every frame under Input-System-only, so the tutorial offer never came;
+- `NewsWindow` Escape had the same problem;
+- an NRE on scene teardown in `ReleaseAgentToIdle`.
 
 Related: [[project_pending_2026_11_19]], [[project_main_menu_village]]

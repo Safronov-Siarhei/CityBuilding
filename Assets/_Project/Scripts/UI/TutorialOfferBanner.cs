@@ -76,9 +76,17 @@ namespace CityBuilder.UI
             if (_placer == null) _placer = FindAnyObjectByType<BuildingPlacer>();
 
             // 3: any touch, click, key or mouse move resets the idle clock
-            var touched = Input.anyKey || Input.touchCount > 0 || Input.mouseScrollDelta.sqrMagnitude > 0f
-                          || (Input.mousePosition - _mouse).sqrMagnitude > 4f;
-            _mouse = Input.mousePosition;
+            // the Input System's devices: the old Input class throws under «Input System only» (the player settings),
+            // and did so every frame -- the offer never came (found in the Windows player's log, 2026-11-19)
+            var keyboard = UnityEngine.InputSystem.Keyboard.current;
+            var mouse = UnityEngine.InputSystem.Mouse.current;
+            var screen = UnityEngine.InputSystem.Touchscreen.current;
+            var at = mouse != null ? (Vector3)mouse.position.ReadValue() : _mouse;
+            var touched = (keyboard != null && keyboard.anyKey.isPressed)
+                          || (screen != null && screen.primaryTouch.press.isPressed)
+                          || (mouse != null && (mouse.leftButton.isPressed || mouse.rightButton.isPressed || mouse.scroll.ReadValue().sqrMagnitude > 0f))
+                          || (at - _mouse).sqrMagnitude > 4f;
+            _mouse = at;
             _idle = touched ? 0f : _idle + dt;
 
             var hall = BuildingInstance.TownHall != null;
