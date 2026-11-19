@@ -13,7 +13,7 @@ The user's notes from the Windows build (2026-11-19), done in code, no build/tes
 - Invasion towers silent = a Unity run at 17:21 regenerated building prefabs WITHOUT the sheet (no DefensiveBuilding, empty requiredBuilding); the Windows build shipped them, the APK did not. RESTORED from HEAD 2026-11-19 on the user's yes (Tower/Castle/FortifiedTower carry DefensiveBuilding again). See [[feedback-build-only-on-request]].
 - Subtitle double shadow -> one outline; red dots on round buttons' rings, shop dot on the right; loading ship smaller; Skip: EventSystem guard + Esc/Space/Enter + `[FilmSkip] skip` log line (cause unproven).
 - Ратуша -> Замок in all 15 text keys (ru+en), sheet + CSV.
-- OPEN: «выбор здания в нашествии затемняет не весь интерфейс»: needs a screenshot.
+- Invasion building card dim missed hero portraits + people chip: panel now SetAsLastSibling on Show (done).
 
 **Why:** the user asked whether these were Windows-only: houses yes (graphics level), towers yes by accident (broken files), the rest no (would show on phones too).
 **How to apply:** before any build, `git status` for modified Prefabs/ScriptableObjects; next setup must be `setup,setup`.

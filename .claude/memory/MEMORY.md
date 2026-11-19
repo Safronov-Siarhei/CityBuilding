@@ -108,4 +108,4 @@
 - [Playtest 2026-11-18 (phone)](project_pending_2026_11_18.md) — 29 items, all built; FPS not measured
 - [Playtest 2026-11-19 (Pixel)](project_pending_2026_11_19.md) — 27 items all done (not seen): incl. fire compensation plaque, rate-us timing, developer gift banner; tutorial offer left as is
 - [Playtest 2026-11-19 round 2](project_pending_2026_11_19b.md) — 9 items, 8 done in code (no build); menu village houses vanishing on re-entry not found, asked the user
-- [Windows playtest 2026-11-19](project_pending_2026_11_19c.md) — 11 items; houses = PC quality level, towers = broken regenerated prefabs (restored from HEAD); invasion dimming open
+- [Windows playtest 2026-11-19](project_pending_2026_11_19c.md) — 11 items; houses = PC quality level, towers = broken regenerated prefabs (restored from HEAD); invasion dimming fixed

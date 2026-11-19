@@ -65,7 +65,13 @@ namespace CityBuilder.UI
         {
             _currentInstance = instance;
             _currentProduction = instance != null ? instance.GetComponent<ProductionBuilding>() : null;
-            if (panelRoot != null) panelRoot.SetActive(true);
+            if (panelRoot != null)
+            {
+                panelRoot.SetActive(true);
+                // over the whole HUD: built before the hero portraits and the people chip, its dim left them
+                // bright (the user, Invasion 2026-11-19); the tutorial's arrow re-lifts itself (GuideHint)
+                panelRoot.transform.SetAsLastSibling();
+            }
             var v2 = V2For(instance);
             var run = RunCard && !v2;
             if (sandboxCard != null) sandboxCard.SetActive(!run && !v2);
