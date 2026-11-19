@@ -16,3 +16,5 @@ Illness start delay becomes 10 min too.
 2026-11-14 round 2: old fire keys deleted (code/CSV/sheet); «build a brigade» notice opens the build menu on
 it (BuildHints.LeadToBuild(id)); fire bucket ToolFireBucket APPROVED and IN THE GAME (FireManager.bucketModel, Water child while full).
 Fire Brigade and Лечебница level 1 open from the start (starts_unlocked 1, the user 2026-11-14).
+
+**2026-11-19 (the user):** fires easier for a young town -- x0.3 chance on an island with < 15 burnable buildings; no thunderstorms before Town Hall level 2; fire banner needs >= 20 buildings and >= 3 burnt in the window. Sheet «Жители и настроение» synced, setup green. Discussed next: option Д (placement hint that fire can jump to a touching neighbour) -- not decided.

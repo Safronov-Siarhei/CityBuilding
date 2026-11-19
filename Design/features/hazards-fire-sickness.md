@@ -110,6 +110,11 @@ SANDBOX ONLY (other modes: no fires at all).
   water near: inside a WELL's own circle (its service_radius, see «Well: one reach»), or within
   8 CELLS (`fire_water_cells`) of the sea / a river / a lake.
 - No fires and no illness the first 10 minutes of a run (was 7 for illness).
+- **Easier for a young town (the user, 2026-11-19):** an island with fewer than `fire_small_island` 15 burnable buildings
+  burns `fire_small_island_mult` x0.3 as often (FireManager.PassDay); NO THUNDERSTORMS before the Town Hall's level
+  `storm_from_hall_level` 2 (Thunderstorm, like the torchbearers; `OrcRaidManager.HallLevel` now internal); the FIRE
+  BANNER needs `fire_banner_min_buildings` 20 buildings (standing + burnt in the window) AND `fire_banner_min_burnt` 3
+  burnt, besides the 15% share -- before, one burnt house in a town of six paused the game.
 - Spread ONLY to a burnable building TOUCHING it (no gap); a 1-cell gap stops it. Every 10 s of
   burning, 30% per touching neighbour.
 - Never burn: Road, Square, TownSquare, Moat, Bridge, Well, Castle (town hall), FortifiedTower

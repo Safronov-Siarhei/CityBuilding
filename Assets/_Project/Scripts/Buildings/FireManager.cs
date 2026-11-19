@@ -101,10 +101,21 @@ namespace CityBuilder.Buildings
             if (!CanStart) return;
             var config = BalanceConfig.Instance;
             var standing = new List<BuildingInstance>(BuildingInstance.All);
+            // burnable buildings per island: a young island (under fire_small_island of them) burns less (the user, 2026-11-19)
+            var burnable = new Dictionary<int, int>();
+            foreach (var b in standing)
+            {
+                if (!FireRules.Burns(b)) continue;
+                var island = HousePeople.IslandOf(b);
+                burnable.TryGetValue(island, out var n);
+                burnable[island] = n + 1;
+            }
             foreach (var b in standing)
             {
                 if (!FireRules.Burns(b) || b.GetComponent<BuildingFire>() != null) continue;
                 var chance = config.FireChancePerDay;
+                if (burnable.TryGetValue(HousePeople.IslandOf(b), out var onIsland) && onIsland < config.FireSmallIsland)
+                    chance *= config.FireSmallIslandMultiplier;
                 if (!FireRules.WaterNear(b)) chance *= config.FireDryMultiplier;
                 if (BrigadeLevelOn(HousePeople.IslandOf(b)) >= config.FirePreventLevel) chance *= config.FirePreventMultiplier;
                 if (Random.value < chance) Ignite(b, "#log_fire_started");
@@ -155,6 +166,8 @@ namespace CityBuilder.Buildings
             var standing = 0;
             foreach (var b in BuildingInstance.All)
                 if (b != null && !b.IsBot && b.Data != null && b.CurrentHealth > 0 && !b.Data.IsGroundWork) standing++;
+            // a small town is spared the banner (the user, 2026-11-19): a big enough town and enough lost in the window
+            if (standing + _burnt.Count < config.FireBannerMinBuildings || _burnt.Count < config.FireBannerMinBurnt) return;
             if (_burnt.Count < config.FireBannerShare * Mathf.Max(1, standing + _burnt.Count)) return;
             _burnt.Clear();
             UI.FireBanner.Instance?.Show(0);

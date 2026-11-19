@@ -842,6 +842,13 @@ namespace CityBuilder.Core
         [SerializeField] private float fireFillSeconds = 1f;
         [SerializeField] private float fireRainMultiplier = 0.5f;
         [SerializeField] private float fireBannerShare = 0.15f;
+        // a small town never gets the fire banner (the user, 2026-11-19: one burnt house in a town of six paused the game)
+        [SerializeField] private int fireBannerMinBuildings = 20;
+        [SerializeField] private int fireBannerMinBurnt = 3;
+        // a young island burns less (the user, 2026-11-19)
+        [SerializeField] private int fireSmallIsland = 15;
+        [SerializeField] private float fireSmallIslandMult = 0.3f;
+        [SerializeField] private int stormFromHallLevel = 2;
         [SerializeField] private float fireBannerWindowSeconds = 300f;
         [SerializeField] private float fireShieldSeconds = 420f;
         [SerializeField] private int fireEndCrystals = 30;
@@ -1405,6 +1412,11 @@ namespace CityBuilder.Core
         public float FireRainMultiplier => fireRainMultiplier;
         /// <summary>Sandbox: fire destroyed this share of the buildings within fire_banner_window_sec -- the banner.</summary>
         public float FireBannerShare => fireBannerShare;
+        public int FireBannerMinBuildings => fireBannerMinBuildings;
+        public int FireBannerMinBurnt => fireBannerMinBurnt;
+        public int FireSmallIsland => fireSmallIsland;
+        public float FireSmallIslandMultiplier => fireSmallIslandMult;
+        public int StormFromHallLevel => stormFromHallLevel;
         /// <summary>Sandbox: the window those losses count over.</summary>
         public float FireBannerWindowSeconds => fireBannerWindowSeconds;
         /// <summary>Sandbox: after the banner put the fires out, no fire starts for so long.</summary>
@@ -2710,6 +2722,11 @@ namespace CityBuilder.Core
             fireFillSeconds = Read(economy, "fire_fill_sec", fireFillSeconds);
             fireRainMultiplier = Read(economy, "fire_rain_mult", fireRainMultiplier);
             fireBannerShare = Read(economy, "fire_banner_share", fireBannerShare);
+            fireBannerMinBuildings = Mathf.RoundToInt(Read(economy, "fire_banner_min_buildings", fireBannerMinBuildings));
+            fireBannerMinBurnt = Mathf.RoundToInt(Read(economy, "fire_banner_min_burnt", fireBannerMinBurnt));
+            fireSmallIsland = Mathf.RoundToInt(Read(economy, "fire_small_island", fireSmallIsland));
+            fireSmallIslandMult = Read(economy, "fire_small_island_mult", fireSmallIslandMult);
+            stormFromHallLevel = Mathf.RoundToInt(Read(economy, "storm_from_hall_level", stormFromHallLevel));
             fireBannerWindowSeconds = Read(economy, "fire_banner_window_sec", fireBannerWindowSeconds);
             fireShieldSeconds = Read(economy, "fire_shield_sec", fireShieldSeconds);
             fireEndCrystals = (int)Read(economy, "fire_end_crystals", fireEndCrystals);

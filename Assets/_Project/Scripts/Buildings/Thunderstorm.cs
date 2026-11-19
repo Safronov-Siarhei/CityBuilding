@@ -63,6 +63,8 @@ namespace CityBuilder.Buildings
             if (!_on)
             {
                 if (FireManager.InGrace) return;
+                // the sandbox: no storms before the Town Hall's level storm_from_hall_level (the user, 2026-11-19)
+                if (FireRules.Active && Combat.OrcRaidManager.HallLevel() < config.StormFromHallLevel) return;
                 if (_next < 0f) _next = Random.Range(config.StormEveryMinSeconds, config.StormEveryMaxSeconds);
                 _next -= Time.deltaTime;
                 if (_next > 0f) return;

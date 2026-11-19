@@ -506,7 +506,8 @@ namespace CityBuilder.Combat
             }
         }
 
-        private static int HallLevel()
+        /// <summary>The player's Town Hall level (0 = none) -- the torchbearers' and the thunderstorms' gate.</summary>
+        internal static int HallLevel()
         {
             var level = 0;
             foreach (var b in BuildingInstance.All)
