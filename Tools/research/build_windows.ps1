@@ -1,5 +1,7 @@
 param(
-    [switch]$Development
+    [switch]$Development,
+    # a build for players: no cheat window, no PerfProbe (BuildWindows' -release -> CB_RELEASE)
+    [switch]$Release
 )
 
 # Builds the Windows 64-bit player through CityBuilder.EditorTools.BuildWindows into the user's
@@ -7,19 +9,26 @@ param(
 # leaves the zip in the build folder (Telegram sending dropped 2026-11-18).
 #
 # The user's rule (2026-10-13): every build goes to D:\Builds CB, and the previous build there is
-# deleted first -- the folder only ever holds the latest one.
+# deleted first. Only the previous WINDOWS build goes (2026-11-19): the APK there is the other
+# platform's latest build and stays, as build_android.ps1 leaves the Windows build alone.
 
 $ErrorActionPreference = 'Continue'
-$unity = 'C:\Program Files\Unity\Hub\Editor\6000.5.4f1\Editor\Unity.exe'
-$project = 'D:/Fork/CityBuilding'
+$version = '6000.5.4f1'
+$unity = $env:UNITY_EXE
+if (-not $unity -or -not (Test-Path $unity)) {
+    $unity = @("D:\unity\$version-x86_64\Editor\Unity.exe", "C:\Program Files\Unity\Hub\Editor\$version\Editor\Unity.exe") |
+        Where-Object { Test-Path $_ } | Select-Object -First 1
+}
+if (-not $unity) { throw "Unity $version not found: set UNITY_EXE" }
+$project = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path.Replace('\', '/')
 New-Item -ItemType Directory -Force "$project/RunLogs" | Out-Null
 $buildsRoot = 'D:\Builds CB'
 $playerFolder = Join-Path $buildsRoot 'CityBuilding-Windows'
 
-# The previous build, whatever it was, goes. Only the folder's contents -- never the folder itself.
 New-Item -ItemType Directory -Force $buildsRoot | Out-Null
-Get-ChildItem -LiteralPath $buildsRoot -Force | Remove-Item -Recurse -Force -Confirm:$false
-Write-Output "cleared $buildsRoot"
+Get-ChildItem -LiteralPath $buildsRoot -Force | Where-Object { $_.Name -like 'CityBuilding-Windows*' } |
+    Remove-Item -Recurse -Force -Confirm:$false
+Write-Output "cleared the old Windows build in $buildsRoot"
 
 # Start-Process joins its arguments with spaces and quotes nothing, so the path is quoted by hand.
 $unityArgs = @(
@@ -32,8 +41,9 @@ $unityArgs = @(
 )
 
 if ($Development) { $unityArgs += '-development' }
+if ($Release) { $unityArgs += '-release' }
 
-Write-Output "=== windows build ($(if ($Development) { 'development' } else { 'release' })) : $(Get-Date -Format o) ==="
+Write-Output "=== windows build ($(if ($Development) { 'development' } elseif ($Release) { 'release, no cheats' } else { 'release' })) : $(Get-Date -Format o) ==="
 $p = Start-Process -FilePath $unity -ArgumentList $unityArgs -PassThru -Wait
 Write-Output "=== done, exit $($p.ExitCode) : $(Get-Date -Format o) ==="
 
