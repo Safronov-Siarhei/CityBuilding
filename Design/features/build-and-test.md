@@ -132,3 +132,5 @@ EditMode 460/460, PlayMode 359/378 (18 skipped). 31 failures fixed: real bugs (t
 draws a cell) and tests behind the user's design changes (food rework, hidden Barn/Windmill -> Warehouse/Smelter,
 own-kill hero XP, fogged start island, archipelago-only picker, tax plaque gone, stone Footing on slopes).
 FLAKY: `InvasionTests.AWaveOrc_KeepsToItsWay_...` -- the lane sometimes bends round scenery (14.9 > 14 m); passes alone.
+
+**2026-11-19, Windows build script fixed:** `build_windows.ps1` takes the project path from its own place (it said D:/Fork), Unity from `UNITY_EXE` or `D:\unity\6000.5.4f1-x86_64` first, `-Release` = no cheats (CB_RELEASE), and deletes only the old `CityBuilding-Windows*` in `D:\Builds CB` -- the APK stays (before, it wiped the whole folder). A release Windows build takes 3 min, zip 241,5 MB. Set `UNITY_EXE` for `build_android.ps1` too: without it it picked the C:\Program Files editor and failed on packages.
