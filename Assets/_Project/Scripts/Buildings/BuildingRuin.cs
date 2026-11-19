@@ -203,7 +203,8 @@ namespace CityBuilder.Buildings
                 renderers.Add(renderer);
             }
 
-            // the break: LOW -- a burnt stub of the walls over a heap of rubble (the user, 2026-11-12: «вид обломков на
+            // the break: LOW -- a burnt stub of the walls over a heap of rubble (the user, 2026-11-12: «вид обломков на
+
             // земле», the orcs walking over it; was a shell broken a third of the way up)
             var ground = transform.position.y;
             var top = ground + 0.3f * cellSize;
@@ -328,9 +329,13 @@ namespace CityBuilder.Buildings
         /// What restoring costs: what the building was worth at its level -- its price and every
         /// upgrade to it, coins too -- times ruin_restore_cost_fraction. Rounded up.
         /// </summary>
-        public List<ResourceAmount> RestoreCost()
+        public List<ResourceAmount> RestoreCost() => RestoreCostOf(Data, Level);
+
+        /// <summary>What restoring a ruin of this building at this level costs (ruin_restore_cost_fraction of its build + upgrades).</summary>
+        public static List<ResourceAmount> RestoreCostOf(BuildingData data, int level)
         {
             var cost = new List<ResourceAmount>(3);
+            if (data == null) return cost;
             void Add(List<ResourceAmount> amounts)
             {
                 if (amounts == null) return;
@@ -342,8 +347,8 @@ namespace CityBuilder.Buildings
                     else cost.Add(new ResourceAmount { type = amount.type, amount = amount.amount });
                 }
             }
-            Add(BuildingPlacer.CostOf(Data));
-            for (var l = 2; l <= Level; l++) Add(BuildingInstance.UpgradePriceOf(Data.UpgradeCostTo(l)));
+            Add(BuildingPlacer.CostOf(data));
+            for (var l = 2; l <= level; l++) Add(BuildingInstance.UpgradePriceOf(data.UpgradeCostTo(l)));
             var share = BalanceConfig.Instance != null ? BalanceConfig.Instance.RuinRestoreCostFraction : 0.5f;
             foreach (var amount in cost) amount.amount = Mathf.Max(1, Mathf.CeilToInt(amount.amount * share));
             return cost;

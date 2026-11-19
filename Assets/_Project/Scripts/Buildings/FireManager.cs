@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using CityBuilder.Citizens;
 using CityBuilder.Core;
+using CityBuilder.Resources;
 using UnityEngine;
 
 namespace CityBuilder.Buildings
@@ -75,6 +76,29 @@ namespace CityBuilder.Buildings
         }
         private readonly List<CitizenAgent> _workers = new List<CitizenAgent>();
         private readonly List<float> _burnt = new List<float>();
+        // this fire's losses (the user, 2026-11-19): every building it took down, each within fire_banner_window_sec of the
+        // one before -- the fire banner pays fire_comp_share of their restore price on top of putting it out
+        private readonly List<(float at, BuildingData data, int level)> _episode = new List<(float, BuildingData, int)>();
+
+        /// <summary>What the fire banner gives back now (fire_comp_share of the restore price of what this fire took down).</summary>
+        public List<ResourceAmount> Compensation()
+        {
+            var total = new List<ResourceAmount>();
+            var share = BalanceConfig.Instance != null ? BalanceConfig.Instance.FireCompShare : 0.5f;
+            if (share <= 0f) return total;
+            foreach (var lost in _episode)
+            {
+                foreach (var a in BuildingRuin.RestoreCostOf(lost.data, lost.level))
+                {
+                    var known = total.Find(c => c.type == a.type);
+                    if (known != null) known.amount += a.amount;
+                    else total.Add(new ResourceAmount { type = a.type, amount = a.amount });
+                }
+            }
+            foreach (var a in total) a.amount = Mathf.CeilToInt(a.amount * share);
+            total.RemoveAll(a => a.amount <= 0);
+            return total;
+        }
         private readonly Dictionary<int, float> _told = new Dictionary<int, float>();
         private float _dispatchIn;
         private static Mesh _markQuad;
@@ -172,6 +196,9 @@ namespace CityBuilder.Buildings
             if (!FireRules.Active) return;
             var config = BalanceConfig.Instance;
             var now = Time.time;
+            // a new fire after a long quiet starts its own count of losses
+            if (_episode.Count > 0 && now - _episode[_episode.Count - 1].at > config.FireBannerWindowSeconds) _episode.Clear();
+            if (building != null && !building.IsBot && building.Data != null) _episode.Add((now, building.Data, building.Level));
             _burnt.Add(now);
             _burnt.RemoveAll(t => now - t > config.FireBannerWindowSeconds);
             var standing = 0;
@@ -187,10 +214,32 @@ namespace CityBuilder.Buildings
         /// <summary>The banner: every fire out, and the shield up for fire_shield_sec.</summary>
         public void EndByBanner()
         {
+            // the compensation first: half the restore price of what this fire took (the user, 2026-11-19), past the stores'
+            // ceiling into the Town Hall like any gift
+            var resources = ResourceManager.Instance;
+            var comp = Compensation();
+            if (resources != null)
+                foreach (var a in comp) resources.AddOverCapacity(a.type, a.amount);
+            if (comp.Count > 0)
+                EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#log_fire_comp", CompensationText(comp)),
+                    EventSeverity.Good, EventGlyph.Check, BrigadeId));
+            _episode.Clear();
             ExtinguishAll();
             ShieldLeft = Mathf.Max(ShieldLeft, BalanceConfig.Instance.FireShieldSeconds);
             EventLogManager.Instance?.Post(GameEvent.ForSettlement(Localization.Format("#log_fire_shield",
                 Mathf.RoundToInt(ShieldLeft / 60f)), EventSeverity.Good, EventGlyph.Check, BrigadeId));
+        }
+
+        /// <summary>«12 дерево, 8 камень» -- the compensation in words (the banner, the log).</summary>
+        public static string CompensationText(List<ResourceAmount> comp)
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (var a in comp)
+            {
+                if (sb.Length > 0) sb.Append(", ");
+                sb.Append(a.amount).Append(' ').Append(ResourceNames.Of(a.type));
+            }
+            return sb.ToString();
         }
 
         public void ExtinguishAll()

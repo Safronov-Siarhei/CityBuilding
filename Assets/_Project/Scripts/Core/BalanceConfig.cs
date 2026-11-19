@@ -854,6 +854,8 @@ namespace CityBuilder.Core
         [SerializeField] private int fireSmallIsland = 15;
         [SerializeField] private float fireSmallIslandMult = 0.3f;
         [SerializeField] private int stormFromHallLevel = 2;
+        // the fire banner also pays this share of the restore price of what the fire took down (the user, 2026-11-19)
+        [SerializeField] private float fireCompShare = 0.5f;
         [SerializeField] private float invasionRoarVolume = 0.8f;
         [SerializeField] private float fireBannerWindowSeconds = 300f;
         [SerializeField] private float fireShieldSeconds = 420f;
@@ -1423,6 +1425,8 @@ namespace CityBuilder.Core
         public int FireSmallIsland => fireSmallIsland;
         public float FireSmallIslandMultiplier => fireSmallIslandMult;
         public int StormFromHallLevel => stormFromHallLevel;
+        /// <summary>Sandbox: the fire banner's compensation, a share of the burnt buildings' restore price (fire_comp_share).</summary>
+        public float FireCompShare => fireCompShare;
         /// <summary>Invasion: the roar each wave comes out with (inv_roar_volume).</summary>
         public float InvasionRoarVolume => invasionRoarVolume;
         /// <summary>Sandbox: the window those losses count over.</summary>
@@ -2743,6 +2747,7 @@ namespace CityBuilder.Core
             fireSmallIsland = Mathf.RoundToInt(Read(economy, "fire_small_island", fireSmallIsland));
             fireSmallIslandMult = Read(economy, "fire_small_island_mult", fireSmallIslandMult);
             stormFromHallLevel = Mathf.RoundToInt(Read(economy, "storm_from_hall_level", stormFromHallLevel));
+            fireCompShare = Read(economy, "fire_comp_share", fireCompShare);
             invasionRoarVolume = Read(economy, "inv_roar_volume", invasionRoarVolume);
             fireBannerWindowSeconds = Read(economy, "fire_banner_window_sec", fireBannerWindowSeconds);
             fireShieldSeconds = Read(economy, "fire_shield_sec", fireShieldSeconds);

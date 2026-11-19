@@ -26,12 +26,22 @@ namespace CityBuilder.UI
         protected virtual void Awake()
         {
             if (root != null) root.SetActive(false);
+            // the words shrink to fit the parchment (the fire's adds a compensation line, the user 2026-11-19)
+            if (bodyText != null && !bodyText.resizeTextForBestFit)
+            {
+                bodyText.resizeTextMaxSize = bodyText.fontSize;
+                bodyText.resizeTextMinSize = Mathf.Max(14, bodyText.fontSize / 2);
+                bodyText.resizeTextForBestFit = true;
+            }
         }
 
         /// <summary>The sheet keys' stem: «#&lt;stem&gt;_text», «_ad», «_ad_playing».</summary>
         protected abstract string Stem { get; }
 
         private string Key(string part) => "#" + Stem + "_" + part;
+
+        /// <summary>The words on the parchment: the sheet's «#&lt;stem&gt;_text»; a banner may add to it.</summary>
+        protected virtual string BodyText => Localization.Get(Key("text"));
 
         /// <summary>The crystals this banner asks.</summary>
         protected abstract int Price { get; }
@@ -59,7 +69,7 @@ namespace CityBuilder.UI
         private void Refresh()
         {
             var price = Price;
-            if (bodyText != null) bodyText.text = Localization.Get(Key("text"));
+            if (bodyText != null) bodyText.text = BodyText;
             if (adButton != null) adButton.gameObject.SetActive(Shop.RewardedAds.IsReady);
             if (adLabel != null) adLabel.text = _adLeft >= 0f ? Localization.Get(Key("ad_playing")) : Localization.Get(Key("ad"));
             // the price alone, beside the crystal icon (the user, 2026-11-13: «вместо слов просто 30 + иконка»)

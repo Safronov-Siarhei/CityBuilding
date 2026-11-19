@@ -199,3 +199,10 @@ EditMode `SicknessAndFireTests`; PlayMode `HazardTests`.
 - Trap: earlier notes called 14/18/24 "cells" -- they were METRES (7-17 cells).
 
 **2026-11-19:** the fire bucket's WATER floated off the bucket: the FBX gives the grandchild `ToolFireBucket-Water` (and `ToolRod-Catch`) a stray turn+offset (checked by importing the FBX in Blender); `FireManager.Bucket` / `CitizenWaddle.Tool` reset its local transform to identity (its mesh is pivoted like the Swing's). Not seen.
+
+**Fire banner compensation (the user, 2026-11-19), in the code, NOT through setup yet, not seen:**
+- The «Пожар!» banner, once paid for (ad or crystals), also gives back `fire_comp_share` 0.5 of the restore price (`BuildingRuin.RestoreCostOf`) of every building THIS fire took down.
+  - Episode = burn-downs each within `fire_banner_window_sec` of the one before (`FireManager._episode`, `Compensation()`).
+  - Paid in `EndByBanner` via AddOverCapacity, log `#log_fire_comp`.
+- In the game for now: a text line under the banner's words, `#fire_banner_comp` «+ на отстройку: {0}» (words), with the text auto-fitting (`PauseBanner` best fit).
+- Mock-up of the wanted look: `Design/ui/Fire_Banner_Comp.png` — a plaque «+ на отстройку:» with numbers and resource icons under the text. WAITING for the user's approval; then the plaque gets built in the banner prefab.

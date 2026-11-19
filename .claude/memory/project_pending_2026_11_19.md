@@ -28,7 +28,7 @@ The user's Pixel playtest of 2026-11-19 had 27 items. They first sent the list, 
 - 26 (rate-us timing) DONE in the code: never in a run or the tutorial, pauses the game, sandbox keeps off plague/fire (+5 min), hunger, people leaving, >10% buildings lost in 2 min; NOT through setup yet.
 
 **WAITING for the user:**
-- 15: fire compensation (1/2 of the restore price) — free or for an ad?
+- 15: the EXISTING fire banner also pays 1/2 of the burnt buildings' restore price (the user's meaning) -- logic in the code (text line); mock-up Design/ui/Fire_Banner_Comp.png (icon plaque) waits for approval.
 - 17: «подарок разработчика» — concept of the conditions and the banner.
 - 27: why the tutorial offer did not show — probably the tutorial was already won on the Pixel.
 
