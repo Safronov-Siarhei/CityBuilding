@@ -344,7 +344,7 @@ namespace CityBuilder.UI
             else if (productionLabel != null)
             {
                 productionLabel.text = hasProduction
-                    ? FoodLine() ?? ProductionSummary(_currentProduction.SelectedRecipe, _currentProduction.BatchesPerWorkerPerTick, _currentProduction.IntervalSeconds)
+                    ? FoodLine() ?? SummaryOf(_currentProduction)
                     : string.Empty;
             }
             RefreshRecipeControls();
@@ -394,7 +394,7 @@ namespace CityBuilder.UI
         {
             var hasProduction = _currentProduction != null && _currentProduction.MaxWorkers > 0;
             if (!hasProduction) return null;
-            var line = FoodLine() ?? ProductionSummary(_currentProduction.SelectedRecipe, _currentProduction.BatchesPerWorkerPerTick, _currentProduction.IntervalSeconds);
+            var line = FoodLine() ?? SummaryOf(_currentProduction);
             return string.IsNullOrEmpty(line) ? null : line;
         }
 
@@ -475,6 +475,23 @@ namespace CityBuilder.UI
         ///
         /// Pure and static so the wording is covered by an EditMode test without a canvas.
         /// </summary>
+        /// <summary>
+        /// A Sawmill's / Quarry's line tells the truth about its trips (the user, 2026-11-19: the card said «x2 / 6 s», a
+        /// timer these two never run): what one worker brings home a trip -- the per-harvest amount times the level's
+        /// batches_per_tick -- and the seconds he works the tree or rock. Everything else: the timer's line.
+        /// </summary>
+        private static string SummaryOf(ProductionBuilding production)
+        {
+            if (production.GathersFromNodes)
+            {
+                var resource = production.ProducesResource;
+                var load = Maps.ResourceNode.YieldPerHarvestFor(resource) * Mathf.Max(1, production.BatchesPerWorkerPerTick);
+                return Localization.Format("#building_gathers", $"{load} {ResourceNames.Of(resource)}",
+                    Core.BalanceConfig.Instance.HarvestSeconds.ToString("0.#"));
+            }
+            return ProductionSummary(production.SelectedRecipe, production.BatchesPerWorkerPerTick, production.IntervalSeconds);
+        }
+
         public static string ProductionSummary(BuildingRecipe recipe, int batchesPerWorker, float intervalSeconds)
         {
             if (recipe == null || batchesPerWorker <= 0) return string.Empty;

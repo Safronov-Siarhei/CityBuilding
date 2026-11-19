@@ -118,9 +118,11 @@ namespace CityBuilder.Maps
         /// with one stone in it hands over one, not the full slice. Returns what was taken so the
         /// caller can credit exactly that and no more.
         /// </summary>
-        public int TakeYield()
+        /// <summary>One visit's take: `loads` times the per-harvest amount (a yard's batches_per_tick at its level,
+        /// the user 2026-11-19), never more than the node has left.</summary>
+        public int TakeYield(int loads = 1)
         {
-            var taken = Mathf.Min(YieldPerHarvestFor(ResourceType), RemainingYield);
+            var taken = Mathf.Min(YieldPerHarvestFor(ResourceType) * Mathf.Max(1, loads), RemainingYield);
             if (taken <= 0) return 0;
 
             RemainingYield -= taken;

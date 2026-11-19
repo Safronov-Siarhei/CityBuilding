@@ -433,7 +433,8 @@ namespace CityBuilder.Citizens
             if (!_claimedNodes.TryGetValue(agent, out var node) || node == null) return;
 
             // Added, not set: whatever he already carries is not thrown away.
-            _carriedByAgent[agent] = CarriedBy(agent) + node.TakeYield();
+            // a Sawmill's / Quarry's batches_per_tick at its level = loads a trip (the user, 2026-11-19)
+            _carriedByAgent[agent] = CarriedBy(agent) + node.TakeYield(building.BatchesPerWorkerPerTick);
             if (!node.IsDepleted) return;
 
             _claimedNodes.Remove(agent);

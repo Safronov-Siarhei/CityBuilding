@@ -4,6 +4,11 @@
 
 > **Status (2026-10-21):** shipped. Since 2026-10-21 nodes hold a STOCK and give one per visit; mines
 > stand only on ORE VEINS. Two delivery bugs fixed 2026-10-20 (no sawmill on any map ever delivered).
+> **2026-11-19 (the user):** a Sawmill's / Quarry's `batches_per_tick` (per level, all three tables: «Здания»,
+> «Нашествие: здания», «Песочница: Здания (Производство)») = LOADS A TRIP: a worker takes `wood/stone_per_harvest` x it
+> from the node (`ResourceNode.TakeYield(loads)`, never more than the node has). All set to 1 (was 2, which did nothing:
+> these two never run the timer). `production_interval_sec` is ignored for them. The card says
+> «Добывает: N за ходку, 15 с работы» (`#building_gathers`, BuildingInfoPanelController.SummaryOf). NOT built/setup yet.
 > **Read with:** [maps-and-terrain](maps-and-terrain.md), [production-chains](production-chains.md),
 > [building-placement](building-placement.md).
 
