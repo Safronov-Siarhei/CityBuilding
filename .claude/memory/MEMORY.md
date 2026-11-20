@@ -110,3 +110,4 @@
 - [Playtest 2026-11-19 round 2](project_pending_2026_11_19b.md) — 9 items, 8 done in code (no build); menu village houses vanishing on re-entry not found, asked the user
 - [Windows playtest 2026-11-19](project_pending_2026_11_19c.md) — 11 items; houses = PC quality level, towers = broken regenerated prefabs (restored from HEAD); invasion dimming fixed
 - [Playtest 2026-11-20 (Editor)](project_pending_2026_11_20.md) — 9 fixes in code (food over the day, lighthouse reach, fire crews, orc notice...), 3 concepts waiting (resource info, booster scroll, save slots)
+- [Concepts as screens](feedback_concepts_as_screens.md) — UI concepts = coloured 1920x1080 PNGs over the user's screenshot with real skin pieces, not chat widgets
