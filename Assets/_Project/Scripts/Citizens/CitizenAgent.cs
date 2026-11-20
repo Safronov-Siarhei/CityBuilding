@@ -201,16 +201,20 @@ namespace CityBuilder.Citizens
         /// the CharacterController switched off and the figure moved by its transform -- a Move() cost ~9 us
         /// a step, the write ~0.5 us, and walkers are the town's whole CPU bill. The NavMesh already routes
         /// round every building (carves), so the capsule only ever mattered on the straight-line fallback.
-        /// MEASURED 2026-11-20 (PerformanceProfileTests stages 6-9): no gain -- 150 and 300 citizens cost the
-        /// same either way (0,54 / 0,61 ms BehaviourUpdate on desktop), so it is OFF everywhere and the capsule
-        /// stays. `SimpleWalkOverride` lets the performance test run the same town both ways.
+        /// MEASURED 2026-11-20 on the Redmi Pad (dev APK, PerfProbe `town 100 220` / `capsule on|off`, archipelago):
+        /// 220 people 41 -> 50 fps (scripts 18.3 -> 13.4 ms), 300 people 24-34 -> 50 fps (scripts 33 -> 13 ms, physics
+        /// 2.0 -> 0.7 ms) -- the citizens cost next to nothing without the capsule. The desktop editor test had shown no
+        /// difference: trust the phone. So ON in EVERY mode (the user's plan: sandbox first, then the rest if it helps).
+        /// `SimpleWalkOverride` lets a test or PerfProbe run the same town both ways.
         /// </summary>
         public static bool? SimpleWalkOverride;
-        public static bool SimpleWalk => SimpleWalkOverride ?? false;
+        public static bool SimpleWalk => SimpleWalkOverride ?? true;
 
         private void Awake()
         {
             _controller = GetComponent<CharacterController>();
+            // off from the start, not only once he first walks: a standing capsule is still in the physics scene
+            if (_controller != null && SimpleWalk) _controller.enabled = false;
         }
 
         /// <summary>The capsule on or off to match SimpleWalk (checked every step: the test flips it mid-run).</summary>

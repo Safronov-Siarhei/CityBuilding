@@ -240,3 +240,9 @@ hunted in the wrong place for months. See [[project_mobile_device_fleet]] for th
 (timer + jitter, immediate on a fallen target / new attack order); camp guards settle at their post. Army bill in the
 test fight 0.33 -> 0.20 ms, GC -2 KB/frame. Tools: PerfMarks (Core/PerfMarks.cs) + per-kind switch-off rows in
 PerformanceProfileTests. Left: CharacterController.Move of walking units (4-9 us; removing = overlap, ask the user).
+
+**2026-11-20 REDMI PAD (decisive, overrides the editor result):** citizens' CharacterController is the cost on a phone:
+300 people 24-34 fps (scripts 33 ms) with it, 50 fps (scripts 13 ms) without; 220: 41 vs 50 fps. SimpleWalk now ON in all
+modes. Empty archipelago town already spends 13 ms in scripts (52 orcs + 50 bot soldiers with capsules) -- next target.
+How: dev APK + perf.txt `town 100 220`, `capsule off|on` (Core/PerfTown, PerfProbe); Redmi Pad wireless adb (port given
+by the user each time; it only listened on the port from the main «Отладка по Wi-Fi» screen).

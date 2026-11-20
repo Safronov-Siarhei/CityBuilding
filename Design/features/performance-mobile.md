@@ -133,6 +133,18 @@
   terrain left the collision matrix. Switch left OFF everywhere (default false). 300 citizens add only ~0,07 ms
   over 150; the costly thing per unit is the army: +11 soldiers +8 orcs = +0,31 ms (stage 5) -- look there next.
   Caveat: only 12 workplaces in the test town, most people idle-wander.
+- **2026-11-20 evening, MEASURED ON THE REDMI PAD (the user: «живые тесты на планшете Редми»)** -- dev APK, archipelago
+  sandbox, PerfProbe `town 100 220` (Core/PerfTown: 100 buildings round the hall, people, staffed) and `capsule on|off`,
+  SurfaceFlinger timestats + PERF lines, alternated on/off/on/off:
+  | town | capsule ON | capsule OFF |
+  |---|---|---|
+  | 5 people (start) | 50 fps, scripts 13 ms | -- |
+  | 220 people | 41 fps, scripts 18.3 ms, physics 1.1 | **50 fps**, scripts 13.4 ms, physics 0.7 |
+  | 300 people | 24-34 fps, scripts 33 ms, physics 2.0 | **50 fps**, scripts 13 ms, physics 0.7 |
+  (the first 220 reading right after the spawn: 20 fps, scripts 40 ms -- 220 capsules pushing apart.) Without the capsule
+  the citizens cost ~nothing; the desktop editor test showed NO difference -- the phone is the judge. -> `CitizenAgent.SimpleWalk`
+  is ON in every mode (capsule disabled from Awake). **The next lever: the 13 ms of scripts with an EMPTY town** (cpu ~20 ms,
+  gpu ~15 ms at 2000x1200 Low): 52 orcs + 50 bot soldiers on the archipelago, all with capsules -- measure next.
 - **2026-11-20, the army (the user: «разбери армию»):** `PerformanceProfileTests` now (a) switches each script
   kind off in turn against a fresh baseline and (b) reads `Core/PerfMarks` -- Stopwatch marks inside the army's
   Update, on only while the test reads them (Unity's ProfilerRecorder read 0 for custom markers inside Update in
