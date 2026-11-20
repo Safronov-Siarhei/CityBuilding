@@ -571,3 +571,5 @@ Not checked against the live Play Console -- re-read Google's pages before actin
   - Art: `Tools/ui/dev_gift_concept.py` writes the mock-up AND the pieces + layout.json into `Assets/_Project/UI/DevGift/` (`UiTextureImport.DevGiftFolder`); `SetupProject.BuildDevGiftBanner` (SetupProjectTutorialOffer.cs) builds it; the plaque is the fire plaque's card look, its rows laid out at Show (3 to a row, real icon widths).
   - Sheet: keys in «Наборы: настройки» rows 119-128; texts `#devgift_title/text/label/claim` («Тексты: интерфейс и меню»), `#log_devgift` («Тексты: журнал событий»).
   - Cheat: Читы -> «Подарок от разработчиков» (shows it now, counts as given when claimed).
+
+**2026-11-20:** the booster hint is no longer a strip over the build menu: a round badge under the resource bar opens a card in the screen's middle (the user's version of Design/ui/Concept_BoosterScroll.png) -- details in hud-and-ui.md; the moments and limits above are unchanged.
