@@ -11,7 +11,7 @@ namespace CityBuilder.Core
     /// and the frame turned out to be GPU-bound with nothing to show which part). Push a text file to
     /// /sdcard/Android/data/&lt;package&gt;/files/perf.txt; every second the probe reads it and applies each line:
     ///   post off | dark off | particles off | skinned off | shadows off | figures off | shader &lt;part of a shader name&gt; off
-    ///   scale 0.5 | msaa 1 | census
+    ///   scale 0.5 | msaa 1 | census | town 100 220 (PerfTown) | capsule off|on (citizens' CharacterController)
     /// «census» writes perf_out.txt next to it: renderers, triangles and screen share per shader. Delete the file to stop
     /// (what was switched off stays off until the scene changes). Without the file the probe costs one File.Exists a second.
     /// </summary>
@@ -114,6 +114,20 @@ namespace CityBuilder.Core
                     break;
                 case "census":
                     Census();
+                    break;
+                // town 100 220 -- a big town round the hall (PerfTown), result in the log and perf_out.txt
+                case "town":
+                    if (w.Length > 2 && int.TryParse(w[1], out var b) && int.TryParse(w[2], out var p))
+                    {
+                        var said = PerfTown.Build(b, p);
+                        Debug.Log("[PerfProbe] " + said);
+                        File.WriteAllText(Path.Combine(Application.persistentDataPath, "perf_out.txt"), said);
+                    }
+                    break;
+                // capsule off -- citizens walk without their CharacterController (CitizenAgent.SimpleWalk); on -- with it
+                case "capsule":
+                    Citizens.CitizenAgent.SimpleWalkOverride = off;
+                    Debug.Log("[PerfProbe] citizens' capsule " + (off ? "OFF" : "ON"));
                     break;
             }
         }
