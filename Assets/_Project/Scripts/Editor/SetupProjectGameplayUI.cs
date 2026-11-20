@@ -1100,21 +1100,52 @@ namespace CityBuilder.EditorTools
             card.type = Image.Type.Sliced;
             var cardRect = card.GetComponent<RectTransform>();
             cardRect.anchorMin = cardRect.anchorMax = new Vector2(0.5f, 0.5f);
-            cardRect.sizeDelta = new Vector2(760f, 420f);
+            // the slots of THIS map to overwrite, then a new one by name (the user, 2026-11-20; Design/ui/Concept_SaveSlots.png)
+            cardRect.sizeDelta = new Vector2(900f, 800f);
             cardRect.anchoredPosition = Vector2.zero;
 
-            Localize(CreateText(card.transform, "Title", string.Empty, 40, new Vector2(0f, 150f), new Vector2(680f, 70f)), "#save_title");
+            Localize(CreateText(card.transform, "Title", string.Empty, 42, new Vector2(0f, 340f), new Vector2(800f, 70f)), "#save_title");
+            var subtitle = CreateText(card.transform, "Subtitle", string.Empty, 24, new Vector2(0f, 290f), new Vector2(800f, 40f));
+            Localize(subtitle, "#save_this_map");
 
-            var nameInput = CreateInputField(card.transform, "NameInput", "MyCityName", new Vector2(0f, 30f), new Vector2(600f, 90f), panelSprite);
+            // the list: a masked, scrolling column of rows SaveDialogController lays in at runtime
+            var view = new GameObject("Slots", typeof(RectTransform), typeof(RectMask2D), typeof(Image), typeof(ScrollRect));
+            view.transform.SetParent(card.transform, false);
+            var viewRect = (RectTransform)view.transform;
+            viewRect.anchorMin = viewRect.anchorMax = new Vector2(0.5f, 0.5f);
+            viewRect.anchoredPosition = new Vector2(0f, 60f);
+            viewRect.sizeDelta = new Vector2(800f, 420f);
+            view.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0f);
+            var content = new GameObject("Content", typeof(RectTransform)).GetComponent<RectTransform>();
+            content.SetParent(viewRect, false);
+            content.anchorMin = new Vector2(0f, 1f);
+            content.anchorMax = new Vector2(1f, 1f);
+            content.pivot = new Vector2(0.5f, 1f);
+            content.anchoredPosition = Vector2.zero;
+            content.sizeDelta = new Vector2(0f, 0f);
+            var scroll = view.GetComponent<ScrollRect>();
+            scroll.horizontal = false;
+            scroll.viewport = viewRect;
+            scroll.content = content;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 30f;
 
-            var confirmButton = CreateButton(card.transform, panelSprite, "ConfirmSaveButton", "#save_confirm", new Vector2(-160f, -100f), new Vector2(300f, 90f));
-            var cancelButton = CreateButton(card.transform, panelSprite, "CancelSaveButton", "#ui_cancel", new Vector2(160f, -100f), new Vector2(300f, 90f));
+            var nameInput = CreateInputField(card.transform, "NameInput", "MyCityName", new Vector2(0f, -200f), new Vector2(800f, 84f), panelSprite);
+            var warning = CreateText(card.transform, "Warning", string.Empty, 24, new Vector2(0f, -268f), new Vector2(800f, 40f));
+            warning.color = UiTheme.Danger;
+
+            var confirmButton = CreateDynamicButton(card.transform, panelSprite, "ConfirmSaveButton", new Vector2(-185f, -335f), new Vector2(340f, 84f), out var confirmText);
+            var cancelButton = CreateButton(card.transform, panelSprite, "CancelSaveButton", "#ui_cancel", new Vector2(185f, -335f), new Vector2(340f, 84f));
 
             var dialogController = dialogRoot.AddComponent<SaveDialogController>();
             var dialogSO = new SerializedObject(dialogController);
             dialogSO.FindProperty("saveController").objectReferenceValue = saveController;
             dialogSO.FindProperty("dialogRoot").objectReferenceValue = dialogRoot;
             dialogSO.FindProperty("nameInput").objectReferenceValue = nameInput;
+            dialogSO.FindProperty("slots").objectReferenceValue = content;
+            dialogSO.FindProperty("rowSprite").objectReferenceValue = panelSprite;
+            dialogSO.FindProperty("warning").objectReferenceValue = warning;
+            dialogSO.FindProperty("confirmLabel").objectReferenceValue = confirmText;
             dialogSO.ApplyModifiedPropertiesWithoutUndo();
 
             UnityEventTools.AddPersistentListener(confirmButton.onClick, dialogController.ConfirmSave);

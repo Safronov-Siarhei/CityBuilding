@@ -33,6 +33,9 @@ namespace CityBuilder.Shop
         [SerializeField] private float step = 110f;
 
         private readonly List<string> _running = new List<string>();
+
+        /// <summary>How wide the row of running boosters stands now (0 with none): the offer's badge stands right of it (BoosterHints).</summary>
+        public static float RowWidth { get; private set; }
         private readonly Dictionary<string, float> _full = new Dictionary<string, float>();
         private bool _dirty = true;
 
@@ -96,6 +99,7 @@ namespace CityBuilder.Shop
                 chip.shownSeconds = -1;
                 ((RectTransform)chip.button.transform).anchoredPosition = new Vector2((i - (_running.Count - 1) * 0.5f) * step, 0f);
             }
+            RowWidth = _running.Count * step;
         }
 
         private void Update()

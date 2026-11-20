@@ -519,8 +519,10 @@ namespace CityBuilder.EditorTools
         }
 
         /// <summary>
-        /// The booster hint's banner (Design/store/Booster_Hints.png): above the build menu, a parchment strip --
-        /// the booster's picture, its name, what it does, «Включить» / «▶ Смотреть», a violet bar running down.
+        /// The booster hint (the user, 2026-11-20; Design/ui/Concept_BoosterScroll.png, moved to the top): a round badge under
+        /// the resource bar's middle (BoosterHints puts it right of the running boosters' row), a gold ring for its time;
+        /// a tap opens the card in the screen's middle over a dim -- the picture, the name, what it does,
+        /// «Включить» / «▶ Смотреть», a close cross.
         /// </summary>
         private static void BuildBoosterHints(Transform uiRoot)
         {
@@ -528,39 +530,78 @@ namespace CityBuilder.EditorTools
             holder.transform.SetParent(uiRoot, false);
             StretchFull((RectTransform)holder.transform);
             holder.AddComponent<SandboxOnly>();
-            const float w = 880f, h = 130f;
-            var banner = CreateImage(holder.transform, "Banner", Color.white);
-            banner.sprite = ShopSprite("Strip");
-            var rect = banner.rectTransform;
-            Anchor(rect, new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 240f), new Vector2(w, h));
-            var group = banner.gameObject.AddComponent<CanvasGroup>();
+
+            // the badge: same row as the running boosters (BuildBoosterHud: y -150), a bit bigger, glowing
+            const float disc = 104f;
+            var badgeRect = new GameObject("Badge", typeof(RectTransform)).GetComponent<RectTransform>();
+            badgeRect.SetParent(holder.transform, false);
+            Anchor(badgeRect, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -150f), new Vector2(disc, disc));
+            var badgeGroup = badgeRect.gameObject.AddComponent<CanvasGroup>();
+            var glow = CreateImage(badgeRect, "Glow", Color.white);
+            glow.sprite = ShopSprite("Glow");
+            glow.raycastTarget = false;
+            Anchor(glow.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(disc * 1.9f, disc * 1.9f));
+            var back = CreateImage(badgeRect, "Disc", Color.white);
+            back.sprite = ShopSprite("BoosterDisc");
+            StretchFull(back.rectTransform);
+            var badgeButton = back.gameObject.AddComponent<Button>();
+            badgeButton.targetGraphic = back;
+            var ring = CreateImage(back.transform, "Ring", new Color(1f, 0.82f, 0.31f));
+            ring.sprite = ShopSprite("BoosterRing");
+            ring.type = Image.Type.Filled;
+            ring.fillMethod = Image.FillMethod.Radial360;
+            ring.fillOrigin = (int)Image.Origin360.Top;
+            ring.fillClockwise = false;
+            ring.raycastTarget = false;
+            StretchFull(ring.rectTransform);
+            var badgeIcon = CreateImage(back.transform, "Icon", Color.white);
+            badgeIcon.preserveAspect = true;
+            badgeIcon.raycastTarget = false;
+            badgeIcon.rectTransform.sizeDelta = new Vector2(disc * 0.9f, disc * 0.9f);
+            var dot = CreateImage(badgeRect, "Dot", Color.white);
+            dot.sprite = ShopSprite("Dot");
+            dot.raycastTarget = false;
+            var rim = disc * 0.5f * 0.7071f;
+            Anchor(dot.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(rim, rim), new Vector2(32f, 32f));
+
+            // the card: a dim over everything, the parchment in the middle
+            var cardRoot = new GameObject("Card", typeof(RectTransform));
+            cardRoot.transform.SetParent(holder.transform, false);
+            StretchFull((RectTransform)cardRoot.transform);
+            var dim = CreateImage(cardRoot.transform, "Dim", new Color(0f, 0f, 0f, 0.55f));
+            StretchBleed(dim.rectTransform);
+            var dimButton = dim.gameObject.AddComponent<Button>();
+            dimButton.transition = Selectable.Transition.None;
+            const float w = 560f, h = 560f;
+            var panel = HudImage(cardRoot.transform, "Panel", "panel", new Vector2(w, h));
+            var rect = panel.rectTransform;
             var box = new[] { 0f, 0f, w, h };
             var icon = CreateImage(rect, "Icon", Color.white);
             icon.preserveAspect = true;
             icon.raycastTarget = false;
-            PlaceIn(icon.rectTransform, box, new[] { 12f, 5f, 132f, 125f });
-            var title = ShopText(rect, "Title", null, 34, UiTheme.Heavy, ShopInk, TextAnchor.MiddleLeft);
-            PlaceIn(title.rectTransform, box, new[] { 144f, 16f, 600f, 62f });
-            var line = ShopText(rect, "Line", null, 26, UiTheme.Bold, UiTheme.Rgb(0x6e4824), TextAnchor.MiddleLeft);
-            PlaceIn(line.rectTransform, box, new[] { 144f, 66f, 610f, 108f });
-            var useRect = new[] { 620f, 18f, 860f, 112f };
+            PlaceIn(icon.rectTransform, box, new[] { w / 2f - 95f, 34f, w / 2f + 95f, 224f });
+            var title = ShopText(rect, "Title", null, 46, UiTheme.Heavy, ShopInk, TextAnchor.MiddleCenter);
+            PlaceIn(title.rectTransform, box, new[] { 40f, 236f, w - 40f, 296f });
+            var line = ShopText(rect, "Line", null, 28, UiTheme.Bold, UiTheme.Rgb(0x6e4824), TextAnchor.UpperCenter);
+            line.horizontalOverflow = HorizontalWrapMode.Wrap;
+            PlaceIn(line.rectTransform, box, new[] { 50f, 304f, w - 50f, 404f });
+            var useRect = new[] { w / 2f - 150f, 422f, w / 2f + 150f, 522f };
             var use = ShopButton(rect, "Use", "ButtonGreen", box, useRect);
-            var play = ShopImage(use.transform, "Play", "Play", useRect, new[] { 632f, 41f, 680f, 89f });
-            var useLabel = ShopText(use.transform, "Label", null, 32, UiTheme.Heavy, Color.white, TextAnchor.MiddleCenter);
-            PlaceIn(useLabel.rectTransform, useRect, new[] { 660f, 18f, 860f, 106f });
+            var play = ShopImage(use.transform, "Play", "Play", useRect, new[] { useRect[0] + 22f, 448f, useRect[0] + 70f, 496f });
+            var useLabel = ShopText(use.transform, "Label", null, 34, UiTheme.Heavy, Color.white, TextAnchor.MiddleCenter);
+            PlaceIn(useLabel.rectTransform, useRect, new[] { useRect[0] + 50f, 422f, useRect[2], 516f });
             Rim(useLabel, UiTheme.Rgb(0x1c5412), 3f);
-            var close = ShopButton(rect, "Close", "Close", box, new[] { 836f, -18f, 896f, 42f });
-            var bar = CreateImage(rect, "Bar", new Color(0.75f, 0.43f, 1f, 0.9f));
-            bar.raycastTarget = false;
-            PlaceIn(bar.rectTransform, box, new[] { 30f, 116f, w - 30f, 124f });
-            var barPos = bar.rectTransform.anchoredPosition;
-            bar.rectTransform.pivot = new Vector2(0f, 0.5f);
-            bar.rectTransform.anchoredPosition = barPos - new Vector2((w - 60f) * 0.5f, 0f);
+            var close = ShopButton(rect, "Close", "Close", box, new[] { w - 52f, -22f, w + 22f, 52f });
 
             var hints = holder.AddComponent<BoosterHints>();
             var so = new SerializedObject(hints);
-            so.FindProperty("banner").objectReferenceValue = rect;
-            so.FindProperty("group").objectReferenceValue = group;
+            so.FindProperty("badge").objectReferenceValue = badgeRect;
+            so.FindProperty("badgeGroup").objectReferenceValue = badgeGroup;
+            so.FindProperty("badgeIcon").objectReferenceValue = badgeIcon;
+            so.FindProperty("badgeRing").objectReferenceValue = ring;
+            so.FindProperty("badgeButton").objectReferenceValue = badgeButton;
+            so.FindProperty("cardRoot").objectReferenceValue = cardRoot;
+            so.FindProperty("backdrop").objectReferenceValue = dimButton;
             so.FindProperty("icon").objectReferenceValue = icon;
             so.FindProperty("title").objectReferenceValue = title;
             so.FindProperty("line").objectReferenceValue = line;
@@ -568,7 +609,6 @@ namespace CityBuilder.EditorTools
             so.FindProperty("useLabel").objectReferenceValue = useLabel;
             so.FindProperty("play").objectReferenceValue = play.gameObject;
             so.FindProperty("close").objectReferenceValue = close;
-            so.FindProperty("bar").objectReferenceValue = bar.rectTransform;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 

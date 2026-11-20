@@ -199,6 +199,8 @@ namespace CityBuilder.Resources
             if (stored == 0) return 0;
 
             Write(type, updated);
+            // the top bar's «+N в день» (ResourceFlow): what came in and went out
+            ResourceFlow.Note(type, stored);
             if (stored > 0 && type == ResourceType.Coins) Core.PiggyTasks.Report(Core.PiggyTasks.Coins, stored);
             return stored;
         }

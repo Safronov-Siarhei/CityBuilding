@@ -79,6 +79,38 @@ namespace CityBuilder.UI
             Core.Wallet.UpgradeCrystalsChanged += OnCrystalsChanged;
             _crystals = Core.Wallet.UpgradeCrystals;
             Refresh();
+            WireInfoTaps();
+        }
+
+        /// <summary>
+        /// Every chip a button: a tap opens its note (ResourceInfoPopup; the user, 2026-11-20: «+4 в день»). The pill
+        /// takes the tap; with no pills (a skin without them) the icon does.
+        /// </summary>
+        private void WireInfoTaps()
+        {
+            var canvas = GetComponentInParent<Canvas>();
+            if (canvas != null) canvas = canvas.rootCanvas;
+            // the icons and numbers over the pills let the tap through to them
+            foreach (var t in amountTexts) if (t != null) t.raycastTarget = false;
+            foreach (var r in icons) if (r != null && r.GetComponent<Graphic>() != null) r.GetComponent<Graphic>().raycastTarget = false;
+            if (crystalText != null) crystalText.raycastTarget = false;
+            if (populationText != null) populationText.raycastTarget = false;
+            for (var i = 0; resourceOrder != null && i < resourceOrder.Length; i++)
+                Tap(Background(i) ?? (i < icons.Length ? icons[i] : null), canvas, (int)resourceOrder[i], i < icons.Length ? icons[i] : null);
+            Tap(crystalBackground ?? crystalIcon, canvas, ResourceFlow.CrystalsKey, crystalIcon);
+            Tap(populationBackground ?? populationIcon, canvas, ResourceInfoPopup.PeopleKey, populationIcon);
+        }
+
+        private static void Tap(RectTransform target, Canvas canvas, int key, RectTransform icon)
+        {
+            if (target == null || canvas == null) return;
+            var graphic = target.GetComponent<Graphic>();
+            if (graphic == null) return;
+            graphic.raycastTarget = true;
+            var button = target.GetComponent<Button>() ?? target.gameObject.AddComponent<Button>();
+            button.transition = Selectable.Transition.None;
+            var sprite = icon != null && icon.GetComponent<Image>() != null ? icon.GetComponent<Image>().sprite : null;
+            button.onClick.AddListener(() => ResourceInfoPopup.Toggle(canvas, key, target, sprite));
         }
 
         /// <summary>A rotation, a resized window or a fold changes the row's width: lay the chips out again.</summary>

@@ -12,8 +12,10 @@ using UnityEngine.UI;
 namespace CityBuilder.Shop
 {
     /// <summary>
-    /// A booster offered at the right moment (the user, 2026-11-12; card monetization.md, concept
-    /// Design/store/Booster_Hints.png): a banner at the foot of the screen -- the booster, what it does,
+    /// A booster offered at the right moment (the user, 2026-11-12; card monetization.md). Since 2026-11-20 (the user,
+    /// concept Design/ui/Concept_BoosterScroll.png, moved by him to the top): a round BADGE under the resource bar
+    /// (right of the running boosters' row), its gold ring running down; a tap opens the CARD in the screen's
+    /// middle -- the booster, what it does,
     /// «Включить» when it is in stock (case A), or «▶ Смотреть» when it is not but lies in the shop now
     /// (case B: the ad, then it is switched on at once and its shop place recharges).
     ///
@@ -24,7 +26,7 @@ namespace CityBuilder.Shop
     /// resource nearly out while its working extraction has enough hands.
     ///
     /// How often (agreed, every number in the sheet's boosters tab): none in the first minutes, one on the
-    /// screen, the same one once per hint_repeat_sec, it fades by itself (a bar on its foot) or is swiped,
+    /// screen, the same one once per hint_repeat_sec, it fades by itself (the badge's ring) or is closed,
     /// ignored hint_ignore_limit times in a row -> quiet till the next game; case B at most once per
     /// hint_shop_offer_sec. The checks run twice a second, not every frame.
     /// </summary>
@@ -33,8 +35,13 @@ namespace CityBuilder.Shop
         private const float CheckSeconds = 2f;
         private const float SlideSeconds = 0.3f;
 
-        [SerializeField] private RectTransform banner;
-        [SerializeField] private CanvasGroup group;
+        [SerializeField] private RectTransform badge;
+        [SerializeField] private CanvasGroup badgeGroup;
+        [SerializeField] private Image badgeIcon;
+        [SerializeField] private Image badgeRing;
+        [SerializeField] private Button badgeButton;
+        [SerializeField] private GameObject cardRoot;
+        [SerializeField] private Button backdrop;
         [SerializeField] private Image icon;
         [SerializeField] private Text title;
         [SerializeField] private Text line;
@@ -42,7 +49,6 @@ namespace CityBuilder.Shop
         [SerializeField] private Text useLabel;
         [SerializeField] private GameObject play;
         [SerializeField] private Button close;
-        [SerializeField] private RectTransform bar;
 
         public static BoosterHints Instance { get; private set; }
 
@@ -63,17 +69,20 @@ namespace CityBuilder.Shop
         private int _peakPeople;
         private bool _wasRaid;
         private Vector2 _home;
-        private Vector2 _dragFrom;
+        private bool _open;
 
         private static BalanceConfig Config => BalanceConfig.Sandbox;
 
         private void Awake()
         {
             Instance = this;
-            _home = banner.anchoredPosition;
+            _home = badge.anchoredPosition;
             use.onClick.AddListener(Take);
             if (close != null) close.onClick.AddListener(() => Hide(true));
-            banner.gameObject.SetActive(false);
+            if (backdrop != null) backdrop.onClick.AddListener(() => Hide(true));
+            if (badgeButton != null) badgeButton.onClick.AddListener(Open);
+            badge.gameObject.SetActive(false);
+            if (cardRoot != null) cardRoot.SetActive(false);
         }
 
         private void OnDestroy()
@@ -81,20 +90,8 @@ namespace CityBuilder.Shop
             if (Instance == this) Instance = null;
         }
 
-        private BuildingPlacer _placer;
-        private UI.BuildingCategoryPanel[] _tabs;
-
-        /// <summary>Something stands at the foot of the screen where the banner would come up.</summary>
-        private bool BusyBelow()
-        {
-            if (ModalGate.IsBlocked || Time.timeScale <= 0f) return true;   // a window, a paused banner
-            if (UI.BuildingFocus.Instance != null && UI.BuildingFocus.Instance.Current != null) return true;
-            if (_placer == null) _placer = FindAnyObjectByType<BuildingPlacer>();
-            if (_placer != null && _placer.IsSelecting) return true;
-            if (_tabs == null) _tabs = FindObjectsByType<UI.BuildingCategoryPanel>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            foreach (var tab in _tabs) if (tab != null && tab.IsOpen) return true;
-            return false;
-        }
+        /// <summary>A window or a paused banner is up: no badge comes, and one up (not opened) goes.</summary>
+        private bool Blocked() => ModalGate.IsBlocked || Time.timeScale <= 0f;
 
         /// <summary>A moment the game itself knows of (the hire row opened): offer this booster if the rules allow.</summary>
         public static void Offer(string id)
@@ -110,9 +107,10 @@ namespace CityBuilder.Shop
                 return;
             }
             _play += Time.deltaTime;
-            // the foot of the screen in use (a building held, a build tab open, placing, a window): no banner over it
-            // (the user, 2026-11-19: the offers came up over the bottom-centre controls); one up goes, not as ignored
-            if (BusyBelow())
+            // the badge stands at the top now (the user, 2026-11-20), so building, placing or a tab open no longer
+            // hides it; a window over the game does (not counted as ignored)
+            if (_open) return;
+            if (Blocked())
             {
                 if (_id != null) Hide(false);
                 return;
@@ -215,7 +213,7 @@ namespace CityBuilder.Shop
         {
             var config = Config;
             var def = Boosters.Def(id);
-            if (config == null || def == null || _id != null || !Boosters.Here || BusyBelow()) return false;
+            if (config == null || def == null || _id != null || !Boosters.Here || Blocked()) return false;
             if (_play < config.HintGraceSeconds || OfferShopWindow.IsOpen) return false;
             if (def.durationSeconds > 0f && Boosters.Left(id) > 0f) return false;
             if (_lastShown.TryGetValue(id, out var last) && _play - last < config.HintRepeatSeconds) return false;
@@ -241,8 +239,11 @@ namespace CityBuilder.Shop
             useLabel.text = Localization.Get(fromShop ? "#shop_watch" : "#booster_on");
             if (play != null) play.SetActive(fromShop);
             use.interactable = true;
-            banner.anchoredPosition = _home;
-            banner.gameObject.SetActive(true);
+            if (badgeIcon != null) badgeIcon.sprite = icon.sprite;
+            _open = false;
+            if (cardRoot != null) cardRoot.SetActive(false);
+            badge.anchoredPosition = BadgeHome();
+            badge.gameObject.SetActive(true);
             return true;
         }
 
@@ -261,38 +262,48 @@ namespace CityBuilder.Shop
             Hide(false);
         }
 
-        /// <summary>Takes the banner down; `ignored` counts towards falling quiet.</summary>
+        /// <summary>The badge's tap: the card in the screen's middle, over the whole HUD; its clock stops meanwhile.</summary>
+        private void Open()
+        {
+            if (_id == null || cardRoot == null) return;
+            _open = true;
+            badge.gameObject.SetActive(false);
+            transform.SetAsLastSibling();
+            cardRoot.SetActive(true);
+        }
+
+        /// <summary>Takes the badge and the card down; `ignored` counts towards falling quiet.</summary>
         private void Hide(bool ignored)
         {
             if (_id != null && ignored)
                 _ignored[_id] = (_ignored.TryGetValue(_id, out var n) ? n : 0) + 1;
             _id = null;
-            banner.gameObject.SetActive(false);
+            _open = false;
+            badge.gameObject.SetActive(false);
+            if (cardRoot != null) cardRoot.SetActive(false);
         }
 
-        /// <summary>Slides in, the bar on its foot runs down, a swipe sideways or down throws it away.</summary>
+        /// <summary>Under the resource bar's middle, right of the running boosters' row when there is one.</summary>
+        private Vector2 BadgeHome()
+        {
+            var row = BoosterHud.RowWidth;
+            return row > 0f ? _home + new Vector2(row * 0.5f + badge.sizeDelta.x * 0.5f + 16f, 0f) : _home;
+        }
+
+        /// <summary>Drops in from the bar, breathes, its ring runs down; the time out counts as ignored.</summary>
         private void Animate()
         {
             var dt = Time.unscaledDeltaTime;
             _shownFor += dt;
             _left -= dt;
             var fade = Config != null ? Mathf.Max(0.1f, Config.HintFadeSeconds) : 8f;
-            if (bar != null) bar.localScale = new Vector3(Mathf.Clamp01(_left / fade), 1f, 1f);
+            if (badgeRing != null) badgeRing.fillAmount = Mathf.Clamp01(_left / fade);
             var k = Mathf.Clamp01(_shownFor / SlideSeconds);
             var outK = Mathf.Clamp01(_left / SlideSeconds);
-            group.alpha = Mathf.Min(k, outK);
-            banner.anchoredPosition = _home + new Vector2(0f, -60f * (1f - k));
-            var pointer = UnityEngine.InputSystem.Pointer.current;
-            if (pointer != null && pointer.press.wasPressedThisFrame) _dragFrom = pointer.position.ReadValue();
-            if (pointer != null && pointer.press.wasReleasedThisFrame && RectTransformUtility.RectangleContainsScreenPoint(banner, _dragFrom, null))
-            {
-                var d = pointer.position.ReadValue() - _dragFrom;
-                if (d.magnitude > Screen.height * 0.06f && (Mathf.Abs(d.x) > Mathf.Abs(d.y) || d.y < 0f))
-                {
-                    Hide(true);
-                    return;
-                }
-            }
+            if (badgeGroup != null) badgeGroup.alpha = Mathf.Min(k, outK);
+            badge.anchoredPosition = BadgeHome() + new Vector2(0f, 50f * (1f - k));
+            var pulse = 1f + 0.06f * Mathf.Sin(_shownFor * 5f);
+            badge.localScale = new Vector3(pulse, pulse, 1f);
             if (_left <= 0f) Hide(true);
         }
     }

@@ -67,7 +67,7 @@ namespace CityBuilder.Saving
         }
 
         /// <summary>The map this game is on.</summary>
-        private string CurrentMapId => meshMapApplier != null && !string.IsNullOrEmpty(meshMapApplier.CurrentMapId)
+        public string CurrentMapId => meshMapApplier != null && !string.IsNullOrEmpty(meshMapApplier.CurrentMapId)
             ? meshMapApplier.CurrentMapId
             : (mapTerrainGenerator != null ? mapTerrainGenerator.CurrentMapId : string.Empty);
 
