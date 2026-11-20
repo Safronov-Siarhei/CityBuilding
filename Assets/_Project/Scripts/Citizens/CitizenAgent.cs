@@ -196,9 +196,29 @@ namespace CityBuilder.Citizens
         public int RouteIndex => _routeIndex;
         public int RouteVersion { get; private set; }
 
+        /// <summary>
+        /// Plain walking (the user, 2026-11-20: «переводи жителей сначала в режиме песочницы, потом замер»):
+        /// the CharacterController switched off and the figure moved by its transform -- a Move() cost ~9 us
+        /// a step, the write ~0.5 us, and walkers are the town's whole CPU bill. The NavMesh already routes
+        /// round every building (carves), so the capsule only ever mattered on the straight-line fallback.
+        /// MEASURED 2026-11-20 (PerformanceProfileTests stages 6-9): no gain -- 150 and 300 citizens cost the
+        /// same either way (0,54 / 0,61 ms BehaviourUpdate on desktop), so it is OFF everywhere and the capsule
+        /// stays. `SimpleWalkOverride` lets the performance test run the same town both ways.
+        /// </summary>
+        public static bool? SimpleWalkOverride;
+        public static bool SimpleWalk => SimpleWalkOverride ?? false;
+
         private void Awake()
         {
             _controller = GetComponent<CharacterController>();
+        }
+
+        /// <summary>The capsule on or off to match SimpleWalk (checked every step: the test flips it mid-run).</summary>
+        private void MatchWalkMode()
+        {
+            if (_controller == null || _escape.Escaping) return;
+            var want = !SimpleWalk;
+            if (_controller.enabled != want) _controller.enabled = want;
         }
 
         private void OnDestroy()
@@ -231,7 +251,7 @@ namespace CityBuilder.Citizens
             var controller = GetComponent<CharacterController>();
             if (controller != null) controller.enabled = false;
             transform.position = at;
-            if (controller != null) controller.enabled = true;
+            if (controller != null) controller.enabled = !SimpleWalk;
         }
 
         /// <summary>Switches (or keeps) the agent to ambient wandering from wherever it currently is.</summary>
@@ -449,6 +469,7 @@ namespace CityBuilder.Citizens
                     }
                 }
 
+                MatchWalkMode();
                 if (_escape.Step(transform, _controller, CurrentWalkSpeed()))
                 {
                     ResetStuckTracking();
@@ -477,6 +498,7 @@ namespace CityBuilder.Citizens
                 else
                 {
                     transform.position += direction * speed * Time.deltaTime;
+                    if (SimpleWalk) PinToGroundHeight();
                 }
                 return;
             }

@@ -232,3 +232,7 @@ hunted in the wrong place for months. See [[project_mobile_device_fleet]] for th
 - The identifier is now `com.depigogames.citybuilding`, set in SetupProject. It was the URP template's own until this build.
 - **`summary.totalSize` lies on Android** -- it reports the uncompressed payload, 692 MB against a 32,5 MB APK. The script reads the file itself.
 - The test phone is a **Pixel 6 Pro**: a 2021 flagship, so it is the WRONG device to conclude "fast enough" from -- expect roughly x2-3 over desktop, not the x3-8 a budget phone would show. It is the right device for thermals, since Tensor throttles.
+
+**2026-11-20 re-measure (capsule vs simple walking, PerformanceProfileTests stages 6-9):** no difference --
+150 people 0,54 ms, 300 people 0,61 ms BehaviourUpdate either way. Citizens are NOT the cost any more; the army is
+(+19 soldiers/orcs = +0,31 ms). `CitizenAgent.SimpleWalk` exists but is OFF. Next lever: OrcUnit/SoldierUnit Update.

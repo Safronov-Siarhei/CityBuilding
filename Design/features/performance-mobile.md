@@ -126,6 +126,13 @@
 > **Rule:** mobile first — weigh frame time/GC in every design decision, not as a later pass.
 
 ## What the frame is made of (measured)
+- **2026-11-20, citizens without the capsule (the user: «переводи жителей сначала в песочнице, потом замер»):**
+  `CitizenAgent.SimpleWalk` (controller off, transform steps) vs the CharacterController, same town,
+  `PerformanceProfileTests` stages 6-9 (editor, uncapped): 150 people 0,539 ms capsule / 0,534 simple;
+  300 people 0,611 / 0,611 ms BehaviourUpdate. **No gain** -- the August cost (Move ~8 us) is gone since the
+  terrain left the collision matrix. Switch left OFF everywhere (default false). 300 citizens add only ~0,07 ms
+  over 150; the costly thing per unit is the army: +11 soldiers +8 orcs = +0,31 ms (stage 5) -- look there next.
+  Caveat: only 12 workplaces in the test town, most people idle-wander.
 - CPU: **walking citizens are the whole budget** (17 walkers +0.72 ms BehaviourUpdate; a town of 150
   ≈ 1.7 ms desktop → ×3–8 on a phone). GC is clean — go after CPU, not allocations.
 - `CharacterController.Move` ≈ 8 µs vs 0.45 µs for a transform write; the terrain is off the collision

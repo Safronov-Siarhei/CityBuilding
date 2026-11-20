@@ -56,6 +56,7 @@ namespace CityBuilder.Tests.PlayMode
         private const int TownBuildings = 30;
         private const int TownPopulation = 60;
         private const int CrowdedPopulation = 150;
+        private const int HugePopulation = 300;
         private const int Soldiers = 12;
         private const int Orcs = 8;
 
@@ -109,12 +110,14 @@ namespace CityBuilder.Tests.PlayMode
         {
             Time.timeScale = 1f;
             Application.targetFrameRate = 60;
+            CitizenAgent.SimpleWalkOverride = null;
         }
 
         [UnityTest]
         public IEnumerator ProfileAFrameStageByStage()
         {
             _stages.Clear();
+            CitizenAgent.SimpleWalkOverride = false;   // stages 1-6 as they always were: the capsule
 
             yield return Measure("1. bare map");
 
@@ -135,7 +138,20 @@ namespace CityBuilder.Tests.PlayMode
 
             CitizenManager.Instance.SetPopulation(CrowdedPopulation);
             yield return null;
-            yield return Measure("6. population " + CrowdedPopulation);
+            StaffEveryWorkplace();
+            yield return Measure("6. population " + CrowdedPopulation + ", capsule walking");
+
+            // the same town, walkers on plain transform steps (CitizenAgent.SimpleWalk, 2026-11-20)
+            CitizenAgent.SimpleWalkOverride = true;
+            yield return Measure("7. population " + CrowdedPopulation + ", simple walking");
+
+            CitizenManager.Instance.SetPopulation(HugePopulation);
+            yield return null;
+            StaffEveryWorkplace();
+            yield return Measure("8. population " + HugePopulation + ", simple walking");
+
+            CitizenAgent.SimpleWalkOverride = false;
+            yield return Measure("9. population " + HugePopulation + ", capsule walking");
 
             Debug.Log(BuildReport());
 

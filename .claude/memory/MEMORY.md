@@ -13,7 +13,7 @@
 - [Verify a green by breaking it](feedback_verify_green_by_breaking.md) — a test that never failed is not evidence; the failures here were always a degenerate fixture, not a wrong assertion.
 - [Mechanics audit (2026-08-23)](project_balance_audit.md) — the map is won in ~25 minutes, a 20-resource tower outclasses the whole army, and the order of repair. Minting shipped 2026-08-31; portals are still the item it rates first and still not agreed.
 - [Current state (2026-10-28)](project_current_state.md) — READ FIRST: older state snapshot; 1 queued menu-field fix.
-- [Performance baseline](project_performance_baseline.md) — the measured CPU budget (walking citizens are the whole cost), the MEASURED draw census that corrected the audit's guesses (a building was 16 draws, a tree is one renderer), the instancing lever deliberately not pulled, and the per-model FBX triangle budget.
+- [Performance baseline](project_performance_baseline.md) — measured CPU budget; 2026-11-20 re-measure: citizens cheap (300 = 0,61 ms, capsule or not), the ARMY is the cost now; draw census, instancing not pulled, FBX triangle budget.
 - [Build only when asked](feedback_build_only_on_request.md) — never run an APK build on your own initiative; finish, push, and stop until the user asks for a build.
 - [No Telegram for builds](feedback_build_to_telegram.md) — since 2026-11-18 builds are NOT sent to Telegram; APK to D:/Builds CB + adb over Wi-Fi.
 - [Competitor teardowns (K&C, Farthest Frontier)](reference_competitor_analyses.md) — two deep analyses in Design/reference/competitors/: architecture, building catalogues, real balance numbers, and what reviewers hated.
