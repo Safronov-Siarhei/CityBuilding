@@ -304,6 +304,9 @@ namespace CityBuilder.Research
             if (topic == null) return Localization.Get("#research_blocked_unknown");
             if (IsCompleted(topic.Id)) return Localization.Get("#research_done");
             if (IsRunning(topic)) return Localization.Get("#research_blocked_busy");
+            // the paid Crystal Mine is levelled only once it is bought (the user, 2026-11-20: it could be before)
+            if (topic.IsBuildingTopic && topic.TargetId == BuildingIds.CrystalMine && !Wallet.CrystalMineOwned)
+                return Localization.Get("#crystal_mine_in_shop");
 
             if (Lab == null) return Localization.Get("#research_blocked_no_lab");
             if (LabLevel < topic.RequiredLabLevel) return Localization.Format("#research_blocked_lab_level", topic.RequiredLabLevel);

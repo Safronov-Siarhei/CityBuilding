@@ -338,8 +338,7 @@ namespace CityBuilder.Ships
                 var side = (k % 2 == 0 ? 1f : -1f) * EscortSpread * (1 + k / 2);
                 SpawnOrcShip(ShipKind.OrcWar, home, n, facing, raid, 0, level, landing + facing * Vector3.right * side);
             }
-            EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_orc_fleet", size), EventSeverity.Danger, EventGlyph.Swords, null,
-                home, first != null ? first.transform : null));
+            // no notice as the fleet puts out (the user, 2026-11-20): it comes when they land by the player's buildings
             return true;
         }
 
@@ -369,8 +368,6 @@ namespace CityBuilder.Ships
                 var side = (k % 2 == 0 ? 1f : -1f) * EscortSpread * (1 + k / 2);
                 SpawnOrcShip(ShipKind.BotWar, home, n, facing, raid, 0, level, landing + facing * Vector3.right * side);
             }
-            EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_bot_fleet", size), EventSeverity.Danger, EventGlyph.Swords, ShipyardId,
-                home, first != null ? first.transform : null));
             return raid;
         }
 
@@ -450,11 +447,22 @@ namespace CityBuilder.Ships
                 if (inland.sqrMagnitude > 0.01f) beach = DryOf(beach, inland.normalized);
                 var leader = ship.IsBotShip ? Bot.BotWar.Land(ship.OrcRaid, beach, ship.OrcCargo)
                     : OrcRaidManager.Instance != null ? OrcRaidManager.Instance.SpawnLanding(beach, ship.OrcCargo, ship.OrcLevel) : null;
-                EventLogManager.Instance?.Post(GameEvent.At(Localization.Format(ship.IsBotShip ? "#log_bot_landing" : "#log_orc_landing", ship.OrcCargo),
-                    EventSeverity.Danger, EventGlyph.Swords, ship.IsBotShip ? ShipyardId : null, beach, leader != null ? leader.transform : null));
+                // only a landing on an island the player has built on is news (the user, 2026-11-20)
+                if (PlayerBuiltOn(beach))
+                    EventLogManager.Instance?.Post(GameEvent.At(Localization.Format(ship.IsBotShip ? "#log_bot_landing" : "#log_orc_landing", ship.OrcCargo),
+                        EventSeverity.Danger, EventGlyph.Swords, ship.IsBotShip ? ShipyardId : null, beach, leader != null ? leader.transform : null));
             }
             ship.OrcCargo = 0;
             ship.OrcHomeward = true;
+        }
+
+        /// <summary>A building of the player's stands on the island under this point (any island on a map without islands).</summary>
+        private static bool PlayerBuiltOn(Vector3 point)
+        {
+            var island = Citizens.HousePeople.IslandOf(point);
+            foreach (var b in BuildingInstance.All)
+                if (b != null && !b.IsBot && Citizens.HousePeople.Same(island, Citizens.HousePeople.IslandOf(b))) return true;
+            return false;
         }
 
         /// <summary>

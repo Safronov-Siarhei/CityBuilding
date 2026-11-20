@@ -23,6 +23,9 @@ namespace CityBuilder.Core
 
         public event Action OnDayPassed;
 
+        /// <summary>A day's length in seconds (the sheet's day_length_seconds): meals spread over it (FoodConsumptionManager).</summary>
+        public float DayLengthSeconds => _dayLengthSeconds;
+
         private void Awake()
         {
             if (Instance != null && Instance != this)

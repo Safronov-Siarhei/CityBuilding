@@ -210,3 +210,5 @@ EditMode `SicknessAndFireTests`; PlayMode `HazardTests`.
   - The plaque grows down from its top, and the banner's words move up to 384..446 while it shows.
   - No compensation: no plaque, and the words stay where they were.
 - Mock-up of the wanted look (the user picked variant 1, 2026-11-19): `Design/ui/Fire_Banner_Comp.png` — under the text a plaque, «+ на отстройку:» on its own line, then the numbers and resource icons 4 to a row, wrapping (up to 7 kinds: wood, stone, coins, the three bars...). WAITING for the user's approval; then the plaque gets built in the banner prefab.
+
+**2026-11-20 (the user: a fire out in 2 s, three times):** `FireManager.Arrived` counted a firefighter who merely STOPPED as arrived wherever he stood, so a walk that never started filled and poured at once. Now: arrived within 0.7 m, or stopped within 4 m (a door in the footprint, the water's edge); stopped farther he is sent again once a second and let go after 8 s (`Crew.Stuck`). Not seen.

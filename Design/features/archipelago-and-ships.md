@@ -419,3 +419,5 @@ Wake (2026-11-06): spawned at the stern, drifting back and out (`ShipWake.Sail`)
 1.4 m apart (golden angle) and lets the ship go.
 
 **2026-11-19 (playtest):** an orc fleet lands only on a beach with a way on foot to the Town Hall (`ShipManagerOrcs.WalksTo`, NavMesh path, ends within 6 m of the hall's carve); none such -> the nearest beach as before. They had landed under cliffs and stood there.
+
+**2026-11-20 (the user):** (1) no notice when an orc/bot fleet puts out (`#log_orc_fleet`/`#log_bot_fleet` no longer posted for raids; the tutorial's fleet still is); the landing notice only when the beach is on an island with a player building (`ShipManagerOrcs.PlayerBuiltOn`). (2) Lighthouse reach was 80 m -- INSIDE the 45-80 cells it lights round itself, so every fogged spot was «далеко»: now `LighthouseAim.RangeOf` = its own lit circle (lighthouse_light_cells_N x cell) + lighthouse_range_meters (comment changed in the sheet + economy.csv); the reach disc shows that.

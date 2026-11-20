@@ -67,8 +67,53 @@ namespace CityBuilder.Resources
         /// <summary>Short of food at the last meal: the HUD's food chip warns from the first hungry day.</summary>
         public bool Hungry => HungryDaysInARow > 0;
 
+        // Meals spread over the day (the user, 2026-11-20: the whole day's food vanished at once at the day's end,
+        // which looked strange and could ruin a player): one ration at a time as the day goes; the day's end eats
+        // only what the day still owes and settles hunger on the day's total, as before.
+        private float _owed;
+        private int _demandedToday;
+        private int _eatenToday;
+        private int _varietyMask;
+
+        private void TickMeals()
+        {
+            var calendar = GameCalendar.Instance;
+            var resources = ResourceManager.Instance;
+            if (calendar == null || resources == null || calendar.DayLengthSeconds <= 0f) return;
+            var mouths = Mouths;
+            if (mouths <= 0) return;
+            _owed += mouths * BalanceConfig.Instance.FoodPerMouthPerDay * Time.deltaTime / calendar.DayLengthSeconds;
+            // never more than the day's whole demand before the day's end settles it
+            var cap = ComputeDemand(mouths);
+            while (_owed >= 1f && _demandedToday < cap)
+            {
+                _owed -= 1f;
+                _demandedToday++;
+                _eatenToday += EatRations(resources, 1);
+            }
+        }
+
+        /// <summary>Eats up to <paramref name="rations"/> from the stores (Distribute picks the kinds); returns how many were found.</summary>
+        private int EatRations(ResourceManager resources, int rations)
+        {
+            if (rations <= 0) return 0;
+            var stocks = new int[ResourceDiet.Edible.Count];
+            for (var i = 0; i < stocks.Length; i++) stocks[i] = resources.GetAmount(ResourceDiet.Edible[i]);
+            var eaten = Distribute(rations, stocks);
+            var total = 0;
+            for (var i = 0; i < eaten.Length; i++)
+            {
+                if (eaten[i] <= 0) continue;
+                resources.Add(ResourceDiet.Edible[i], -eaten[i]);
+                total += eaten[i];
+                _varietyMask |= 1 << i;
+            }
+            return total;
+        }
+
         private void Update()
         {
+            TickMeals();
             if (!Starving || citizenManager == null)
             {
                 _leaveTimer = 0f;
@@ -164,26 +209,17 @@ namespace CityBuilder.Resources
             var resources = ResourceManager.Instance;
             if (resources == null) return;
 
-            LastDemand = ComputeDemand(Mouths);
-
-            var stocks = new int[ResourceDiet.Edible.Count];
-            for (var i = 0; i < stocks.Length; i++)
-            {
-                stocks[i] = resources.GetAmount(ResourceDiet.Edible[i]);
-            }
-
-            var eaten = Distribute(LastDemand, stocks);
-
-            LastEaten = 0;
+            // what the day still owes (all of it when no time ran, as in the tests and the cheat's day-end)
+            var rest = Mathf.Max(0, ComputeDemand(Mouths) - _demandedToday);
+            var eatenRest = EatRations(resources, rest);
+            LastDemand = _demandedToday + rest;
+            LastEaten = _eatenToday + eatenRest;
             LastVariety = 0;
-            for (var i = 0; i < eaten.Length; i++)
-            {
-                if (eaten[i] <= 0) continue;
-
-                resources.Add(ResourceDiet.Edible[i], -eaten[i]);
-                LastEaten += eaten[i];
-                LastVariety++;
-            }
+            for (var m = _varietyMask; m != 0; m &= m - 1) LastVariety++;
+            _demandedToday = 0;
+            _eatenToday = 0;
+            _varietyMask = 0;
+            _owed = 0f;
 
             ResolveShortfall(LastDemand - LastEaten);
             // yesterday's leavers (Update) into the register the happiness model reads

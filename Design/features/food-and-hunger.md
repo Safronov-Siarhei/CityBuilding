@@ -70,3 +70,5 @@ nothing forces it UP as foods are added; raise it by hand).
 - (2026-11-17) The six food buildings (Fisher hut, Farm, Orchard, Pig farm, Bakery, Smokehouse) are BUILT per the
   2026-11-02 rework but NEVER SEEN or played by the user; food is stored in the Кладовая (storage rework, per-store).
 - Old hunger tests (deaths at the meal) are outdated; the meat/fruit chains of the old Open are superseded by the rework.
+
+**2026-11-20 (the user): meals spread over the day.** The day's food no longer vanishes at the day's end: `FoodConsumptionManager.TickMeals` (Update) eats ONE ration at a time at mouths x food_per_mouth_per_day / day_length_seconds (`GameCalendar.DayLengthSeconds`), capped at the day's demand; `FeedSettlement` (day end) eats only what the day still owes (all of it when no time ran: tests, the cheat's day-end) and settles hunger on the day's total (missed rations) as before. Not saved: the calendar's day restarts on load, so a day still costs one demand. No build/test yet.

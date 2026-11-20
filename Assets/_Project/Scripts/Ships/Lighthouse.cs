@@ -24,7 +24,20 @@ namespace CityBuilder.Ships
         public static BuildingInstance Aiming { get; private set; }
 
         private static BalanceConfig Balance => BalanceConfig.Instance;
-        public static float Range => Balance != null ? Balance.LighthouseRangeMeters : 80f;
+        /// <summary>How far past its OWN lit circle a lighthouse aims (lighthouse_range_meters).</summary>
+        public static float ReachPastLight => Balance != null ? Balance.LighthouseRangeMeters : 80f;
+
+        /// <summary>
+        /// How far this lighthouse can light: its own lit circle (lighthouse_light_cells_N at its level) and
+        /// lighthouse_range_meters beyond it. It used to be the 80 m alone -- inside the 45-80 CELLS the lighthouse
+        /// already opens round itself, so every fogged spot was «too far» (the user, 2026-11-20).
+        /// </summary>
+        public static float RangeOf(BuildingInstance lighthouse)
+        {
+            var cell = Grid.GridManager.Instance != null ? Grid.GridManager.Instance.CellSize : 2f;
+            var own = lighthouse != null && Balance != null ? Balance.LighthouseLightCells(lighthouse.Level) * cell : 0f;
+            return own + ReachPastLight;
+        }
         public static int Price => Balance != null ? Balance.LighthouseRevealCoins : 30;
 
         /// <summary>Seconds until this lighthouse can light again; 0 when ready.</summary>
@@ -61,7 +74,7 @@ namespace CityBuilder.Ships
                 return false;
             }
             Aiming = lighthouse;
-            Grid.HarvestRadiusOverlay.ShowFor(lighthouse.transform.position, Mathf.RoundToInt(Range));
+            Grid.HarvestRadiusOverlay.ShowFor(lighthouse.transform.position, Mathf.RoundToInt(RangeOf(lighthouse)));
             Say(Localization.Get("#lighthouse_aim"), EventSeverity.Good);
             return true;
         }
@@ -93,7 +106,7 @@ namespace CityBuilder.Ships
             var blocker = DescribeBlocker(lighthouse);
             var flat = point - lighthouse.transform.position;
             flat.y = 0f;
-            if (blocker == null && flat.magnitude > Range) blocker = Localization.Get("#lighthouse_far");
+            if (blocker == null && flat.magnitude > RangeOf(lighthouse)) blocker = Localization.Get("#lighthouse_far");
             if (blocker != null)
             {
                 Say(blocker, EventSeverity.Warning);

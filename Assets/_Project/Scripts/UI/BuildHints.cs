@@ -61,9 +61,24 @@ namespace CityBuilder.UI
             if (research != null && topic != null)
             {
                 if (research.Laboratory == null) return Localization.Get("#research_blocked_no_lab");
-                if (research.LabLevel < topic.RequiredLabLevel) return Localization.Format("#research_blocked_lab_level", topic.RequiredLabLevel);
+                if (research.LabLevel < topic.RequiredLabLevel)
+                    return LabGrowingTo(research) >= topic.RequiredLabLevel
+                        ? Localization.Format("#research_lab_upgrading", topic.RequiredLabLevel)
+                        : Localization.Format("#research_blocked_lab_level", topic.RequiredLabLevel);
             }
             return Localization.Format("#building_upgrade_locked", level);
+        }
+
+        /// <summary>
+        /// The level the Laboratory is being upgraded TO, else its level: under an upgrade its Level is still the old
+        /// one, and the chain said «нужна лаборатория 2» and led to «Улучшить» on a lab already going to 2 (the user,
+        /// 2026-11-19/20).
+        /// </summary>
+        private static int LabGrowingTo(ResearchManager research)
+        {
+            var lab = research != null ? research.Laboratory : null;
+            if (lab == null) return 0;
+            return lab.Site != null && lab.Site.IsUpgrade ? lab.Level + 1 : lab.Level;
         }
 
         private static void LeadToBuild(BuildingData data, int step)
@@ -118,7 +133,8 @@ namespace CityBuilder.UI
             if (panel == null) return;
             if (research.LabLevel < topic.RequiredLabLevel)
             {
-                GuideHint.Point(panel.LabUpgradeButton);
+                // already growing to it: nothing to press, the lab's window says it is under way
+                if (LabGrowingTo(research) < topic.RequiredLabLevel) GuideHint.Point(panel.LabUpgradeButton);
                 return;
             }
             GuideHint.Point(panel.ActionOf(topic));

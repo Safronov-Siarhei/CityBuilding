@@ -59,6 +59,7 @@ namespace CityBuilder.Buildings
             public bool Full;
             public GameObject Bucket;
             public GameObject Water;   // the bucket's "Water" child: shown while it is full
+            public float Stuck;        // seconds stood still short of the goal (Arrived)
         }
 
         private readonly List<Crew> _crews = new List<Crew>();
@@ -331,6 +332,8 @@ namespace CityBuilder.Buildings
                 if (c.Full) GoToFire(c);
                 else GoToWater(c);
             }
+            // a man who stopped short and cannot get on is let go (Arrived gives him a few tries)
+            if (c.Stuck > StuckGiveUpSeconds) return false;
             switch (c.Leg)
             {
                 case Leg.ToWater:
@@ -355,11 +358,26 @@ namespace CityBuilder.Buildings
             }
         }
 
+        // A man who STOPPED counted as arrived wherever he stood (the user, 2026-11-20: a fire went out in 2 seconds,
+        // three times -- a walk that never started "arrived" at once, filled and poured in a second): now he must
+        // stand near the goal; stopped short he is sent again, and let go after StuckGiveUpSeconds.
+        private const float StopNearMeters = 4f;
+        private const float StuckGiveUpSeconds = 8f;
+
         private bool Arrived(Crew c)
         {
             var to = c.Goal - c.Agent.transform.position;
             to.y = 0f;
-            return to.magnitude <= ArriveMeters || !c.Agent.ManualMoving;
+            var d = to.magnitude;
+            if (d <= ArriveMeters) { c.Stuck = 0f; return true; }
+            if (c.Agent.ManualMoving) { c.Stuck = 0f; return false; }
+            // stopped: near enough (a door inside the building's footprint, the water's edge) is there
+            if (d <= StopNearMeters) { c.Stuck = 0f; return true; }
+            var before = c.Stuck;
+            c.Stuck += Time.deltaTime;
+            // sent again once a second, not every frame (a path search each)
+            if (Mathf.Floor(c.Stuck) != Mathf.Floor(before)) c.Agent.MoveTo(c.Goal);
+            return false;
         }
 
         private void GoToWater(Crew c)

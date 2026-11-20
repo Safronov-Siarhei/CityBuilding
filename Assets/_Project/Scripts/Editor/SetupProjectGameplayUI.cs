@@ -552,7 +552,10 @@ namespace CityBuilder.EditorTools
             popIcon.preserveAspect = true;
             var popIconRect = popIcon.GetComponent<RectTransform>();
             popIconRect.anchorMin = popIconRect.anchorMax = new Vector2(0.5f, 0.5f);
-            popIconRect.sizeDelta = new Vector2(48f, 48f);
+            // the portrait's body reaches its sprite's foot: 42 px and lifted (pivot 0.42) it stays inside the
+            // chip's lower rim (the user, 2026-11-20: «житель чуть ниже чем нижняя граница рамки»)
+            popIconRect.pivot = new Vector2(0.5f, 0.42f);
+            popIconRect.sizeDelta = new Vector2(42f, 42f);
             // the free hands: a small disc on the icon's corner (ResourceHUDController.idleBadge)
             var idleBadge = CreateImage(popIcon.transform, "Idle", UiTheme.Good);
             idleBadge.sprite = SkinSprite("circle_mask");

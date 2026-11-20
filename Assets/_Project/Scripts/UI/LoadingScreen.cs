@@ -29,7 +29,7 @@ namespace CityBuilder.UI
         private const float MaxReadySeconds = 15f;
         private const float FadeSeconds = 0.25f;
         private const float TipSeconds = 4f;
-        // the course's shape, as baked (loading_maps.py ROUTE_*): y = -Amplitude * sin(2 pi u) on a strip this tall
+        // the course's shape, as baked (loading_maps.py ROUTE_*): y = mid - Amplitude * sin(2 pi u) in the PICTURE (y down), so +sin in the UI, on a strip this tall
         private const float CourseBakedHeight = 80f;
         private const float CourseBakedAmplitude = 16f;
         // the ship rocks a little on the swell
@@ -172,9 +172,11 @@ namespace CityBuilder.UI
             var rect = course.rect;
             var scale = rect.height / CourseBakedHeight;
             var phase = u * Mathf.PI * 2f;
-            var y = -CourseBakedAmplitude * scale * Mathf.Sin(phase);
+            // the picture counts y DOWN from its top (mid - AMP sin), the UI counts it UP: +sin here (the user,
+            // 2026-11-20: the ship sailed a mirror of the red line)
+            var y = CourseBakedAmplitude * scale * Mathf.Sin(phase);
             // the course's slope (stretched across the screen's width), so the ship follows the curve
-            var slope = -CourseBakedAmplitude * scale * Mathf.Cos(phase) * Mathf.PI * 2f / Mathf.Max(1f, rect.width);
+            var slope = CourseBakedAmplitude * scale * Mathf.Cos(phase) * Mathf.PI * 2f / Mathf.Max(1f, rect.width);
             var time = Time.unscaledTime * RockHz * Mathf.PI * 2f;
             var arrived = voyage >= 1f;
             // at the cross it waits still, as the user asked: nothing on the screen changes
