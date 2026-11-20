@@ -60,6 +60,11 @@ replaced by CRLF" warnings (`core.autocrlf` is true and half the repo is LF). Se
 `D:\Fork` machine; run it once on any other device.
 
 ## Traps
+- **Never pipe `build_android.ps1` into `Select-Object -First N`** (2026-11-20): PowerShell stops the script once N lines
+  are out, so the copy to `D:\Builds CB` never ran -- two "fixed" builds were never installed and a fix looked useless.
+  Pipe to `-Last N` or nothing; the fresh APK is always in `Builds/Android/` (install from there when in doubt).
+- Installing over Wi-Fi adb on the Redmi Pad (MIUI) pops an "install via USB?" window on the tablet: the user must tap
+  «Установить» within about a minute, or adb reports `INSTALL_FAILED_USER_RESTRICTED`.
 - **Unity is open (setup exits 1 in 0 s) and the code must still be checked:** compile outside Unity with its own
   Roslyn and the response files Unity left: take `Library/Bee/artifacts/<latest>E.dag/CityBuilder.Runtime.rsp`, change
   `-out:` to a scratch path, drop `-refout/-doc/-pdb`, REPLACE its `.cs` list with the current tree (files pulled

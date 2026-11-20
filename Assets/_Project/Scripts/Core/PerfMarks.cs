@@ -39,6 +39,11 @@ namespace CityBuilder.Core
         }
 
         public static readonly Mark SoldierWall = new Mark("Soldier.Wall");
+        public static readonly Mark WallSeek = new Mark("Wall.Seek (none)");
+        public static readonly Mark WallToStair = new Mark("Wall.ToStair");
+        public static readonly Mark WallWalking = new Mark("Wall.Walking");
+        public static readonly Mark WallPosted = new Mark("Wall.Posted");
+        public static readonly Mark WallRebuild = new Mark("WallWalk.Rebuild");
         public static readonly Mark SoldierTarget = new Mark("Soldier.Target");
         public static readonly Mark SoldierRoute = new Mark("Soldier.Route");
         public static readonly Mark SoldierStep = new Mark("Soldier.Step");
@@ -60,7 +65,7 @@ namespace CityBuilder.Core
 
         public static readonly Mark[] All =
         {
-            SoldierWall, SoldierTarget, SoldierRoute, SoldierStep, SoldierMove, SoldierAttack, SoldierSlot,
+            SoldierWall, WallSeek, WallToStair, WallWalking, WallPosted, WallRebuild, SoldierTarget, SoldierRoute, SoldierStep, SoldierMove, SoldierAttack, SoldierSlot,
             OrcScan, OrcFight, OrcHuntCitizen, OrcHuntPrisoner, OrcGuard, OrcGuardWalk, OrcTarget, OrcAdvance, OrcLate, CampShoot,
             SoldierUpdate, OrcUpdate,
         };

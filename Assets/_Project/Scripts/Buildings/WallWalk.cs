@@ -147,7 +147,7 @@ namespace CityBuilder.Buildings
         {
             if (!_dirty) return;
             _dirty = false;
-            Rebuild();
+            using (Core.PerfMarks.WallRebuild.Auto()) Rebuild();
         }
 
         private static void Rebuild()

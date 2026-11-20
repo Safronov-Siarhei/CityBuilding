@@ -12,6 +12,7 @@ namespace CityBuilder.Core
     /// /sdcard/Android/data/&lt;package&gt;/files/perf.txt; every second the probe reads it and applies each line:
     ///   post off | dark off | particles off | skinned off | shadows off | figures off | shader &lt;part of a shader name&gt; off
     ///   scale 0.5 | msaa 1 | census | town 100 220 (PerfTown) | capsule off|on (citizens' CharacterController)
+    ///   kinds | off &lt;Type&gt; | on &lt;Type&gt; | marks &lt;seconds&gt; (Core/PerfMarks)
     /// «census» writes perf_out.txt next to it: renderers, triangles and screen share per shader. Delete the file to stop
     /// (what was switched off stays off until the scene changes). Without the file the probe costs one File.Exists a second.
     /// </summary>
@@ -38,6 +39,7 @@ namespace CityBuilder.Core
 
         private void Awake()
         {
+            _self = this;
             _path = Path.Combine(Application.persistentDataPath, "perf.txt");
             _out = Path.Combine(Application.persistentDataPath, "perf_out.txt");
         }
@@ -125,11 +127,102 @@ namespace CityBuilder.Core
                     }
                     break;
                 // capsule off -- citizens walk without their CharacterController (CitizenAgent.SimpleWalk); on -- with it
+                // kinds -- every enabled script kind that has an Update/LateUpdate, by count, into perf_out.txt
+                case "kinds":
+                    Kinds();
+                    break;
+                // off <TypeName> / on <TypeName> -- switch every one of that kind (a script, or a CharacterController) off and back
+                case "off":
+                case "on":
+                    if (w.Length > 1) Switch(w[1], w[0] == "off");
+                    break;
+                // marks <seconds> -- Core/PerfMarks (the army's insides) for that long, ms per frame into perf_out.txt
+                case "marks":
+                    if (w.Length > 1 && float.TryParse(w[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var secs) && _self != null)
+                        _self.StartCoroutine(_self.Marks(secs));
+                    break;
                 case "capsule":
                     Citizens.CitizenAgent.SimpleWalkOverride = off;
                     Debug.Log("[PerfProbe] citizens' capsule " + (off ? "OFF" : "ON"));
                     break;
             }
+        }
+
+        private const char NL = (char)10;
+        private static PerfProbe _self;
+        private static readonly List<Component> _switchedOff = new List<Component>();
+
+        private static void Write(string text)
+        {
+            File.WriteAllText(Path.Combine(Application.persistentDataPath, "perf_out.txt"), text);
+            Debug.Log("[PerfProbe] " + text.Replace(NL, ';'));
+        }
+
+        private static void Kinds()
+        {
+            const System.Reflection.BindingFlags F = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic;
+            var counts = new Dictionary<System.Type, int>();
+            foreach (var b in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            {
+                if (!b.enabled || !b.gameObject.activeInHierarchy) continue;
+                var t = b.GetType();
+                counts.TryGetValue(t, out var n);
+                counts[t] = n + 1;
+            }
+            var rows = new List<(string name, int n, bool upd)>();
+            foreach (var kv in counts)
+            {
+                var upd = kv.Key.GetMethod("Update", F) != null || kv.Key.GetMethod("LateUpdate", F) != null;
+                rows.Add((kv.Key.Name, kv.Value, upd));
+            }
+            rows.Sort((a, b) => b.n.CompareTo(a.n));
+            var sb = new StringBuilder();
+            foreach (var r in rows) if (r.upd) sb.Append(r.name).Append(' ').Append(r.n).Append(NL);
+            int cc = 0, ccOn = 0;
+            foreach (var c in FindObjectsByType<CharacterController>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)) { cc++; if (c.enabled) ccOn++; }
+            sb.Append("CharacterController ").Append(ccOn).Append(" on of ").Append(cc).Append(NL);
+            Write(sb.ToString());
+        }
+
+        private static void Switch(string typeName, bool off)
+        {
+            if (!off)
+            {
+                var back = 0;
+                for (var i = _switchedOff.Count - 1; i >= 0; i--)
+                {
+                    var c = _switchedOff[i];
+                    if (c == null || c.GetType().Name != typeName) continue;
+                    if (c is Behaviour b) b.enabled = true; else if (c is Collider col) col.enabled = true;
+                    _switchedOff.RemoveAt(i);
+                    back++;
+                }
+                Debug.Log("[PerfProbe] on " + typeName + " " + back);
+                return;
+            }
+            var n = 0;
+            foreach (var c in FindObjectsByType<Component>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+            {
+                if (c == null || c.GetType().Name != typeName) continue;
+                if (c is Behaviour b && b.enabled) { b.enabled = false; _switchedOff.Add(c); n++; }
+                else if (c is Collider col && col.enabled) { col.enabled = false; _switchedOff.Add(c); n++; }
+            }
+            Debug.Log("[PerfProbe] off " + typeName + " " + n);
+        }
+
+        private System.Collections.IEnumerator Marks(float seconds)
+        {
+            foreach (var m in PerfMarks.All) m.Reset();
+            PerfMarks.On = true;
+            var frames = 0;
+            var until = Time.unscaledTime + seconds;
+            while (Time.unscaledTime < until) { frames++; yield return null; }
+            PerfMarks.On = false;
+            var sb = new StringBuilder();
+            foreach (var m in PerfMarks.All)
+                sb.Append(m.Name).Append(' ').Append((m.Ms / Mathf.Max(1, frames)).ToString("0.000")).Append(" ms/frame, ")
+                  .Append(((double)m.Calls / Mathf.Max(1, frames)).ToString("0.0")).Append(" calls").Append(NL);
+            Write(sb.ToString());
         }
 
         private static void Census()

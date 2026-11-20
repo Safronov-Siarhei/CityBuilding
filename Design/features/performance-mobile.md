@@ -145,6 +145,13 @@
   the citizens cost ~nothing; the desktop editor test showed NO difference -- the phone is the judge. -> `CitizenAgent.SimpleWalk`
   is ON in every mode (capsule disabled from Awake). **The next lever: the 13 ms of scripts with an EMPTY town** (cpu ~20 ms,
   gpu ~15 ms at 2000x1200 Low): 52 orcs + 50 bot soldiers on the archipelago, all with capsules -- measure next.
+- **2026-11-20 night, the EMPTY town's 11 ms on the Redmi Pad** (PerfProbe `kinds`, `off <Type>`/`on <Type>`, `marks <s>`):
+  switching kinds off one by one: the bot's 50 SoldierUnits ~7 ms, everything else ~1 ms or less. Marks inside: **Soldier.Wall
+  6.8 ms** -- the bot's archers POSTED on their walls ran `NearestEnemyInReach` over ~200 enemies (orcs + 153 camp buildings)
+  EVERY frame (WallFight, the same no-target-every-frame bug). Fixed (timer + jitter, distance before BodyRadius);
+  OrcCampBuilding towers also wait 0.4-0.6 s when nobody is in reach. Same town after: Soldier.Wall 0.44 ms, scripts
+  11.2 -> 6.2 ms, cpu 17.5 -> 13.9 ms. Left: Soldier.Update ~2 ms (1.5 of it outside the marks), gpu ~14 ms at 2000x1200 Low.
+  Side note: a LOADED sandbox save showed 1 bot soldier instead of 50 -- check whether the bot garrison is restored on load.
 - **2026-11-20, the army (the user: «разбери армию»):** `PerformanceProfileTests` now (a) switches each script
   kind off in turn against a fresh baseline and (b) reads `Core/PerfMarks` -- Stopwatch marks inside the army's
   Update, on only while the test reads them (Unity's ProfilerRecorder read 0 for custom markers inside Update in

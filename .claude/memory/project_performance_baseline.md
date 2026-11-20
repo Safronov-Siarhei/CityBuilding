@@ -246,3 +246,6 @@ PerformanceProfileTests. Left: CharacterController.Move of walking units (4-9 us
 modes. Empty archipelago town already spends 13 ms in scripts (52 orcs + 50 bot soldiers with capsules) -- next target.
 How: dev APK + perf.txt `town 100 220`, `capsule off|on` (Core/PerfTown, PerfProbe); Redmi Pad wireless adb (port given
 by the user each time; it only listened on the port from the main «Отладка по Wi-Fi» screen).
+**2026-11-20 night:** empty archipelago town 11.2 -> 6.2 ms scripts on the Redmi Pad: the bot's wall archers scanned ~200
+enemies every frame (WallFight) -- fixed. Open: bot garrison 1 soldier after loading a save (50 on a new game) -- check.
+Trap: piping build_android.ps1 into Select-Object -First N kills the script before the copy to D:\Builds CB.

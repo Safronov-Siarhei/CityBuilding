@@ -192,7 +192,8 @@ namespace CityBuilder.Combat
             if (target == null)
             {
                 var ship = Ships.ShipManager.Instance != null ? Ships.ShipManager.Instance.NearestShip(transform.position, _shotRange, orc: false) : null;
-                if (ship == null) return;
+                // nobody in reach: look again in a moment, not every frame (a tower scanned all soldiers each frame)
+                if (ship == null) { _shotTimer = 0.4f + 0.2f * UnityEngine.Random.value; return; }
                 _shotTimer = BalanceConfig.Instance.OrcTowerIntervalSeconds;
                 CombatProjectiles.Fire(kind, CombatProjectiles.MuzzleOf(this, ship.transform.position), ship, _shotDamage);
                 return;

@@ -140,7 +140,7 @@ namespace CityBuilder.Combat
         private bool TickWall()
         {
             using var _pm = PerfMarks.SoldierWall.Auto();
-            if (_wallPhase == WallPhase.None) return TrySeekWall();
+            if (_wallPhase == WallPhase.None) { using (PerfMarks.WallSeek.Auto()) return TrySeekWall(); }
             if (Dungeon.DungeonMode.IsActive)
             {
                 DropToGround();
@@ -158,6 +158,7 @@ namespace CityBuilder.Combat
             {
                 case WallPhase.ToStair:
                 {
+                    using var _pw = PerfMarks.WallToStair.Auto();
                     if (!WallWalk.IsStair(_wallStair))
                     {
                         _wallPhase = WallPhase.None;
@@ -200,6 +201,7 @@ namespace CityBuilder.Combat
                 }
                 case WallPhase.Walking:
                 {
+                    using var _pw = PerfMarks.WallWalking.Auto();
                     if (_wallStep >= _wallPath.Count)
                     {
                         if (_wallLeaving) BeginClimb(false);
@@ -243,7 +245,7 @@ namespace CityBuilder.Combat
                     return true;
                 }
                 case WallPhase.Posted:
-                    WallFight();
+                    using (PerfMarks.WallPosted.Auto()) WallFight();
                     return true;
             }
             return false;
@@ -271,10 +273,12 @@ namespace CityBuilder.Combat
         /// <summary>Shoots the nearest enemy in reach -- never leaves the wall to chase one.</summary>
         private void WallFight()
         {
+            // With NO target he looks again only when the timer runs out: the bot's 50 archers on their walls went
+            // through ~200 enemies each, every frame -- 8 of the empty town's 11 ms on the Redmi Pad (2026-11-20).
             _retargetTimer -= Time.deltaTime;
-            if (_target == null || !_target.IsAlive || _retargetTimer <= 0f)
+            if ((_target != null && !_target.IsAlive) || _retargetTimer <= 0f)
             {
-                _retargetTimer = RetargetIntervalSeconds;
+                _retargetTimer = RetargetIntervalSeconds * (0.75f + 0.5f * Random.value);
                 _target = NearestEnemyInReach();
             }
             if (_target == null || !_target.IsAlive)
@@ -285,6 +289,7 @@ namespace CityBuilder.Combat
             if (HorizontalDistance(_target.Transform.position, transform.position) > UnitAttackRange + BodyRadius(_target))
             {
                 _target = null;
+                _retargetTimer = 0f;   // gone out of reach: the next one at once
                 return;
             }
             FaceTowards(_target.Transform.position);
@@ -312,7 +317,9 @@ namespace CityBuilder.Combat
             {
                 if (candidate == null || !candidate.IsAlive) continue;
                 if (candidate is OrcPortal portal && portal.IsShielded) continue;
-                var d = HorizontalDistance(candidate.Transform.position, transform.position) - BodyRadius(candidate);
+                var raw = HorizontalDistance(candidate.Transform.position, transform.position);
+                if (raw > UnitAttackRange + 3f) continue;   // far past any body's half-width: no GetComponent for it
+                var d = raw - BodyRadius(candidate);
                 if (d > UnitAttackRange || d >= best) continue;
                 best = d;
                 nearest = candidate;
