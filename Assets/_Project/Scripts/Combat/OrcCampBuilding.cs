@@ -180,6 +180,7 @@ namespace CityBuilder.Combat
 
         private void Update()
         {
+            using var _pm = PerfMarks.CampShoot.Auto();
             if (_shotDamage <= 0 || CurrentHealth <= 0) return;
 
             _shotTimer -= Time.deltaTime;

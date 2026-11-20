@@ -447,12 +447,13 @@ namespace CityBuilder.Combat
             _guardRadius = radius;
             _camp = camp;
             _guardPost = post;
+            _guardSettled = false;
             _target = null;
             _guardRoute = NewRoute();
         }
 
         /// <summary>Moves the post it holds without ending a fight: a dungeon patrol walking its route.</summary>
-        public void MovePost(Vector3 post) => _guardPost = post;
+        public void MovePost(Vector3 post) { _guardPost = post; _guardSettled = false; }
 
         private bool _perched;
         private float _perchBonus;
@@ -468,6 +469,7 @@ namespace CityBuilder.Combat
             if (_controller != null) _controller.enabled = false;
             transform.position = top;
             _guardPost = top;
+            _guardSettled = false;
             _guardRadius = _soldierAttackRange + _perchBonus;
         }
 
@@ -520,12 +522,14 @@ namespace CityBuilder.Combat
             if (IgnoresSoldiers || Steered) return;
             offset.y = 0f;
             _knockLeft = Mathf.Max(0.05f, seconds);
+            _guardSettled = false;
             _knock = offset / _knockLeft;
             BusyFor = Mathf.Max(BusyFor, _knockLeft);
         }
 
         private void Update()
         {
+            using var _pm = PerfMarks.OrcUpdate.Auto();
             if (Steered || Asleep) return;
             if (_knockLeft > 0f)
             {
@@ -549,9 +553,12 @@ namespace CityBuilder.Combat
 
             // Defenders in reach come first -- see SoldierAggroRadius.
             _soldierScanTimer -= Time.deltaTime;
-            if (_soldierTarget == null || _soldierTarget.CurrentHealth <= 0 || _soldierScanTimer <= 0f)
+            // With NO target he looks again only when the timer runs out (it was every frame: 50 idle camp guards
+            // searched for soldiers each frame, ~5 us apiece -- the army's biggest bill, measured 2026-11-20).
+            // A target that just fell is replaced at once.
+            if ((_soldierTarget != null && _soldierTarget.CurrentHealth <= 0) || _soldierScanTimer <= 0f)
             {
-                _soldierScanTimer = SoldierScanIntervalSeconds;
+                _soldierScanTimer = SoldierScanIntervalSeconds * (0.75f + 0.5f * Random.value);   // spread over frames
 
                 // A target handed over by being SHOT is kept while the chase is still worth it.
                 // Without this exception the very next scan -- which looks no further than the
@@ -769,10 +776,14 @@ namespace CityBuilder.Combat
 
         private void GuardUpdate()
         {
+            using var _pm = PerfMarks.OrcGuard.Auto();
             _soldierScanTimer -= Time.deltaTime;
-            if (_soldierTarget == null || _soldierTarget.CurrentHealth <= 0 || _soldierScanTimer <= 0f)
+            // With NO target he looks again only when the timer runs out (it was every frame: 50 idle camp guards
+            // searched for soldiers each frame, ~5 us apiece -- the army's biggest bill, measured 2026-11-20).
+            // A target that just fell is replaced at once.
+            if ((_soldierTarget != null && _soldierTarget.CurrentHealth <= 0) || _soldierScanTimer <= 0f)
             {
-                _soldierScanTimer = SoldierScanIntervalSeconds;
+                _soldierScanTimer = SoldierScanIntervalSeconds * (0.75f + 0.5f * Random.value);   // spread over frames
                 if (!_retaliating || !StillWorthChasing(_soldierTarget))
                 {
                     _retaliating = false;
@@ -782,6 +793,8 @@ namespace CityBuilder.Combat
 
             if (_soldierTarget != null)
             {
+                _guardSettled = false;
+                _guardBest = float.MaxValue;
                 var toSoldier = _soldierTarget.transform.position - transform.position;
                 toSoldier.y = 0f;
                 if (toSoldier.magnitude <= _soldierAttackRange + (_perched ? _perchBonus : 0f))
@@ -790,7 +803,7 @@ namespace CityBuilder.Combat
                     if (_attackTimer > 0f) return;
                     _attackTimer = _attackIntervalSeconds;
                     Strike(_soldierTarget);
-                    if (_soldierTarget.CurrentHealth <= 0) _soldierTarget = null;
+                    if (_soldierTarget.CurrentHealth <= 0) { _soldierTarget = null; _soldierScanTimer = 0f; }
                     return;
                 }
                 if (_perched) return;
@@ -799,13 +812,24 @@ namespace CityBuilder.Combat
             }
 
             if (_perched) return;
-            if (HuntPrisoner()) return;
+            if (HuntPrisoner()) { _guardSettled = false; return; }
 
+            // Back at his post -- or as near as he gets (the route ends short of it, others stand on it): he stays put
+            // till a soldier or a prisoner moves him. Guards that never quite reached their post walked on the spot
+            // every frame, ~2-3 us each, 50 of them at once (measured 2026-11-20).
+            if (_guardSettled) return;
             var toPost = _guardPost - transform.position;
             toPost.y = 0f;
-            if (toPost.magnitude < 0.6f) return;
-            GuardWalk(_guardPost);
+            var distance = toPost.magnitude;
+            if (distance < 0.6f) { _guardSettled = true; return; }
+            if (distance < _guardBest - 0.05f) { _guardBest = distance; _guardStall = 0f; }
+            else if ((_guardStall += Time.deltaTime) > 1.5f) { _guardSettled = true; _guardBest = float.MaxValue; _guardStall = 0f; return; }
+            if (!GuardWalk(_guardPost)) _guardSettled = true;
         }
+
+        private bool _guardSettled;
+        private float _guardBest = float.MaxValue;
+        private float _guardStall;
 
         /// <summary>
         /// With no soldier to fight, goes for a freed prisoner: a guard for one inside its camp's
@@ -813,6 +837,7 @@ namespace CityBuilder.Combat
         /// </summary>
         private bool HuntPrisoner()
         {
+            using var _pm = PerfMarks.OrcHuntPrisoner.Auto();
             if (FreedPrisoner.All.Count == 0)
             {
                 _prisonerTarget = null;
@@ -867,8 +892,10 @@ namespace CityBuilder.Combat
             return nearest;
         }
 
-        private void GuardWalk(Vector3 destination, bool straightLineFallback = false)
+        /// <summary>One step towards it; false when the route has nowhere more to go.</summary>
+        private bool GuardWalk(Vector3 destination, bool straightLineFallback = false)
         {
+            using var _pm = PerfMarks.OrcGuardWalk.Auto();
             _guardRoute ??= NewRoute();
             _guardRouteTimer -= Time.deltaTime;
             var moved = destination - _guardRouteDestination;
@@ -879,7 +906,7 @@ namespace CityBuilder.Combat
                 _guardRouteDestination = destination;
                 _guardRouteTimer = GuardRouteRefreshSeconds;
             }
-            if (!_guardRoute.TryGetDirection(transform.position, out var direction)) return;
+            if (!_guardRoute.TryGetDirection(transform.position, out var direction)) return false;
 
             // wading slower, rings round it (the user, 2026-11-04: monsters had no water effect)
             var step = direction * _walkSpeed * Buildings.Moat.SpeedAt(transform.position) * Time.deltaTime;
@@ -894,6 +921,7 @@ namespace CityBuilder.Combat
                 transform.position += step;
             }
             transform.rotation = Quaternion.LookRotation(direction);
+            return true;
         }
 
         private const float ChaseLookAheadMeters = 1.5f;
@@ -1076,6 +1104,7 @@ namespace CityBuilder.Combat
         /// </summary>
         private void FightSoldier()
         {
+            using var _pm = PerfMarks.OrcFight.Auto();
             var toSoldier = _soldierTarget.transform.position - transform.position;
             toSoldier.y = 0f;
             var distance = toSoldier.magnitude;
@@ -1087,7 +1116,7 @@ namespace CityBuilder.Combat
                 _attackTimer = _attackIntervalSeconds;
 
                 Strike(_soldierTarget);
-                if (_soldierTarget.CurrentHealth <= 0) _soldierTarget = null;
+                if (_soldierTarget.CurrentHealth <= 0) { _soldierTarget = null; _soldierScanTimer = 0f; }
                 return;
             }
 
@@ -1108,6 +1137,7 @@ namespace CityBuilder.Combat
         /// </summary>
         private bool HuntCitizen()
         {
+            using var _pm = PerfMarks.OrcHuntCitizen.Auto();
             if (!Invasion.InvasionMode.IsActive) return false;
             var visuals = CityBuilder.Citizens.CitizenVisualsManager.Instance;
             if (visuals == null) return false;
@@ -1155,6 +1185,7 @@ namespace CityBuilder.Combat
 
         private SoldierUnit FindNearestSoldierInAggroRange()
         {
+            using var _pm = PerfMarks.OrcScan.Auto();
             SoldierUnit nearest = null;
             var nearestDistSq = _soldierAggroRadius * _soldierAggroRadius;
 
@@ -1207,6 +1238,7 @@ namespace CityBuilder.Combat
         /// <summary>Faces the way it walks: a raider used to slide along its route facing wherever it was made.</summary>
         private void LateUpdate()
         {
+            using var _pm = PerfMarks.OrcLate.Auto();
             var moved = transform.position - _lastPosition;
             _lastPosition = transform.position;
             moved.y = 0f;
@@ -1280,6 +1312,7 @@ namespace CityBuilder.Combat
         /// <summary>Walks toward the current route waypoint, advancing to the next one on arrival. Purely locomotion -- Update already decided this frame isn't an attack frame before calling this.</summary>
         private void AdvanceAlongRoute()
         {
+            using var _pm = PerfMarks.OrcAdvance.Auto();
             var waypoint = _route[_routeIndex];
             var toWaypoint = waypoint - transform.position;
             toWaypoint.y = 0f;
@@ -1313,6 +1346,7 @@ namespace CityBuilder.Combat
         /// </summary>
         private void AcquireTarget(bool besideTheLane = false)
         {
+            using var _pm = PerfMarks.OrcTarget.Auto();
             BuildingInstance nearest = null;
             var nearestDistSq = float.MaxValue;
             var castle = Invasion.InvasionMode.IsActive ? Invasion.InvasionMode.Instance.Castle : null;

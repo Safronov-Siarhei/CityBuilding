@@ -81,6 +81,11 @@ PlayMode `CombatProjectileTests` (+ photos `projectile-*.png`), `ArmyCombatTests
 `SoldiersBreakInRatherThanWalkThroughTheWall`; archer test measures max distance an orc walked alive).
 
 ## Traps
+- **Target search is on a timer even with NO target** (2026-11-20): SoldierUnit `_retargetTimer` and OrcUnit
+  `_soldierScanTimer` used to fire every frame while the target was null -- the army's biggest CPU bill. A fallen
+  target, a new `Group.AttackTarget`, Regroup/Revive reset the timer to 0 (at once). Camp guards `_guardSettled` at
+  their post; anything that moves a guard (MovePost, knock, a new post) must clear it. Measure with
+  `PerformanceProfileTests` + `Core/PerfMarks` (see performance-mobile).
 - A plain Gate has `defense` 0 on every level since 2026-10-22 (the user: a gate is a way through
   for allies and a wall for orcs, not a turret); the Fortified Gate still shoots.
 CitizenAgent and OrcUnit still carry older hand-rolled route copies — port to `NavRoute` if they bug out.

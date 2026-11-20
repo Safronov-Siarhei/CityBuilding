@@ -236,3 +236,7 @@ hunted in the wrong place for months. See [[project_mobile_device_fleet]] for th
 **2026-11-20 re-measure (capsule vs simple walking, PerformanceProfileTests stages 6-9):** no difference --
 150 people 0,54 ms, 300 people 0,61 ms BehaviourUpdate either way. Citizens are NOT the cost any more; the army is
 (+19 soldiers/orcs = +0,31 ms). `CitizenAgent.SimpleWalk` exists but is OFF. Next lever: OrcUnit/SoldierUnit Update.
+**2026-11-20 army pass:** idle orcs/soldiers searched for targets EVERY frame (timer only ran with a target) -- fixed
+(timer + jitter, immediate on a fallen target / new attack order); camp guards settle at their post. Army bill in the
+test fight 0.33 -> 0.20 ms, GC -2 KB/frame. Tools: PerfMarks (Core/PerfMarks.cs) + per-kind switch-off rows in
+PerformanceProfileTests. Left: CharacterController.Move of walking units (4-9 us; removing = overlap, ask the user).

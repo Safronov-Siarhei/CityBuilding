@@ -133,6 +133,17 @@
   terrain left the collision matrix. Switch left OFF everywhere (default false). 300 citizens add only ~0,07 ms
   over 150; the costly thing per unit is the army: +11 soldiers +8 orcs = +0,31 ms (stage 5) -- look there next.
   Caveat: only 12 workplaces in the test town, most people idle-wander.
+- **2026-11-20, the army (the user: «разбери армию»):** `PerformanceProfileTests` now (a) switches each script
+  kind off in turn against a fresh baseline and (b) reads `Core/PerfMarks` -- Stopwatch marks inside the army's
+  Update, on only while the test reads them (Unity's ProfilerRecorder read 0 for custom markers inside Update in
+  batchmode). Found and fixed: **an orc or soldier with NO target searched for one EVERY frame** (the 0.4 s timer
+  only ran while he had one): 50 idle camp guards ~5 us each, an idle soldier through all 326 enemies (orcs +
+  portals + 271 camp buildings) ~9 us. Now the search waits for the timer (jittered 0.75-1.25x), except a fallen
+  target or a new player attack order -> at once. Camp guards also SETTLE at their post (reached, or no closer for
+  1.5 s, or the route ends) and stand till a soldier/prisoner/knock/new post moves them. Result, stage 5 (11
+  soldiers + 8 orcs): +0.33 -> +0.20 ms; soldier 17-24 -> 3.5-6.5 us/frame, orc 4.4-5.3 -> 1.9-2.3 us; GC
+  3 982 -> 1 982 B/frame. Left: a WALKING unit's step 6-10 us (CharacterController.Move 4-9 us -- removing it
+  lets units overlap, a look decision); 271 camp buildings' Update 0.07 ms (0.27 us each, most never shoot).
 - CPU: **walking citizens are the whole budget** (17 walkers +0.72 ms BehaviourUpdate; a town of 150
   ≈ 1.7 ms desktop → ×3–8 on a phone). GC is clean — go after CPU, not allocations.
 - `CharacterController.Move` ≈ 8 µs vs 0.45 µs for a transform write; the terrain is off the collision

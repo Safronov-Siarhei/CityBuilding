@@ -6,6 +6,7 @@ using CityBuilder.Citizens;
 using CityBuilder.Combat;
 using CityBuilder.Core;
 using CityBuilder.Grid;
+using CityBuilder.Maps;
 using CityBuilder.Resources;
 using CityBuilder.Saving;
 using NUnit.Framework;
@@ -135,6 +136,7 @@ namespace CityBuilder.Tests.PlayMode
             var recruited = Recruit(Soldiers);
             SpawnOrcs(Orcs);
             yield return Measure("5. + " + recruited + " soldiers, " + Orcs + " orcs");
+            yield return MeasureMarks("during the fight (stage 5)");
 
             CitizenManager.Instance.SetPopulation(CrowdedPopulation);
             yield return null;
@@ -153,9 +155,54 @@ namespace CityBuilder.Tests.PlayMode
             CitizenAgent.SimpleWalkOverride = false;
             yield return Measure("9. population " + HugePopulation + ", capsule walking");
 
+            // who the frame is spent on (2026-11-20, «разбери армию»): each kind's Update switched off in turn,
+            // the saving read against stage 9 -- a cheap per-script profile without a deep-profiling build
+            var kinds = new[]
+            {
+                typeof(OrcUnit), typeof(SoldierUnit), typeof(OrcBodyAnimator), typeof(OrcCampBuilding),
+                typeof(CitizenAgent), typeof(CitizenWaddle), typeof(FogCulled), typeof(ResourceNode),
+            };
+            foreach (var kind in kinds)
+            {
+                yield return Measure("x. all on");   // the baseline right before, the frame drifts as the fight ends
+                var off = SwitchOff(kind);
+                yield return Measure("x. " + kind.Name + " off (" + off.Count + ")");
+                foreach (var b in off) if (b != null) b.enabled = true;
+            }
+
+            yield return MeasureMarks("at the end");
+
             Debug.Log(BuildReport());
+            Debug.Log(_marks.ToString());
 
             Assert.Greater(placed, 0, "Nothing was built, so the stages measure nothing.");
+        }
+
+        private readonly StringBuilder _marks = new StringBuilder();
+
+        private IEnumerator MeasureMarks(string when)
+        {
+            for (var i = 0; i < WarmupFrames; i++) yield return null;
+            foreach (var m in PerfMarks.All) m.Reset();
+            PerfMarks.On = true;
+            for (var i = 0; i < SampleFrames; i++) yield return null;
+            PerfMarks.On = false;
+            int soldiers = 0, orcs = 0, awake = 0;
+            foreach (var u in SoldierUnit.All) if (u != null && u.CurrentHealth > 0) soldiers++;
+            foreach (var o in OrcUnit.All) if (o != null && o.CurrentHealth > 0) { orcs++; if (!o.Asleep) awake++; }
+            _marks.AppendLine("=== ARMY MARKS " + when + ": " + soldiers + " soldiers, " + orcs + " orcs (" + awake + " awake); ms per frame over " + SampleFrames + " frames (marks inside others are counted in both) ===");
+            foreach (var m in PerfMarks.All)
+                _marks.AppendLine(string.Format("{0,-22} | {1,8:F4} ms | {2,8:F1} calls/frame | {3,7:F2} us/call", m.Name, m.Ms / SampleFrames, (double)m.Calls / SampleFrames, m.Calls > 0 ? m.Ms * 1000.0 / m.Calls : 0.0));
+        }
+
+        private static List<Behaviour> SwitchOff(System.Type kind)
+        {
+            var off = new List<Behaviour>();
+            foreach (var o in Object.FindObjectsByType(kind, FindObjectsSortMode.None))
+            {
+                if (o is Behaviour b && b.enabled) { b.enabled = false; off.Add(b); }
+            }
+            return off;
         }
 
         private IEnumerator Measure(string label)

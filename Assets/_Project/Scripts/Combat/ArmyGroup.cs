@@ -304,6 +304,7 @@ namespace CityBuilder.Combat
         /// <summary>Where this member stands relative to HoldPosition, so a group of ten doesn't pile into one point and shove each other around.</summary>
         public Vector3 SlotPositionFor(SoldierUnit unit)
         {
+            using var _pm = CityBuilder.Core.PerfMarks.SoldierSlot.Auto();
             if (IsGarrison && _posts.TryGetValue(unit, out var post)) return post;
             if (IsSquad) return HoldPosition + FormationSlot(unit);
             var index = _members.IndexOf(unit);

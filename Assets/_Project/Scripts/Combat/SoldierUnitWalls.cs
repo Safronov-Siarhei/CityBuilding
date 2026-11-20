@@ -139,6 +139,7 @@ namespace CityBuilder.Combat
         /// <summary>One frame of the wall's business; true when it took the frame (Update returns).</summary>
         private bool TickWall()
         {
+            using var _pm = PerfMarks.SoldierWall.Auto();
             if (_wallPhase == WallPhase.None) return TrySeekWall();
             if (Dungeon.DungeonMode.IsActive)
             {

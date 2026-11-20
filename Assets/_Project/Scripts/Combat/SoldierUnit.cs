@@ -236,7 +236,7 @@ namespace CityBuilder.Combat
         public void Regroup(ArmyGroup group)
         {
             Group = group;
-            _target = null;
+            _target = null; _retargetTimer = 0f;   // the next one at once
             _hasRoute = false;
             Marching = false;
         }
@@ -283,7 +283,7 @@ namespace CityBuilder.Combat
         public void Revive()
         {
             CurrentHealth = MaxHealth;
-            _target = null;
+            _target = null; _retargetTimer = 0f;   // the next one at once
             _breach = null;
             _hasRoute = false;
             _attackTimer = 0f;
@@ -338,6 +338,7 @@ namespace CityBuilder.Combat
 
         private void Update()
         {
+            using var _pm = PerfMarks.SoldierUpdate.Auto();
             if (_shieldLeft > 0f) _shieldLeft -= Time.deltaTime;
             if (_rageLeft > 0f) _rageLeft -= Time.deltaTime;
             if (_hasteLeft > 0f) _hasteLeft -= Time.deltaTime;
@@ -379,9 +380,13 @@ namespace CityBuilder.Combat
             }
 
             _retargetTimer -= Time.deltaTime;
-            if (_target == null || !_target.IsAlive || _retargetTimer <= 0f)
+            // With NO target he looks again only when the timer runs out (it was every frame: an idle soldier went
+            // through every orc, portal and camp building -- 326 of them -- each frame, ~9 us; measured 2026-11-20).
+            // A target that fell, or a new attack order from the player, is answered at once.
+            var ordered = Group.AttackTarget != null && Group.AttackTarget.IsAlive && Group.AttackTarget != _target;
+            if ((_target != null && !_target.IsAlive) || ordered || _retargetTimer <= 0f)
             {
-                _retargetTimer = RetargetIntervalSeconds;
+                _retargetTimer = RetargetIntervalSeconds * (0.75f + 0.5f * UnityEngine.Random.value);   // spread over frames
                 Group.ClearFinishedAttackOrder();
                 // a fighter keeps the one he picked till it falls (the user, 2026-11-19: defenders and heroes in a run
                 // swung from orc to orc every 0.4 s, the nearest each time, and walked to and fro striking none)
@@ -439,6 +444,7 @@ namespace CityBuilder.Combat
         /// <summary>A live orc within a melee blow; none for archers.</summary>
         private OrcUnit OrcAtHand()
         {
+            using var _pm = PerfMarks.SoldierTarget.Auto();
             if (IsRanged) return null;
             OrcUnit nearest = null;
             var best = UnitAttackRange;
@@ -467,6 +473,7 @@ namespace CityBuilder.Combat
         /// </summary>
         private IDamageTarget KeptTarget()
         {
+            using var _pm = PerfMarks.SoldierTarget.Auto();
             var t = _target;
             if (t == null || !t.IsAlive || t.Transform == null || Marching || Group.IsGarrison) return null;
             if (Group.AttackTarget != null && Group.AttackTarget.IsAlive && Group.AttackTarget != t) return null;
@@ -479,6 +486,7 @@ namespace CityBuilder.Combat
 
         private IDamageTarget AcquireTarget()
         {
+            using var _pm = PerfMarks.SoldierTarget.Auto();
             if (Group.AttackTarget != null && Group.AttackTarget.IsAlive && CanStrike(Group.AttackTarget)) return Group.AttackTarget;
             // sent somewhere by the player: he goes there first, fights after (the user, 2026-11-02) --
             // unless he is caught on the way: one pinned by monsters striking him stood and took it
@@ -664,6 +672,7 @@ namespace CityBuilder.Combat
 
         private void TickAttack()
         {
+            using var _pm = PerfMarks.SoldierAttack.Auto();
             _attackTimer -= Time.deltaTime;
             if (_attackTimer > 0f) return;
             _attackTimer = AttackInterval;
@@ -688,7 +697,7 @@ namespace CityBuilder.Combat
             else struck.TakeDamage(blow);
             if (!struck.IsAlive)
             {
-                _target = null;
+                _target = null; _retargetTimer = 0f;   // the next one at once
                 KilledTarget?.Invoke(struck);
                 return;
             }
@@ -702,6 +711,7 @@ namespace CityBuilder.Combat
         /// <summary>Routes to a destination, replanning when the destination has moved or the plan has gone stale. Movement itself is one step along the current route.</summary>
         private void WalkTowards(Vector3 destination)
         {
+            using var _pm = PerfMarks.SoldierStep.Auto();
             // kept inside (campaign mission 2: the garrison never leaves the town's walls, the user 2026-11-12)
             // -- but into the rubble of a broken wall, after an orc standing there (the user's sixth playtest)
             if (Pen.width > 0f && !(PenBreach != null && PenBreach(destination))) destination = new Vector3(Mathf.Clamp(destination.x, Pen.xMin, Pen.xMax), destination.y, Mathf.Clamp(destination.z, Pen.yMin, Pen.yMax));
@@ -712,7 +722,7 @@ namespace CityBuilder.Combat
 
             if (!_hasRoute || destinationMoved || _routeRefreshTimer <= 0f || _route.IsFinished)
             {
-                _route.SetDestination(transform.position, destination);
+                using (PerfMarks.SoldierRoute.Auto()) _route.SetDestination(transform.position, destination);
                 _routeDestination = destination;
                 _routeRefreshTimer = RouteRefreshSeconds;
                 _hasRoute = true;
@@ -731,7 +741,8 @@ namespace CityBuilder.Combat
                 }
             }
 
-            if (!_route.TryGetDirection(transform.position, out var direction)) return;
+            Vector3 direction;
+            using (PerfMarks.SoldierRoute.Auto()) { if (!_route.TryGetDirection(transform.position, out direction)) return; }
 
             var speed = _walkSpeed * Weather.SpeedMultiplier;   // the New Year's blizzard slows everyone
             if (SlowedFor > 0f) speed *= _slowFactor;
@@ -739,7 +750,7 @@ namespace CityBuilder.Combat
             speed *= Buildings.Moat.SpeedAt(transform.position);   // wading a moat
             if (_controller != null && _controller.enabled)
             {
-                _controller.Move(direction * speed * Time.deltaTime);
+                using (PerfMarks.SoldierMove.Auto()) _controller.Move(direction * speed * Time.deltaTime);
             }
             else
             {
