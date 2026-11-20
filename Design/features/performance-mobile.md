@@ -151,7 +151,8 @@
   EVERY frame (WallFight, the same no-target-every-frame bug). Fixed (timer + jitter, distance before BodyRadius);
   OrcCampBuilding towers also wait 0.4-0.6 s when nobody is in reach. Same town after: Soldier.Wall 0.44 ms, scripts
   11.2 -> 6.2 ms, cpu 17.5 -> 13.9 ms. Left: Soldier.Update ~2 ms (1.5 of it outside the marks), gpu ~14 ms at 2000x1200 Low.
-  Side note: a LOADED sandbox save showed 1 bot soldier instead of 50 -- check whether the bot garrison is restored on load.
+  Then: the 50 were a NEW-game bug -- the bot garrison manned before the fog was on (a load correctly keeps it unmanned
+  until the player sees the bot castle); fixed in BotGarrison. Empty new town on the Redmi Pad: scripts **4.0 ms**, cpu 11.7 ms.
 - **2026-11-20, the army (the user: «разбери армию»):** `PerformanceProfileTests` now (a) switches each script
   kind off in turn against a fresh baseline and (b) reads `Core/PerfMarks` -- Stopwatch marks inside the army's
   Update, on only while the test reads them (Unity's ProfilerRecorder read 0 for custom markers inside Update in

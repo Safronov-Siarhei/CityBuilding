@@ -116,6 +116,7 @@ Proposed, not agreed:
   - `bot_garrison_patrols` x `bot_garrison_patrol_size` ManAtArms patrol the avenues.
   - `bot_garrison_archers` Archers hold walk-wall cells (GoToWall).
   - A fallen soldier respawns at the hall after `bot_garrison_respawn_sec`. The garrison is not saved: it is manned fresh on load.
+  - **Not manned before the player's own castle stands** (2026-11-20): until then the fog is off and `FogCulling.Seen` said yes, so a NEW game manned all 50 under the cloud at once (a loaded game correctly did not). Now `BotGarrison.Update` waits for `BuildingInstance.TownHall`; Redmi Pad empty town scripts 6.2 -> 4.0 ms.
 - **IsBot filters:** BuildingPlacer (island check, OnlyOne), FireManager, CheatsPanelEconomy, CitizenVisualsManager, SicknessManager, FreedPrisoner, OrcRaidManagerPlacement, PlayerProgression, GameEvent, HappinessManager, InvasionHealing, ResearchManager, GameSaveController (save and lookup), ShipManager (shipyard).
   - GameOverManager ignores a bot Town Hall.
   - No event-log line for bot losses.

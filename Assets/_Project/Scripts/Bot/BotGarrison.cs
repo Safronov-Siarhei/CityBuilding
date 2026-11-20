@@ -71,7 +71,10 @@ namespace CityBuilder.Bot
             var config = BalanceConfig.Instance;
             if (kingdom == null || !kingdom.Placed || army == null || config == null) return;
             if (_standDown) return;
-            // the garrison mans, walks and refills only while the player can see the castle
+            // the garrison mans, walks and refills only while the player can see the castle -- and not before the
+            // player's own castle stands: until then the fog is not on yet and FogCulling.Seen said yes, so a NEW game
+            // manned all 50 at once under the cloud (a loaded one did not); measured on the Redmi Pad 2026-11-20
+            if (Buildings.BuildingInstance.TownHall == null) return;
             if (kingdom.Hall != null && !Maps.FogCulling.Seen(kingdom.Hall.transform.position, BotKingdom.SeenRadiusCells)) return;
             if (!_manned)
             {
