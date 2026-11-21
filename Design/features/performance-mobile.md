@@ -1,5 +1,12 @@
 # Performance on mobile
 
+> **Every measurement is logged in `Design/PERFORMANCE_TESTS.md`** (method, devices, raw tables) -- add new ones there.
+>
+> **2026-11-21, Redmi Pad (the floor we design for):** battle limit 120 v 120 (the user); Invasion with a developed
+> town + late waves never under 44 fps; **mission 1 play 27-28 fps, GPU-bound (35 ms) at 170k tris**:
+> CineGround ground still ~11 ms even with the baked noise (4 samples + soft shadows + fog per pixel, ribbons over
+> the grass), DungeonDark darkness ~6 ms, post ~6 ms. NOT fixed yet -- candidates in PERFORMANCE_TESTS.md.
+
 > **2026-11-18 evening, "дожимай" -- MEASURED on three devices (dev APK + PERF lines, PerfProbe toggles):**
 > - **The big one: the film/menu/mission GROUND shader** (`CineGround.shader`) computed four-octave value noise per pixel
 >   (up to five Fbm calls, ~80 sine hashes a pixel). Redmi Pad: GPU 60 ms -> ~28 ms in the main menu (16 -> 31-36 fps);

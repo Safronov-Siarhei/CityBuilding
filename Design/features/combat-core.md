@@ -84,6 +84,11 @@ PlayMode `CombatProjectileTests` (+ photos `projectile-*.png`), `ArmyCombatTests
 - **Crowd pause** (2026-11-21, `Core/CrowdPause`): orc Chase / GuardWalk and soldier WalkTowards skip their Move for
   ~0.4 s after 0.4 s of getting under a quarter of the step (pressed into a crowd). A capsule Move in a packed fight
   costs 60-100 us on a phone. A new walking path for units should use it too.
+- **Orc building look on a timer** (2026-11-21, `OrcUnit.TimeToRetarget`/`Retargeted`): the march, `Raid` and the siege
+  road (`WalkTheLane`) used `_target == null || timer` -- an orc with no building to go for searched EVERY frame, on a
+  lane with a NavMesh detour path each time (mission 2 wave 5: 8 ms a frame for 18 orcs on the Redmi Pad). Now a fallen
+  target re-picks at once, nothing found looks again in `IdleLookSeconds` 0.5 s (jittered), a held one every 5 s.
+  RULE: never `x == null || timer` for a search that can come back empty.
 - **Target search is on a timer even with NO target** (2026-11-20): SoldierUnit `_retargetTimer` and OrcUnit
   `_soldierScanTimer` used to fire every frame while the target was null -- the army's biggest CPU bill. A fallen
   target, a new `Group.AttackTarget`, Regroup/Revive reset the timer to 0 (at once). Camp guards `_guardSettled` at

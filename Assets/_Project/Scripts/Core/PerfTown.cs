@@ -112,6 +112,34 @@ namespace CityBuilder.Core
             return "battle: " + BattleSoldiers.Count + " soldiers vs " + BattleOrcs.Count + " orcs";
         }
 
+        /// <summary>
+        /// The player's army at once (PerfProbe `army N`): N soldiers (2/3 men-at-arms, 1/3 archers, squads of 20)
+        /// holding in front of the castle at their sheet strength -- a developed run's or town's defence to measure.
+        /// </summary>
+        public static string Army(int soldiers)
+        {
+            var army = Combat.ArmyManager.Instance;
+            var hall = BuildingInstance.TownHall;
+            if (army == null) return "army: no army manager";
+            var at = hall != null ? hall.transform.position + new Vector3(0f, 0f, -10f) : Vector3.zero;
+            if (UnityEngine.AI.NavMesh.SamplePosition(at, out var hit, 10f, UnityEngine.AI.NavMesh.AllAreas)) at = hit.position;
+            Combat.ArmyGroup group = null;
+            var made = 0;
+            for (var i = 0; i < soldiers; i++)
+            {
+                var type = i % 3 == 2 ? Combat.SoldierType.Archer : Combat.SoldierType.ManAtArms;
+                if (i % 20 == 0) { group = new Combat.ArmyGroup(type, at + new Vector3((i / 20) * 4f - 8f, 0f, 0f)); }
+                var unit = army.SpawnHireling(type, at + new Vector3(Random.Range(-6f, 6f), 0f, Random.Range(-3f, 3f)), group);
+                if (unit == null) continue;
+                var stats = Combat.SoldierStats.StatsAt(type, 3);
+                unit.SetHeroStats(stats.maxHealth, stats.attackDamage);
+                unit.SetCurrentHealth(stats.maxHealth);
+                BattleSoldiers.Add(unit);
+                made++;
+            }
+            return "army: " + made + " soldiers";
+        }
+
         private static void ClearBattle()
         {
             var army = Combat.ArmyManager.Instance;

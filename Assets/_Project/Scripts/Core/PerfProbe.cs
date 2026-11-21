@@ -132,6 +132,18 @@ namespace CityBuilder.Core
                     if (w.Length > 2 && int.TryParse(w[1], out var bs) && int.TryParse(w[2], out var bo))
                         Write(PerfTown.Battle(bs, bo));
                     break;
+                // army 60 -- the player's soldiers at once in front of the castle (PerfTown.Army)
+                case "army":
+                    if (w.Length > 1 && int.TryParse(w[1], out var an)) Write(PerfTown.Army(an));
+                    break;
+                // wave 30 -- an Invasion run sends wave 30 now (InvasionWaves.SendWave)
+                case "wave":
+                    if (w.Length > 1 && int.TryParse(w[1], out var wn) && Invasion.InvasionMode.Instance != null && Invasion.InvasionMode.Instance.Waves != null)
+                    {
+                        Invasion.InvasionMode.Instance.Waves.SendWave(wn);
+                        Write("wave: " + wn + " sent, " + Invasion.InvasionMode.Instance.Waves.OrcsLeft + " orcs");
+                    }
+                    break;
                 // kinds -- every enabled script kind that has an Update/LateUpdate, by count, into perf_out.txt
                 case "kinds":
                     Kinds();

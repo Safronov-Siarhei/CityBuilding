@@ -1122,3 +1122,6 @@ Commands:
 - The level structure beyond mission 1.
 
 **2026-11-19 (Windows playtest):** the film's subtitle had an Outline AND a Shadow (the Shadow copied the outline's four copies 3-4 px off = a doubled shadow) -> one thin Outline (black 0.8, 1.2 px; `SetupProjectCampaign` «Line»). «Пропустить» did not respond on Windows (cause not proven): `FilmSkip.Attach` now makes an EventSystem + InputSystemUIInputModule if the scene has none, Esc/Space/Enter skip while the button shows, and a tap logs `[FilmSkip] skip` -- look for it in Player.log if it fails again. The film's missing houses were the Windows PC quality level (build-and-test card).
+
+**Performance (2026-11-21, Redmi Pad):** mission 1 play 27-28 fps, GPU-bound -- ground shader CineGround ~11 ms,
+darkness ~6 ms, post ~6 ms (not fixed yet); mission 2 see `Design/PERFORMANCE_TESTS.md`.

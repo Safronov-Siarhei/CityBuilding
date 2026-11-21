@@ -143,6 +143,13 @@ namespace CityBuilder.Invasion
             return best < float.MaxValue;
         }
 
+        /// <summary>Sends wave `wave` now, as if the run had come that far (PerfProbe `wave N`, measuring a late run on a phone).</summary>
+        public void SendWave(int wave)
+        {
+            Wave = Mathf.Max(0, wave - 1);
+            SendNextWave();
+        }
+
         /// <summary>Sends the next wave now. Public for the tests, which do not wait out the clock.</summary>
         public void SendNextWave()
         {

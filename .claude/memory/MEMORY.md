@@ -13,7 +13,7 @@
 - [Verify a green by breaking it](feedback_verify_green_by_breaking.md) — a test that never failed is not evidence; the failures here were always a degenerate fixture, not a wrong assertion.
 - [Mechanics audit (2026-08-23)](project_balance_audit.md) — the map is won in ~25 minutes, a 20-resource tower outclasses the whole army, and the order of repair. Minting shipped 2026-08-31; portals are still the item it rates first and still not agreed.
 - [Current state (2026-10-28)](project_current_state.md) — READ FIRST: older state snapshot; 1 queued menu-field fix.
-- [Performance baseline](project_performance_baseline.md) — REDMI PAD 2026-11-20/21: capsule-free citizens, bot wall-archer + garrison fixes (empty town scripts 11->4 ms); BATTLE LIMIT 100v100 = 40 fps, 150v150 = 30 with stutter; editor tests understate phone costs.
+- [Performance baseline](project_performance_baseline.md) — ALL DATA in Design/PERFORMANCE_TESTS.md (user 2026-11-21: optimisation goes to another person). Redmi Pad: fight cap 120v120 (user), Invasion developed 44+ fps, mission 1 27-28 fps GPU-bound (CineGround/darkness/post, NOT fixed), mission 2 orc lane-retarget bug fixed.
 - [Build only when asked](feedback_build_only_on_request.md) — never run an APK build on your own initiative; finish, push, and stop until the user asks for a build.
 - [No Telegram for builds](feedback_build_to_telegram.md) — since 2026-11-18 builds are NOT sent to Telegram; APK to D:/Builds CB + adb over Wi-Fi.
 - [Competitor teardowns (K&C, Farthest Frontier)](reference_competitor_analyses.md) — two deep analyses in Design/reference/competitors/: architecture, building catalogues, real balance numbers, and what reviewers hated.

@@ -235,6 +235,10 @@ namespace CityBuilder.Combat
         // Much shorter than RetargetIntervalSeconds: buildings don't move, soldiers do, and a
         // five-second reaction to being attacked reads as the orc simply not noticing.
         private const float SoldierScanIntervalSeconds = 0.4f;
+        // With no building to go for, the next look comes this soon (jittered), not every frame: on a
+        // siege road the look ran a NavMesh detour path per orc per frame -- mission 2 on the Redmi Pad
+        // spent 8 ms a frame on 18 orcs (2026-11-21).
+        private const float IdleLookSeconds = 0.5f;
         // How far from a building's WALL a stuck orc looks for the thing blocking its way: wide
         // enough to catch the wall it just walked up to, narrow enough that it can't reach past
         // that wall for something behind it.
@@ -270,6 +274,20 @@ namespace CityBuilder.Combat
         private bool _routeBlocked;
         private float _attackTimer;
         private float _retargetTimer;
+        private bool _heldTarget;
+
+        // A held target that fell re-picks at once; with nothing held the look waits for the timer.
+        private bool TimeToRetarget()
+        {
+            _retargetTimer -= Time.deltaTime;
+            return (_heldTarget && _target == null) || _retargetTimer <= 0f;
+        }
+
+        private void Retargeted()
+        {
+            _heldTarget = _target != null;
+            _retargetTimer = (_heldTarget ? RetargetIntervalSeconds : IdleLookSeconds) * (0.75f + 0.5f * UnityEngine.Random.value);
+        }
         private float _soldierScanTimer;
 
         /// <summary>The soldier it is after was handed over by being hit rather than found by the scan, so the scan must not immediately forget it -- see NotifyAttackedBy.</summary>
@@ -592,11 +610,10 @@ namespace CityBuilder.Combat
             }
             else
             {
-                _retargetTimer -= Time.deltaTime;
-                if (_target == null || _retargetTimer <= 0f)
+                if (TimeToRetarget())
                 {
                     AcquireTarget();
-                    _retargetTimer = RetargetIntervalSeconds;
+                    Retargeted();
                 }
             }
             if (_target == null) return;
@@ -1438,14 +1455,13 @@ namespace CityBuilder.Combat
         /// <summary>One frame of the raid. False when a building is the target: the ordinary target code walks to it and breaks it.</summary>
         private bool Raid()
         {
-            _retargetTimer -= Time.deltaTime;
-            if (_target == null || _retargetTimer <= 0f)
+            if (TimeToRetarget())
             {
                 _target = NearestBuildingOutsideTheBase(transform.position, _raidCastle, _raidBaseRadius);
                 _routeIndex = 0;
                 _routeBlocked = false;
                 _route = _target != null ? BuildRoute(transform.position, _target.transform.position, out _routeBlocked) : new[] { transform.position };
-                _retargetTimer = RetargetIntervalSeconds;
+                Retargeted();
             }
             if (_target != null) return false;
 
@@ -1549,11 +1565,10 @@ namespace CityBuilder.Combat
         /// <summary>One frame on the way. False when a building beside it (or the castle at its end) is the target: the ordinary target code then walks to it and hits it.</summary>
         private bool WalkTheLane()
         {
-            _retargetTimer -= Time.deltaTime;
-            if (_target == null || _retargetTimer <= 0f)
+            if (TimeToRetarget())
             {
                 AcquireTarget(besideTheLane: true);
-                _retargetTimer = RetargetIntervalSeconds;
+                Retargeted();
             }
             if (_target != null) return false;
 
