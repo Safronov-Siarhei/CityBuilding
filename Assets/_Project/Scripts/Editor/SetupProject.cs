@@ -90,9 +90,12 @@ namespace CityBuilder.EditorTools
             // the campaign's opening cutscene (SetupProjectCampaign) -- not in the build list yet
             BuildCampaignOpeningScene();
             BuildCampaignMapScene();
+            // the studio splash «Чернильное перо» -- the build's FIRST scene; it loads MainMenu (SetupProjectSplash)
+            BuildSplashScene();
 
             EditorBuildSettings.scenes = new[]
             {
+                new EditorBuildSettingsScene(SplashScenePath, true),
                 new EditorBuildSettingsScene($"{ScenesFolder}/MainMenu.unity", true),
                 new EditorBuildSettingsScene($"{ScenesFolder}/CityBuilder.unity", true),
                 new EditorBuildSettingsScene(CampaignOpeningScenePath, true),

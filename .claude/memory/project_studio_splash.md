@@ -22,3 +22,5 @@ lifts in arcs between strokes, slow ink soak, slow camera push-in 0.965->1. Prev
 **How to apply:** when building it into Unity: skippable by tap, plays while the main menu loads, drawn from the
 same vector paths (no video). Open question I raised: 7.6 s every launch is long — full version on first launch,
 short (~3 s) after? Not answered. «Made with Unity» splash OFF in SetupProject + SplashScreen.backgroundColor = paper, which per Unity 6 docs also recolours the Android 12+ system splash (user asked for paper, 2026-11-21); not checked on a phone. Card: Design/features/studio-splash.md.
+
+BUILT 2026-11-21 (user: «встраивай»): Splash.unity = build index 0, SplashInk loads MainMenu underneath; art/timeline exported by Design/branding/depigo/splash/export_splash_unity.py into Assets/_Project/UI/Splash -- change the splash THERE and re-export. Not seen by the user, not on a phone.
