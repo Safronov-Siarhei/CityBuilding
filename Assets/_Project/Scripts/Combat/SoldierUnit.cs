@@ -748,6 +748,8 @@ namespace CityBuilder.Combat
             if (SlowedFor > 0f) speed *= _slowFactor;
             if (_hasteLeft > 0f) speed *= _hasteFactor;
             speed *= Buildings.Moat.SpeedAt(transform.position);   // wading a moat
+            if (_crowd.Waiting(Time.deltaTime)) { FaceTowards(transform.position + direction); return; }   // pressed into a crowd
+            var before = transform.position;
             if (_controller != null && _controller.enabled)
             {
                 using (PerfMarks.SoldierMove.Auto()) _controller.Move(direction * speed * Time.deltaTime);
@@ -756,6 +758,7 @@ namespace CityBuilder.Combat
             {
                 transform.position += direction * speed * Time.deltaTime;
             }
+            _crowd.After(before, transform.position, speed * Time.deltaTime, Time.deltaTime);
 
             PinToGroundHeight();
             Dungeon.DungeonWake.Step(transform.position, ref _wakeClock);   // rings round a wading walker
@@ -764,6 +767,7 @@ namespace CityBuilder.Combat
         }
 
         private float _wakeClock;
+        private CrowdPause _crowd;
 
         private void FaceTowards(Vector3 worldPosition)
         {

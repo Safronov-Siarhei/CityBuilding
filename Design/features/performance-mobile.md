@@ -174,9 +174,15 @@
   | 120 v 120 | 27 | 36 / 27 | 24.9 | 36 %, 6 % > 50 ms |
   | 150 v 150 | 20 | 51 / 31 | 38.1 | 70 %, 35 % > 50 ms |
   Reading: **in a big town the ceiling is ~100 a side (36 fps); 120 a side already falls under 30.** Past 100 the
-  scripts climb faster than per fighter (16 -> 25 -> 38 ms) -- something in a town fight scales worse than linear
-  (orcs among buildings/people: target picking, HuntCitizen, burning?) -- worth a `marks` pass if bigger fights
-  are wanted.
+  scripts climb faster than per fighter (16 -> 25 -> 38 ms). **Found (marks at 120 v 120):** CharacterController.Move
+  in the CROWD -- Orc.FightSoldier 8.8 ms (its Chase), Orc.GuardWalk 3.8, Soldier capsule Move 2.1 ms; a Move costs
+  ~60-100 us when packed among 240 capsules (a few us in the open), so the cost grows with density. Fix 2026-11-21:
+  `Core/CrowdPause` -- a walker that got under a quarter of its step for 0.4 s stops pushing for ~0.4 s (orc Chase,
+  GuardWalk, soldier WalkTowards). After (same town save, 188 people): 100 v 100 38 fps (scripts 16 -> 8.9 ms),
+  120 v 120 **30 fps** (was 27), 150 v 150 **29 fps** (was 20; scripts 38 -> 24 ms, no frames > 50 ms).
+  Still left: soldiers WALKING in a crowd -- 107 capsule Moves a frame, 58 us each = 6.2 ms. The real lever: soldiers and
+  orcs without the capsule (transform steps like citizens, ~0.5 us) plus a cheap separation push -- a LOOK decision
+  (units may overlap a little), asked the user.
 - **2026-11-20 night, the EMPTY town's 11 ms on the Redmi Pad** (PerfProbe `kinds`, `off <Type>`/`on <Type>`, `marks <s>`):
   switching kinds off one by one: the bot's 50 SoldierUnits ~7 ms, everything else ~1 ms or less. Marks inside: **Soldier.Wall
   6.8 ms** -- the bot's archers POSTED on their walls ran `NearestEnemyInReach` over ~200 enemies (orcs + 153 camp buildings)

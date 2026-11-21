@@ -81,6 +81,9 @@ PlayMode `CombatProjectileTests` (+ photos `projectile-*.png`), `ArmyCombatTests
 `SoldiersBreakInRatherThanWalkThroughTheWall`; archer test measures max distance an orc walked alive).
 
 ## Traps
+- **Crowd pause** (2026-11-21, `Core/CrowdPause`): orc Chase / GuardWalk and soldier WalkTowards skip their Move for
+  ~0.4 s after 0.4 s of getting under a quarter of the step (pressed into a crowd). A capsule Move in a packed fight
+  costs 60-100 us on a phone. A new walking path for units should use it too.
 - **Target search is on a timer even with NO target** (2026-11-20): SoldierUnit `_retargetTimer` and OrcUnit
   `_soldierScanTimer` used to fire every frame while the target was null -- the army's biggest CPU bill. A fallen
   target, a new `Group.AttackTarget`, Regroup/Revive reset the timer to 0 (at once). Camp guards `_guardSettled` at

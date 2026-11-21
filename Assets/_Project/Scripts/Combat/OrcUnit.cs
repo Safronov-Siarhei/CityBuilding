@@ -908,9 +908,11 @@ namespace CityBuilder.Combat
             }
             if (!_guardRoute.TryGetDirection(transform.position, out var direction)) return false;
 
+            if (_crowd.Waiting(Time.deltaTime)) return true;   // pressed into a crowd: not pushing this moment
             // wading slower, rings round it (the user, 2026-11-04: monsters had no water effect)
             var step = direction * _walkSpeed * Buildings.Moat.SpeedAt(transform.position) * Time.deltaTime;
             Dungeon.DungeonWake.Step(transform.position, ref _wakeClock);
+            var before = transform.position;
             if (_controller != null && _controller.enabled)
             {
                 _controller.Move(step);
@@ -920,6 +922,7 @@ namespace CityBuilder.Combat
             {
                 transform.position += step;
             }
+            _crowd.After(before, transform.position, step.magnitude, Time.deltaTime);
             transform.rotation = Quaternion.LookRotation(direction);
             return true;
         }
@@ -944,8 +947,10 @@ namespace CityBuilder.Combat
                 if (_guardRoute.Blocked && _guardRoute.IsFinished) BreakThrough();
                 return;
             }
+            if (_crowd.Waiting(Time.deltaTime)) return;   // pressed into a crowd: not pushing this moment
             var speed = _walkSpeed * Buildings.Moat.SpeedAt(transform.position);
             Dungeon.DungeonWake.Step(transform.position, ref _wakeClock);
+            var before = transform.position;
             if (_controller != null && _controller.enabled)
             {
                 _controller.Move(direction * speed * Time.deltaTime);
@@ -955,7 +960,10 @@ namespace CityBuilder.Combat
             {
                 transform.position += direction * speed * Time.deltaTime;
             }
+            _crowd.After(before, transform.position, speed * Time.deltaTime, Time.deltaTime);
         }
+
+        private CrowdPause _crowd;
 
         /// <summary>An orc's route: never across a gate's cell -- a gate is a wall to it (NavAreas).</summary>
         private static NavRoute NewRoute() => new NavRoute { AreaMask = CityBuilder.Maps.NavAreas.WithoutGates };

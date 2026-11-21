@@ -254,3 +254,6 @@ Trap: piping build_android.ps1 into Select-Object -First N kills the script befo
 tablet (in an empty town; a big town eats more). Table in performance-mobile card.
 **2026-11-21 battle IN A BIG TOWN (100 buildings, ~210 people):** town alone 46 fps; 100 v 100 = 36 fps; 120 v 120 = 27
 (under the floor), 150 v 150 = 20. Ceiling in a town ~100 a side. Past 100 scripts grow faster than linear -- unexplained.
+**2026-11-21 crowd fix:** the town fight's superlinear cost = CharacterController.Move in a packed crowd (60-100 us each).
+CrowdPause (stop pushing 0.4 s when stuck) -> town 120 v 120 27 -> 30 fps, 150 v 150 20 -> 29. Next lever (look decision,
+asked the user): soldiers/orcs without the capsule + separation push.
