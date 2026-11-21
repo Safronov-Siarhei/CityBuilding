@@ -1108,6 +1108,23 @@ namespace CityBuilder.Core
         [SerializeField] private int foodFertileBonus = 1;
         [SerializeField] private int fisherShoreCells = 2;
         [SerializeField] private int foodInlandCells = 2;
+        // the sandbox hunt (the user, 2026-11-21; Maps/Hunting, card hunting.md): hunt_* on «Еда и голод».
+        // Kinds in Hunting.Kind order: hare, deer, boar; sizes small, medium, large.
+        [SerializeField] private float huntFirstHerdSeconds = 600f;
+        [SerializeField] private int huntHerds = 3;
+        [SerializeField] private float huntHerdLifeSeconds = 480f;
+        [SerializeField] private float huntCheckSeconds = 10f;
+        [SerializeField] private float huntShotSeconds = 30f;
+        [SerializeField] private float huntShotRangeCells = 5f;
+        [SerializeField] private float huntHerdRadiusCells = 7f;
+        [SerializeField] private float huntBuildingGapCells = 10f;
+        [SerializeField] private float huntSizeSmallPct = 50f;
+        [SerializeField] private float huntSizeMediumPct = 35f;
+        [SerializeField] private int[] huntCount = { 4, 6, 8, 3, 5, 7, 2, 3, 5 };
+        [SerializeField] private float[] huntHitPct = { 25f, 15f, 10f };
+        [SerializeField] private int[] huntFood = { 1, 2, 3 };
+        [SerializeField] private int[] huntHides = { 1, 2, 3 };
+        [SerializeField] private float huntBoarAttackPct = 2f;
         [SerializeField] private float tideWakeRadius = 14f;
         [SerializeField] private int tideShamanHeal = 12;
         [SerializeField] private float tideShamanHealEverySeconds = 4f;
@@ -2352,6 +2369,23 @@ namespace CityBuilder.Core
         public int FoodFertileBonus => foodFertileBonus;
         public int FisherShoreCells => fisherShoreCells;
         public int FoodInlandCells => foodInlandCells;
+
+        // the sandbox hunt (Maps/Hunting); kind 0 hare, 1 deer, 2 boar; size 0 small, 1 medium, 2 large
+        public float HuntFirstHerdSeconds => huntFirstHerdSeconds;
+        public int HuntHerds => huntHerds;
+        public float HuntHerdLifeSeconds => huntHerdLifeSeconds;
+        public float HuntCheckSeconds => huntCheckSeconds;
+        public float HuntShotSeconds => huntShotSeconds;
+        public float HuntShotRangeCells => huntShotRangeCells;
+        public float HuntHerdRadiusCells => huntHerdRadiusCells;
+        public float HuntBuildingGapCells => huntBuildingGapCells;
+        public float HuntSizeSmallPct => huntSizeSmallPct;
+        public float HuntSizeMediumPct => huntSizeMediumPct;
+        public int HuntCount(int kind, int size) => huntCount[Mathf.Clamp(kind, 0, 2) * 3 + Mathf.Clamp(size, 0, 2)];
+        public float HuntHitPct(int kind) => huntHitPct[Mathf.Clamp(kind, 0, 2)];
+        public int HuntFood(int kind) => huntFood[Mathf.Clamp(kind, 0, 2)];
+        public int HuntHides(int kind) => huntHides[Mathf.Clamp(kind, 0, 2)];
+        public float HuntBoarAttackPct => huntBoarAttackPct;
         public float TideWakeRadius => tideWakeRadius;
         public int TideShamanHeal => tideShamanHeal;
         public float TideShamanHealEverySeconds => tideShamanHealEverySeconds;
@@ -3338,6 +3372,27 @@ namespace CityBuilder.Core
             foodFertileBonus = (int)Read(economy, "food_fertile_bonus", foodFertileBonus);
             fisherShoreCells = (int)Read(economy, "fisher_shore_cells", fisherShoreCells);
             foodInlandCells = (int)Read(economy, "food_inland_cells", foodInlandCells);
+            huntFirstHerdSeconds = Read(economy, "hunt_first_herd_sec", huntFirstHerdSeconds);
+            huntHerds = (int)Read(economy, "hunt_herds", huntHerds);
+            huntHerdLifeSeconds = Read(economy, "hunt_herd_life_sec", huntHerdLifeSeconds);
+            huntCheckSeconds = Read(economy, "hunt_check_sec", huntCheckSeconds);
+            huntShotSeconds = Read(economy, "hunt_shot_sec", huntShotSeconds);
+            huntShotRangeCells = Read(economy, "hunt_shot_range_cells", huntShotRangeCells);
+            huntHerdRadiusCells = Read(economy, "hunt_herd_radius_cells", huntHerdRadiusCells);
+            huntBuildingGapCells = Read(economy, "hunt_building_gap_cells", huntBuildingGapCells);
+            huntSizeSmallPct = Read(economy, "hunt_size_small_pct", huntSizeSmallPct);
+            huntSizeMediumPct = Read(economy, "hunt_size_medium_pct", huntSizeMediumPct);
+            {
+                var kinds = new[] { "hare", "deer", "boar" };
+                for (var k = 0; k < kinds.Length; k++)
+                {
+                    for (var s = 0; s < 3; s++) huntCount[k * 3 + s] = (int)Read(economy, $"hunt_{kinds[k]}_count_{s + 1}", huntCount[k * 3 + s]);
+                    huntHitPct[k] = Read(economy, $"hunt_{kinds[k]}_hit_pct", huntHitPct[k]);
+                    huntFood[k] = (int)Read(economy, $"hunt_{kinds[k]}_food", huntFood[k]);
+                    huntHides[k] = (int)Read(economy, $"hunt_{kinds[k]}_hides", huntHides[k]);
+                }
+            }
+            huntBoarAttackPct = Read(economy, "hunt_boar_attack_pct", huntBoarAttackPct);
             tideWakeRadius = Read(economy, "tide_wake_radius", tideWakeRadius);
             tideShamanHeal = (int)Read(economy, "tide_shaman_heal", tideShamanHeal);
             tideShamanHealEverySeconds = Read(economy, "tide_shaman_heal_every_sec", tideShamanHealEverySeconds);

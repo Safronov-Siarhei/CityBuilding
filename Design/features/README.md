@@ -33,7 +33,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | [production-chains](production-chains.md) | workshops, recipes, grain→flour→bread, ore→bars, Smelter bar buttons (minting removed) | производство, рецепт, плавильня, пекарня, чеканка |
 | [gathering](gathering.md) | trees/rocks stock per node, ore veins, harvest radius, gatherer walk, manual tap-to-gather | лес, камень, сбор, радиус, лесопилка, жила, рудник |
 | [food-and-hunger](food-and-hunger.md) | eating, diet, starvation deaths, food variety | еда, голод, рацион |
-| [hunting](hunting.md) | sandbox herds (hares/deer/boars) on the islands, Hunter's Hut, bow hunting by chance, food + hides; DESIGN AGREED 2026-11-21, concepts made, not built | охота, стая, охотник, хижина охотника, шкуры, олени, кабаны, зайцы |
+| [hunting](hunting.md) | sandbox herds (hares/deer/boars) on the islands, Hunter's Hut, bow hunting by chance, food + hides; BUILT 2026-11-21 (Maps/Hunting.cs), not seen | охота, стая, охотник, хижина охотника, шкуры, олени, кабаны, зайцы |
 | **Population** | | |
 | [citizens-and-workforce](citizens-and-workforce.md) | headcount, workers, workforce panel, citizen agents, tiers | жители, рабочие, назначить |
 | [happiness-and-migration](happiness-and-migration.md) | 6-factor happiness, arrivals/departures | довольство, миграция |

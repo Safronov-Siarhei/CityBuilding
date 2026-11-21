@@ -1,16 +1,36 @@
 # Hunting: herds on the islands, the Hunter's Hut (sandbox)
 
-> **Status (2026-11-21): DESIGN AGREED with the user, concepts made, NOTHING BUILT.**
-> Concepts: `Design/concepts/hunting/Hunt_1_Notice.png`, `Hunt_2_Herd.png`, `Hunt_3_Sheet.png`
-> (`python Tools/ui/hunting_concepts.py`; sprites from the game's own models via `Tools/blender/concept_sprites.py`).
-> Concepts + numbers v3 APPROVED by the user («к моделям»). MODEL RENDERS sent for approval 2026-11-21
-> (`Design/concepts/hunting/models/`): Hunter's Hut lvl 1-5 (`Tools/blender/hunterhut1.py`, 1x1, ridge front-to-back,
-> antlers on the gable peak; lvl2 stone footing + fire pit + 2nd hide + lantern; lvl3 lookout with pennant, gold
-> antler tips; lvl4 red diamonds on the thatch + boar head; lvl5 red-orange thatch, gold antlers; 1385-2224 tris),
-> the hunter `FigureHunter` (his OWN model, the user: brown felt hat with a white feather, fur cape, browns, the
-> archer's rig ArmDraw/ArmBow so the shot animation fits; 1338 tris) and the boar `FaunaBoar` (jointed like the
-> deer; 504 tris) -- both in `Tools/blender/hunting_figures.py`; renders by `render_hunting.py` (never saves).
-> NOT installed into the models file / not exported until approved. Still to make: hide icon, three herd signs.
+> **Status (2026-11-21): BUILT in code (setup x2 run), the user has not seen it, no tests, not on a phone.**
+> Models APPROVED («Да, дальше») and in the game: `HunterHut1-lvl1..5` (Models/Buildings), `SoldierHunter`
+> (Models/Soldiers, jointed, ArmDraw/ArmBow), `FaunaBoar` (Models/Fauna) -- built into the H: models .blend by
+> `Tools/blender/hunting_install.py`, exported by `export_fbx.py`. Icons: `Res_Hides` (`render_icons.py`),
+> `HerdHare/HerdDeer/HerdBoar` (`render_hunt_icons.py`), `HunterHut` + `_L2.._L5`.
+> Concepts: `Design/concepts/hunting/Hunt_1..3*.png` (`Tools/ui/hunting_concepts.py`), renders `models/`.
+
+## How it is built
+- `Scripts/Maps/Hunting.cs` (on the managers object; wired in `SetupProjectCityScene` with the 3 animal models,
+  the hunter model, the 3 sign sprites and `Materials/HuntLit.mat`, URP Unlit yellow). Runs only when
+  `Infirmary.Active` (the sandbox rules).
+- Herds: clock `hunt_first_herd_sec`, then up to `hunt_herds`; the first on the Town Hall's island; others on a random
+  island (sampled cells, stride 2, >= 40 cells) that is not the orcs' (`MeshMapApplier.ArchipelagoOrcCell`, new) nor
+  the bot's, has no herd and is not the one just left. A spot = Wildlife's `OnLand` + `hunt_building_gap_cells` from
+  every building + open land round it. Animals wander inside `hunt_herd_radius_cells`; at the end of the life they
+  run outward 4 s and vanish; a retry every 30 s refills the map.
+- Sign: a screen-space overlay Button (rim + parchment disc + animal icon) bobbing over the centre; hidden under
+  `ModalGate`. Tap = `Light()`: yellow rings under the live animals + the radius ring for 6 s, and the
+  `#log_herd_status` notice. Appearance notice `#log_herd_appeared` (picture `Herd<Kind>`, tap flies the camera).
+- Hut: `HunterHut` in `buildings.csv`/`sandbox.csv` (Food, batches_per_tick 0 = produces nothing itself; interval 6, not 0 -- a 0 fails BalanceConfigTests,
+  max_workers 1-5), shell building in SetupProjectCityScene, `BuildingIds.OnePerIsland` checked by
+  `BuildingPlacer.OnePerIslandTaken` (`#place_blocked_one_per_island`), card line `#card_what_hunterhut`.
+- Hunters: one `SoldierHunter` figure per `AssignedWorkers` of each operational own hut (synced every 1 s; the
+  resident himself is inside the hut). Without a herd on the hut's island: strolls within 6 cells of the hut. With
+  one: walks within `hunt_shot_range_cells` of the nearest animal, `FigureAnimator.OnStruck()` every `hunt_shot_sec`,
+  an arrow (`CombatProjectiles.FireAt`, new) after 0.35 s, resolved 0.45 s later. Hit -> the animal falls on its side,
+  `AddProduced(Food/Hides)` + popups. Miss on a boar with `hunt_boar_attack_pct` -> the boar charges,
+  `LayOffWorker()` + `KillCitizens(1, true)` + `Remains.Drop` + `#log_hunter_killed`.
+- `ResourceType.Hides` (after Meat): in the inventory panel, NOT in the top bar (its list is explicit).
+- Saved: `SaveData.huntClock` + `herds` (`HerdEntry`), in GameSaveController next to the plague. Hunters are not
+  saved (re-made from the huts' workers).
 
 Read with: [food-and-hunger](food-and-hunger.md) (food buildings, «+N» popups), [resources-and-storage](resources-and-storage.md)
 (hides), [maps-and-terrain](maps-and-terrain.md) (the decorative Wildlife -- deer/hares that never vanish),
@@ -60,6 +80,5 @@ herd and the hut's levels (more hunters) matter. The same day the user dropped t
   reach 6-8 cells, 10-12 cells from any building).
 
 ## Open
-- The user's approval of the three concepts and of these numbers.
-- Models (renders for approval): boar, Hunter's Hut x5 levels, hunter with bow + shot animation; hide icon; herd signs.
+- The user's playtest; hides are only a resource for now (no use yet).
 - Performance: herds of 2-8 animals, off-view animals switched off like Wildlife -- check on the Redmi Pad.

@@ -57,6 +57,9 @@
         public const string CrystalMine = "CrystalMine";
         public const string Lighthouse = "Lighthouse";
 
+        /// <summary>The Хижина охотника (the user, 2026-11-21, card hunting.md): its hunters shoot the herds on their island.</summary>
+        public const string HunterHut = "HunterHut";
+
         /// <summary>The stores (the storage rework, the user 2026-11-17): the start chain gives the three ordinary ones.</summary>
         public const string Warehouse = "Warehouse";
         public const string Granary = "Granary";
@@ -65,5 +68,8 @@
         /// <summary>Buildings a town may have only one of (the user, 2026-11-02: one Tax House; 2026-11-03: one Diplomacy Hall;
         /// 2026-11-14: one Crystal Mine a map).</summary>
         public static readonly System.Collections.Generic.HashSet<string> OnlyOne = new System.Collections.Generic.HashSet<string> { TaxHouse, DiplomacyHall, CrystalMine };
+
+        /// <summary>Buildings an ISLAND may have only one of (the user, 2026-11-21: one Hunter's Hut an island).</summary>
+        public static readonly System.Collections.Generic.HashSet<string> OnePerIsland = new System.Collections.Generic.HashSet<string> { HunterHut };
     }
 }

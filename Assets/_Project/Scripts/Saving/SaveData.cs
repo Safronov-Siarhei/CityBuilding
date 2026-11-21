@@ -166,6 +166,10 @@ namespace CityBuilder.Saving
         /// <summary>Seconds left of the plague shield the banner gave (Citizens/Plague.ShieldLeft).</summary>
         public float plagueShield;
 
+        /// <summary>The sandbox hunt (Maps/Hunting): seconds of play so far, and the herds standing.</summary>
+        public float huntClock;
+        public List<HerdEntry> herds = new List<HerdEntry>();
+
         /// <summary>
         /// Everything alight, and how far into its burn it is. Without this a reload was a fire
         /// brigade: every fire went out at once, the buildings kept whatever health the flames had
@@ -335,6 +339,19 @@ namespace CityBuilder.Saving
         public int deaths;
         public float calm;
         public bool bannerShown;
+    }
+
+    [Serializable]
+    public class HerdEntry
+    {
+        public int kind;
+        public int size;
+        public int total;
+        public int alive;
+        public int island;
+        public float x;
+        public float z;
+        public float life;
     }
 
     [Serializable]

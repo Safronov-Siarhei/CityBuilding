@@ -801,6 +801,7 @@ namespace CityBuilder.Buildings
             if (!canPlace)
             {
                 if (OnlyOneAlreadyStands()) return Localization.Get("#place_blocked_only_one");
+                if (OnePerIslandTaken(cell, footprint)) return Localization.Get("#place_blocked_one_per_island");
                 if (IsTownHall(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return Localization.Get("#place_blocked_start_zone");
                 if (OreDeposit.KindForBuilding(_selectedBuilding.buildingName).HasValue) return Localization.Get("#place_blocked_vein");
                 var mapApplier = MeshMapApplier.Instance;
@@ -1033,6 +1034,22 @@ namespace CityBuilder.Buildings
             return _onlyOneStands;
         }
 
+        /// <summary>The selected building is one an island has only one of (BuildingIds.OnePerIsland), and the island under
+        /// `cell` already has it (standing or going up).</summary>
+        private bool OnePerIslandTaken(Vector2Int cell, Vector2Int footprint)
+        {
+            if (_selectedBuilding == null || !BuildingIds.OnePerIsland.Contains(_selectedBuilding.buildingName)) return false;
+            var island = Citizens.HousePeople.IslandOf(GridManager.Instance.GetFootprintCenterWorld(cell, footprint));
+            var all = BuildingInstance.All;
+            for (var i = 0; i < all.Count; i++)
+            {
+                var b = all[i];
+                if (b == null || b.IsBot || b.Data == null || b.Data.buildingName != _selectedBuilding.buildingName) continue;
+                if (Citizens.HousePeople.IslandOf(b) == island) return true;
+            }
+            return false;
+        }
+
         private float _onlyOneCheckedAt = -100f;
         private bool _onlyOneStands;
 
@@ -1058,6 +1075,7 @@ namespace CityBuilder.Buildings
         {
             if (!GridManager.Instance.IsWithinBounds(cell, footprint) || !IsFreeFor(_selectedBuilding, cell, footprint)) return false;
             if (_movingNow == null && OnlyOneAlreadyStands()) return false;
+            if (_movingNow == null && OnePerIslandTaken(cell, footprint)) return false;
             // a move stays on its own island (its residents and workers are bound to it)
             if (_movingNow != null && !Citizens.HousePeople.Same(Citizens.HousePeople.IslandOf(GridManager.Instance.GetFootprintCenterWorld(cell, footprint)),
                     Citizens.HousePeople.IslandOf(_movingNow))) return false;

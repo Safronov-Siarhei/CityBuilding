@@ -41,6 +41,10 @@ namespace CityBuilder.Resources
         GoldBar,
 
         /// <summary>The Свиноферма's pork, the Коптильня's input: a middle link like flour -- nobody eats it raw.</summary>
-        Meat
+        Meat,
+
+        /// <summary>Hides from the sandbox hunt (Maps/Hunting, the user 2026-11-21): a plain resource for now, its use to come.
+        /// Kept in the Склад (Materials) and the inventory, never in the top bar.</summary>
+        Hides
     }
 }

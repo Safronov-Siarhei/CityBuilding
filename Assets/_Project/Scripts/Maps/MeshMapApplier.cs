@@ -147,6 +147,9 @@ namespace CityBuilder.Maps
         /// <summary>The archipelago's bot island spot, where the bot kingdom's castle stands (Bot.BotKingdom); null on any other map.</summary>
         public Vector2Int? ArchipelagoBotCell { get; private set; }
 
+        /// <summary>The archipelago's orc main base cell (its island takes no herds, Maps/Hunting); null on any other map.</summary>
+        public Vector2Int? ArchipelagoOrcCell { get; private set; }
+
         private Archipelago.Island _tutorialIsland;
         private Vector3 _tutorialOrigin;
 
@@ -806,6 +809,7 @@ namespace CityBuilder.Maps
             IslandRichesOf = Archipelago.IslandRiches.Assign(world);
             _archipelagoStart = world.StartCell;
             ArchipelagoBotCell = tutorial ? (Vector2Int?)null : world.BotCell;
+            ArchipelagoOrcCell = tutorial ? (Vector2Int?)null : world.OrcBaseCell;
             ArchipelagoSeed = seed;
             var n = world.Size;
             var origin = grid.CellToWorld(Vector2Int.zero);

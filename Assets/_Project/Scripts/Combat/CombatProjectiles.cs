@@ -161,6 +161,19 @@ namespace CityBuilder.Combat
             instance.Launch(kind, from, ref shot);
         }
 
+        /// <summary>
+        /// A shot that only flies and lands -- no damage, nobody told: the sandbox hunter's arrow (Maps/Hunting decides the
+        /// hit itself). It lands on `target` + `aimOffset` (a miss: an offset beside the animal) and sticks there a while.
+        /// </summary>
+        public static void FireAt(ProjectileKind kind, Vector3 from, Transform target, Vector3 aimOffset)
+        {
+            if (target == null) return;
+            var instance = Instance;
+            if (instance == null) return;
+            var shot = new Shot { TargetTransform = target, AimOffset = aimOffset };
+            instance.Launch(kind, from, ref shot);
+        }
+
         /// <summary>The catapult's stone landing: every live orc within `radius` of `at` but the one it was thrown at takes `damage`.</summary>
         private static void Splash(Vector3 at, float radius, int damage, IDamageTarget aimed, SoldierUnit attacker)
         {

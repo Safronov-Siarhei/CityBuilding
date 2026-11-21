@@ -112,6 +112,28 @@ def res_food(b):
     b.zbox(-0.075, -0.08, 0.15, 0.162, 0.035, 0.016, 30, 'grass_dark')
 
 
+def res_hides(b):
+    """Hides from the sandbox hunt (the user, 2026-11-21): a pelt laid out flat -- four legs and a neck stretched
+    out, lighter in the middle -- with a second one rolled and tied lying across its back."""
+    import math as m
+    pts = []
+    for i in range(24):
+        a = i / 24 * m.tau
+        r = 0.15 + 0.03 * m.cos(4 * a + 0.8) + 0.035 * max(0.0, m.cos(a - m.pi / 2)) ** 8
+        pts.append((m.cos(a) * r * 1.05, m.sin(a) * r * 1.2))
+    b.prism(pts, (0, 0, 0.0), (1, 0, 0), (0, 1, 0), 0.025, 'wood_light', back_cap=True)
+    inner = [(x * 0.7, y * 0.7) for x, y in pts]
+    b.prism(inner, (0, 0, 0.025), (1, 0, 0), (0, 1, 0), 0.006, 'burlap', back_cap=True)
+    for a in (40, 140, 220, 320):
+        r = m.radians(a)
+        b.zbox(m.cos(r) * 0.17, m.sin(r) * 0.2, 0.0, 0.025, 0.045, 0.03, a, 'wood_light')
+    # the roll, tied with two cords
+    b.hcylinder('x', (0.0, 0.04, 0.075), 0.15, 0.05, 'wood_mid', sides=9)
+    b.hcylinder('x', (0.0, 0.04, 0.075), 0.152, 0.03, 'burlap', sides=9)
+    for x in (-0.08, 0.08):
+        b.hcylinder('x', (x, 0.04, 0.075), 0.008, 0.054, 'wood_dark', sides=9)
+
+
 def res_bread(b):
     for x, y, a in ((-0.06, 0, 15), (0.08, 0.03, -10)):
         b.zbox(x, y, 0, 0.08, 0.11, 0.06, a, 'roof_straw_dark', bevel=0.03)
@@ -195,7 +217,7 @@ RESOURCES = {"Res_Wood": res_wood, "Res_Stone": res_stone, "Res_Coal": res_coal,
              "Res_CopperOre": res_copper_ore, "Res_CopperBar": res_copper_bar,
              "Res_Gold": res_gold_ore, "Res_GoldBar": res_gold_bar, "Res_Coins": res_coins,
              "Res_Grain": res_grain, "Res_Flour": res_flour, "Res_Bread": res_bread,
-             "Res_Food": res_food, "Res_Population": res_people,
+             "Res_Food": res_food, "Res_Population": res_people, "Res_Hides": res_hides,
              # Res_UpgradeCrystal is no longer drawn here (the user, 2026-11-11): variant 4 of
              # crystal_icons.py, copied from Design/art/crystal_icons/Crystal_4.png
              # buildings drawn here rather than taken whole from the file

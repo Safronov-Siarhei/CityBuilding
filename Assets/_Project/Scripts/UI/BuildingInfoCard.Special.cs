@@ -69,6 +69,7 @@ namespace CityBuilder.UI
                 case "DiplomacyHall": return "#card_what_diplomacy";
                 case "Smelter": return "#card_what_smelter";
                 case "CrystalMine": return "#card_what_crystalmine";
+                case BuildingIds.HunterHut: return "#card_what_hunterhut";
                 default: return null;
             }
         }

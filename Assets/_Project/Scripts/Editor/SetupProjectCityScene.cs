@@ -326,6 +326,8 @@ namespace CityBuilder.EditorTools
                 ("Cemetery", new Vector2Int(2, 2), 1f, new Color(0.45f, 0.62f, 0.3f), new Color(0.4f, 0.27f, 0.16f), BuildingStyle.Plot, BuildingMotif.Cross),
                 // the paid Рудник кристаллов (Tools/blender/crystalmine1.py, the user 2026-11-14): mines crystals into its store
                 ("CrystalMine", new Vector2Int(2, 2), 1.8f, new Color(0.62f, 0.6f, 0.58f), new Color(0.49f, 0.34f, 0.85f), BuildingStyle.Hut, BuildingMotif.Headframe),
+                // the Хижина охотника (Tools/blender/hunterhut1.py, the user 2026-11-21): hunters for the herds (Maps.Hunting)
+                ("HunterHut", new Vector2Int(1, 1), 2f, new Color(0.55f, 0.4f, 0.26f), new Color(0.78f, 0.66f, 0.36f), BuildingStyle.Hut, BuildingMotif.Stack),
                 ("Colosseum", new Vector2Int(4, 6), 3.6f, new Color(0.72f, 0.68f, 0.6f), new Color(0.5f, 0.47f, 0.42f), BuildingStyle.Plot, BuildingMotif.Arena),
             })
             {
@@ -993,6 +995,40 @@ namespace CityBuilder.EditorTools
             var plagueSO = new SerializedObject(plague);
             plagueSO.FindProperty("hazeMaterial").objectReferenceValue = plagueHaze;
             plagueSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // the sandbox hunt (the user, 2026-11-21; card hunting.md): the herds' animals, the hunter, the
+            // signs' pictures (Tools/blender/render_hunt_icons.py) and the yellow of a lit herd
+            var hunting = managers.AddComponent<CityBuilder.Maps.Hunting>();
+            var huntingSO = new SerializedObject(hunting);
+            var herdModels = new[] { "FaunaRabbit", "FaunaDeer", "FaunaBoar" };
+            var herdIcons = new[] { "HerdHare", "HerdDeer", "HerdBoar" };
+            var herdModelProp = huntingSO.FindProperty("animalModels");
+            var herdIconProp = huntingSO.FindProperty("signIcons");
+            herdModelProp.arraySize = herdIconProp.arraySize = herdModels.Length;
+            for (var i = 0; i < herdModels.Length; i++)
+            {
+                herdModelProp.GetArrayElementAtIndex(i).objectReferenceValue =
+                    AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/_Project/Models/Fauna/{herdModels[i]}.fbx");
+                herdIconProp.GetArrayElementAtIndex(i).objectReferenceValue =
+                    AssetDatabase.LoadAssetAtPath<Sprite>($"Assets/_Project/UI/Icons/{herdIcons[i]}.png");
+            }
+            huntingSO.FindProperty("hunterModel").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Soldiers/SoldierHunter.fbx");
+            const string huntLitPath = "Assets/_Project/Materials/HuntLit.mat";
+            var huntLit = AssetDatabase.LoadAssetAtPath<Material>(huntLitPath);
+            var unlit = Shader.Find("Universal Render Pipeline/Unlit");
+            if (huntLit == null && unlit != null)
+            {
+                huntLit = new Material(unlit) { name = "HuntLit" };
+                AssetDatabase.CreateAsset(huntLit, huntLitPath);
+            }
+            if (huntLit != null)
+            {
+                huntLit.SetColor("_BaseColor", new Color(1f, 0.86f, 0.18f, 1f));
+                EditorUtility.SetDirty(huntLit);
+            }
+            huntingSO.FindProperty("highlightMaterial").objectReferenceValue = huntLit;
+            huntingSO.ApplyModifiedPropertiesWithoutUndo();
 
             // sandbox fires v2 (the user, 2026-11-14): the opening film's flames and smoke on the roof,
             // a fire mark over it (UI/Icons/FireMark.png, Tools/ui/sick_mark_icon.py), the firefighters'

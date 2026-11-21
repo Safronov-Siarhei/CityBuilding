@@ -459,6 +459,14 @@ namespace CityBuilder.Saving
                 foreach (var o in data.outbreaks)
                     outbreaks.Add(new Citizens.Plague.Outbreak { Island = o.island, People = o.people, Deaths = o.deaths, Calm = o.calm, BannerShown = o.bannerShown });
             Citizens.Plague.Instance?.RestoreFromSave(outbreaks, data.plagueShield);
+            if (Maps.Hunting.Instance != null)
+            {
+                var herds = new List<Maps.Hunting.SavedHerd>();
+                if (data.herds != null)
+                    foreach (var h in data.herds)
+                        herds.Add(new Maps.Hunting.SavedHerd { Kind = h.kind, Size = h.size, Total = h.total, Alive = h.alive, Island = h.island, X = h.x, Z = h.z, Life = h.life });
+                Maps.Hunting.Instance.RestoreFromSave(data.huntClock, herds);
+            }
         }
 
         /// <summary>The sandbox Лечебница's patients, each back in his house and his bed with his clocks (after the buildings).</summary>
@@ -1043,6 +1051,13 @@ namespace CityBuilder.Saving
             }
             if (Citizens.Plague.Instance != null) data.plagueShield = Citizens.Plague.Instance.ShieldLeft;
             if (UI.CrystalMines.Instance != null) data.crystalMineStored = UI.CrystalMines.Instance.Stored;
+            if (Maps.Hunting.Instance != null)
+            {
+                var herds = new List<Maps.Hunting.SavedHerd>();
+                Maps.Hunting.Instance.Capture(out data.huntClock, herds);
+                foreach (var h in herds)
+                    data.herds.Add(new HerdEntry { kind = h.Kind, size = h.Size, total = h.Total, alive = h.Alive, island = h.Island, x = h.X, z = h.Z, life = h.Life });
+            }
             if (Citizens.Plague.Instance != null)
                 foreach (var o in Citizens.Plague.Instance.Outbreaks)
                     data.outbreaks.Add(new OutbreakEntry { island = o.Island, people = o.People, deaths = o.Deaths, calm = o.Calm, bannerShown = o.BannerShown });
