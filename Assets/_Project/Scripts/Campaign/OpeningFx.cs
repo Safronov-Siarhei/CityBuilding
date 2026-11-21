@@ -524,7 +524,7 @@ namespace CityBuilder.Campaign
         /// </summary>
         private static void NoPostOnLow()
         {
-            if (CityBuilder.Core.GraphicsQuality.Effective != CityBuilder.Core.GraphicsTier.Low) return;
+            if (CityBuilder.Core.GraphicsQuality.PostAllowed) return;
             foreach (var cam in Camera.allCameras)
                 UnityEngine.Rendering.Universal.CameraExtensions.GetUniversalAdditionalCameraData(cam).renderPostProcessing = false;
         }

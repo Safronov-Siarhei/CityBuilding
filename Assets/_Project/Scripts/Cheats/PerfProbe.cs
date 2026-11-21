@@ -125,7 +125,7 @@ namespace CityBuilder.Cheats
                  .Append(" scene ").Append(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name)
                  .Append(" map ").Append(Maps.MeshMapApplier.Instance != null ? Maps.MeshMapApplier.Instance.CurrentMapId : "-")
                  .Append(" res ").Append(Screen.width).Append('x').Append(Screen.height)
-                 .Append(" tier ").Append(Core.GraphicsQuality.Effective);
+                 .Append(" tier ").Append(Core.GraphicsQuality.Effective).Append(" rq ").Append(Core.RuntimeQuality.Step).Append(" th ").Append(Core.RuntimeQuality.ThermalStatus);
             Debug.Log(_line.ToString());
         }
     }

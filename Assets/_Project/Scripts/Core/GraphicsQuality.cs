@@ -194,6 +194,9 @@ namespace CityBuilder.Core
         /// <summary>The tier actually drawn: the device's in Auto; in Manual the level the details match (the chosen one for a mix).</summary>
         public static GraphicsTier Effective => !Manual ? Detect() : MatchingLevel ?? Chosen;
 
+        /// <summary>Post effects drawn: not on Low, not after the run-time step-down took them away.</summary>
+        public static bool PostAllowed => Effective != GraphicsTier.Low && !(!Manual && RuntimeQuality.PostOff);
+
         /// <summary>
         /// The device's tier from its memory and cores: a flagship (8+ GB, 8 cores) draws High, a
         /// 4 GB device or less Low, the rest Medium. A desktop is High.
@@ -203,8 +206,46 @@ namespace CityBuilder.Core
             if (!Application.isMobilePlatform) return GraphicsTier.High;
             var memory = SystemInfo.systemMemorySize;
             if (memory > 0 && memory < LowBelowMb) return GraphicsTier.Low;
-            if (memory >= HighFromMb && SystemInfo.processorCount >= 8) return GraphicsTier.High;
-            return GraphicsTier.Medium;
+            // the GPU family first (2026-11-21, three phones: the A71's 6 GB put it on Medium, where its Adreno 618
+            // drew mission 1 at 17 fps -- ~2x weaker than the 4 GB Redmi Pad's Mali-G57 on Low); High also needs the memory
+            var byGpu = GpuTier(SystemInfo.graphicsDeviceName) ?? GraphicsTier.Medium;
+            if (byGpu == GraphicsTier.High && (memory < HighFromMb || SystemInfo.processorCount < 8)) return GraphicsTier.Medium;
+            return byGpu;
+        }
+
+        /// <summary>
+        /// The tier a GPU family draws this game at, or null when the name is not known (-> Medium, and the run-time
+        /// step-down, <see cref="RuntimeQuality"/>, catches a wrong guess). Measured: Mali-G57 (Redmi Pad) Low,
+        /// Adreno 618 (A71) Low, Mali-G78 MP20 (Pixel 6 Pro) High; the rest placed by the families' known strength.
+        /// </summary>
+        public static GraphicsTier? GpuTier(string gpu)
+        {
+            if (string.IsNullOrEmpty(gpu)) return null;
+            if (gpu.IndexOf("PowerVR", System.StringComparison.OrdinalIgnoreCase) >= 0) return GraphicsTier.Low;
+            if (gpu.IndexOf("Immortalis", System.StringComparison.OrdinalIgnoreCase) >= 0) return GraphicsTier.High;
+            if (gpu.IndexOf("Mali-T", System.StringComparison.OrdinalIgnoreCase) >= 0) return GraphicsTier.Low;
+            var m = System.Text.RegularExpressions.Regex.Match(gpu, @"Adreno\D*(\d{3})", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (m.Success)
+            {
+                var n = int.Parse(m.Groups[1].Value);
+                if (n < 630) return GraphicsTier.Low;                 // 3xx-5xx, 610..620
+                if (n < 700) return GraphicsTier.Medium;              // 630..690
+                if (n < 720) return GraphicsTier.Low;                 // 710: a 619-class part
+                if (n < 730) return GraphicsTier.Medium;              // 720, 725
+                return GraphicsTier.High;                             // 730+, 8xx
+            }
+            m = System.Text.RegularExpressions.Regex.Match(gpu, @"Mali-G(\d+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (m.Success)
+            {
+                var n = int.Parse(m.Groups[1].Value);
+                if (n >= 700) return GraphicsTier.High;               // G710, G715, G720 ...
+                if (n >= 600) return GraphicsTier.Medium;             // G610, G615
+                if (n == 78) return GraphicsTier.High;                // Pixel 6 Pro, measured
+                if (n == 76 || n == 77) return GraphicsTier.Medium;
+                return GraphicsTier.Low;                              // G31..G72, G52, G57, G68, G310
+            }
+            if (gpu.IndexOf("Xclipse", System.StringComparison.OrdinalIgnoreCase) >= 0) return GraphicsTier.Medium;
+            return null;
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -273,6 +314,13 @@ namespace CityBuilder.Core
                 _copy.mainLightShadowmapResolution = ShadowMaps[shadows];
                 // a zero reach is URP's "no main light shadows"
                 _copy.shadowDistance = shadows == 0 ? 0f : ShadowReaches[Mathf.Clamp(d.ShadowReach, 0, ShadowReaches.Length - 1)];
+            }
+            if (!Manual)
+            {
+                // the run-time step-down (frame time / heat): Auto only, never above the boot tier
+                _copy.renderScale = Mathf.Clamp(_copy.renderScale * RuntimeQuality.ScaleFactor, 0.4f, 1f);
+                if (RuntimeQuality.ShadowsOff) _copy.shadowDistance = 0f;
+                if (RuntimeQuality.MsaaOff) _copy.msaaSampleCount = 1;
             }
             Application.targetFrameRate = FrameRate;
             // no post effects in the game: HDR buys nothing but bandwidth

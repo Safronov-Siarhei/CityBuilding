@@ -70,6 +70,9 @@ namespace CityBuilder.Core
                     foreach (var cam in Camera.allCameras)
                         cam.GetUniversalAdditionalCameraData().renderPostProcessing = !off;
                     break;
+                case "governor":   // the run-time step-down off for measuring (RuntimeQuality)
+                    RuntimeQuality.Enabled = !off;
+                    break;
                 case "dark":
                     foreach (var r in FindObjectsByType<MeshRenderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
                         if (r.name.Contains("Darkness")) r.enabled = !off;

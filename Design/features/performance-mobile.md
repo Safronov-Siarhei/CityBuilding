@@ -4,11 +4,22 @@
 > menu ~40 -> 55. The resolution stays native (0.85 / 0.75 scale gave only +1 / +4 fps with post on).
 >
 > **2026-11-21 Pixel 6 Pro (High):** 55-60 fps everywhere cold, 120 v 120 48; heats to thermal 2 in ~1 min of big
-> fights (-25 %). Auto-tier rule (GPU family + RAM at boot, frame-time step-down at run) proposed, not built.
+> fights (-25 %).
+>
+> **AUTO TIER v2 (the user, 2026-11-21), BUILT, not run on a phone yet:**
+> - boot: `GraphicsQuality.Detect` -> RAM < 4.5 GB Low, else `GpuTier(graphicsDeviceName)`: Adreno <630 / 710 /
+>   Mali-G31..G72, G52, G57, G68, G310 / Mali-T / PowerVR -> Low; Adreno 630-690, 720-725 / Mali-G76, G77, G610 /
+>   Xclipse / unknown -> Medium; Adreno 730+ / Mali-G78, G710+ / Immortalis -> High, but only with 7 GB + 8 cores.
+>   A71 (Adreno 618) now Low; Redmi Pad Low; Pixel High.
+> - run (`Core/RuntimeQuality`, Auto only): two 10 s windows under **40 fps** (the user: not 50) or thermal status >= 2
+>   -> one step: scale x0.85, x0.7, post off (`GraphicsQuality.PostAllowed`), shadows off, MSAA off (no-op steps
+>   skipped); 30 s at 55+ fps and not hot -> one step up; an up undone within a minute blocks ups 5 min (doubling).
+>   PERF line shows `rq <step> th <thermal>`; probe `governor off` freezes it for measuring.
+> - Player army cap = **80** (`army_max_size`, sheet «Армия и отряды» + «Нашествие: настройки»; the user 2026-11-21).
 >
 > **Every measurement is logged in `Design/PERFORMANCE_TESTS.md`** (method, devices, raw tables) -- add new ones there.
 >
-> **2026-11-21, Redmi Pad (the floor we design for):** battle limit 120 v 120 (the user); Invasion with a developed
+> **2026-11-21, Redmi Pad (the floor we design for):** battle limit 120 v 120 measured; player army cap 80 (the user); Invasion with a developed
 > town + late waves never under 44 fps; mission 1 play was 27-28 fps GPU-bound: CineGround picked its pattern with
 > `?:`, which in HLSL runs BOTH sides -- every pixel ran all six patterns. `[branch] if` now: menu 34 -> 39, film
 > 31 -> 39, mission 1 28 -> 36-37. RULE: never pick an expensive shader function with `?:`. Darkness: fixed masks pre-blurred (`DarkMaskBlur`) -> mission 1 40 fps; left ~4.3 ms (the blend), 
