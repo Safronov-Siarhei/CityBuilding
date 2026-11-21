@@ -68,3 +68,7 @@ slower => we are CPU-bound (Kryo 470 vs Tensor is about 2x) and graphics tiers w
 One measurement settles a question that is otherwise pure guesswork.
 
 OPEN QUESTION (the user, 2026-11-10) -- to think over, not decided: checking the device and its CAMERA CUT-OUT. Since d33c5ff62 the HUD ignores the side safe-area insets (left column at the screen edge, the user's wish); on some phones the cut-out may cover a side button or the event feed. Options to weigh: shift only what Screen.cutouts would cover, a per-device list, or a «cut-out margin» setting; check on every fleet phone before release. Card hud-and-ui.md «Open».
+
+**Measured 2026-11-21 (Design/PERFORMANCE_TESTS.md):** the A71 gets Medium by its RAM yet is ~2x weaker than the
+Redmi Pad (Low) in this game and heats within minutes (menu 31 -> 18 fps): mission 1 17-18 fps, mission 2 21. The
+RAM-based Auto tier is wrong for it; GPU family + a runtime step-down are needed. Pixel / POCO / Note 14 not measured.

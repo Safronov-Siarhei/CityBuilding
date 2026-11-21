@@ -44,10 +44,31 @@ raw record. **Add every new measurement here** (the user, 2026-11-21).
 |---|---|---|---|---|
 | Redmi Pad 10.6 (2022), 22081283G | Helio G99 (2x A76 2.2 GHz + 6x A55 2.0), Mali-G57 MC2 | 4 GB | 2000x1200, 60 Hz | Android 13; the weak GPU of the fleet, the reference for the limits below; quality tier Low (auto) |
 | Pixel 6 Pro | Tensor G1, Mali-G78 MP20 | 12 GB | 3120x1440, 120 Hz | strong |
-| Samsung A71 | SD 730, Adreno 618 | 6 GB | 2400x1080 | |
+| Samsung A71 | SD 730, Adreno 618 | 6 GB | 2400x1080 | auto = Medium; ~2x weaker than the Redmi Pad here, heats in minutes (2026-11-21) |
 | Redmi 12 | Helio G88, Mali-G52 MC2 | 4 GB | | the floor, not measured yet |
 
 ---
+
+## 2026-11-21 evening -- Samsung A71 (the Medium candidate)
+
+SM-A715F, Snapdragon 730 / Adreno 618, 6 GB, 2400x1080, Android 11. Auto put it on **Medium** (by its RAM). Same dev
+APK (Low = no post / no mission-2 shadows does not apply to it). **It heats fast**: the menu fell 31 -> 18 fps in ~3
+min (thermal status 1), so every switch was measured on/off back to back; absolute numbers drift with heat.
+
+| scene | as is | switch -> fps (gpu ms) |
+|---|---|---|
+| main menu (cold) | 31 (gpu 32) | post off 45 (20) |
+| main menu (warm) | 18 (gpu 56) | post off 26 (38) |
+| mission 1 film | 19 (gpu 52) | post off 26 (38); shadows off 0; particles off 0; scale 0.75 22 (46) |
+| mission 1 play | 17-18 (gpu 54-57) | post off 25-26 (38); +shadows off 28; +scale 0.8 30; dark off +1.5; post+shadows off+scale 0.6 39; +ground off 43 |
+| mission 2 intro | 30 (gpu 31) | |
+| mission 2 play | 21 (gpu 47, scripts 15.7!) | shadows off 22 (44); scale 0.75 24 (41) |
+
+Conclusions: the A71 is ~2x WEAKER than the Redmi Pad in this game (Redmi Pad Low: mission 1 60, mission 2 55) though
+it gets the HIGHER tier -- **choosing the tier by RAM is wrong** (the fleet note already said: GPU family + RAM). On the
+A71 even everything off and 0.6 scale is ~40 fps in mission 1; its CPU also runs mission 2's scripts at 15 ms (Redmi 6).
+Needed: an Adreno 6xx mid-range GPU (610/618/619...) -> Low or a lower tier (scale ~0.7); and the runtime step-down by
+frame time (heat), which no static tier can see.
 
 ## 2026-11-21 -- mission 2 towards 60 (Redmi Pad)
 
