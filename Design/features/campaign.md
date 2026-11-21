@@ -1126,3 +1126,10 @@ Commands:
 **Performance (2026-11-21, Redmi Pad):** CineGround ran all six patterns per pixel (`?:` evaluates both sides);
 fixed with `[branch] if` -- mission 1 28 -> 36-37 fps, film 31 -> 39, menu 34 -> 39, same picture. Left: darkness
 ~5.5 -> ~4.3 ms (fixed mask pre-blurred on the CPU, `DarkMaskBlur`, one tap; mission 1 40 fps), post ~7 ms. Data: `Design/PERFORMANCE_TESTS.md`.
+
+**Ground with textures -- CONCEPT (2026-11-21, not approved, not in the game):** the user found CineGround's ground
+cheap («пиксели большими, как квадраты»: the flat rectangular setts and the 11 cm square grass flecks -- they were
+always so). Proposed: the village ground as textured models (rounded setts with dark joints and moss, grass in soft
+patches and round tufts, dirt with ruts and pebbles), baked from Blender node materials into tiling images.
+Concept `Tools/blender/cinematic/ground_concept.py` -> `Design/concepts/campaign_ground/new_v1.png`, side by side with
+the tablet in `compare_v1.png`. Waiting for the user's notes.
