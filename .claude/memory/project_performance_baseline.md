@@ -252,3 +252,5 @@ Trap: piping build_android.ps1 into Select-Object -First N kills the script befo
 **2026-11-21 battle limit (Redmi Pad, PerfProbe `battle N M`):** 100 v 100 on screen = 40 fps; 120 v 120 = 35;
 150 v 150 = 30 with stutter. So: army + enemies on screen together <= ~200-240 fighters for >= 30 fps on the weak
 tablet (in an empty town; a big town eats more). Table in performance-mobile card.
+**2026-11-21 battle IN A BIG TOWN (100 buildings, ~210 people):** town alone 46 fps; 100 v 100 = 36 fps; 120 v 120 = 27
+(under the floor), 150 v 150 = 20. Ceiling in a town ~100 a side. Past 100 scripts grow faster than linear -- unexplained.

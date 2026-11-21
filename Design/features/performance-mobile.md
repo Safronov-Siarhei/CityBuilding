@@ -160,8 +160,23 @@
   | 150 v 150 | 30 | 31 / 26 | 21.8 | 22 %, 6 % > 50 ms (stutter) |
   Reading: **~100 v 100 (200 fighters on screen) keeps 40 fps; the 30-fps floor is ~120-130 a side; 150 a side
   stutters.** Both halves grow: scripts ~0.1 ms per fighter, GPU ~0.04 ms per fighter (figures + hp bars). The Redmi
-  Pad is the weak GPU of the fleet; the Pixel should hold more. Not measured: a battle inside a big town (add the
-  town's own ~4-13 ms), at night/rain, or with the camera zoomed in.
+  Pad is the weak GPU of the fleet; the Pixel should hold more. Not measured: night/rain, the camera zoomed in.
+  **The same battle INSIDE A BIG TOWN** (`town 100 220`, ~210 citizens walking capsule-free, the fight just south of
+  the hall among buildings, orcs burning them -- ruins on screen):
+  | per side | fps | cpu / gpu ms | scripts ms | frames > 34 ms |
+  |---|---|---|---|---|
+  | town alone | 46 | 16 / 19 | 6.5 | 2 % |
+  | 20 v 20 | 43 | 18 / 20 | 7.8 | 0.4 % |
+  | 40 v 40 | 41 | 19 / 21 | 9.5 | 1 % |
+  | 60 v 60 | 39 | 20 / 22 | 11.3 | 4 % |
+  | 80 v 80 | 37 | 23 / 24 | 13.6 | 11 % |
+  | 100 v 100 | 36 | 25 / 24 | 16.0 | 13 % |
+  | 120 v 120 | 27 | 36 / 27 | 24.9 | 36 %, 6 % > 50 ms |
+  | 150 v 150 | 20 | 51 / 31 | 38.1 | 70 %, 35 % > 50 ms |
+  Reading: **in a big town the ceiling is ~100 a side (36 fps); 120 a side already falls under 30.** Past 100 the
+  scripts climb faster than per fighter (16 -> 25 -> 38 ms) -- something in a town fight scales worse than linear
+  (orcs among buildings/people: target picking, HuntCitizen, burning?) -- worth a `marks` pass if bigger fights
+  are wanted.
 - **2026-11-20 night, the EMPTY town's 11 ms on the Redmi Pad** (PerfProbe `kinds`, `off <Type>`/`on <Type>`, `marks <s>`):
   switching kinds off one by one: the bot's 50 SoldierUnits ~7 ms, everything else ~1 ms or less. Marks inside: **Soldier.Wall
   6.8 ms** -- the bot's archers POSTED on their walls ran `NearestEnemyInReach` over ~200 enemies (orcs + 153 camp buildings)
