@@ -112,3 +112,4 @@
 - [Playtest 2026-11-20 (Editor)](project_pending_2026_11_20.md) — 9 fixes in code (food over the day, lighthouse reach, fire crews, orc notice...), 3 concepts approved + BUILT (not compiled: Unity was open)
 - [Concepts as screens](feedback_concepts_as_screens.md) — UI concepts = coloured 1920x1080 PNGs over the user's screenshot with real skin pieces, not chat widgets
 - [Studio logo + splash (2026-11-21)](project_studio_splash.md) — Depigo Games logo kit committed; «Чернильное перо» splash v2 (7.6 s, NO sound) BUILT as first scene Splash.unity (not seen); edit via Design/branding/depigo/splash exporter
+- [Hunting (2026-11-21)](project_hunting.md) — sandbox herds + Hunter's Hut: design agreed, concepts sent, not built; card hunting.md
