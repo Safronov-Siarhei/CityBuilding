@@ -311,6 +311,13 @@ namespace CityBuilder.EditorTools
             // that gets blamed on a slow phone and hunted in the wrong place for months.
             PlayerSettings.Android.optimizedFramePacing = true;
 
+            // No «Made with Unity» splash (the user, 2026-11-21: «убрать заставку юнити»). Optional on
+            // Unity Personal since Unity 6; the studio's own «Чернильное перо» splash replaces it
+            // (Design/branding/depigo/splash). Its background is the splash paper colour, so the moment
+            // the engine starts up does not flash black before the paper.
+            PlayerSettings.SplashScreen.show = false;
+            PlayerSettings.SplashScreen.backgroundColor = new Color(0.937f, 0.902f, 0.824f); // #efe6d2
+
             // The app's icon: for now the 3D orc chief over the wall (the user, 2026-11-10: «поставь
             // пока что орка», the choice against the king left open), rendered by
             // Tools/store/render_icons_3d.py from the game's own models. One default icon; Unity
