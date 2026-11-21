@@ -3,6 +3,9 @@
 > **Low tier = no post effects** (2026-11-21, the user): `OpeningFx.NoPostOnLow`; Redmi Pad mission 1 40 -> 60 fps,
 > menu ~40 -> 55. The resolution stays native (0.85 / 0.75 scale gave only +1 / +4 fps with post on).
 >
+> **2026-11-21 Pixel 6 Pro (High):** 55-60 fps everywhere cold, 120 v 120 48; heats to thermal 2 in ~1 min of big
+> fights (-25 %). Auto-tier rule (GPU family + RAM at boot, frame-time step-down at run) proposed, not built.
+>
 > **Every measurement is logged in `Design/PERFORMANCE_TESTS.md`** (method, devices, raw tables) -- add new ones there.
 >
 > **2026-11-21, Redmi Pad (the floor we design for):** battle limit 120 v 120 (the user); Invasion with a developed

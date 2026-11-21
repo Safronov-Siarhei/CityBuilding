@@ -43,11 +43,36 @@ raw record. **Add every new measurement here** (the user, 2026-11-21).
 | device | chip / GPU | RAM | screen | note |
 |---|---|---|---|---|
 | Redmi Pad 10.6 (2022), 22081283G | Helio G99 (2x A76 2.2 GHz + 6x A55 2.0), Mali-G57 MC2 | 4 GB | 2000x1200, 60 Hz | Android 13; the weak GPU of the fleet, the reference for the limits below; quality tier Low (auto) |
-| Pixel 6 Pro | Tensor G1, Mali-G78 MP20 | 12 GB | 3120x1440, 120 Hz | strong |
+| Pixel 6 Pro | Tensor G1, Mali-G78 MP20 | 12 GB | 3120x1440, 120 Hz | strong; auto High; 55-60 fps everywhere cold, thermal 2 in ~1 min of big fights (-25 %) (2026-11-21) |
 | Samsung A71 | SD 730, Adreno 618 | 6 GB | 2400x1080 | auto = Medium; ~2x weaker than the Redmi Pad here, heats in minutes (2026-11-21) |
 | Redmi 12 | Helio G88, Mali-G52 MC2 | 4 GB | | the floor, not measured yet |
 
 ---
+
+## 2026-11-21 night -- Pixel 6 Pro on its auto tier (High)
+
+Tensor G1 / Mali-G78 MP20, 12 GB, 3120x1440 (Unity renders at the tier's own scale), Android 14. Auto = High: post,
+shadows, MSAA. Thermal status 0 at the start.
+
+| scene | Pixel High | switches |
+|---|---|---|
+| main menu | 57-60 | |
+| mission 1 film | 52 | post off 59 |
+| mission 1 play | 56-58 | each switch (post/shadows/dark/scale) 1-3 ms |
+| mission 2 intro | 59 | |
+| mission 2 play | 60 (gpu 15.4) | shadows off / msaa off: no change |
+| sandbox, archipelago, town 100 / 220 people | 59 (cpu 13, gpu 16.7, scripts 3.8) | shadows off 59 (gpu 16.0) |
+| + battle 40 v 40 | 58.5 (cpu 14, scripts 4.9) | |
+| + battle 80 v 80 | 55 (cpu 17, gpu 21, scripts 6.4) | |
+| + battle 120 v 120 | 48 (cpu 20, gpu 23, scripts 8.9) | |
+
+**Heat run** (battle 80 v 80 restarted every minute, 6 min): fps 48 -> 40 -> 38 -> 42 -> 38 -> 46; gpu 27 -> 36 ms;
+thermal status 2 (moderate) from the first minute, battery 38.6 -> 39.8 C. The calm town afterwards, hot: 54 fps
+(gpu 23 vs 16.7 cold); scale 0.7 -> gpu 19. So even the flagship loses ~25 % in sustained fights: the runtime
+step-down is needed on every phone, not only the weak ones.
+
+Read: the Pixel is a 60-fps device everywhere on High when cold; the only thing below 55 is 120 v 120 (CPU, scripts
+9 ms = ~2.4x faster than the Redmi Pad's, ~3.4x the A71's). Heat, not the tier, is what brings it down.
 
 ## 2026-11-21 evening -- Samsung A71 on LOW (manual)
 
