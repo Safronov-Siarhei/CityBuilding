@@ -31,6 +31,15 @@ namespace CityBuilder.Campaign
             UnityEngine.Rendering.RenderPipelineManager.beginCameraRendering -= OnCameraRendering;
         }
 
+        /// <summary>The Low graphics tier draws mission 2 without the sun's shadows (the user, 2026-11-21: «без теней на
+        /// Low»): on the Redmi Pad they were ~4 ms of the GPU, ~40 -> ~54 fps. The scene is reloaded for any other mode.</summary>
+        private static void NoShadowsOnLow()
+        {
+            if (CityBuilder.Core.GraphicsQuality.Effective != CityBuilder.Core.GraphicsTier.Low) return;
+            foreach (var l in FindObjectsByType<Light>(FindObjectsSortMode.None))
+                if (l.type == LightType.Directional) l.shadows = LightShadows.None;
+        }
+
         private void SetUpView()
         {
             var rig = RTSCameraController.Instance;

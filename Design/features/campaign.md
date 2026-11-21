@@ -1150,4 +1150,4 @@ the layout is the same. Seen on the Redmi Pad, 40 fps.
 
 **Mission 2 perf (2026-11-21):** the darkness draws without the depth texture (`_NoDepth`, ground plane = GridManager
 GroundHeight) -- ~2 ms; the FPS counter survives the scenes' canvas sweep (Intro/Capital/SupportOfferWindow skip
-FpsCounter). Redmi Pad ~40 fps in play; shadows off would give ~54 (not done: look decision).
+FpsCounter). Redmi Pad ~40 fps in play; Low tier: NO SUN SHADOWS in mission 2 (the user, 2026-11-21; `NoShadowsOnLow`) -> 54-55 fps in play.

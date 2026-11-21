@@ -58,6 +58,8 @@ start. DONE: mission 2's darkness finds the ground by the view ray like mission 
 ~1.5-2 ms, the picture the same (intro shot checked); `[branch]` on CloudShadow's early-out (no clouds there). Now ~40,
 gpu ~21. Left: shadows (look decision), the town's own pixels. New probe lines: `hard on|off`, `lights on|off`,
 `depth on|off`, `shadowdist N`.
+Then the user chose «без теней на Low»: `CityDefenceMode.NoShadowsOnLow` (the sun's shadows off on the Low tier,
+mission 2 only) -> play **54-55 fps** (gpu 17.1, no frame over 34 ms), intro scenes 56-59.
 Also: the FPS counter was hidden by mission 2's scenes (they switch every root canvas off) -- now kept.
 
 ## 2026-11-21 -- no post effects on the Low tier (Redmi Pad)

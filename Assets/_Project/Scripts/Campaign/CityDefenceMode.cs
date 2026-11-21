@@ -301,6 +301,7 @@ namespace CityBuilder.Campaign
             OrcUnit.Wounded += OnOrcWounded;
             RTSCameraController.GesturesLocked = true;
             SetUpView();
+            NoShadowsOnLow();
             Darkness();
             RaiseHealers();
             CountOrcs();
