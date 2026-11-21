@@ -62,7 +62,7 @@ Set by hand in the settings (Ручная, Низкий, 60, no MSAA) -- so no p
 | mission 2 play | 31 (gpu 30, scripts 10) | 21 | |
 | sandbox, archipelago, castle only | 30 (gpu 33, scripts 10.4) | | |
 | sandbox town 100 / 220 people | 30-31 (gpu 30, scripts 12) | | shadows off +1 (0.6 ms); scale 0.75 35; BuildingDetail off 50 (gpu 16) |
-| + battle 40 v 40 | 30 (cpu 25, scripts 15) | | 10 % frames > 50 ms... |
+| + battle 40 v 40 | 30 (cpu 25, scripts 15) | | 1 % frames > 50 ms |
 | + battle 80 v 80 | 25 (cpu 32, scripts 23.5) | | 20 % frames > 50 ms |
 | + battle 120 v 120 | 23 (cpu 38.5, scripts 30) | | 21 % frames > 50 ms |
 
