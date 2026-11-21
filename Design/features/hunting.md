@@ -3,8 +3,14 @@
 > **Status (2026-11-21): DESIGN AGREED with the user, concepts made, NOTHING BUILT.**
 > Concepts: `Design/concepts/hunting/Hunt_1_Notice.png`, `Hunt_2_Herd.png`, `Hunt_3_Sheet.png`
 > (`python Tools/ui/hunting_concepts.py`; sprites from the game's own models via `Tools/blender/concept_sprites.py`).
-> Before building: the user approves the concepts, then renders of the NEW models (boar, Hunter's Hut lvl 1-5,
-> the hunter with a bow + shooting animation, hide icon, three herd signs) -- models first, as always.
+> Concepts + numbers v3 APPROVED by the user («к моделям»). MODEL RENDERS sent for approval 2026-11-21
+> (`Design/concepts/hunting/models/`): Hunter's Hut lvl 1-5 (`Tools/blender/hunterhut1.py`, 1x1, ridge front-to-back,
+> antlers on the gable peak; lvl2 stone footing + fire pit + 2nd hide + lantern; lvl3 lookout with pennant, gold
+> antler tips; lvl4 red diamonds on the thatch + boar head; lvl5 red-orange thatch, gold antlers; 1385-2224 tris),
+> the hunter `FigureHunter` (his OWN model, the user: brown felt hat with a white feather, fur cape, browns, the
+> archer's rig ArmDraw/ArmBow so the shot animation fits; 1338 tris) and the boar `FaunaBoar` (jointed like the
+> deer; 504 tris) -- both in `Tools/blender/hunting_figures.py`; renders by `render_hunting.py` (never saves).
+> NOT installed into the models file / not exported until approved. Still to make: hide icon, three herd signs.
 
 Read with: [food-and-hunger](food-and-hunger.md) (food buildings, «+N» popups), [resources-and-storage](resources-and-storage.md)
 (hides), [maps-and-terrain](maps-and-terrain.md) (the decorative Wildlife -- deer/hares that never vanish),
