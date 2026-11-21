@@ -260,12 +260,12 @@ def screen_sheet():
     hare = head('FaunaRabbit_a', (0.0, 0.0, 0.75, 0.8))
     deer = head('FaunaDeer_c', (0.0, 0.0, 1.0, 1.0))
     cols = [180, 540, 800, 1020, 1240, 1500]
-    heads = ['стая', 'животных: мал. / сред. / бол.', 'попадание', 'еда', 'шкура: шанс, шт.', 'шанс размера']
+    heads = ['стая', 'животных: мал. / сред. / бол.', 'попадание', 'еда', 'шкуры', 'шанс размера']
     y0 = 190
     for x, t in zip(cols, heads):
         d.text((x if x != 180 else 290, y0), t, font=font(24, True), fill=(130, 96, 60), anchor='mm')
-    rows = [('Зайцы', hare, '4 / 6 / 8', '25 %', '1', '10 %, 1'), ('Олени', deer, '3 / 5 / 7', '15 %', '2', '20 %, 2'),
-            ('Кабаны', None, '2 / 3 / 5', '10 %', '3', '30 %, 3')]
+    rows = [('Зайцы', hare, '4 / 6 / 8', '25 %', '1', '1'), ('Олени', deer, '3 / 5 / 7', '15 %', '2', '2'),
+            ('Кабаны', None, '2 / 3 / 5', '10 %', '3', '3')]
     for i, (name, pic, n, hit, food, hide) in enumerate(rows):
         y = y0 + 90 + i * 120
         d.rounded_rectangle((130, y - 52, W - 130, y + 52), 20, fill=(236, 216, 170))
@@ -279,8 +279,8 @@ def screen_sheet():
             d.text((x, y), v, font=font(34), fill=INK, anchor='mm')
         d.text((cols[5], y), '50 / 35 / 15 %', font=font(28, True), fill=INK, anchor='mm')
     img.alpha_composite(icon('Res_Food', 64), (cols[3] + 26, y0 + 90 - 32))
-    img.alpha_composite(hide_icon(40), (cols[4] + 112, y0 - 20))
-    d.text((150, y0 + 90 + 2 * 120 + 78), 'выстрел раз в 30 с; шкура падает не с каждого зверя; кабан нападает на 2 % промахов -- охотник погибает', font=font(22, True),
+    img.alpha_composite(hide_icon(40), (cols[4] + 60, y0 - 20))
+    d.text((150, y0 + 90 + 2 * 120 + 78), 'выстрел раз в 30 с, добыча только при попадании; кабан нападает на 2 % промахов -- охотник погибает', font=font(22, True),
            fill=(176, 64, 44), anchor='lm')
 
     y = 700

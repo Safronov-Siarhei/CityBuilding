@@ -38,14 +38,15 @@ Read with: [food-and-hunger](food-and-hunger.md) (food buildings, «+N» popups)
 ## Numbers proposed by Claude (the user: «поставь значения сам пока что») -- go to the sheet, not C#
 Revised 2026-11-21 (the user: «слишком высокие шансы попадания, тогда не будет смысла в прокачке хижины, шкура
 должна быть редкой добычей, которую трудно получить»): low hit chances + a slow shot, so ONE hunter takes only part of a
-herd and the hut's levels (more hunters) matter; a hide drops only from some kills.
-| herd | animals small/med/large | hit chance | food per kill | hide: chance per kill, amount |
+herd and the hut's levels (more hunters) matter. The same day the user dropped the separate hide chance («делает
+добычу слишком сложной»): the ONLY chance is the hit; every kill gives its food AND hides.
+| herd | animals small/med/large | hit chance | food per kill | hides per kill |
 |---|---|---|---|---|
-| hares | 4 / 6 / 8 | 25 % | 1 | 10 %, 1 |
-| deer | 3 / 5 / 7 | 15 % | 2 | 20 %, 2 |
-| boars | 2 / 3 / 5 | 10 % | 3 | 30 %, 3 |
+| hares | 4 / 6 / 8 | 25 % | 1 | 1 |
+| deer | 3 / 5 / 7 | 15 % | 2 | 2 |
+| boars | 2 / 3 / 5 | 10 % | 3 | 3 |
 - a hunter shoots once every **30 s** (~16 shots in a herd's 8 min, less the walk to it): per hunter per herd about
-  4 hares / 2.4 deer / 1.6 boars and ~0.4 / 1 / 1.4 hides -> a large herd needs 2-3+ hunters.
+  4 hares / 2.4 deer / 1.6 boars = ~4 / 5 / 5 food and as many hides -> a large herd needs 2-3+ hunters.
 - size chance small/medium/large 50 / 35 / 15 %; a boar attacks on **2 %** of the misses -> the hunter dies
   (~0.3 deaths per hunter per boar herd; 10 % killed him almost every time).
 - Hut research: 40 coins, 60 s. Levels 1-5 cost: 40 wood + 10 stone; 60 + 30; 90 + 60; 130 + 100 + 20 gold; 180 + 150 + 50 gold.
