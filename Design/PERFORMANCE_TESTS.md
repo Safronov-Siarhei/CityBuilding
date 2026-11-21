@@ -49,6 +49,28 @@ raw record. **Add every new measurement here** (the user, 2026-11-21).
 
 ---
 
+## 2026-11-21 evening -- Samsung A71 on LOW (manual)
+
+Set by hand in the settings (Ручная, Низкий, 60, no MSAA) -- so no post, no mission-2 shadows. Thermal status 0.
+
+| scene | A71 Low | (A71 auto Medium) | switches |
+|---|---|---|---|
+| main menu | 43 fps (gpu 21) | 31 | |
+| mission 1 film | 41-46 (gpu 21) | 19 | |
+| mission 1 play | 39-40 (gpu 25) | 17-18 | shadows off 41; scale 0.8 41; **dark off 57 (gpu 17)** -- the darkness is ~8 ms on Adreno 618 |
+| mission 2 intro | 48 | 30 | |
+| mission 2 play | 31 (gpu 30, scripts 10) | 21 | |
+| sandbox, archipelago, castle only | 30 (gpu 33, scripts 10.4) | | |
+| sandbox town 100 / 220 people | 30-31 (gpu 30, scripts 12) | | shadows off +1 (0.6 ms); scale 0.75 35; BuildingDetail off 50 (gpu 16) |
+| + battle 40 v 40 | 30 (cpu 25, scripts 15) | | 10 % frames > 50 ms... |
+| + battle 80 v 80 | 25 (cpu 32, scripts 23.5) | | 20 % frames > 50 ms |
+| + battle 120 v 120 | 23 (cpu 38.5, scripts 30) | | 21 % frames > 50 ms |
+
+Read: on Low the A71 is a 40-fps device in the campaign, 30 in the sandbox. Sandbox shadows cost almost nothing (the
+town's own pixels do: BuildingDetail ~14 ms). Its CPU is the battle limit: scripts 2-2.5x the Redmi Pad's at the same
+fight (120 v 120: 30 ms vs ~22 before CrowdPause / 21.6 after) -> on such a phone the fight cap should be ~60 v 60.
+The mission-1 darkness is the biggest single GPU item there (8 ms).
+
 ## 2026-11-21 evening -- Samsung A71 (the Medium candidate)
 
 SM-A715F, Snapdragon 730 / Adreno 618, 6 GB, 2400x1080, Android 11. Auto put it on **Medium** (by its RAM). Same dev
