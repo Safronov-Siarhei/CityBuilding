@@ -161,7 +161,9 @@ def boar_head(b):
     b.hcylinder('y', (0, -0.33, 0.185), 0.012, 0.026, SNOUT, sides=7)
     for k in (-1, 1):
         b.box(k * 0.009 - 0.004, k * 0.009 + 0.004, -0.344, -0.338, 0.18, 0.19, SPOT)    # nostrils
-        b.box(k * 0.04 - 0.007, k * 0.04 + 0.007, -0.245, -0.235, 0.235, 0.247, SPOT)   # eyes
+        # eyes: set on the brow's front corners so they show from the front and the side, a glint in each
+        b.box(k * 0.038 - 0.012, k * 0.038 + 0.012, -0.268, -0.238, 0.232, 0.256, SPOT, bevel=0.004)
+        b.box(k * 0.038 + k * 0.004 - 0.004, k * 0.038 + k * 0.004 + 0.004, -0.271, -0.266, 0.246, 0.253, 'white')
         o.tube(b, [(k * 0.035, -0.19, 0.26), (k * 0.055, -0.18, 0.31)], [0.018, 0.0], BOAR_DARK, sides=4)  # ears
         o.tube(b, [(k * 0.03, -0.31, 0.17), (k * 0.05, -0.33, 0.2), (k * 0.045, -0.31, 0.235)],
                [0.009, 0.007, 0.0], TUSK, sides=4)
