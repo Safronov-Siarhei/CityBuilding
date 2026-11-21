@@ -514,6 +514,19 @@ namespace CityBuilder.Campaign
             if (_bloom != null) _bloom.active = false;
             if (_dof != null) _dof.active = false;
             _playLight = true;
+            NoPostOnLow();
+        }
+
+        /// <summary>
+        /// The Low graphics tier draws no post effects at all (the user, 2026-11-21: «пост Low»): on the Redmi Pad the
+        /// post pass (colour adjustments + vignette, through an intermediate texture) was ~8 ms of the GPU -- mission 1
+        /// 40 -> 60 fps without it, the picture a touch less saturated and contrasted, no vignette.
+        /// </summary>
+        private static void NoPostOnLow()
+        {
+            if (CityBuilder.Core.GraphicsQuality.Effective != CityBuilder.Core.GraphicsTier.Low) return;
+            foreach (var cam in Camera.allCameras)
+                UnityEngine.Rendering.Universal.CameraExtensions.GetUniversalAdditionalCameraData(cam).renderPostProcessing = false;
         }
 
         private bool _playLight;
@@ -567,6 +580,7 @@ namespace CityBuilder.Campaign
                 _dof.aperture.value = _c.dofAperture;
                 _dof.active = false;
             }
+            NoPostOnLow();
         }
 
         // ------------------------------------------------------------ chimney smoke, the title

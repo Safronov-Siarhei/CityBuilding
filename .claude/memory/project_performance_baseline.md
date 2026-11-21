@@ -15,7 +15,7 @@ its pattern with HLSL `?:` (evaluates BOTH sides -> all six patterns per pixel);
 menu 39. The user had agreed to rebuild the ground as a baked mesh; the measurement showed it unnecessary. Left: the
 darkness (9-tap mask blur, ~5.5 ms) and post (~7 ms). Later the same day: darkness pre-blurred (DarkMaskBlur) -> mission 1 40 fps; the user found the
 ground «пиксели как квадраты» -> concept approved -> CineGround now reads painted seamless tiles
-(Tools/textures/cine_ground_textures.py -> Resources/CineGround, held + DontUnloadUnusedAsset), still 40 fps. Mission 2's orc lane retarget-every-frame bug fixed (OrcUnit.TimeToRetarget).
+(Tools/textures/cine_ground_textures.py -> Resources/CineGround, held + DontUnloadUnusedAsset), still 40 fps. Then the Low tier drops post effects (OpeningFx.NoPostOnLow, the user's choice): mission 1 60 fps, menu 55. Mission 2's orc lane retarget-every-frame bug fixed (OrcUnit.TimeToRetarget).
 
 First real performance measurement of the game, 2026-08-19 (commit `32396a68`). Everything below was measured, not reasoned about. Read with [[project_current_state]] and [[feedback_mobile_first_optimization]].
 

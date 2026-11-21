@@ -1143,3 +1143,7 @@ Pad; tablet shot `ingame_v1.png`. To retune: edit the generator, rerun it.
 (set by SetupProjectCampaign for CampaignOpening only) draws the cobbled streets with the dirt material; the square
 under the portal stays stone; the main menu's village keeps its cobbles. Lines and the random sequence untouched, so
 the layout is the same. Seen on the Redmi Pad, 40 fps.
+
+**Low graphics tier: no post effects** in the menu, the film and mission 1 (`OpeningFx.NoPostOnLow`, the user
+2026-11-21): Redmi Pad mission 1 60 fps, menu 55, film 43; the look a touch less saturated, no vignette
+(`Design/concepts/campaign_ground/low_no_post.png`).

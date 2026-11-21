@@ -49,6 +49,19 @@ raw record. **Add every new measurement here** (the user, 2026-11-21).
 
 ---
 
+## 2026-11-21 -- no post effects on the Low tier (Redmi Pad)
+
+Mission 1 play at 40 fps (gpu 24 ms): `post off` -> **60 fps** (gpu 16.4); `scale 0.85` with post on 41, `scale 0.75`
+44 -- the resolution barely matters, the post pass (colour adjustments + vignette via an intermediate texture) did.
+The user chose «разрешение + пост Low»; the resolution was left native since post alone reached 60.
+`OpeningFx.NoPostOnLow` (camera renderPostProcessing off when GraphicsQuality.Effective == Low):
+
+| scene | before | after |
+|---|---|---|
+| main menu | 37-43 | **55** |
+| mission 1 film | 39 | 43 |
+| mission 1 play | 40 | **60** |
+
 ## 2026-11-21 -- CineGround with painted tiles (Redmi Pad)
 
 The user's new look (textures instead of formulas for setts, grass tufts, dirt): mission 1 play **40 fps** (gpu 24 ms,
