@@ -145,6 +145,23 @@
   the citizens cost ~nothing; the desktop editor test showed NO difference -- the phone is the judge. -> `CitizenAgent.SimpleWalk`
   is ON in every mode (capsule disabled from Awake). **The next lever: the 13 ms of scripts with an EMPTY town** (cpu ~20 ms,
   gpu ~15 ms at 2000x1200 Low): 52 orcs + 50 bot soldiers on the archipelago, all with capsules -- measure next.
+- **2026-11-21, FIELD BATTLE LIMIT on the Redmi Pad** (the user: how big an army, against how many, before fps < 30?).
+  PerfProbe `battle N M` (PerfTown.Battle: N soldiers -- 2/3 men-at-arms, 1/3 archers, squads of 20 -- against M orcs a
+  few cells apart on screen, both x30 health so the fight lasts), empty archipelago sandbox, default camera, after the
+  fixes above (+~40 camp orcs idle elsewhere):
+  | per side | fps | cpu / gpu ms | scripts ms | frames > 34 ms |
+  |---|---|---|---|---|
+  | 20 v 20 | 48-55 | 14 / 15-19 | 5.5 | 0 |
+  | 40 v 40 | 54-55 | 15 / 15 | 6.2 | 0 |
+  | 60 v 60 | 45 | 17 / 19 | 8.3 | 0 |
+  | 80 v 80 | 41-42 | 19 / 22 | 10.9 | 1 % |
+  | 100 v 100 | 40-42 | 20 / 22 | 12.9 | 4 % |
+  | 120 v 120 | 35-37 | 23 / 25 | 15.6 | 8 % |
+  | 150 v 150 | 30 | 31 / 26 | 21.8 | 22 %, 6 % > 50 ms (stutter) |
+  Reading: **~100 v 100 (200 fighters on screen) keeps 40 fps; the 30-fps floor is ~120-130 a side; 150 a side
+  stutters.** Both halves grow: scripts ~0.1 ms per fighter, GPU ~0.04 ms per fighter (figures + hp bars). The Redmi
+  Pad is the weak GPU of the fleet; the Pixel should hold more. Not measured: a battle inside a big town (add the
+  town's own ~4-13 ms), at night/rain, or with the camera zoomed in.
 - **2026-11-20 night, the EMPTY town's 11 ms on the Redmi Pad** (PerfProbe `kinds`, `off <Type>`/`on <Type>`, `marks <s>`):
   switching kinds off one by one: the bot's 50 SoldierUnits ~7 ms, everything else ~1 ms or less. Marks inside: **Soldier.Wall
   6.8 ms** -- the bot's archers POSTED on their walls ran `NearestEnemyInReach` over ~200 enemies (orcs + 153 camp buildings)

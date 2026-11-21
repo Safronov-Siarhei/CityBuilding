@@ -249,3 +249,6 @@ by the user each time; it only listened on the port from the main «Отладк
 **2026-11-20 night:** empty archipelago town 11.2 -> 6.2 ms scripts on the Redmi Pad: the bot's wall archers scanned ~200
 enemies every frame (WallFight) -- fixed. The 50-vs-1 was a NEW-game bug (garrison manned before the fog was on) -- fixed; empty new town now 4.0 ms scripts, cpu 11.7 ms.
 Trap: piping build_android.ps1 into Select-Object -First N kills the script before the copy to D:\Builds CB.
+**2026-11-21 battle limit (Redmi Pad, PerfProbe `battle N M`):** 100 v 100 on screen = 40 fps; 120 v 120 = 35;
+150 v 150 = 30 with stutter. So: army + enemies on screen together <= ~200-240 fighters for >= 30 fps on the weak
+tablet (in an empty town; a big town eats more). Table in performance-mobile card.

@@ -127,6 +127,11 @@ namespace CityBuilder.Core
                     }
                     break;
                 // capsule off -- citizens walk without their CharacterController (CitizenAgent.SimpleWalk); on -- with it
+                // battle 40 40 -- a field battle on screen (PerfTown.Battle); battle 0 0 clears it
+                case "battle":
+                    if (w.Length > 2 && int.TryParse(w[1], out var bs) && int.TryParse(w[2], out var bo))
+                        Write(PerfTown.Battle(bs, bo));
+                    break;
                 // kinds -- every enabled script kind that has an Update/LateUpdate, by count, into perf_out.txt
                 case "kinds":
                     Kinds();

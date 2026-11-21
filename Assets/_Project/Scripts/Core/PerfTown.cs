@@ -58,6 +58,69 @@ namespace CityBuilder.Core
             return "town: " + placed + " buildings, " + people + " people, " + staffed + " at work";
         }
 
+        private static readonly List<Combat.SoldierUnit> BattleSoldiers = new List<Combat.SoldierUnit>();
+        private static readonly List<Combat.OrcUnit> BattleOrcs = new List<Combat.OrcUnit>();
+
+        /// <summary>
+        /// A field battle on screen (the user, 2026-11-21: «сколько солдат разом выдержал бы планшет ... чтобы фпс не
+        /// падал ниже 30»): `soldiers` of the player's kind (2/3 men-at-arms, 1/3 archers, in squads of 20) facing
+        /// `orcs` raiders a few cells off, south of the hall, the camera put on them. Both sides `toughness` times their
+        /// health so the fight lasts the measurement. PerfProbe `battle N M`; `battle 0 0` clears it.
+        /// </summary>
+        public static string Battle(int soldiers, int orcs, float toughness = 30f)
+        {
+            ClearBattle();
+            if (soldiers <= 0 && orcs <= 0) return "battle: cleared";
+            var army = Combat.ArmyManager.Instance;
+            var raids = Combat.OrcRaidManager.Instance;
+            var grid = GridManager.Instance;
+            if (army == null || raids == null || grid == null) return "battle: no army/raids/grid";
+            if (Combat.OrcRaidManager.Instance != null) Combat.OrcRaidManager.Instance.RaidsSuspended = true;
+
+            var hall = BuildingInstance.TownHall;
+            var centre = hall != null ? hall.transform.position + new Vector3(0f, 0f, -12f) : grid.GetFootprintCenterWorld(new Vector2Int(grid.GridSize.x / 2, grid.GridSize.y / 2), Vector2Int.one);
+            if (UnityEngine.AI.NavMesh.SamplePosition(centre, out var hit, 10f, UnityEngine.AI.NavMesh.AllAreas)) centre = hit.position;
+            var ours = centre + new Vector3(-4f, 0f, 0f);
+            var theirs = centre + new Vector3(4f, 0f, 0f);
+
+            Combat.ArmyGroup group = null;
+            for (var i = 0; i < soldiers; i++)
+            {
+                var type = i % 3 == 2 ? Combat.SoldierType.Archer : Combat.SoldierType.ManAtArms;
+                if (i % 20 == 0) group = new Combat.ArmyGroup(type, theirs);
+                var at = ours + new Vector3(Random.Range(-3f, 3f), 0f, Random.Range(-5f, 5f));
+                var unit = army.SpawnHireling(type, at, group);
+                if (unit == null) continue;
+                var stats = Combat.SoldierStats.StatsAt(type, 1);
+                unit.SetHeroStats(Mathf.RoundToInt(stats.maxHealth * toughness), stats.attackDamage);
+                unit.SetCurrentHealth(Mathf.RoundToInt(stats.maxHealth * toughness));
+                BattleSoldiers.Add(unit);
+            }
+            if (group != null) group.OrderMoveTo(theirs);
+            var before = Combat.OrcUnit.All.Count;
+            for (var i = 0; i < orcs; i++)
+                raids.SpawnOrcs(theirs + new Vector3(Random.Range(-3f, 3f), 0f, Random.Range(-5f, 5f)), 1, 1);
+            for (var i = before; i < Combat.OrcUnit.All.Count; i++)
+            {
+                var orc = Combat.OrcUnit.All[i];
+                if (orc == null) continue;
+                orc.Toughen(toughness);
+                BattleOrcs.Add(orc);
+            }
+            var cam = CameraControl.RTSCameraController.Instance;
+            if (cam != null) cam.JumpTo(centre);
+            return "battle: " + BattleSoldiers.Count + " soldiers vs " + BattleOrcs.Count + " orcs";
+        }
+
+        private static void ClearBattle()
+        {
+            var army = Combat.ArmyManager.Instance;
+            foreach (var u in BattleSoldiers) if (u != null && army != null) army.Dismiss(u);
+            foreach (var o in BattleOrcs) if (o != null) Object.Destroy(o.gameObject);
+            BattleSoldiers.Clear();
+            BattleOrcs.Clear();
+        }
+
         private static BuildingInstance Place(BuildingData data, Vector2Int cell)
         {
             var grid = GridManager.Instance;
