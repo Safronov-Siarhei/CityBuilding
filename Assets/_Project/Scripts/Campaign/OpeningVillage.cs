@@ -61,6 +61,10 @@ namespace CityBuilder.Campaign
         [SerializeField] private Material cobble;
         [SerializeField] private Material dirt;
         [SerializeField] private Material field;
+        // level 1 (the film and mission 1): the cobbled streets drawn as sand lanes, only the square under the portal
+        // stays stone (the user, 2026-11-21: «дорога из брусчатки слишком сильно выделяется»). The main menu's
+        // village keeps its cobbles. The streets' lines and the random sequence are unchanged, so the layout is too.
+        [SerializeField] private bool sandStreets;
         [SerializeField] private CityBuilder.Maps.MapDecorData decorKit;
         [SerializeField] private Material decorMaterial;
         [SerializeField] private int seed = 11;
@@ -218,7 +222,8 @@ namespace CityBuilder.Campaign
             // one continuous ribbon along the curve (separate quads per step left notches on the
             // outside of every bend); dirt roads alternate a hair in height where they cross
             var h = cobbled ? y : y + 0.003f * (_streets.Count % 2);
-            Flat("Street", Ribbon(line, width, h, width * 0.5f), material, line[line.Length - 1] - line[0], seed);
+            var sand = cobbled && sandStreets;
+            Flat("Street", Ribbon(line, width, h, width * 0.5f), sand ? dirt : material, line[line.Length - 1] - line[0], sand ? 7.3f * _streets.Count : seed);
             return line;
         }
 

@@ -1138,3 +1138,8 @@ GrassDetail and DirtDetail 4 m colour multipliers), globals `_CineCobble/_CineGr
 `CineGroundNoise` (held + DontUnloadUnusedAsset -- unheld, the scene load unloaded them and the ground went flat grey).
 Field shoots and wheat flecks use the grass tile's tufts (no square cells left). Mission 1 still 40 fps on the Redmi
 Pad; tablet shot `ingame_v1.png`. To retune: edit the generator, rerun it.
+
+**Level 1 streets are SAND (the user, 2026-11-21: «дорога из брусчатки слишком сильно выделяется»):** `OpeningVillage.sandStreets`
+(set by SetupProjectCampaign for CampaignOpening only) draws the cobbled streets with the dirt material; the square
+under the portal stays stone; the main menu's village keeps its cobbles. Lines and the random sequence untouched, so
+the layout is the same. Seen on the Redmi Pad, 40 fps.

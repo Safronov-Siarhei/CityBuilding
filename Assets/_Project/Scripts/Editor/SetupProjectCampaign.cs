@@ -122,6 +122,10 @@ namespace CityBuilder.EditorTools
 
             var clips = BakeCastClips();
             var (village, life) = CreateOpeningVillage(clips);
+            // level 1: sand streets, the stone square only (the user, 2026-11-21); the menu's village keeps cobbles
+            var vso = new SerializedObject(village);
+            vso.FindProperty("sandStreets").boolValue = true;
+            vso.ApplyModifiedPropertiesWithoutUndo();
 
             // the director: the film itself, with its subtitles drawn by the cutscene camera
             var canvasGO = new GameObject("Subtitles", typeof(Canvas), typeof(CanvasScaler));
