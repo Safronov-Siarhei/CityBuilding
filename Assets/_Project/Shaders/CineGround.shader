@@ -63,6 +63,11 @@ Shader "CityBuilder/CineGround"
                 return o;
             }
 
+            // PerfProbe `cine N` (a measuring switch, 0 in the game): 1 flat colour per mode, 2 no shadow taps,
+            // 3 both -- shows on a device what the patterns and the shadows cost
+            float _CineProbe;
+
+            // the palette's sRGB colours are written already converted to linear (no per-pixel pow; measured: no gain, kept)
             float Hash(float2 p) { return frac(sin(dot(p, float2(127.1, 311.7))) * 43758.5453); }
             float2 Hash2(float2 p) { return frac(sin(float2(dot(p, float2(127.1, 311.7)), dot(p, float2(269.5, 183.3)))) * 43758.5453); }
 
@@ -81,11 +86,11 @@ Shader "CityBuilder/CineGround"
             // the islands' grass zones, edges softened over a few centimetres
             half3 Grass(float2 p)
             {
-                half3 grass = Hex(0x86, 0xC7, 0x52);
-                half3 light = Hex(0xA8, 0xD8, 0x67);
-                half3 mid = Hex(0x71, 0xB9, 0x47);
-                half3 dry = Hex(0xC4, 0xCE, 0x68);
-                half3 alt = Hex(0x7C, 0xC1, 0x4D);
+                half3 grass = half3(0.23840, 0.57112, 0.08438);
+                half3 light = half3(0.39157, 0.68669, 0.13563);
+                half3 mid = half3(0.16513, 0.48515, 0.06301);
+                half3 dry = half3(0.55201, 0.61721, 0.13843);
+                half3 alt = half3(0.20156, 0.53328, 0.07421);
                 float e = 0.035;
                 half3 c = grass;
                 c = lerp(c, mid, smoothstep(0.40 - e, 0.40 + e, Fbm(p / 9.0 + 3.1)));
@@ -109,13 +114,13 @@ Shader "CityBuilder/CineGround"
                 float round_ = length(max(abs(f) - float2(0.28, 0.22), 0.0));
                 float stone = 1.0 - smoothstep(0.40, 0.47, d + round_ * 0.6);
                 float shade = Hash(cell + 3.7);
-                half3 setts = lerp(Hex(0xA9, 0xA4, 0x99), Hex(0xC9, 0xC2, 0xB3), shade);
-                setts = lerp(setts, Hex(0xB5, 0x9E, 0x83), step(0.86, Hash(cell + 9.1)) * 0.6);   // a warm one here and there
+                half3 setts = lerp(half3(0.39676, 0.37124, 0.31855), half3(0.58408, 0.53948, 0.45079), shade);
+                setts = lerp(setts, half3(0.46208, 0.34191, 0.22697), step(0.86, Hash(cell + 9.1)) * 0.6);   // a warm one here and there
                 setts *= 0.92 + 0.12 * (0.5 - f.y);                                            // lit from above, a soft dome
-                half3 joint = Hex(0x6E, 0x69, 0x60);
+                half3 joint = half3(0.15593, 0.14126, 0.11697);
                 half3 c = lerp(joint, setts, stone);
                 // moss in the joints and wear along the middle
-                c = lerp(c, Hex(0x6A, 0x9A, 0x3C), (1.0 - stone) * smoothstep(0.55, 0.75, Fbm(p * 1.3 + 5.0)) * 0.7);
+                c = lerp(c, half3(0.14413, 0.32314, 0.04519), (1.0 - stone) * smoothstep(0.55, 0.75, Fbm(p * 1.3 + 5.0)) * 0.7);
                 return c;
             }
 
@@ -124,19 +129,19 @@ Shader "CityBuilder/CineGround"
                 // along and across the road itself (its ribbon's uv), so the ruts follow its bends
                 float along = uv.x;
                 float across = uv.y + (Fbm(float2(along * 0.15, _Seed)) - 0.5) * 0.25;
-                half3 c = lerp(Hex(0xCD, 0xA8, 0x6D), Hex(0xB6, 0x8C, 0x57), Fbm(p * 1.7 + _Seed));
+                half3 c = lerp(half3(0.61050, 0.39157, 0.15293), half3(0.46778, 0.26225, 0.09531), Fbm(p * 1.7 + _Seed));
                 // two wheel ruts, darker and smoother
                 float rut = exp(-pow((abs(across) - 0.3) / 0.08, 2.0));
-                c = lerp(c, Hex(0x8F, 0x6A, 0x43), rut * 0.55);
+                c = lerp(c, half3(0.27468, 0.14413, 0.05613), rut * 0.55);
                 // a ridge of grass down the middle where wheels don't run
                 float middle = exp(-pow(across / 0.1, 2.0)) * smoothstep(0.45, 0.7, Fbm(float2(along * 0.6, across * 3.0) + 11.0));
-                c = lerp(c, Hex(0x86, 0xC7, 0x52), middle * 0.6);
+                c = lerp(c, half3(0.23840, 0.57112, 0.08438), middle * 0.6);
                 // pebbles
                 float2 g = p / 0.08;
                 float2 cell = floor(g);
                 float2 h = Hash2(cell);
                 float peb = step(0.9, h.x) * (1.0 - smoothstep(0.12, 0.2, length(frac(g) - 0.3 - h * 0.4)));
-                c = lerp(c, Hex(0xC4, 0xBB, 0xA2), peb);
+                c = lerp(c, half3(0.55201, 0.49693, 0.36131), peb);
                 return c;
             }
 
@@ -146,10 +151,10 @@ Shader "CityBuilder/CineGround"
                 float2 side = float2(-dir.y, dir.x);
                 float across = dot(p, side);
                 float furrow = 0.5 + 0.5 * sin(across / 0.22 * 6.2832);
-                half3 c = lerp(Hex(0x7A, 0x58, 0x38), Hex(0xA4, 0x7C, 0x50), furrow);
+                half3 c = lerp(half3(0.19462, 0.09759, 0.03955), half3(0.37124, 0.20156, 0.08022), furrow);
                 // young shoots on the ridges, thicker in patches
                 float shoots = furrow * smoothstep(0.35, 0.75, Fbm(p * 0.5 + _Seed)) * step(0.45, Hash(floor(p * 14.0)));
-                c = lerp(c, Hex(0x8B, 0xB8, 0x4A), shoots * 0.8);
+                c = lerp(c, half3(0.25818, 0.47932, 0.06848), shoots * 0.8);
                 return c;
             }
 
@@ -157,19 +162,19 @@ Shader "CityBuilder/CineGround"
             {
                 float along = uv.x;
                 float across = uv.y;
-                half3 c = lerp(Hex(0x2F, 0x86, 0xC4), Hex(0x4D, 0xB6, 0xE6), Fbm(p * 0.35 + _Seed));
+                half3 c = lerp(half3(0.02843, 0.23840, 0.55201), half3(0.07421, 0.46778, 0.79130), Fbm(p * 0.35 + _Seed));
                 // ripples running along the flow, broken up
                 float rip = sin(along * 3.1 + Fbm(p * 0.8) * 6.0) * sin(across * 1.7 + along * 0.4);
-                c = lerp(c, Hex(0xBF, 0xEA, 0xFA), smoothstep(0.82, 0.97, rip) * 0.6);
+                c = lerp(c, half3(0.52100, 0.82279, 0.95597), smoothstep(0.82, 0.97, rip) * 0.6);
                 // shallower and lighter along the banks
-                c = lerp(c, Hex(0x7C, 0xCF, 0xEE), smoothstep(1.6, 2.4, abs(across)) * 0.7);
+                c = lerp(c, half3(0.20156, 0.62396, 0.85499), smoothstep(1.6, 2.4, abs(across)) * 0.7);
                 return c;
             }
 
             half3 Wheat(float2 p, float y)
             {
-                half3 c = lerp(Hex(0xE2, 0xB8, 0x4E), Hex(0xF4, 0xD4, 0x6C), Fbm(p * 0.9 + 3.0));
-                c = lerp(c, Hex(0xF6, 0xD6, 0x72), step(0.8, Hash(floor(p * 18.0))) * 0.6);   // flecks of bright ears
+                half3 c = lerp(half3(0.76052, 0.47932, 0.07619), half3(0.90466, 0.65837, 0.14996), Fbm(p * 0.9 + 3.0));
+                c = lerp(c, half3(0.92158, 0.67244, 0.16827), step(0.8, Hash(floor(p * 18.0))) * 0.6);   // flecks of bright ears
                 c *= lerp(0.6, 1.0, saturate(y / 0.27));                                       // shaded low down
                 return c;
             }
@@ -177,10 +182,20 @@ Shader "CityBuilder/CineGround"
             half4 Frag(Varyings input) : SV_Target
             {
                 float2 p = input.positionWS.xz;
-                half3 albedo = _Mode < 0.5 ? Grass(p) : _Mode < 1.5 ? Cobble(p) : _Mode < 2.5 ? Dirt(p, input.uv) : _Mode < 3.5 ? Field(p)
-                    : _Mode < 4.5 ? Water(p, input.uv) : Wheat(p, input.positionWS.y);
-                float4 shadowCoord = TransformWorldToShadowCoord(input.positionWS);
-                Light light = GetMainLight(shadowCoord);
+                half3 albedo;
+                if (_CineProbe == 1.0 || _CineProbe == 3.0) albedo = _Mode < 0.5 ? half3(0.23840, 0.57112, 0.08438) : _Mode < 1.5 ? half3(0.39676, 0.37124, 0.31855) : half3(0.61050, 0.39157, 0.15293);
+                // REAL branches on the material's mode: HLSL's ?: evaluates BOTH sides, so the old
+                // chain of ?: ran all six patterns on every pixel -- 11 ms of the Redmi Pad's GPU in
+                // mission 1 (2026-11-21). Never pick a pattern with ?: here.
+                else [branch] if (_Mode < 0.5) albedo = Grass(p);
+                else [branch] if (_Mode < 1.5) albedo = Cobble(p);
+                else [branch] if (_Mode < 2.5) albedo = Dirt(p, input.uv);
+                else [branch] if (_Mode < 3.5) albedo = Field(p);
+                else [branch] if (_Mode < 4.5) albedo = Water(p, input.uv);
+                else albedo = Wheat(p, input.positionWS.y);
+                Light light;
+                if (_CineProbe >= 2.0) light = GetMainLight();
+                else light = GetMainLight(TransformWorldToShadowCoord(input.positionWS));
                 float3 n = normalize(input.normalWS);
                 half3 lit = albedo * (light.color * saturate(dot(n, light.direction)) * light.shadowAttenuation + SampleSH(n));
                 // fog per pixel: the grass is one quad 800 m across, its corners all deep in the haze

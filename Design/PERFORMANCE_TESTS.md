@@ -32,6 +32,7 @@ raw record. **Add every new measurement here** (the user, 2026-11-21).
    | `off <Type>` / `on <Type>` | switch every script (or collider) of that type off / back on -- read the saving in the PERF line |
    | `army 60` | 60 player soldiers (level-3 stats) at the hall (`PerfTown.Army`) |
    | `wave 25` | send Invasion wave 25 now (`InvasionWaves.SendWave`) |
+   | `cine 1` / `cine 0` / `cine order` | CineGround flat colours / normal / grass after the roads |
    | `marks 8` | `Core/PerfMarks` timers inside the army's Update for 8 s, ms per frame into `perf_out.txt` |
    | `post/shadows/particles/skinned/figures/ui/sky off`, `shader <name> off`, `scale 0.5`, `msaa 1`, `census` | GPU-side switches and a renderer census (2026-11-18) |
 5. **Editor**: `PerformanceProfileTests` (PlayMode) grows a town in stages and switches script kinds off in turn.
@@ -47,6 +48,24 @@ raw record. **Add every new measurement here** (the user, 2026-11-21).
 | Redmi 12 | Helio G88, Mali-G52 MC2 | 4 GB | | the floor, not measured yet |
 
 ---
+
+## 2026-11-21 later -- the CineGround fix (Redmi Pad)
+
+PerfProbe `cine 1|2|3|0` (flat colour per mode / no shadow taps / both / normal) and `cine order|unorder` (grass
+drawn after the ribbons). Mission 1 play: flat colours 28 -> 40 fps, shadows and draw order ~0 -- the whole 11 ms was
+the PATTERN maths. Precomputed linear palette colours: no gain; a sine-free hash: no gain. The cause: the fragment
+picked the pattern with a chain of `?:` -- **HLSL's `?:` evaluates both sides, so every pixel ran all six patterns**
+(grass, cobble, dirt, field, water, wheat). Now `[branch] if` on `_Mode`. Same picture.
+
+| scene | before | after |
+|---|---|---|
+| main menu (village) | 34 fps | **39** (gpu 24.8) |
+| mission 1 film | 31-32 | **39-40** (gpu 24.1) |
+| mission 1 play | 28 (gpu 35.5) | **36-37** (gpu 27) |
+
+Left in mission 1 play (after): darkness `dark off` 37.7 -> 43.9 (-5.5 ms gpu), post `post off` 36.2 -> 44.8
+(-7 ms). The darkness does a 9-tap blur of its mask + 2 value noises per pixel over the whole screen: pre-blurring the
+mask on the CPU when it changes would make it 1 tap. RULE (shaders): never pick an expensive function with `?:`.
 
 ## 2026-11-21 -- campaign levels (Redmi Pad)
 

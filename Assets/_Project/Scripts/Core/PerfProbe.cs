@@ -114,6 +114,20 @@ namespace CityBuilder.Core
                 case "msaa":
                     if (w.Length > 1 && int.TryParse(w[1], out var n)) { GraphicsQuality.OverrideMsaa = n; GraphicsQuality.Apply(); }
                     break;
+                // cine 1|2|3|0 -- CineGround: flat colours / no shadow taps / both / normal; cine order|unorder
+                // -- the grass drawn after the roads and fields (early depth kills it under them)
+                case "cine":
+                    if (w.Length > 1 && w[1].EndsWith("order"))
+                    {
+                        foreach (var r in FindObjectsByType<MeshRenderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                        {
+                            var m = r.sharedMaterial;
+                            if (m == null || m.shader == null || !m.shader.name.Contains("CineGround")) continue;
+                            if (m.GetFloat("_Mode") < 0.5f) m.renderQueue = w[1] == "order" ? 2010 : -1;
+                        }
+                    }
+                    else if (w.Length > 1 && float.TryParse(w[1], out var cp)) Shader.SetGlobalFloat("_CineProbe", cp);
+                    break;
                 case "census":
                     Census();
                     break;

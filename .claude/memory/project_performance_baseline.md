@@ -10,9 +10,10 @@ metadata:
 
 **2026-11-21: every measurement now lives in `Design/PERFORMANCE_TESTS.md`** (the user: the optimisation will be handed
 to another person who must see all earlier results) -- add each new one there, newest first. The user's decisions
-that day: no fight bigger than 120 v 120; the Redmi Pad (G99) is the reference floor. Open item: mission 1 is
-27-28 fps on the Redmi Pad, GPU-bound (CineGround ground ~11 ms, DungeonDark ~6 ms, post ~6 ms) -- not fixed, candidates
-in the file. Mission 2's orc lane retarget-every-frame bug fixed (OrcUnit.TimeToRetarget).
+that day: no fight bigger than 120 v 120; the Redmi Pad (G99) is the reference floor. Mission 1 was 27-28 fps: CineGround picked
+its pattern with HLSL `?:` (evaluates BOTH sides -> all six patterns per pixel); `[branch] if` -> 36-37 fps, film and
+menu 39. The user had agreed to rebuild the ground as a baked mesh; the measurement showed it unnecessary. Left: the
+darkness (9-tap mask blur, ~5.5 ms) and post (~7 ms). Mission 2's orc lane retarget-every-frame bug fixed (OrcUnit.TimeToRetarget).
 
 First real performance measurement of the game, 2026-08-19 (commit `32396a68`). Everything below was measured, not reasoned about. Read with [[project_current_state]] and [[feedback_mobile_first_optimization]].
 
