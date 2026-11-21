@@ -67,6 +67,11 @@ Left in mission 1 play (after): darkness `dark off` 37.7 -> 43.9 (-5.5 ms gpu), 
 (-7 ms). The darkness does a 9-tap blur of its mask + 2 value noises per pixel over the whole screen: pre-blurring the
 mask on the CPU when it changes would make it 1 tap. RULE (shaders): never pick an expensive function with `?:`.
 
+Then the darkness: a FIXED mask (mission 1 corridor, mission 2 town) is blurred once on the CPU
+(`Campaign/DarkMaskBlur`, the shader's 9-tap kernel at 2x the mask's resolution) and the shader reads one tap
+(`_PreBlurred`); the dungeon's changing mask keeps the 9 taps. Mission 1 play: **36-37 -> 40 fps** (gpu 27 -> 24.5);
+the darkness now costs ~4.3 ms (`dark off` 44-45 fps) -- the rest is the full-screen alpha blend itself.
+
 ## 2026-11-21 -- campaign levels (Redmi Pad)
 
 **Mission 1 «Бегство»** (scene CampaignOpening, its own ground/darkness shaders, camera «Cutscene Camera»):

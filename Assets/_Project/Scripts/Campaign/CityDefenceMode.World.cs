@@ -61,7 +61,6 @@ namespace CityBuilder.Campaign
             const float texel = 1f;
             var w = Mathf.CeilToInt(size.x / texel);
             var h = Mathf.CeilToInt(size.y / texel);
-            _darkMask = new Texture2D(w, h, TextureFormat.R8, false, true) { filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp, name = "M2DarkMask" };
             var px = new byte[w * h];
             for (var j = 0; j < h; j++)
                 for (var i = 0; i < w; i++)
@@ -74,11 +73,12 @@ namespace CityBuilder.Campaign
                     var k = Mathf.Clamp01(0.5f - outside / soft);
                     px[j * w + i] = (byte)Mathf.RoundToInt(k * 255f);
                 }
-            _darkMask.SetPixelData(px, 0);
-            _darkMask.Apply(false);
+            // blurred once here (DarkMaskBlur) with the material's own _Soft: one tap in the shader
+            _darkMask = DarkMaskBlur.Blurred(px, w, h, source.GetFloat("_Soft"), "M2DarkMask");
             UnityEngine.Rendering.Universal.CameraExtensions.GetUniversalAdditionalCameraData(cam).requiresDepthTexture = true;
             var material = new Material(source) { name = "M2Dark (runtime)" };
             material.SetTexture("_DarkMask", _darkMask);
+            material.SetFloat("_PreBlurred", DarkMaskBlur.Up);
             material.SetVector("_DarkRect", new Vector4(min.x, min.y, 1f / (w * texel), 1f / (h * texel)));
             material.SetFloat("_Strength", 1f);
             material.SetFloat("_SkyOpen", 1f);      // a clear sky over the dark land (the opening scene looks up)

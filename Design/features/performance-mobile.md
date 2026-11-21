@@ -5,7 +5,7 @@
 > **2026-11-21, Redmi Pad (the floor we design for):** battle limit 120 v 120 (the user); Invasion with a developed
 > town + late waves never under 44 fps; mission 1 play was 27-28 fps GPU-bound: CineGround picked its pattern with
 > `?:`, which in HLSL runs BOTH sides -- every pixel ran all six patterns. `[branch] if` now: menu 34 -> 39, film
-> 31 -> 39, mission 1 28 -> 36-37. RULE: never pick an expensive shader function with `?:`. Left: darkness ~5.5 ms,
+> 31 -> 39, mission 1 28 -> 36-37. RULE: never pick an expensive shader function with `?:`. Darkness: fixed masks pre-blurred (`DarkMaskBlur`) -> mission 1 40 fps; left ~4.3 ms (the blend), 
 > post ~7 ms (mission 1).
 
 > **2026-11-18 evening, "дожимай" -- MEASURED on three devices (dev APK + PERF lines, PerfProbe toggles):**

@@ -282,7 +282,6 @@ namespace CityBuilder.Campaign
             var w = Mathf.CeilToInt((max.x - min.x) / k.texel);
             var h = Mathf.CeilToInt((max.y - min.y) / k.texel);
             var open = new bool[w, h];
-            var tex = new Texture2D(w, h, TextureFormat.R8, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear, name = "CorridorMask" };
             var px = new byte[w * h];
             for (var j = 0; j < h; j++)
                 for (var i = 0; i < w; i++)
@@ -299,8 +298,8 @@ namespace CityBuilder.Campaign
                     open[i, j] = lit;
                     px[j * w + i] = lit ? (byte)255 : (byte)0;
                 }
-            tex.SetPixelData(px, 0);
-            tex.Apply();
+            // blurred once here (DarkMaskBlur), the shader reads one tap
+            var tex = DarkMaskBlur.Blurred(px, w, h, k.soft, "CorridorMask");
             var cam = Camera.main;
             if (cam == null) return;
             // no depth texture: the village is flat, so the shader finds each pixel's ground point by its view
@@ -314,6 +313,7 @@ namespace CityBuilder.Campaign
             m.SetVector("_DarkRect", new Vector4(min.x, min.y, 1f / (w * k.texel), 1f / (h * k.texel)));
             m.SetFloat("_Strength", k.strength);
             m.SetFloat("_Soft", k.soft);
+            m.SetFloat("_PreBlurred", DarkMaskBlur.Up);
             m.SetFloat("_Wobble", k.wobble);
             m.SetFloat("_MapEdge", 0f);
             m.SetColor("_DarkColor", Col(k.color));

@@ -17,6 +17,8 @@ Shader "CityBuilder/DungeonDark"
         // the camp lies ~7 cells from the south edge: the band (with its wobble) must stop short of it
         _MapEdge ("Darkness eating into the map's edge (cells)", Float) = 1
         _SkyOpen ("Sky left clear (0 dark, 1 clear)", Float) = 0
+        // a mask already blurred on the CPU (Campaign/DarkMaskBlur) at this many texels a mask cell; 0 = blur here
+        _PreBlurred ("Pre-blurred mask (upscale, 0 = no)", Float) = 0
         // 1: no depth texture -- each pixel's world point is where its view ray meets the flat ground at
         // _GroundY (mission 1's village is flat). On a phone the depth copy the other path needs cut the
         // frame rate to a third (Pixel 6 Pro, 2026-11-18: 14 fps native, the cost growing with the pixels)
@@ -56,6 +58,7 @@ Shader "CityBuilder/DungeonDark"
                 float _SkyOpen;
                 float _NoDepth;
                 float _GroundY;
+                float _PreBlurred;
             CBUFFER_END
 
             struct Attributes
@@ -131,7 +134,11 @@ Shader "CityBuilder/DungeonDark"
                     // as the parchment's edge (the user, 2026-11-01: «темнота квадратами ... сделай
                     // такой же как пергамент»): the mask blurred over a few cells, then a wobbling,
                     // slowly drifting border cut through the blur, so it never shows the cell grid
-                    float blurred = (Open(uv) * 2.0
+                    float blurred;
+                    // a fixed mask comes blurred already (DarkMaskBlur): one tap, not nine -- the nine over
+                    // the whole screen were ~5.5 ms of the Redmi Pad's GPU in mission 1 (2026-11-21)
+                    [branch] if (_PreBlurred > 0.5) blurred = Open(uv);
+                    else blurred = (Open(uv) * 2.0
                         + Open(uv + float2(t.x, t.y)) + Open(uv + float2(-t.x, t.y))
                         + Open(uv + float2(t.x, -t.y)) + Open(uv + float2(-t.x, -t.y))
                         + Open(uv + float2(t.x * 1.6, 0)) + Open(uv - float2(t.x * 1.6, 0))
@@ -142,7 +149,7 @@ Shader "CityBuilder/DungeonDark"
                     open = 1.0 - smoothstep(0.3, 0.62, cover);
                     // the map's own edge: the darkness eats a wobbling band into it, so the end of
                     // the world is never a straight line (the user, 2026-11-01)
-                    float2 cells = min(uv, 1.0 - uv) * _DarkMask_TexelSize.zw;
+                    float2 cells = min(uv, 1.0 - uv) * _DarkMask_TexelSize.zw / max(_PreBlurred, 1.0);
                     // the darkness hugs the edge (the user, 2026-11-01): its border wanders between
                     // the edge itself and _MapEdge cells in, half a cell soft
                     float inward = min(cells.x, cells.y) - _MapEdge * 0.5 + (lumps - 0.5) * _MapEdge;

@@ -1125,4 +1125,4 @@ Commands:
 
 **Performance (2026-11-21, Redmi Pad):** CineGround ran all six patterns per pixel (`?:` evaluates both sides);
 fixed with `[branch] if` -- mission 1 28 -> 36-37 fps, film 31 -> 39, menu 34 -> 39, same picture. Left: darkness
-~5.5 ms, post ~7 ms. Data: `Design/PERFORMANCE_TESTS.md`.
+~5.5 -> ~4.3 ms (fixed mask pre-blurred on the CPU, `DarkMaskBlur`, one tap; mission 1 40 fps), post ~7 ms. Data: `Design/PERFORMANCE_TESTS.md`.
