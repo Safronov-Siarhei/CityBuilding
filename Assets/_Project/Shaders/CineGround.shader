@@ -80,6 +80,16 @@ Shader "CityBuilder/CineGround"
                 return SAMPLE_TEXTURE2D(_CineFbm, sampler_CineFbm, p / 64.0).r;
             }
 
+            // painted tiles (the user approved them 2026-11-21: Design/concepts/campaign_ground, made by
+            // Tools/textures/cine_ground_textures.py, set as globals by CineGroundNoise): the setts with their
+            // light baked in, and colour multipliers for grass and dirt. They replace the square-celled flecks
+            // and setts the user called cheap («пиксели большими, как квадраты»)
+            TEXTURE2D(_CineCobble);
+            TEXTURE2D(_CineGrassDetail);
+            TEXTURE2D(_CineDirtDetail);
+            SAMPLER(sampler_CineCobble);
+            half3 GrassDetail(float2 p) { return SAMPLE_TEXTURE2D(_CineGrassDetail, sampler_CineCobble, p / 4.0).rgb * 1.4; }
+
             // the palette is written in sRGB; the project renders in linear space
             half3 Hex(float r, float g, float b) { return SRGBToLinear(half3(r, g, b) / 255.0); }
 
@@ -97,31 +107,16 @@ Shader "CityBuilder/CineGround"
                 c = lerp(c, dry, smoothstep(0.64 - e, 0.64 + e, Fbm(p / 11.0 + 41.0)));
                 c = lerp(c, light, smoothstep(0.62 - e, 0.62 + e, Fbm(p / 6.0 + 17.0)));
                 c = lerp(c, alt, smoothstep(0.60 - e, 0.60 + e, Fbm(p / 1.6 + 7.0)) * 0.7);
-                // tiny flecks of brighter blades so the grass is never a flat colour up close
-                c *= 0.95 + 0.1 * Hash(floor(p * 9.0));
+                // tufts and blades from the painted tile (was: 11 cm square flecks)
+                c *= GrassDetail(p);
                 return c;
             }
 
             half3 Cobble(float2 p)
             {
-                float2 q = p / 0.1;
-                float row = floor(q.y);
-                q.x += Hash(float2(row, _Seed)) * 0.7 + row * 0.5;
-                float2 cell = floor(q);
-                float2 f = frac(q) - 0.5;
-                f += (Hash2(cell) - 0.5) * 0.12;
-                float d = max(abs(f.x) * 1.05, abs(f.y) * 1.25);
-                float round_ = length(max(abs(f) - float2(0.28, 0.22), 0.0));
-                float stone = 1.0 - smoothstep(0.40, 0.47, d + round_ * 0.6);
-                float shade = Hash(cell + 3.7);
-                half3 setts = lerp(half3(0.39676, 0.37124, 0.31855), half3(0.58408, 0.53948, 0.45079), shade);
-                setts = lerp(setts, half3(0.46208, 0.34191, 0.22697), step(0.86, Hash(cell + 9.1)) * 0.6);   // a warm one here and there
-                setts *= 0.92 + 0.12 * (0.5 - f.y);                                            // lit from above, a soft dome
-                half3 joint = half3(0.15593, 0.14126, 0.11697);
-                half3 c = lerp(joint, setts, stone);
-                // moss in the joints and wear along the middle
-                c = lerp(c, half3(0.14413, 0.32314, 0.04519), (1.0 - stone) * smoothstep(0.55, 0.75, Fbm(p * 1.3 + 5.0)) * 0.7);
-                return c;
+                // the painted setts, 6 m a tile; a broad wash of light and dark so the tile never repeats visibly
+                half3 c = SAMPLE_TEXTURE2D(_CineCobble, sampler_CineCobble, p / 6.0).rgb;
+                return c * (0.92 + 0.16 * Fbm(p * 0.35 + 7.0));
             }
 
             half3 Dirt(float2 p, float2 uv)
@@ -136,12 +131,8 @@ Shader "CityBuilder/CineGround"
                 // a ridge of grass down the middle where wheels don't run
                 float middle = exp(-pow(across / 0.1, 2.0)) * smoothstep(0.45, 0.7, Fbm(float2(along * 0.6, across * 3.0) + 11.0));
                 c = lerp(c, half3(0.23840, 0.57112, 0.08438), middle * 0.6);
-                // pebbles
-                float2 g = p / 0.08;
-                float2 cell = floor(g);
-                float2 h = Hash2(cell);
-                float peb = step(0.9, h.x) * (1.0 - smoothstep(0.12, 0.2, length(frac(g) - 0.3 - h * 0.4)));
-                c = lerp(c, half3(0.55201, 0.49693, 0.36131), peb);
+                // lumps and round pebbles from the painted tile (was: hashed 8 cm cells)
+                c *= SAMPLE_TEXTURE2D(_CineDirtDetail, sampler_CineCobble, p / 4.0).rgb * 2.0;
                 return c;
             }
 
@@ -153,7 +144,7 @@ Shader "CityBuilder/CineGround"
                 float furrow = 0.5 + 0.5 * sin(across / 0.22 * 6.2832);
                 half3 c = lerp(half3(0.19462, 0.09759, 0.03955), half3(0.37124, 0.20156, 0.08022), furrow);
                 // young shoots on the ridges, thicker in patches
-                float shoots = furrow * smoothstep(0.35, 0.75, Fbm(p * 0.5 + _Seed)) * step(0.45, Hash(floor(p * 14.0)));
+                float shoots = furrow * smoothstep(0.35, 0.75, Fbm(p * 0.5 + _Seed)) * smoothstep(0.98, 1.06, GrassDetail(p).g);
                 c = lerp(c, half3(0.25818, 0.47932, 0.06848), shoots * 0.8);
                 return c;
             }
@@ -174,7 +165,7 @@ Shader "CityBuilder/CineGround"
             half3 Wheat(float2 p, float y)
             {
                 half3 c = lerp(half3(0.76052, 0.47932, 0.07619), half3(0.90466, 0.65837, 0.14996), Fbm(p * 0.9 + 3.0));
-                c = lerp(c, half3(0.92158, 0.67244, 0.16827), step(0.8, Hash(floor(p * 18.0))) * 0.6);   // flecks of bright ears
+                c = lerp(c, half3(0.92158, 0.67244, 0.16827), smoothstep(1.02, 1.1, GrassDetail(p * 1.6).g) * 0.6);   // flecks of bright ears (round, from the grass tile)
                 c *= lerp(0.6, 1.0, saturate(y / 0.27));                                       // shaded low down
                 return c;
             }

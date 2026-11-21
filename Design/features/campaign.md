@@ -1132,4 +1132,9 @@ cheap («пиксели большими, как квадраты»: the flat re
 always so). Proposed: the village ground as textured models (rounded setts with dark joints and moss, grass in soft
 patches and round tufts, dirt with ruts and pebbles), baked from Blender node materials into tiling images.
 Concept `Tools/blender/cinematic/ground_concept.py` -> `Design/concepts/campaign_ground/new_v1.png`, side by side with
-the tablet in `compare_v1.png`. Waiting for the user's notes.
+the tablet in `compare_v1.png`. APPROVED («нравится, в игру») and IN THE GAME the same day: seamless tiles made by
+`Tools/textures/cine_ground_textures.py` into `Resources/CineGround/` (Cobble 6 m with the dome light baked in,
+GrassDetail and DirtDetail 4 m colour multipliers), globals `_CineCobble/_CineGrassDetail/_CineDirtDetail` set by
+`CineGroundNoise` (held + DontUnloadUnusedAsset -- unheld, the scene load unloaded them and the ground went flat grey).
+Field shoots and wheat flecks use the grass tile's tufts (no square cells left). Mission 1 still 40 fps on the Redmi
+Pad; tablet shot `ingame_v1.png`. To retune: edit the generator, rerun it.

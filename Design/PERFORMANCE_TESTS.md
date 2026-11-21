@@ -49,6 +49,11 @@ raw record. **Add every new measurement here** (the user, 2026-11-21).
 
 ---
 
+## 2026-11-21 -- CineGround with painted tiles (Redmi Pad)
+
+The user's new look (textures instead of formulas for setts, grass tufts, dirt): mission 1 play **40 fps** (gpu 24 ms,
+same as before the change), main menu 37-43 fps. One texture read replaces the sett/fleck/pebble maths.
+
 ## 2026-11-21 later -- the CineGround fix (Redmi Pad)
 
 PerfProbe `cine 1|2|3|0` (flat colour per mode / no shadow taps / both / normal) and `cine order|unorder` (grass
