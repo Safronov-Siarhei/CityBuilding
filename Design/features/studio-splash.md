@@ -13,7 +13,9 @@ designed and previewed only — NOT in Unity yet.
 
 ## Launch order on Android
 1. Android 12+ system splash (the phone draws it: app icon in a circle on the theme background) -- cannot be
-   removed in any app, only recoloured. Proposed: paper background (#efe6d2) via an Android theme resource -- not done.
+   removed in any app, only recoloured. Recoloured to paper (user 2026-11-21): Unity 6 itself uses
+   `PlayerSettings.SplashScreen.backgroundColor` to cover the Android 12+ automatic splash (Unity 6.3 docs), so the
+   one line in SetupProject does it -- no Android theme resource needed. NOT checked on a phone yet (icon may or may not show).
 2. Engine start: background = `PlayerSettings.SplashScreen.backgroundColor` (paper).
 3. Studio splash scene: tap skips; the main menu loads in the background.
 
@@ -24,5 +26,5 @@ designed and previewed only — NOT in Unity yet.
 
 ## Open
 - Full 7.6 s every launch vs full on first launch + short (~3 s) after -- asked, not answered.
-- Recolour the Android 12 system splash to paper -- proposed.
+- Check on a phone that the first screen is paper (and whether the app icon still shows on it).
 - Build the splash scene in Unity.
