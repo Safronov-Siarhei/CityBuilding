@@ -25,12 +25,25 @@ namespace CityBuilder.EditorTools
                 Debug.LogError($"[SetupProject] {SplashFolder}/splash_ink.json is missing -- run Design/branding/depigo/splash/export_splash_unity.py. The splash scene is not built.");
                 return;
             }
-            var paper = SplashTexture("paper.png", 2048);
-            var fillTex = SplashTexture("fill.png", 512);
-            var penTex = SplashTexture("pen.png", 512);
-            var soak = SplashSoakMaterial();
+            // fill: one alpha channel at 1024, pen: full colour -- both UNCOMPRESSED (the user, 2026-11-21: on the
+            // tablet the splash looked short of resolution; ASTC smeared the petals' edges and the vein cuts)
+            var fillTex = SplashTexture("fill.png", 1024, alphaOnly: true);
+            var penTex = SplashTexture("pen.png", 512, alphaOnly: false);
+            var soak = SplashMaterial("SplashInkSoak", "CityBuilder/UI/InkSoak");
             var data = SplashInkData.Parse(dataJson.text);
             var paperColour = SplashInkData.Hex(data.paper, Color.white);
+            var paperMat = SplashMaterial("SplashPaper", "CityBuilder/UI/SplashPaper");
+            var look = data.paperLook;
+            if (paperMat != null && look != null)
+            {
+                paperMat.SetColor("_VignetteColor", SplashInkData.Hex(look.vignette, Color.black));
+                paperMat.SetVector("_Vignette", new Vector4(look.cx, look.cy, look.r, look.inner));
+                paperMat.SetFloat("_VignetteAlpha", look.vignetteAlpha);
+                paperMat.SetColor("_GrainColor", SplashInkData.Hex(look.grain, Color.black));
+                paperMat.SetFloat("_GrainAlpha", look.grainAlpha);
+                paperMat.SetFloat("_GrainFreq", look.grainFreq);
+                EditorUtility.SetDirty(paperMat);
+            }
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
@@ -45,7 +58,10 @@ namespace CityBuilder.EditorTools
             canvasGO.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
             ConfigureScaler(canvasGO.GetComponent<CanvasScaler>());
 
-            var paperImg = SplashRaw("Paper", canvasGO.transform, paper);
+            // the paper: no picture, the SplashPaper shader draws colour + vignette + grain at the screen's own resolution
+            var paperImg = SplashRaw("Paper", canvasGO.transform, null);
+            paperImg.color = paperColour;
+            paperImg.material = paperMat;
             Stretch(paperImg.rectTransform);
 
             var content = new GameObject("Drawing", typeof(RectTransform)).GetComponent<RectTransform>();
@@ -105,38 +121,55 @@ namespace CityBuilder.EditorTools
             rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
         }
 
-        /// <summary>A splash picture as a plain clamped, mip-less texture (the paper's grain must stay crisp).</summary>
-        private static Texture2D SplashTexture(string file, int maxSize)
+        /// <summary>
+        /// A splash picture as a clamped, mip-less, UNCOMPRESSED texture on every platform: Alpha8 when only its
+        /// shape matters (the ink's colour comes from the vertex colour), RGBA32 otherwise. Both are small.
+        /// </summary>
+        private static Texture2D SplashTexture(string file, int maxSize, bool alphaOnly)
         {
             var path = $"{SplashFolder}/{file}";
             if (AssetImporter.GetAtPath(path) is TextureImporter imp)
             {
-                var changed = imp.textureType != TextureImporterType.Default || imp.mipmapEnabled
-                              || imp.wrapMode != TextureWrapMode.Clamp || !imp.alphaIsTransparency
-                              || imp.maxTextureSize != maxSize || imp.npotScale != TextureImporterNPOTScale.None;
-                imp.textureType = TextureImporterType.Default;
+                imp.textureType = alphaOnly ? TextureImporterType.SingleChannel : TextureImporterType.Default;
+                if (alphaOnly)
+                {
+                    var s = new TextureImporterSettings();
+                    imp.ReadTextureSettings(s);
+                    s.singleChannelComponent = TextureImporterSingleChannelComponent.Alpha;
+                    imp.SetTextureSettings(s);
+                }
                 imp.mipmapEnabled = false;
                 imp.wrapMode = TextureWrapMode.Clamp;
-                imp.alphaIsTransparency = true;
+                imp.alphaIsTransparency = !alphaOnly;
                 imp.npotScale = TextureImporterNPOTScale.None;
                 imp.maxTextureSize = maxSize;
-                if (changed) imp.SaveAndReimport();
+                imp.textureCompression = TextureImporterCompression.Uncompressed;
+                foreach (var platform in new[] { "Android", "Standalone", "iPhone" })
+                {
+                    var ps = imp.GetPlatformTextureSettings(platform);
+                    ps.overridden = true;
+                    ps.maxTextureSize = maxSize;
+                    ps.format = alphaOnly ? TextureImporterFormat.Alpha8 : TextureImporterFormat.RGBA32;
+                    ps.textureCompression = TextureImporterCompression.Uncompressed;
+                    imp.SetPlatformTextureSettings(ps);
+                }
+                imp.SaveAndReimport();
             }
             var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
             if (tex == null) Debug.LogError($"[SetupProject] {path} is missing -- run Design/branding/depigo/splash/export_splash_unity.py.");
             return tex;
         }
 
-        /// <summary>The ink-soak material; an asset referenced by the scene, so its shader goes into every build.</summary>
-        private static Material SplashSoakMaterial()
+        /// <summary>A splash material; an asset referenced by the scene, so its shader goes into every build.</summary>
+        private static Material SplashMaterial(string name, string shaderName)
         {
-            var shader = Shader.Find("CityBuilder/UI/InkSoak");
+            var shader = Shader.Find(shaderName);
             if (shader == null)
             {
-                Debug.LogError("[SetupProject] Shader CityBuilder/UI/InkSoak not found -- the splash's petals will show without the soak.");
+                Debug.LogError($"[SetupProject] Shader {shaderName} not found -- the splash draws without it.");
                 return null;
             }
-            var path = $"{MaterialsFolder}/SplashInkSoak.mat";
+            var path = $"{MaterialsFolder}/{name}.mat";
             var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (mat == null)
             {

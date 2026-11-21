@@ -14,6 +14,7 @@ namespace CityBuilder.UI
     {
         public float width, height, total;
         public string ink, paper;
+        public PaperLook paperLook;
         public float[] fadeIn, fadeOut, fadeEase;
         public float skipFade;
         public float zoomFrom;
@@ -25,6 +26,14 @@ namespace CityBuilder.UI
         public Pen pen;
 
         [Serializable] public class Poly { public float[] p; }
+
+        /// <summary>The paper's vignette and grain for the SplashPaper shader (set into its material by SetupProject).</summary>
+        [Serializable]
+        public class PaperLook
+        {
+            public string vignette, grain;
+            public float cx, cy, r, inner, vignetteAlpha, grainAlpha, grainFreq;
+        }
 
         [Serializable]
         public class Stroke

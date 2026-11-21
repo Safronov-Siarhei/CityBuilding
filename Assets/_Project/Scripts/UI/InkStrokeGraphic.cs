@@ -19,6 +19,7 @@ namespace CityBuilder.UI
         private float _time;
         private float[][] _lengths;          // per stroke: running length at the end of each poly
         private readonly List<Vector2> _pts = new List<Vector2>(256);
+        private float _aa;                   // one screen pixel in this graphic's units: the width of the soft edge
         private bool _finished;
 
         public void Init(SplashInkData data)
@@ -63,6 +64,10 @@ namespace CityBuilder.UI
             vh.Clear();
             if (_data == null) return;
             var col = (Color32)color;
+            // a 1-px soft edge on every stroke and dot (the user, 2026-11-21: on the tablet the hard, aliased edges
+            // read as «не хватает разрешения»); the overlay canvas scale x the slow zoom, so it stays one real pixel
+            var scale = transform.lossyScale.x;
+            _aa = scale > 1e-4f ? 1f / scale : 1f;
 
             for (var s = 0; s < _data.strokes.Length; s++)
             {
@@ -134,8 +139,8 @@ namespace CityBuilder.UI
             {
                 var a = _pts[i]; var b = _pts[i + 1];
                 var dir = (b - a).normalized;
-                var nrm = new Vector2(-dir.y, dir.x) * hw;
-                Quad(vh, a + nrm, a - nrm, b - nrm, b + nrm, col);
+                var nrm = new Vector2(-dir.y, dir.x);
+                SoftQuad(vh, a, b, nrm, hw, col);
             }
             for (var i = 1; i + 1 < n; i++)
             {
@@ -158,6 +163,26 @@ namespace CityBuilder.UI
             if (roundCaps) { Disc(vh, _pts[0], hw, col); Disc(vh, _pts[n - 1], hw, col); }
         }
 
+        /// <summary>A segment: an opaque core and a fringe on each side that fades to clear over one pixel.</summary>
+        private void SoftQuad(VertexHelper vh, Vector2 a, Vector2 b, Vector2 nrm, float hw, Color32 col)
+        {
+            var clear = col; clear.a = 0;
+            var hi = Mathf.Max(hw - _aa * 0.5f, 0f);
+            var ho = hw + _aa * 0.5f;
+            Quad(vh, a + nrm * hi, a - nrm * hi, b - nrm * hi, b + nrm * hi, col);
+            QuadGrad(vh, a + nrm * hi, a + nrm * ho, b + nrm * ho, b + nrm * hi, col, clear);
+            QuadGrad(vh, a - nrm * hi, a - nrm * ho, b - nrm * ho, b - nrm * hi, col, clear);
+        }
+
+        /// <summary>A quad whose first and last corners are `inner`, the middle two `outer`.</summary>
+        private static void QuadGrad(VertexHelper vh, Vector2 a, Vector2 b, Vector2 c, Vector2 d, Color32 inner, Color32 outer)
+        {
+            var i = vh.currentVertCount;
+            vh.AddVert(a, inner, Vector4.zero); vh.AddVert(b, outer, Vector4.zero);
+            vh.AddVert(c, outer, Vector4.zero); vh.AddVert(d, inner, Vector4.zero);
+            vh.AddTriangle(i, i + 1, i + 2); vh.AddTriangle(i, i + 2, i + 3);
+        }
+
         private static void Quad(VertexHelper vh, Vector2 a, Vector2 b, Vector2 c, Vector2 d, Color32 col)
         {
             var i = vh.currentVertCount;
@@ -173,17 +198,27 @@ namespace CityBuilder.UI
             vh.AddTriangle(i, i + 1, i + 2);
         }
 
-        private static void Disc(VertexHelper vh, Vector2 c, float r, Color32 col)
+        /// <summary>A filled circle with the same one-pixel soft rim as the strokes.</summary>
+        private void Disc(VertexHelper vh, Vector2 c, float r, Color32 col)
         {
             if (r <= 0f) return;
-            var segs = Mathf.Clamp(Mathf.CeilToInt(r * 1.2f), 6, 24);
+            var clear = col; clear.a = 0;
+            var ri = Mathf.Max(r - _aa * 0.5f, 0f);
+            var ro = r + _aa * 0.5f;
+            var segs = Mathf.Clamp(Mathf.CeilToInt(ro * 1.2f / Mathf.Max(_aa, 0.25f)), 8, 32);
             var centre = vh.currentVertCount;
             vh.AddVert(c, col, Vector4.zero);
+            // vertices: centre, then per step an inner (opaque) and an outer (clear) point
             for (var i = 0; i <= segs; i++)
             {
                 var a = i * Mathf.PI * 2f / segs;
-                vh.AddVert(c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r, col, Vector4.zero);
-                if (i > 0) vh.AddTriangle(centre, centre + i, centre + i + 1);
+                var dir = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
+                vh.AddVert(c + dir * ri, col, Vector4.zero);
+                vh.AddVert(c + dir * ro, clear, Vector4.zero);
+                if (i == 0) continue;
+                int pi = centre + 1 + (i - 1) * 2, po = pi + 1, ni = pi + 2, no = pi + 3;
+                vh.AddTriangle(centre, pi, ni);
+                vh.AddTriangle(pi, po, no); vh.AddTriangle(pi, no, ni);
             }
         }
     }

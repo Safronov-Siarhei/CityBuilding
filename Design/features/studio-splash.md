@@ -24,17 +24,25 @@ game, not on a phone).
 ## How it is made (one source of truth)
 - `Design/branding/depigo/splash/gen_splash_ink.py` -- the timeline, shapes and the HTML preview.
 - `export_splash_unity.py` (same folder) runs it and writes `Assets/_Project/UI/Splash/`: `splash_ink.json`
-  (stroke polylines in 1920x1080 px y-down, dots, soak, pen keyframes, easing curves), `paper.png`, `fill.png`,
-  `pen.png`. **Change the splash there and re-export; nothing in C# is tuned by hand.**
+  (stroke polylines in 1920x1080 px y-down, dots, soak, pen keyframes, easing curves, the paper's vignette/grain
+  numbers), `fill.png` (1024, imported Alpha8), `pen.png` (RGBA32). **Change the splash there and re-export; nothing in C# is tuned by hand.**
 - Runtime: `Scripts/UI/SplashInk.cs` (player), `InkStrokeGraphic.cs` (strokes + dots as one UI mesh, rebuilt only
   while drawing), `SplashInkData.cs` (json + cubic-bezier easing). Shader `Shaders/InkSoak.shader` (UI; ragged
   radial reveal of fill.png), material `Materials/SplashInkSoak.mat` (referenced by the scene -> in every build).
 - Editor: `SetupProjectSplash.cs` builds the scene; `SetupProject.Run` puts it FIRST in the build list.
 - The scene also carries `FrameRateController` (60 fps from the first frame).
 
+## Sharpness (the user, 2026-11-21: on the tablet it looked «как будто не хватает разрешения»)
+- The paper is NOT a picture: shader `SplashPaper` (material `SplashPaper.mat`) draws colour + vignette + grain per
+  SCREEN pixel. The old stretched 1920x1080 `paper.png` (ASTC-compressed grain = mush) is deleted.
+- Splash textures are UNCOMPRESSED on every platform (`SetupProjectSplash.SplashTexture`): fill Alpha8 1024, pen RGBA32.
+- Strokes and dots have a one-screen-pixel soft edge (`InkStrokeGraphic`: core + fringe quads, discs with a rim),
+  sized from the canvas scale, so the overlay UI (no MSAA) has no stair-steps.
+- Not yet seen on the tablet after the fix.
+
 ## Traps
 - Editor Play from MainMenu skips the splash (it is only the build's first scene); open `Splash.unity` to see it.
-- `paper.png` is 1.9 MB of grain (PNG can't compress noise); imported at max 2048, no mips.
+- Never let the splash textures be compressed (ASTC smears thin edges); never go back to a paper picture.
 
 ## Open
 - Full 7.6 s every launch vs full on first launch + short (~3 s) after -- asked, not answered.

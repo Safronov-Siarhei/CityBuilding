@@ -2,8 +2,7 @@
 preview can't drift apart:
   Assets/_Project/UI/Splash/splash_ink.json  -- strokes (polylines in 1920x1080 screen px, y down), dots, ink
                                                 soak, pen keyframes, timings and easing curves
-  Assets/_Project/UI/Splash/paper.png         -- the paper (colour + grain + vignette), 1920x1080
-  Assets/_Project/UI/Splash/fill.png          -- the four petals filled (white, alpha) for the ink soak
+  Assets/_Project/UI/Splash/fill.png          -- the four petals filled (white, alpha), 1024 px, for the ink soak
   Assets/_Project/UI/Splash/pen.png           -- the quill (nib at the pivot written into the json)
 Usage: python export_splash_unity.py            (needs Edge for the PNGs)"""
 import json, math, pathlib, re, runpy, subprocess, sys
@@ -94,6 +93,9 @@ PEN_BOX = (-6, -222, 116, 236)     # pen svg units (= screen px): x, y, w, h; ni
 data = {
     "width": 1920, "height": 1080, "total": g["TOTAL"],
     "ink": g["INK"], "paper": g["PAPER"],
+    # the preview's <radialGradient id="vig"> and <filter id="grain"> as numbers for the SplashPaper shader
+    "paperLook": {"vignette": "#6b4f2a", "cx": .5, "cy": .46, "r": .75, "inner": .55, "vignetteAlpha": .42,
+                  "grain": "#59452b", "grainAlpha": .09, "grainFreq": .9},
     "fadeIn": list(g["FADE_IN"]), "fadeOut": list(g["T_FADE"]), "fadeEase": [.4, 0, .6, 1], "skipFade": 0.35,
     "zoomFrom": 0.965, "zoomEase": [.25, .1, .25, 1],
     "strokeEase": list(g["EASE"]),
@@ -118,10 +120,9 @@ def render(svg, w, h, name, transparent=True):
     src.unlink()
 
 defs = g["svg"].split("<defs>")[1].split("</defs>")[0]
-render(f'<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080"><defs>{defs}</defs>'
-       f'<rect width="1920" height="1080" fill="{g["PAPER"]}"/><rect width="1920" height="1080" filter="url(#grain)"/>'
-       f'<rect width="1920" height="1080" fill="url(#vig)"/></svg>', 1920, 1080, "paper.png", transparent=False)
-TEX = 512
+# the paper is NOT a picture any more (a stretched 1920x1080 PNG looked soft on the tablet, 2026-11-21): the
+# shader SplashPaper draws it per screen pixel from the numbers in data["paperLook"]
+TEX = 1024
 petals = "".join(f'<path fill-rule="evenodd" d="{g["PETAL"]} {g["VEIN"]}" transform="rotate({a}) translate(7,0)"/>' for a in g["ORDER"])
 render(f'<svg xmlns="http://www.w3.org/2000/svg" width="{TEX}" height="{TEX}" viewBox="{CX - side / 2} {CY - side / 2} {side} {side}">'
        f'<g fill="#fff" transform="translate({CX},{CY}) scale({S})">{petals}</g></svg>', TEX, TEX, "fill.png")

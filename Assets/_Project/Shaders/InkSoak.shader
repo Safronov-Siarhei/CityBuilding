@@ -61,7 +61,9 @@ Shader "CityBuilder/UI/InkSoak"
 
             fixed4 frag(v2f i) : SV_Target
             {
-                fixed4 c = tex2D(_MainTex, i.uv) * i.color;
+                // fill.png is imported as a single alpha channel (Alpha8, uncompressed): the ink's colour is the vertex colour
+                fixed4 c = i.color;
+                c.a *= tex2D(_MainTex, i.uv).a;
                 float n = vnoise(i.uv * _NoiseScale) * 0.65 + vnoise(i.uv * _NoiseScale * 2.3 + 17.0) * 0.35;
                 float d = distance(i.uv, _Center.xy) + (n - 0.5) * 2.0 * _NoiseAmp;
                 c.a *= 1.0 - smoothstep(_Radius - _Edge, _Radius, d);
