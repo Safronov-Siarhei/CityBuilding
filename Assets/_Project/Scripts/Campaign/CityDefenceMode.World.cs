@@ -75,8 +75,11 @@ namespace CityBuilder.Campaign
                 }
             // blurred once here (DarkMaskBlur) with the material's own _Soft: one tap in the shader
             _darkMask = DarkMaskBlur.Blurred(px, w, h, source.GetFloat("_Soft"), "M2DarkMask");
-            UnityEngine.Rendering.Universal.CameraExtensions.GetUniversalAdditionalCameraData(cam).requiresDepthTexture = true;
+            // no depth texture: each pixel's ground point comes from its view ray on the town's ground plane, as in
+            // mission 1. The depth copy was ~5 ms of the Redmi Pad's GPU (2026-11-21, 38 -> 47 fps without it)
             var material = new Material(source) { name = "M2Dark (runtime)" };
+            material.SetFloat("_NoDepth", 1f);
+            material.SetFloat("_GroundY", CityBuilder.Grid.GridManager.Instance.GroundHeight);
             material.SetTexture("_DarkMask", _darkMask);
             material.SetFloat("_PreBlurred", DarkMaskBlur.Up);
             material.SetVector("_DarkRect", new Vector4(min.x, min.y, 1f / (w * texel), 1f / (h * texel)));

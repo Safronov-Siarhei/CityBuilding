@@ -106,6 +106,7 @@ namespace CityBuilder.UI
             foreach (var c in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
             {
                 if (c == null || c == own || !c.isRootCanvas || !c.enabled) continue;
+                if (c.GetComponent<FpsCounter>() != null) continue;   // the player's FPS counter stays (the user, 2026-11-21)
                 c.enabled = false;
                 _hidden.Add(c);
             }

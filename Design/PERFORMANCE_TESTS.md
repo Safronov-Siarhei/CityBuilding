@@ -49,6 +49,17 @@ raw record. **Add every new measurement here** (the user, 2026-11-21).
 
 ---
 
+## 2026-11-21 -- mission 2 towards 60 (Redmi Pad)
+
+Play (wave 1, no post already): 38 fps, gpu 22-23 ms. Switches: `dark off` 0, `msaa 1` 0, `lights off` 0, `hard on` 0
+(hard sun shadows), `shader BuildingDetail off` 56 fps (the town itself ~10 ms), `scale 0.7` 43, `shadows off`
+47-54 (~4 ms), `shadowdist 12` 45, `shadowdist 20` 41.5, `depth off` (the camera's depth texture) up to 47 at the
+start. DONE: mission 2's darkness finds the ground by the view ray like mission 1 (`_NoDepth`), no depth texture --
+~1.5-2 ms, the picture the same (intro shot checked); `[branch]` on CloudShadow's early-out (no clouds there). Now ~40,
+gpu ~21. Left: shadows (look decision), the town's own pixels. New probe lines: `hard on|off`, `lights on|off`,
+`depth on|off`, `shadowdist N`.
+Also: the FPS counter was hidden by mission 2's scenes (they switch every root canvas off) -- now kept.
+
 ## 2026-11-21 -- no post effects on the Low tier (Redmi Pad)
 
 Mission 1 play at 40 fps (gpu 24 ms): `post off` -> **60 fps** (gpu 16.4); `scale 0.85` with post on 41, `scale 0.75`

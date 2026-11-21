@@ -25,7 +25,8 @@ float CloudDensity(float2 xz)
 // 0..1: how much a point on the ground is darkened -- the cloud straight up the sun's ray from it
 float CloudShadow(float3 positionWS, float3 toSun)
 {
-    if (_CloudParams.w <= 0.0 || toSun.y <= 0.05) return 0.0;
+    // [branch]: a real jump past the cloud noise when there are no clouds (a flattened if would run it anyway)
+    [branch] if (_CloudParams.w <= 0.0 || toSun.y <= 0.05) return 0.0;
     float up = max(_CloudPlace.z - positionWS.y, 0.0);
     float2 at = positionWS.xz + toSun.xz * (up / toSun.y);
     return CloudDensity(at) * _CloudParams.w;

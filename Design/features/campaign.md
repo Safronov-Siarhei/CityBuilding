@@ -1147,3 +1147,7 @@ the layout is the same. Seen on the Redmi Pad, 40 fps.
 **Low graphics tier: no post effects** in the menu, the film and mission 1 (`OpeningFx.NoPostOnLow`, the user
 2026-11-21): Redmi Pad mission 1 60 fps, menu 55, film 43; the look a touch less saturated, no vignette
 (`Design/concepts/campaign_ground/low_no_post.png`).
+
+**Mission 2 perf (2026-11-21):** the darkness draws without the depth texture (`_NoDepth`, ground plane = GridManager
+GroundHeight) -- ~2 ms; the FPS counter survives the scenes' canvas sweep (Intro/Capital/SupportOfferWindow skip
+FpsCounter). Redmi Pad ~40 fps in play; shadows off would give ~54 (not done: look decision).

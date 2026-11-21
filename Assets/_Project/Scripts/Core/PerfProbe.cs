@@ -88,6 +88,25 @@ namespace CityBuilder.Core
                     foreach (var l in FindObjectsByType<Light>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
                         if (l.type == LightType.Directional) l.shadows = off ? LightShadows.None : LightShadows.Soft;
                     break;
+                // hard on|off -- the sun's shadows hard instead of soft; lights off|on -- every point/spot light;
+                // depth off|on -- the cameras' depth texture (the darkness then draws wrong: measuring only)
+                // shadowdist 20 -- cap the sun's shadow reach (metres; 0 = the tier's own)
+                case "shadowdist":
+                    if (w.Length > 1 && float.TryParse(w[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var sd))
+                    { GraphicsQuality.ShadowDistanceCap = sd; GraphicsQuality.Apply(); }
+                    break;
+                case "hard":
+                    foreach (var l in FindObjectsByType<Light>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+                        if (l.type == LightType.Directional) l.shadows = off ? LightShadows.Soft : LightShadows.Hard;
+                    break;
+                case "lights":
+                    foreach (var l in FindObjectsByType<Light>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                        if (l.type != LightType.Directional) l.enabled = !off;
+                    break;
+                case "depth":
+                    foreach (var cam in Camera.allCameras)
+                        cam.GetUniversalAdditionalCameraData().requiresDepthTexture = !off;
+                    break;
                 case "shader":
                     if (w.Length < 3) break;
                     foreach (var r in FindObjectsByType<Renderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))

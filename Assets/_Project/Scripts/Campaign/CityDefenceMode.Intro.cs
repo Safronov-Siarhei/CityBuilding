@@ -332,6 +332,7 @@ namespace CityBuilder.Campaign
             {
                 if (c == null || !c.isRootCanvas || !c.enabled || c == s.canvas) continue;
                 if (c.GetComponentInParent<LoadingScreen>() != null || c.GetComponent<FilmSkip>() != null) continue;
+                if (c.GetComponent<CityBuilder.UI.FpsCounter>() != null) continue;   // the player's FPS counter stays (the user, 2026-11-21)
                 c.enabled = false;
                 s.hidden.Add(c);
             }
