@@ -1161,3 +1161,47 @@ FpsCounter). Redmi Pad ~40 fps in play; Low tier: NO SUN SHADOWS in mission 2 (t
   overlapping ribbons now read as one road instead of separate pieces. The route's track keeps its ruts.
 - `CineGroundNoise` is no longer built before the first scene: on `sceneLoaded` of any non-Splash scene, or by the
   splash under its finished logo (the user: a long blank screen before the studio logo).
+
+## Level 3: two branches + the prologue «Пленные» (the user, 2026-11-22; DISCUSSION, nothing built)
+
+**Story decisions (the user):**
+- Level 3 = a PROLOGUE scene, then the campaign map offers TWO branches: Ардан's (rescue the prisoners) and the
+  King's (take the caged monster to the capital). They are two SEPARATE story lines that may meet later (to be
+  discussed). Order does not matter, and both are not required.
+- Idea: Ардан's branch may be sold for crystals, so that the mystery pulls the player. Not decided.
+- The humans do NOT know the word «орки» yet: in all the CAMPAIGN texts they are «чудовища»/monsters.
+  - Done 2026-11-22 for the 9 keys on «Тексты: обучение и сюжет»: #cine_m2_tell, #cine_m2_send, #m1_story,
+    #m2_goal_square, #m2_lost_square, #m2_lost_castle, #m2_skill_0/1/2_line. The sheet was synced and verified.
+  - The sandbox and tutorial texts keep «орки».
+  - Any new campaign text: «чудовища».
+  - Possible hook (mine): the name is learned in the capital from the captive.
+- The scene comes RIGHT AFTER the win of mission 2, in the same town (smoke, ruins, the dead of «Подкрепление»).
+- The old man in the cage: only the VIEWER sees him (variant A). Ардан does not know he is there.
+- The Captain goes WITH Ардан.
+- The King NOTICES Ардан's amulet. The King wears the same stone: the «son» line is for later, with no words now.
+
+**Storyboard draft (~60 s), lines to be approved:**
+1. Wide (5 s): the burnt town, soldiers gather; the King on his white horse rides at a walk onto the square, with his retinue.
+2. Square (10 s): Ардан and the Captain on foot; the Captain holds his side (the champion's blow).
+   - King: «Я выступил, как только прибыл гонец. Но такого я не ждал… Город уничтожен. Что это за чудовища?»
+   - Optional Captain line (mine): «Они пришли из леса, ваше величество».
+3. A cavalryman gallops up (5 s): «Ваше величество! Одно чудище взяли живым — сидит в клетке!»
+4. The cage (6 s): a cage on a CART (mine: it rides to the capital in the King's branch); the monster batters the
+   bars and roars; the soldiers round it shy back and lower their spears.
+5. A second rider (5 s): «Мы выследили, куда чудища утащили пленных!»
+6. The glade (8 s): forest, a campfire, monster guards, 3-4 cages with townsfolk; the camera pushes in on one cage:
+   the old man (CineElder) gripping the bars.
+7. Ардан (3 s): «Им нужно помочь, сейчас же!»
+8. King (6 s): «Сейчас важнее доставить чудище в столицу. Мы должны узнать, кто они и откуда пришли».
+9. The amulet (4 s): the King's eyes drop to Ардан's amulet (a close-up), his hand touches his own stone, a pause.
+10. King (4 s): «…Но я не стану тебя держать. Возьми добровольцев».
+11. Volunteers (5 s): two men step out of the line (a swordsman and an archer = Ардан's party). The Captain:
+    «Я пойду с ним». The King turns his horse.
+    Then the campaign map: two flags, «Пленные» (Ардан) and «Клетка» (King).
+
+**Assets:**
+- Have: CineKing + CineKingRide, the cavalry with horses, Ардан, the Captain, M2Guard, the monsters, CineElder, mission 2's town with ruins, and the cages of the orc camps (for the glade).
+- New, renders first:
+  - the cage cart;
+  - the glade set;
+  - anims: the King talking from the saddle, the monster in the cage, prisoners in cages, volunteers stepping out, the amulet close-up.
