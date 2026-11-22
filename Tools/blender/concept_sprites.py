@@ -1,4 +1,7 @@
-import bpy, sys, math
+import bpy, sys, math, os
+# optional: CONCEPT_PITCH (deg, default 50 = the game camera), CONCEPT_RES (px, 320), CONCEPT_VIEWS ('yaw:tag,...')
+PITCH=float(os.environ.get('CONCEPT_PITCH','50')); RES=int(os.environ.get('CONCEPT_RES','320'))
+VIEWS=[(float(v.split(':')[0]),v.split(':')[1]) for v in os.environ['CONCEPT_VIEWS'].split(',')] if os.environ.get('CONCEPT_VIEWS') else ((30,'a'),(150,'b'),(-80,'c'),(80,'d'),(-150,'e'),(0,'f'))
 from mathutils import Vector
 out = sys.argv[sys.argv.index('--')+1]
 R = 'G:/Fork/CityBuilding/Assets/_Project/Models/'
@@ -22,8 +25,8 @@ for name in NAMES:
     sc=bpy.context.scene
     cam=bpy.data.objects.new('cam',bpy.data.cameras.new('cam')); sc.collection.objects.link(cam)
     cam.data.type='ORTHO'; cam.data.ortho_scale=size*1.25
-    for yaw,tag in ((30,'a'),(150,'b'),(-80,'c'),(80,'d'),(-150,'e'),(0,'f')):   # f: straight on, as the game camera
-        d=Vector((math.sin(math.radians(yaw))*math.cos(math.radians(50)), -math.cos(math.radians(yaw))*math.cos(math.radians(50)), math.sin(math.radians(50))))
+    for yaw,tag in VIEWS:   # f: straight on, as the game camera
+        d=Vector((math.sin(math.radians(yaw))*math.cos(math.radians(PITCH)), -math.cos(math.radians(yaw))*math.cos(math.radians(PITCH)), math.sin(math.radians(PITCH))))
         cam.location=ctr+d*size*4
         cam.rotation_euler=(-d).to_track_quat('-Z','Y').to_euler()
         sc.camera=cam
@@ -31,6 +34,6 @@ for name in NAMES:
             l=bpy.data.objects.new('sun',bpy.data.lights.new('sun','SUN')); l.data.energy=3.5; l.rotation_euler=(math.radians(40),0,math.radians(-30)); sc.collection.objects.link(l)
             sc.world=bpy.data.worlds.new('w'); sc.world.use_nodes=True; sc.world.node_tree.nodes['Background'].inputs[1].default_value=1.2
         sc.render.engine='BLENDER_EEVEE' if 'BLENDER_EEVEE' in [e.identifier for e in bpy.types.RenderSettings.bl_rna.properties['engine'].enum_items] else 'BLENDER_EEVEE_NEXT'
-        sc.render.film_transparent=True; sc.render.resolution_x=sc.render.resolution_y=320
+        sc.render.film_transparent=True; sc.render.resolution_x=sc.render.resolution_y=RES
         sc.view_settings.view_transform='Standard'
         sc.render.filepath=out+'/'+name+'_'+tag+'.png'; bpy.ops.render.render(write_still=True)

@@ -4,8 +4,11 @@ the tribute is set per wave in its own sheet tab, up to 5 resource types. Over t
 ribbon (UI/Plague/Band.png, the red one), the green button (UI/DevGift/ClaimButton.png), the orcs rendered from their models
 (Tools/blender/concept_sprites.py -> Design/concepts/tribute/src) and the rate-us orc (UI/RateUs/Orc.png).
 
-    python Tools/ui/tribute_concepts.py  ->  Design/concepts/tribute/Tribute_A_Banner.png, Tribute_B_Herald.png,
-                                             Tribute_C_Scroll.png, Tribute_D_Sheet.png
+    python Tools/ui/tribute_concepts.py  ->  Design/concepts/tribute/Tribute_C1_Open.png, Tribute_C2_Rolled.png,
+                                             Tribute_C3_WithBooster.png, Tribute_D_Sheet.png
+The user picked C (2026-11-22); round 2: the chief facing the player to the scroll's full height, a cross instead of
+the seal, a third button «Отложить» that rolls the scroll into a badge under the resource bar's middle (the booster
+offer's size, beside it when both are up). A, B and the first C stay as functions for the record.
 """
 import math
 import os
@@ -363,6 +366,163 @@ def concept_c():
     return img.convert('RGB')
 
 
+# ---------------------------------------------------------------------------------------------------- C, round 2 (the user's pick)
+
+
+def scroll_shape(img, box, seed=7):
+    """A torn, scorched orc scroll on two wooden rods."""
+    sx0, sy0, sx1, sy1 = box
+    rnd = random.Random(seed)
+    pts = []
+    for x in range(sx0, sx1 + 1, 30):
+        pts.append((x, sy0 + rnd.uniform(-8, 8)))
+    for y in range(sy0, sy1 + 1, 30):
+        pts.append((sx1 + rnd.uniform(-10, 10), y))
+    for x in range(sx1, sx0 - 1, -30):
+        pts.append((x, sy1 + rnd.uniform(-8, 8)))
+    for y in range(sy1, sy0 - 1, -30):
+        pts.append((sx0 + rnd.uniform(-10, 10), y))
+    sh = Image.new('RGBA', img.size, 0)
+    ImageDraw.Draw(sh).polygon([(x + 10, y + 16) for x, y in pts], fill=(0, 0, 0, 150))
+    img.alpha_composite(sh.filter(ImageFilter.GaussianBlur(16)))
+    d = ImageDraw.Draw(img)
+    d.polygon(pts, fill=(222, 196, 140))
+    inner = Image.new('RGBA', img.size, 0)
+    ImageDraw.Draw(inner).polygon(pts, fill=(240, 222, 176, 255))
+    img.alpha_composite(inner.filter(ImageFilter.GaussianBlur(24)))
+    d = ImageDraw.Draw(img)
+    for _ in range(10):
+        x, y = rnd.uniform(sx0, sx1), rnd.choice([rnd.uniform(sy0, sy0 + 50), rnd.uniform(sy1 - 50, sy1)])
+        r = rnd.uniform(10, 26)
+        d.ellipse((x - r, y - r * 0.6, x + r, y + r * 0.6), fill=(120, 80, 40))
+    for rod_y in (sy0 - 14, sy1 + 2):
+        d.rounded_rectangle((sx0 - 50, rod_y, sx1 + 50, rod_y + 26), 12, fill=WOOD)
+        d.ellipse((sx0 - 70, rod_y - 6, sx0 - 30, rod_y + 32), fill=WOOD_D)
+        d.ellipse((sx1 + 30, rod_y - 6, sx1 + 70, rod_y + 32), fill=WOOD_D)
+
+
+def orange_button(img, box, text, size=34):
+    b = Image.open(UI + 'Shop/ButtonOrange.png').convert('RGBA').resize((box[2] - box[0], box[3] - box[1]), Image.LANCZOS)
+    img.alpha_composite(b, (box[0], box[1]))
+    stroked(ImageDraw.Draw(img), ((box[0] + box[2]) // 2, (box[1] + box[3]) // 2 - 4), text, size,
+            fill=(255, 255, 255), stroke=(110, 50, 10))
+
+
+def note(img, lines):
+    """The concept's own words in a dark strip at the bottom-left (not part of the game)."""
+    d = ImageDraw.Draw(img)
+    h = 30 + 44 * len(lines)
+    y = H - h
+    d.rectangle((0, y, 1000, H), fill=(28, 20, 12, 235))
+    for i, txt in enumerate(lines):
+        d.text((26, y + 16 + i * 44), txt, font=font(30 if i == 0 else 25, i != 0), fill=(255, 220, 140) if i == 0 else CREAM)
+
+
+def concept_c1():
+    """The scroll open: the chief to his full height beside it, facing the player; a cross; three buttons."""
+    img = background(dim=0.6, blur=6)
+    box = (700, 120, 1560, 1000)
+    scroll_shape(img, box)
+    chief = pic(SRC + 'OrcChief-Boss_front.png', height=box[3] - box[1] + 40)
+    img.alpha_composite(chief, (box[0] - chief.width + 90, box[3] + 28 - chief.height))
+    d = ImageDraw.Draw(img)
+    cx = (box[0] + box[2]) // 2
+    stroked(d, (cx, 190), 'Дань для вождя Грыза', 50, fill=(120, 22, 16), stroke=(240, 222, 176))
+    d.text((cx, 244), '«Заплати дань или мы нападём!» · волна 4', font=font(28, True), fill=(90, 66, 36), anchor='mm')
+    names = {'Res_Coins': 'Монеты', 'Res_Wood': 'Дерево', 'Res_Stone': 'Камень', 'Res_Food': 'Еда', 'Res_Iron': 'Железо'}
+    y = 312
+    for icon, need, have in TRIBUTE:
+        ok = have >= need
+        d.rounded_rectangle((box[0] + 90, y - 34, box[2] - 90, y + 34), 16, fill=(232, 210, 164) if ok else (240, 196, 176))
+        ic = pic(UI + 'Icons/' + icon + '.png', height=54)
+        img.alpha_composite(ic, (box[0] + 110, y - 27))
+        d.text((box[0] + 190, y), names[icon], font=font(34, True), fill=INK, anchor='lm')
+        d.text((box[0] + 500, y), str(need), font=font(38), fill=INK, anchor='rm')
+        d.text((box[0] + 520, y), f'/ {have}', font=font(30, True), fill=(176, 40, 32) if not ok else (80, 110, 40), anchor='lm')
+        tx = box[2] - 140
+        if ok:
+            d.line([(tx - 14, y), (tx - 2, y + 13), (tx + 20, y - 14)], fill=(70, 140, 40), width=8, joint='curve')
+        else:
+            d.line([(tx - 12, y - 14), (tx + 16, y + 14)], fill=(196, 40, 34), width=8)
+            d.line([(tx - 12, y + 14), (tx + 16, y - 14)], fill=(196, 40, 34), width=8)
+        y += 80
+    d.text((cx, 735), 'Нападут через', font=font(30, True), fill=(80, 60, 34), anchor='mm')
+    stroked(d, (cx, 785), '1:30', 56, fill=(196, 40, 34), stroke=(240, 222, 176))
+    green_button(img, (box[0] + 70, 840, box[0] + 310, 930), 'Заплатить', 34, grey=True)
+    red_button(img, (box[0] + 330, 846, box[0] + 540, 924), 'Биться!', 34)
+    orange_button(img, (box[0] + 560, 840, box[2] - 70, 930), 'Отложить', 34)
+    # the cross: the same as «Отложить»
+    x = pic(UI + 'Shop/Close.png', height=96)
+    img.alpha_composite(x, (box[2] - 40, box[1] - 52))
+    return img.convert('RGB')
+
+
+BADGE = 128          # the booster offer badge's size (Shop/BoosterDisc): both badges the same
+BADGE_Y = 190        # under the resource bar's middle
+
+
+def ring_timer(img, c, r, share, colour=(255, 200, 60)):
+    ImageDraw.Draw(img).arc((c[0] - r, c[1] - r, c[0] + r, c[1] + r), -90, -90 + 360 * share, fill=colour, width=9)
+
+
+def tribute_badge(img, c, timer='1:12', share=0.8):
+    """The scroll rolled up: a dark-red disc with a rolled scroll and its seal; the gold ring = the time left."""
+    r = BADGE // 2
+    glow = Image.new('RGBA', img.size, 0)
+    ImageDraw.Draw(glow).ellipse((c[0] - r - 18, c[1] - r - 18, c[0] + r + 18, c[1] + r + 18), fill=(255, 80, 40, 110))
+    img.alpha_composite(glow.filter(ImageFilter.GaussianBlur(14)))
+    d = ImageDraw.Draw(img)
+    d.ellipse((c[0] - r, c[1] - r, c[0] + r, c[1] + r), fill=(110, 26, 20), outline=(232, 190, 90), width=3)
+    # a rolled scroll lying slanted across the disc: the roll, its spiral ends, a red cord and a wax seal
+    roll = Image.new('RGBA', (120, 60), 0)
+    rd = ImageDraw.Draw(roll)
+    rd.rounded_rectangle((10, 12, 110, 48), 18, fill=(240, 222, 176), outline=(140, 100, 52), width=3)
+    rd.line((14, 22, 106, 22), fill=(255, 244, 214), width=4)
+    for ex in (12, 108):
+        rd.ellipse((ex - 9, 12, ex + 9, 48), fill=(226, 200, 150), outline=(140, 100, 52), width=3)
+        rd.arc((ex - 5, 20, ex + 5, 40), 0, 300, fill=(140, 100, 52), width=2)
+    rd.rectangle((54, 10, 66, 50), fill=(190, 36, 28))
+    roll = roll.rotate(28, resample=Image.BICUBIC, expand=True)
+    img.alpha_composite(roll, (c[0] - roll.width // 2, c[1] - roll.height // 2 - 4))
+    d = ImageDraw.Draw(img)
+    d.ellipse((c[0] - 4, c[1] + 10, c[0] + 26, c[1] + 40), fill=(170, 30, 22), outline=(120, 18, 12), width=2)
+    d.polygon([(c[0] + 4, c[1] + 34), (c[0] + 11, c[1] + 16), (c[0] + 18, c[1] + 34)], fill=(240, 226, 196))
+    ring_timer(img, c, r + 6, share)
+    stroked(ImageDraw.Draw(img), (c[0], c[1] + r + 28), timer, 36, fill=(255, 236, 200), stroke=(80, 20, 14))
+
+
+def booster_badge(img, c, timer='0:12', share=0.55):
+    r = BADGE // 2
+    disc = pic(UI + 'Shop/BoosterDisc.png', height=BADGE)
+    img.alpha_composite(disc, (c[0] - disc.width // 2, c[1] - disc.height // 2))
+    b = pic(UI + 'Shop/Resources/Shop/Boosters/Booster_repair.png', height=round(BADGE * 0.72))
+    img.alpha_composite(b, (c[0] - b.width // 2, c[1] - b.height // 2))
+    ring_timer(img, c, r + 6, share)
+    stroked(ImageDraw.Draw(img), (c[0], c[1] + r + 28), timer, 36, fill=(255, 255, 255), stroke=INK)
+
+
+def concept_c2():
+    img = background(dim=0.0, blur=0)
+    tribute_badge(img, (960, BADGE_Y))
+    note(img, ['Вариант C, свиток свёрнут («Отложить» или крестик)',
+               'Висит сверху по центру под ресурсами, размер как у бустера',
+               'Золотое кольцо и цифры: сколько осталось до нападения',
+               'Нажатие открывает свиток снова; время вышло — орки нападают'])
+    return img.convert('RGB')
+
+
+def concept_c3():
+    img = background(dim=0.0, blur=0)
+    gap = 40
+    tribute_badge(img, (960 - BADGE // 2 - gap // 2, BADGE_Y))
+    booster_badge(img, (960 + BADGE // 2 + gap // 2, BADGE_Y))
+    note(img, ['Вариант C, свиток и предложение бустера вместе',
+               'Оба по центру под ресурсами: свиток слева, бустер справа',
+               'Размер один (как значок бустера), у каждого свой таймер',
+               'Один ушёл — второй снова встаёт в центр'])
+    return img.convert('RGB')
+
+
 # ---------------------------------------------------------------------------------------------------- D: the sheet
 
 
@@ -409,9 +569,9 @@ def concept_d():
 
 def main():
     os.makedirs(OUT, exist_ok=True)
-    concept_a().save(OUT + 'Tribute_A_Banner.png')
-    concept_b().save(OUT + 'Tribute_B_Herald.png')
-    concept_c().save(OUT + 'Tribute_C_Scroll.png')
+    concept_c1().save(OUT + 'Tribute_C1_Open.png')
+    concept_c2().save(OUT + 'Tribute_C2_Rolled.png')
+    concept_c3().save(OUT + 'Tribute_C3_WithBooster.png')
     concept_d().save(OUT + 'Tribute_D_Sheet.png')
     print('written to', OUT)
 
