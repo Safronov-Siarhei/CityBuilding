@@ -184,7 +184,7 @@ def _copy(name, x, y, turn_deg, scale):
     return o
 
 
-PATH_HALF = 0.75               # the one way into the glade: a track out through the forest to -y (the camera's side)
+PATH_HALF = 1.0                # the one way into the glade: a track out through the forest to -y (the camera's side)
 
 
 def _trees():
@@ -202,7 +202,7 @@ def _trees():
         a = rnd.uniform(0, 6.283)
         r = CLEARING + 1.1 + (13.0 - CLEARING) * rnd.random() ** 1.4      # thickest at the edge, clear of the camp
         x, y = r * math.cos(a), 0.4 + r * math.sin(a)
-        if y < 0.0 and abs(x) < PATH_HALF + 0.35 + 0.08 * max(0.0, -y - CLEARING):   # the track, a little wider out
+        if y < 0.0 and abs(x) < PATH_HALF + 1.7:          # the track: no tree within a canopy's reach of it (the user)
             continue
         if any((x - px) ** 2 + (y - py) ** 2 < gap * gap for px, py in placed):
             continue
