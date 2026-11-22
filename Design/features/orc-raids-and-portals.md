@@ -4,6 +4,7 @@
 > (Maps 4–5) or round the Town Hall; destroying the MAIN portal = instant win + optional free mode.
 > **Open, the user's call:** what closing a portal BUYS (today: a quieter direction + plunder + a
 > breather); the raid roster per portal level («позже»).
+> **2026-11-22:** on the archipelago the raids come by the table + tribute: [orc-tribute-and-table-waves](orc-tribute-and-table-waves.md).
 > **Read with:** [orc-camps-and-main-base](orc-camps-and-main-base.md), [combat-core](combat-core.md),
 > [maps-and-terrain](maps-and-terrain.md).
 

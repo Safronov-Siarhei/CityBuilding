@@ -419,6 +419,20 @@ namespace CityBuilder.Core
         // the wait once the player has become the score below -- interpolated in between.
         [SerializeField] private float raidMinIntervalSeconds = 45f;
         [SerializeField] private int raidProgressAtMinInterval = 400;
+        // the sandbox's table waves + the orcs' tribute (the orcwaves tab, the user 2026-11-22)
+        [SerializeField] private float tributeSeconds = 150f;
+        [SerializeField] private float raidStuckSeconds = 180f;
+        [SerializeField] private float raidHeavyShare = 0.4f;
+        [SerializeField] private float raidHeavyMult = 0.5f;
+        [SerializeField] private float raidHeavyRestSeconds = 300f;
+        [SerializeField] private float raidHallRetreatShare = 0.25f;
+        [SerializeField] private int raidSiegeSeats = 4;
+        [SerializeField] private float raidRamHealthMult = 12f;
+        [SerializeField] private float raidRamDamageMult = 6f;
+        [SerializeField] private float raidTowerHealthMult = 15f;
+        [SerializeField] private float raidSiegeSpeed = 0.6f;
+        [SerializeField] private float raidTowerStaySeconds = 20f;
+        [SerializeField] private float raidTowerClimbGapSeconds = 0.8f;
         [SerializeField] private int portalMaxHealth = 320;
         // The orc camp round each portal (see OrcCamp).
         [SerializeField] private int orcTowerHealth = 160;
@@ -1385,6 +1399,19 @@ namespace CityBuilder.Core
         public int RaidMaxOrcLevel => raidMaxOrcLevel;
         public float RaidMinIntervalSeconds => raidMinIntervalSeconds;
         public int RaidProgressAtMinInterval => raidProgressAtMinInterval;
+        public float TributeSeconds => tributeSeconds;
+        public float RaidStuckSeconds => raidStuckSeconds;
+        public float RaidHeavyShare => raidHeavyShare;
+        public float RaidHeavyMult => raidHeavyMult;
+        public float RaidHeavyRestSeconds => raidHeavyRestSeconds;
+        public float RaidHallRetreatShare => raidHallRetreatShare;
+        public int RaidSiegeSeats => raidSiegeSeats;
+        public float RaidRamHealthMult => raidRamHealthMult;
+        public float RaidRamDamageMult => raidRamDamageMult;
+        public float RaidTowerHealthMult => raidTowerHealthMult;
+        public float RaidSiegeSpeed => raidSiegeSpeed;
+        public float RaidTowerStaySeconds => raidTowerStaySeconds;
+        public float RaidTowerClimbGapSeconds => raidTowerClimbGapSeconds;
         public float ProgressPerBuildingLevel => progressPerBuildingLevel;
         public float ProgressPerCitizen => progressPerCitizen;
         public float ProgressPerSoldierLevel => progressPerSoldierLevel;
@@ -1863,6 +1890,33 @@ namespace CityBuilder.Core
 
         [SerializeField] private List<M2WaveRow> m2Waves = new List<M2WaveRow>();
 
+        /// <summary>One sandbox orc raid (the orcwaves tab, the user 2026-11-22): the wait before it sails, who comes,
+        /// at what level, and the tribute that buys it off (up to five resources, never crystals).</summary>
+        [System.Serializable]
+        public class OrcWaveRow
+        {
+            public int wave, raiders, throwers, brutes, chiefs, rams, towers, level = 1;
+            public float delay;
+            public List<CityBuilder.Resources.ResourceAmount> tribute = new List<CityBuilder.Resources.ResourceAmount>();
+        }
+
+        [SerializeField] private List<OrcWaveRow> orcWaves = new List<OrcWaveRow>();
+
+        /// <summary>The table's waves, in order.</summary>
+        public IReadOnlyList<OrcWaveRow> OrcWaves => orcWaves;
+
+        /// <summary>Raid number `wave` (1 = the first); past the table's last row, the last again. Null when the table is empty.</summary>
+        public OrcWaveRow OrcWave(int wave)
+        {
+            OrcWaveRow last = null, hit = null;
+            foreach (var row in orcWaves)
+            {
+                if (last == null || row.wave > last.wave) last = row;
+                if (row.wave == wave) hit = row;
+            }
+            return hit ?? last;
+        }
+
         /// <summary>One task of the piggy bank (the piggytasks tab, the user 2026-11-16): what is counted (`kind`, a word
         /// Core/PiggyTasks knows), how many, the crystals it puts in the piggy, easy/medium/hard, where it counts (`mode`).</summary>
         [System.Serializable]
@@ -1952,6 +2006,7 @@ namespace CityBuilder.Core
         /// <summary>The importer's way in (BalanceImporter, the botwaves tab).</summary>
         public void EditorSetBotWaves(List<BotWaveRow> rows) => botWaves = rows ?? new List<BotWaveRow>();
         public void EditorSetM2Waves(List<M2WaveRow> rows) => m2Waves = rows ?? new List<M2WaveRow>();
+        public void EditorSetOrcWaves(List<OrcWaveRow> rows) => orcWaves = rows ?? new List<OrcWaveRow>();
         public void EditorSetPiggyTasks(List<PiggyTask> rows) => piggyTasks = rows ?? new List<PiggyTask>();
 #endif
 
@@ -2787,6 +2842,19 @@ namespace CityBuilder.Core
             raidMaxOrcLevel = (int)Read(economy, "raid_max_orc_level", raidMaxOrcLevel);
             raidMinIntervalSeconds = Read(economy, "raid_min_interval_seconds", raidMinIntervalSeconds);
             raidProgressAtMinInterval = (int)Read(economy, "raid_progress_at_min_interval", raidProgressAtMinInterval);
+            tributeSeconds = Read(economy, "tribute_seconds", tributeSeconds);
+            raidStuckSeconds = Read(economy, "raid_stuck_sec", raidStuckSeconds);
+            raidHeavyShare = Read(economy, "raid_heavy_share", raidHeavyShare);
+            raidHeavyMult = Read(economy, "raid_heavy_mult", raidHeavyMult);
+            raidHeavyRestSeconds = Read(economy, "raid_heavy_rest_sec", raidHeavyRestSeconds);
+            raidHallRetreatShare = Read(economy, "raid_hall_retreat_share", raidHallRetreatShare);
+            raidSiegeSeats = (int)Read(economy, "raid_siege_seats", raidSiegeSeats);
+            raidRamHealthMult = Read(economy, "raid_ram_health_mult", raidRamHealthMult);
+            raidRamDamageMult = Read(economy, "raid_ram_damage_mult", raidRamDamageMult);
+            raidTowerHealthMult = Read(economy, "raid_tower_health_mult", raidTowerHealthMult);
+            raidSiegeSpeed = Read(economy, "raid_siege_speed", raidSiegeSpeed);
+            raidTowerStaySeconds = Read(economy, "raid_tower_stay_sec", raidTowerStaySeconds);
+            raidTowerClimbGapSeconds = Read(economy, "raid_tower_climb_gap_sec", raidTowerClimbGapSeconds);
             progressPerBuildingLevel = Read(economy, "progress_per_building_level", progressPerBuildingLevel);
             progressPerCitizen = Read(economy, "progress_per_citizen", progressPerCitizen);
             progressPerSoldierLevel = Read(economy, "progress_per_soldier_level", progressPerSoldierLevel);

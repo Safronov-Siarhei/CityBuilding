@@ -45,6 +45,7 @@ namespace CityBuilder.EditorTools
         public const string BotWavesCsvPath = BalanceFolder + "/botwaves.csv";
         /// <summary>The sheet's tab «Кампания: волны обороны» (the user, 2026-11-12): mission 2's waves, a row each.</summary>
         public const string M2WavesCsvPath = BalanceFolder + "/m2waves.csv";
+        public const string OrcWavesCsvPath = BalanceFolder + "/orcwaves.csv";
         /// <summary>The sheet's tab «Копилка: задания» (the user, 2026-11-16): the piggy bank's tasks, a row each.</summary>
         public const string PiggyTasksCsvPath = BalanceFolder + "/piggytasks.csv";
         /// <summary>The sheet's tab «Зал дипломатии: таблицы» (the user, 2026-11-17): help requests, the bot's gifts, trade offers.</summary>
@@ -106,6 +107,7 @@ namespace CityBuilder.EditorTools
             var config = WriteConfig(ConfigAssetPath, sandboxUnits, sandboxBuildings, sandboxEconomy);
             config.EditorSetBotWaves(ReadBotWaves(BotWavesCsvPath));
             config.EditorSetM2Waves(ReadM2Waves(M2WavesCsvPath));
+            config.EditorSetOrcWaves(ReadOrcWaves(OrcWavesCsvPath));
             config.EditorSetPiggyTasks(ReadPiggyTasks(PiggyTasksCsvPath, out var piggyNames));
             config.EditorSetDiplomacyRows(ReadDiplomacy(DiplomacyCsvPath, out var diplomacyNames));
             config.EditorSetStoreCapRows(ReadStoreCaps(StorageCsvPath));
@@ -545,6 +547,52 @@ namespace CityBuilder.EditorTools
                     rams = Roads("rams"), towers = Roads("towers"), level = Mathf.Max(1, Int("level")), pause = Mathf.Max(0f, pause)
                 });
             }
+            return result;
+        }
+
+        /// <summary>The orcwaves tab: wave, delay_sec, raiders, throwers, brutes, chiefs, rams, towers, level, res1..5/amount1..5, comment.</summary>
+        private static List<BalanceConfig.OrcWaveRow> ReadOrcWaves(string path)
+        {
+            var result = new List<BalanceConfig.OrcWaveRow>();
+            if (!File.Exists(path)) return result;
+            var rows = ReadCsv(path);
+            if (rows.Count == 0) return result;
+            var header = rows[0];
+            int Col(string name) => header.FindIndex(h => h.Trim() == name);
+            var wave = Col("wave");
+            if (wave < 0)
+            {
+                Debug.LogError($"BalanceImporter: {path} needs the column wave.");
+                return result;
+            }
+            var culture = System.Globalization.CultureInfo.InvariantCulture;
+            for (var i = 1; i < rows.Count; i++)
+            {
+                var row = rows[i];
+                string Cell(int c) => c >= 0 && c < row.Count ? row[c].Trim().Replace(',', '.') : string.Empty;
+                int Int(string name) => int.TryParse(Cell(Col(name)), System.Globalization.NumberStyles.Integer, culture, out var v) ? Mathf.Max(0, v) : 0;
+                if (!int.TryParse(Cell(wave), System.Globalization.NumberStyles.Integer, culture, out var w)) continue;
+                float.TryParse(Cell(Col("delay_sec")), System.Globalization.NumberStyles.Float, culture, out var delay);
+                var entry = new BalanceConfig.OrcWaveRow
+                {
+                    wave = w, delay = Mathf.Max(0f, delay), raiders = Int("raiders"), throwers = Int("throwers"), brutes = Int("brutes"),
+                    chiefs = Int("chiefs"), rams = Int("rams"), towers = Int("towers"), level = Mathf.Max(1, Int("level"))
+                };
+                for (var k = 1; k <= 5; k++)
+                {
+                    var name = Cell(Col("res" + k));
+                    var amount = Int("amount" + k);
+                    if (string.IsNullOrEmpty(name) || amount <= 0) continue;
+                    if (!System.Enum.TryParse<CityBuilder.Resources.ResourceType>(name, true, out var type) || type == CityBuilder.Resources.ResourceType.Population)
+                    {
+                        Debug.LogError($"BalanceImporter: {path} wave {w}: unknown tribute resource {name}.");
+                        continue;
+                    }
+                    entry.tribute.Add(new CityBuilder.Resources.ResourceAmount { type = type, amount = amount });
+                }
+                result.Add(entry);
+            }
+            result.Sort((a, b) => a.wave.CompareTo(b.wave));
             return result;
         }
 

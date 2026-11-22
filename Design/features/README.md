@@ -54,6 +54,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | [bot](bot.md) | the bot kingdom: castle scheme v2, garrison, Diplomacy Hall relations (peace/trade/war), WAR built 2026-11-04; DIPLOMACY REWORK in the code 2026-11-17 (gifts, help, trade, bot gifts, banners; not set up yet) | бот, дипломатия, война, торговля |
 | [ruins](ruins.md) | ruins of the player's destroyed buildings: restore for a share of the price / demolish / later; sandbox only; burnt-shell shader; BUILT 2026-11-05, untested | руины, восстановить, снести, обломки |
 | [orc-raids-and-portals](orc-raids-and-portals.md) | raids, progression score, portals, orc kinds, win/lose | орки, набег, портал, победа, поражение |
+| [orc-tribute-and-table-waves](orc-tribute-and-table-waves.md) | sandbox raids by the «Орки: волны» table, the chief's tribute scroll + badge, siege machines off the moat, help after a heavy wave | дань, волны орков, таран, осадная башня, свиток |
 | [orc-camps-and-main-base](orc-camps-and-main-base.md) | walled camps L1–3, spawners, totems, cages, treasury, main base, boss; the gloomy SWAMP orc island + beast skeleton; LIVING base A with patrols (2026-11-06) | лагерь, база орков, вождь, клетки, сокровищница |
 | **World** | | |
 | [maps-and-terrain](maps-and-terrain.md) | map pipeline, Maps 3–5 + Inv1, picker, decor, fords/bridges, map spots, Vikings/dungeons plans | карта, рельеф, мост, брод, выбор карты |

@@ -318,19 +318,33 @@ namespace CityBuilder.Ships
         /// </summary>
         public bool LaunchOrcFleet(int size, int level)
         {
+            if (size <= 0) return false;
+            var seats = Mathf.Max(1, ShipStats.Capacity(ShipKind.OrcTransport));
+            var loads = new List<int>();
+            for (var left = size; left > 0; left -= seats) loads.Add(Mathf.Min(seats, left));
+            return LaunchOrcLoads(loads, level) != 0;
+        }
+
+        /// <summary>Seats in one orc transport (ShipStats) -- a table wave packs its siege machines by it.</summary>
+        public static int OrcTransportSeats => Mathf.Max(1, ShipStats.Capacity(ShipKind.OrcTransport));
+
+        /// <summary>
+        /// A raid by sea with its loads given: one transport per entry, carrying that many (a table
+        /// wave's, OrcRaidManagerWaves), the escorts as LaunchOrcFleet's. The raid's number, 0 when nothing sails.
+        /// </summary>
+        public int LaunchOrcLoads(List<int> loads, int level = 1)
+        {
             var shipyard = OrcShipyard;
-            if (shipyard == null || size <= 0 || !TryFindOrcLanding(out var landing)) return false;
-            if (!TryNearestSea(shipyard.transform.position, 20f, out var home)) return false;
+            if (shipyard == null || loads == null || loads.Count == 0 || !TryFindOrcLanding(out var landing)) return 0;
+            if (!TryNearestSea(shipyard.transform.position, 20f, out var home)) return 0;
 
             var raid = _nextOrcRaid++;
-            var seats = Mathf.Max(1, ShipStats.Capacity(ShipKind.OrcTransport));
             var facing = Quaternion.LookRotation((landing - home).sqrMagnitude > 0.01f ? (landing - home).normalized : Vector3.forward);
-            ShipUnit first = null;
             var n = 0;
-            for (var left = size; left > 0; left -= seats, n++)
+            foreach (var load in loads)
             {
-                var ship = SpawnOrcShip(ShipKind.OrcTransport, home, n, facing, raid, Mathf.Min(seats, left), level, landing);
-                if (first == null) first = ship;
+                if (load <= 0) continue;
+                SpawnOrcShip(ShipKind.OrcTransport, home, n++, facing, raid, load, level, landing);
             }
             var escorts = BalanceConfig.Instance != null ? BalanceConfig.Instance.OrcFleetEscorts : 1;
             for (var k = 0; k < escorts; k++, n++)
@@ -339,7 +353,7 @@ namespace CityBuilder.Ships
                 SpawnOrcShip(ShipKind.OrcWar, home, n, facing, raid, 0, level, landing + facing * Vector3.right * side);
             }
             // no notice as the fleet puts out (the user, 2026-11-20): it comes when they land by the player's buildings
-            return true;
+            return raid;
         }
 
         /// <summary>
@@ -446,7 +460,7 @@ namespace CityBuilder.Ships
                 // the shallows are walkable too: on up the beach until no water is within the wave's spread
                 if (inland.sqrMagnitude > 0.01f) beach = DryOf(beach, inland.normalized);
                 var leader = ship.IsBotShip ? Bot.BotWar.Land(ship.OrcRaid, beach, ship.OrcCargo)
-                    : OrcRaidManager.Instance != null ? OrcRaidManager.Instance.SpawnLanding(beach, ship.OrcCargo, ship.OrcLevel) : null;
+                    : OrcRaidManager.Instance != null ? OrcRaidManager.Instance.SpawnLanding(beach, ship.OrcCargo, ship.OrcLevel, ship.OrcRaid) : null;
                 // only a landing on an island the player has built on is news (the user, 2026-11-20)
                 if (PlayerBuiltOn(beach))
                     EventLogManager.Instance?.Post(GameEvent.At(Localization.Format(ship.IsBotShip ? "#log_bot_landing" : "#log_orc_landing", ship.OrcCargo),
@@ -511,6 +525,9 @@ namespace CityBuilder.Ships
                 if (dx * dx + dy * dy <= r * r && map.IsWaterCell(centre + new Vector2Int(dx, dy))) return true;
             return false;
         }
+
+        /// <summary>A transport of this raid still on its way out (a table wave is not over while one is).</summary>
+        public bool OrcRaidOutbound(int raid) => RaidStillOutbound(raid);
 
         private bool RaidStillOutbound(int raid)
         {

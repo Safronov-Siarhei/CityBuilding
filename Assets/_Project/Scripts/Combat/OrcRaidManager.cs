@@ -350,6 +350,12 @@ namespace CityBuilder.Combat
             if (WorldSettings.Current.RaidsOff) return;
             // the tutorial's orcs are its script's (Tutorial.TutorialDirector): no raid clock
             if (Tutorial.TutorialMode.IsActive) return;
+            // the sandbox archipelago's raids come by the table, with the chief's tribute (OrcRaidManagerWaves)
+            if (TableWaves)
+            {
+                TickTableWaves(Time.deltaTime);
+                return;
+            }
 
             _raidTimer -= Time.deltaTime;
             if (_raidTimer > 0f) return;
@@ -454,10 +460,13 @@ namespace CityBuilder.Combat
         }
 
         /// <summary>A raid's wave put ashore by an orc ship (ShipManager): raiders, throwers and a chief as SpawnRaid's are.</summary>
-        public OrcUnit SpawnLanding(Vector3 beach, int count, int level)
+        public OrcUnit SpawnLanding(Vector3 beach, int count, int level, int raid = 0)
         {
             var before = OrcUnit.All.Count;
-            var leader = SpawnWave(beach, count, level);
+            // a table wave's transport: its own orcs and machines off the wave's queue
+            var leader = raid != 0 && _wavePhase == WavePhase.Out && raid == _waveRaid && _waveQueue.Count > 0
+                ? LandTableWave(beach, count)
+                : SpawnWave(beach, count, level);
             // a wave spreads round its point: none of it left standing in the shallows
             var map = Maps.MeshMapApplier.Instance;
             var grid = GridManager.Instance;

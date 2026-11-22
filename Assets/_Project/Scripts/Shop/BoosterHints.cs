@@ -287,7 +287,9 @@ namespace CityBuilder.Shop
         private Vector2 BadgeHome()
         {
             var row = BoosterHud.RowWidth;
-            return row > 0f ? _home + new Vector2(row * 0.5f + badge.sizeDelta.x * 0.5f + 16f, 0f) : _home;
+            if (row > 0f) return _home + new Vector2(row * 0.5f + badge.sizeDelta.x * 0.5f + 16f, 0f);
+            // the orcs' tribute badge up: the pair centred, the scroll left, the booster right (the user, 2026-11-22)
+            return UI.TributeScroll.BadgeShown ? _home + new Vector2(badge.sizeDelta.x * 0.5f + 12f, 0f) : _home;
         }
 
         /// <summary>Drops in from the bar, breathes, its ring runs down; the time out counts as ignored.</summary>

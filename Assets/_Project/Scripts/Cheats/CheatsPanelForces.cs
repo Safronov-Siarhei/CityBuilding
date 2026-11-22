@@ -140,6 +140,14 @@ namespace CityBuilder.Cheats
                 if (Button($"Ждать набега: {Mathf.CeilToInt(raids.SecondsUntilNextRaid)} с → 0")) { raids.EndRaidWait(); Say("набег идёт"); }
                 GUILayout.EndHorizontal();
 
+                if (OrcRaidManager.TableWaves)
+                {
+                    GUILayout.BeginHorizontal();
+                    Label($"Волны по таблице: следующая {raids.NextWaveNumber}, {(raids.CurrentWavePhase == OrcRaidManager.WavePhase.Out ? $"в пути/на берегу ({raids.WaveOrcs.Count})" : "ждём")}", 420f);
+                    if (Button("Дань сейчас")) Say(raids.TributeNow() ? "свиток дани" : "нет (волна в пути или без дани)");
+                    GUILayout.EndHorizontal();
+                }
+
                 var predators = CityBuilder.Maps.Predators.Instance;
                 if (predators != null && CityBuilder.Maps.Predators.Active)
                 {

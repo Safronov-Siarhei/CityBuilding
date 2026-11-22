@@ -654,6 +654,7 @@ namespace CityBuilder.EditorTools
                 chips[i] = new BoosterHud.Chip { button = button, ring = ring, icon = icon, time = time };
             }
             BuildBoosterHints(uiRoot);
+            BuildTributeScroll(uiRoot);
             var hud = rowGO.AddComponent<BoosterHud>();
             var so = new SerializedObject(hud);
             var prop = so.FindProperty("chips");

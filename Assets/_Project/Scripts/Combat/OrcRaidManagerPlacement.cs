@@ -106,6 +106,8 @@ namespace CityBuilder.Combat
             // Set before the early return below, and whatever happened: the map geometry won't
             // change, so re-running this every frame would just repeat the same failure forever.
             _portalsPlaced = true;
+            // the table waves' first wait starts with the Town Hall (the user, 2026-11-22: 7 minutes)
+            if (TableWaves) _raidTimer = FirstWaveSeconds();
 
             // the archipelago has the main base alone (the user, 2026-10-29): no camp is no fault there
             if (opened == 0 && designed != null && designed.HasMainBaseSpot && designed.CampSpots.Length == 0) return;
@@ -126,7 +128,7 @@ namespace CityBuilder.Combat
             // And never before the town has settled in (the user, 2026-10-20: an easy start) --
             // the same seven minutes migration and sickness wait out.
             // the quiet start is the world's (WorldSettings: 0 / 7 / 15 / 30 minutes; 7 by default, as settling_in_seconds)
-            _raidTimer = Mathf.Max(BalanceConfig.Instance.RaidIntervalSeconds, WorldSettings.Current.QuietSeconds);
+            _raidTimer = TableWaves ? FirstWaveSeconds() : Mathf.Max(BalanceConfig.Instance.RaidIntervalSeconds, WorldSettings.Current.QuietSeconds);
             // The nearest portal is the one the camera goes to: the closest threat to the town.
             EventLogManager.Instance?.Post(GameEvent.At(opened == 1
                     ? Localization.Get("#log_portal_opened")

@@ -240,6 +240,15 @@ namespace CityBuilder.Saving
         /// <summary>Seconds left on the raid clock, so reloading cannot push the next wave back to a full interval.</summary>
         public float secondsUntilNextRaid;
 
+        // the sandbox's table waves (OrcRaidManagerWaves, 2026-11-22): phase (0 waiting, 1 out), waves done, the ships' raid,
+        // who is still aboard (OrcKind + machine 0/1/2), the help, the landing island's buildings (origin cells + broken count)
+        public int wavePhase, wavesDone, waveRaid, waveLevel = 1, waveSnapBroken;
+        public bool waveHelped, waveHelpNext, waveSnapped, waveTorches;
+        public Vector3 waveBeach;
+        public List<int> waveQueue = new List<int>();
+        public List<int> waveSiege = new List<int>();
+        public List<Vector2Int> waveSnap = new List<Vector2Int>();
+
         public List<OrcEntry> orcs = new List<OrcEntry>();
 
         /// <summary>
@@ -451,6 +460,10 @@ namespace CityBuilder.Saving
 
         /// <summary>Raider, thrower or chief. Absent in saves from before the kinds existed, which reads as a raider -- what every orc then was.</summary>
         public Combat.OrcKind kind = Combat.OrcKind.Raider;
+
+        /// <summary>One of the table wave out (OrcRaidManagerWaves), and the machine it is (0 none, 1 ram, 2 tower).</summary>
+        public bool wave;
+        public int siege;
     }
 
     [Serializable]

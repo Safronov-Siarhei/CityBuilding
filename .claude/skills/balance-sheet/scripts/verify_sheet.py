@@ -54,6 +54,8 @@ TABS = {
     # the bot's raid waves at war (2026-11-04): a row per unit type in a wave
     "botwaves": {"key": ["wave", "unit"]},
     "m2waves": {"key": ["part", "wave"]},
+    # the sandbox orc raids + tribute (2026-11-22): a row per wave
+    "orcwaves": {"key": ["wave"]},
     # the piggy bank's tasks (2026-11-16): a row per task
     "piggytasks": {"key": ["id"]},
     # the Diplomacy Hall's lists (2026-11-17): help requests, the bot's gifts, trade offers

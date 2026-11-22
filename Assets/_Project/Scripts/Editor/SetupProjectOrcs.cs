@@ -145,6 +145,9 @@ namespace CityBuilder.EditorTools
                 if (model == null) Debug.LogWarning($"[SetupProject] {path} is missing -- run Tools/blender/predators_install.py and export_fbx.py.");
                 so.FindProperty(field).objectReferenceValue = model;
             }
+            // the sandbox raids' siege machines (the orcwaves tab; the campaign's models, Tools/blender/orc_siege_drafts.py)
+            so.FindProperty("siegeRamModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Orcs/OrcRam.fbx");
+            so.FindProperty("siegeTowerModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Orcs/OrcSiegeTower.fbx");
             // the upgrade crystal's look (the user, 2026-11-01: bright, glowing, juicy -- it is paid content)
             so.FindProperty("crystalMaterial").objectReferenceValue = CrystalMaterial("Crystal", "CityBuilder/Crystal", null);
             so.FindProperty("crystalHaloMaterial").objectReferenceValue = CrystalMaterial("CrystalHalo", "CityBuilder/CrystalHalo", null);

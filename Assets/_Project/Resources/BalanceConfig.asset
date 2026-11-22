@@ -9553,6 +9553,19 @@ MonoBehaviour:
   raidMaxOrcLevel: 5
   raidMinIntervalSeconds: 45
   raidProgressAtMinInterval: 400
+  tributeSeconds: 150
+  raidStuckSeconds: 180
+  raidHeavyShare: 0.4
+  raidHeavyMult: 0.5
+  raidHeavyRestSeconds: 300
+  raidHallRetreatShare: 0.25
+  raidSiegeSeats: 4
+  raidRamHealthMult: 12
+  raidRamDamageMult: 6
+  raidTowerHealthMult: 15
+  raidSiegeSpeed: 0.6
+  raidTowerStaySeconds: 20
+  raidTowerClimbGapSeconds: 0.8
   portalMaxHealth: 320
   orcTowerHealth: 160
   orcTowerDamage: 3
@@ -11423,6 +11436,181 @@ MonoBehaviour:
     rams: 000000000000000000000000
     towers: 000000000000000000000000
     pause: 3
+  orcWaves:
+  - wave: 1
+    raiders: 2
+    throwers: 0
+    brutes: 0
+    chiefs: 0
+    rams: 0
+    towers: 0
+    level: 1
+    delay: 420
+    tribute:
+    - type: 7
+      amount: 30
+    - type: 0
+      amount: 20
+  - wave: 2
+    raiders: 3
+    throwers: 0
+    brutes: 0
+    chiefs: 0
+    rams: 0
+    towers: 0
+    level: 1
+    delay: 600
+    tribute:
+    - type: 7
+      amount: 50
+    - type: 0
+      amount: 30
+  - wave: 3
+    raiders: 3
+    throwers: 1
+    brutes: 0
+    chiefs: 0
+    rams: 0
+    towers: 0
+    level: 1
+    delay: 600
+    tribute:
+    - type: 7
+      amount: 70
+    - type: 0
+      amount: 40
+    - type: 1
+      amount: 20
+  - wave: 4
+    raiders: 4
+    throwers: 1
+    brutes: 0
+    chiefs: 0
+    rams: 0
+    towers: 0
+    level: 2
+    delay: 600
+    tribute:
+    - type: 7
+      amount: 90
+    - type: 0
+      amount: 50
+    - type: 1
+      amount: 30
+  - wave: 5
+    raiders: 4
+    throwers: 1
+    brutes: 1
+    chiefs: 1
+    rams: 0
+    towers: 0
+    level: 2
+    delay: 600
+    tribute:
+    - type: 7
+      amount: 120
+    - type: 0
+      amount: 60
+    - type: 1
+      amount: 40
+    - type: 2
+      amount: 30
+  - wave: 6
+    raiders: 5
+    throwers: 2
+    brutes: 1
+    chiefs: 1
+    rams: 1
+    towers: 0
+    level: 2
+    delay: 600
+    tribute:
+    - type: 7
+      amount: 150
+    - type: 0
+      amount: 80
+    - type: 1
+      amount: 50
+    - type: 2
+      amount: 40
+  - wave: 7
+    raiders: 5
+    throwers: 2
+    brutes: 2
+    chiefs: 1
+    rams: 1
+    towers: 0
+    level: 3
+    delay: 600
+    tribute:
+    - type: 7
+      amount: 180
+    - type: 0
+      amount: 90
+    - type: 1
+      amount: 60
+    - type: 2
+      amount: 50
+  - wave: 8
+    raiders: 6
+    throwers: 2
+    brutes: 2
+    chiefs: 1
+    rams: 1
+    towers: 1
+    level: 3
+    delay: 600
+    tribute:
+    - type: 7
+      amount: 220
+    - type: 0
+      amount: 100
+    - type: 1
+      amount: 80
+    - type: 2
+      amount: 60
+    - type: 12
+      amount: 10
+  - wave: 9
+    raiders: 6
+    throwers: 3
+    brutes: 2
+    chiefs: 1
+    rams: 2
+    towers: 1
+    level: 4
+    delay: 600
+    tribute:
+    - type: 7
+      amount: 260
+    - type: 0
+      amount: 120
+    - type: 1
+      amount: 100
+    - type: 2
+      amount: 80
+    - type: 12
+      amount: 15
+  - wave: 10
+    raiders: 7
+    throwers: 3
+    brutes: 3
+    chiefs: 1
+    rams: 2
+    towers: 1
+    level: 5
+    delay: 600
+    tribute:
+    - type: 7
+      amount: 300
+    - type: 0
+      amount: 150
+    - type: 1
+      amount: 120
+    - type: 2
+      amount: 100
+    - type: 12
+      amount: 20
   piggyTasks:
   - id: invasion_run
     kind: invasion_run

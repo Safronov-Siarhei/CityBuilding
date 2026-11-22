@@ -592,6 +592,8 @@ namespace CityBuilder.Saving
             // A cheat flag, and saved for exactly that reason: raids that switch themselves back on
             // at the next load arrive in the middle of whatever they were switched off to watch.
             raids.RaidsSuspended = data.raidsSuspended;
+            raids.RestoreWaves(data.wavePhase, data.wavesDone, data.waveRaid, data.waveQueue, data.waveSiege, data.waveHelped,
+                data.waveHelpNext, data.waveSnapped, data.waveSnap, data.waveSnapBroken, data.waveBeach, data.waveLevel, data.waveTorches);
 
             if (data.freedPrisoners != null)
             {
@@ -601,7 +603,9 @@ namespace CityBuilder.Saving
             if (data.orcs == null) return restored;
             foreach (var orc in data.orcs)
             {
-                restored.Add(raids.RestoreOrc(orc.position, orc.level, orc.currentHealth, orc.kind));
+                var unit = raids.RestoreOrc(orc.position, orc.level, orc.currentHealth, orc.kind);
+                if (orc.wave) raids.RestoreWaveOrc(unit, orc.siege, orc.currentHealth);
+                restored.Add(unit);
             }
 
             return restored;
@@ -951,6 +955,9 @@ namespace CityBuilder.Saving
                     }
                 }
                 data.secondsUntilNextRaid = raids.SecondsUntilNextRaid;
+                raids.CaptureWaves(out data.wavePhase, out data.wavesDone, out data.waveRaid, data.waveQueue, data.waveSiege,
+                    out data.waveHelped, out data.waveHelpNext, out data.waveSnapped, data.waveSnap, out data.waveSnapBroken,
+                    out data.waveBeach, out data.waveLevel, out data.waveTorches);
                 data.raidsSuspended = raids.RaidsSuspended;
             }
 
@@ -970,7 +977,12 @@ namespace CityBuilder.Saving
                 // nor the sandbox's predators: they go back to their cave, a load starts without them
                 if (Combat.OrcUnit.IsPredator(orc.Kind)) continue;
                 orcIndices[orc] = data.orcs.Count;
-                data.orcs.Add(new OrcEntry { position = orc.transform.position, level = orc.Level, currentHealth = orc.CurrentHealth, kind = orc.Kind });
+                var raidsNow = Combat.OrcRaidManager.Instance;
+                data.orcs.Add(new OrcEntry
+                {
+                    position = orc.transform.position, level = orc.Level, currentHealth = orc.CurrentHealth, kind = orc.Kind,
+                    wave = raidsNow != null && raidsNow.IsWaveOrc(orc), siege = Combat.OrcRaidManager.SiegeOf(orc),
+                });
             }
 
             var army = Combat.ArmyManager.Instance;
