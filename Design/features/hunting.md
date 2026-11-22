@@ -82,3 +82,12 @@ herd and the hut's levels (more hunters) matter. The same day the user dropped t
 ## Open
 - The user's playtest; hides are only a resource for now (no use yet).
 - Performance: herds of 2-8 animals, off-view animals switched off like Wildlife -- check on the Redmi Pad.
+
+## Playtest 2026-11-22 (built, not compiled, not seen)
+- The herd's sign: a tap now also flies the camera to the herd (`Light` -> `RTSCameraController.FocusOn`), besides
+  lighting it. The event-feed notice already flew it (GameEvent.At).
+- `#log_herd_appeared` only for an island with a player building on it (`PlayerBuildsOn`), so no notice for a herd
+  nobody can see.
+- The sign's canvas is at sortingOrder -5 (UNDER the HUD at 0); it drew over the interface at 4.
+- Hut card line `#hunt_card_chances` (hare/deer/boar hit %, `Hunting.CardLine`, shown in the band like the healer's
+  line, no icon).

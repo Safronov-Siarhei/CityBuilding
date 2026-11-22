@@ -47,3 +47,10 @@ game, not on a phone).
 ## Open
 - Full 7.6 s every launch vs full on first launch + short (~3 s) after -- asked, not answered.
 - Check on a phone: the first screen is paper (and whether the app icon still shows), the splash is smooth at 60 fps.
+
+## 2026-11-22
+- The long cream screen before the logo is the engine's boot on `PlayerSettings.SplashScreen.backgroundColor`. One
+  cost was ours and is moved: `CineGroundNoise` (512x512 fbm, a million lerps + 3 Resources textures) ran
+  BeforeSceneLoad; now SplashInk makes it 0.6 s before the fade-out (logo finished), or any other scene's load.
+  Not measured on a phone.
+- The FPS counter is hidden on this scene.

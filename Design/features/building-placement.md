@@ -95,3 +95,7 @@ disc read as "a stone pancake"), 3–5 `Fence1-lvl3..5-*` from `Tools/blender/fe
 spire, 5 gilded. Test `InvasionTests.AnUpgradedFence_IsStone` checks 2..5. The Bridge stays research-locked.
 
 **2026-11-19 (the user):** a ROAD may now be laid under a standing gate's way-through cell (a gate's one, a barbican's middle) as a gate may stand on a road (`BuildingPlacer.IsFreeFor` isRoad branch, `IsGatewayOfStandingGate`; shared cells were already freed right). Gates have no grass plot of their own (checked the Blender scripts).
+
+## 2026-11-22
+- The aim dot uses its own 32 px anti-aliased `UI/Skin/aim_dot.png` (`Tools/ui/make_skin.py` aim_dot): the 256 px
+  circle_mask shrunk to 16 px read as angular on a tablet (no mipmaps on UI).

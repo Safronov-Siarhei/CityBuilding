@@ -172,8 +172,11 @@ namespace CityBuilder.Campaign
             foreach (var k in _keepClear) Reserve(new Vector2(k.x, k.y), k.z);
         }
 
+        private bool _villageStreets;
+
         private void Streets()
         {
+            _villageStreets = true;
             // the roads out of the square: into the market street, to the fields east and west,
             // up past the church, and lanes between them; then a ring road round the old houses
             Street(new[] { new Vector2(0, -4), new Vector2(0, -12), new Vector2(-3, -24), new Vector2(-6, -44) }, 2.4f, cobble);
@@ -191,6 +194,7 @@ namespace CityBuilder.Campaign
                 ring[i] = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 17f;
             }
             Street(ring, 1.6f, dirt, false, RingY, 0f);
+            _villageStreets = false;
         }
 
         // Every flat layer at its own height, 3 mm apart and more, so no two ever share a depth and
@@ -210,6 +214,8 @@ namespace CityBuilder.Campaign
         /// keep to the curve). The meander fades out at the road's ends, so it still meets the square
         /// and the roads it joins, and near the pins (the bridge, the gate). Returns the line as laid.
         /// </summary>
+        private const float SandSeed = 7.3f;
+
         private Vector2[] Street(Vector2[] line, float width, Material material, bool lane = true, float y = -1f, float wiggle = -1f, bool smooth = true)
         {
             var cobbled = material == cobble;
@@ -222,8 +228,20 @@ namespace CityBuilder.Campaign
             // one continuous ribbon along the curve (separate quads per step left notches on the
             // outside of every bend); dirt roads alternate a hair in height where they cross
             var h = cobbled ? y : y + 0.003f * (_streets.Count % 2);
-            var sand = cobbled && sandStreets;
-            Flat("Street", Ribbon(line, width, h, width * 0.5f), sand ? dirt : material, line[line.Length - 1] - line[0], sand ? 7.3f * _streets.Count : seed);
+            // level 1's sand: the cobbled streets AND the village's own lanes and ring road (not the route's track
+            // through the fields, whose ruts are the point)
+            var sand = sandStreets && (cobbled || _villageStreets);
+            var ribbon = Ribbon(line, width, h, width * 0.5f);
+            if (sand)
+            {
+                // the sand streets drawn as ONE surface (the user, 2026-11-22: the joints showed the separate ribbons):
+                // no ruts or grass ridge along each ribbon (uv far off its middle) and one seed for all, so where
+                // ribbons overlap they show the same world-space sand and the seam is gone
+                var flatUv = new Vector2[ribbon.vertexCount];
+                for (var i = 0; i < flatUv.Length; i++) flatUv[i] = new Vector2(0f, 5f);
+                ribbon.uv = flatUv;
+            }
+            Flat("Street", ribbon, sand ? dirt : material, line[line.Length - 1] - line[0], sand ? SandSeed : seed);
             return line;
         }
 

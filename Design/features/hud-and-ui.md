@@ -330,3 +330,15 @@ https://claude.ai/artifact/DLLxzFesTdktVVR6uSUwD6 (looks).
 **2026-11-20 (the user):** loading screen -- the ship sailed the mirror of the red line (the picture counts y down, the UI up): `LoadingScreen` +sin now. Top bar people chip: the portrait 48 -> 42 px, pivot y 0.42 (it hung below the chip's rim); the green number on it = FREE (idle) people. CONCEPTS shown, waiting for the user: resource chip tap -> parchment note (per-day in/out, net, days left; people: free, places, why none come); booster offer as a round scroll at the screen edge that opens a small card; save window listing the CURRENT map's saves to overwrite + «Новое сохранение».
 
 **2026-11-20 (the user approved concepts 1 and 3, changed 2):** (1) a tap on any top-bar chip opens `UI/ResourceInfoPopup` (built in code, any tap closes): wood/stone/coins/other = gained / spent / net «в день» MEASURED by `Resources/ResourceFlow` (every stored change of `ResourceManager.Add`, crystals via `Wallet.UpgradeCrystalsChanged`; 10 buckets of a tenth of a day, stretched to a day before one has run, reset per scene); food = `FoodOutput.PerDay` of staffed food buildings vs `ComputeDemand(Mouths)`, net, days the stock lasts; people = free hands, free places, contentment, «Новым жителям нужны дома». Chips wired in `ResourceHUDController.WireInfoTaps` (pills take the tap). Keys `#resinfo_*` (sheet «Тексты: интерфейс и меню» rows 393-408). (2) the booster offer: no bottom strip any more -- a round BADGE under the resource bar's middle, right of the running boosters' row (`BoosterHud.RowWidth`), gold ring = its time, pulsing; a tap opens the CARD in the screen's middle over a dim (picture, name, line, «Включить»/«▶ Смотреть», cross); building/placing/tabs no longer hide it, a window does (`BoosterHints.Blocked`). Not compiled by setup yet (the user's Unity was open), not seen.
+
+## Playtest 2026-11-22 (built, not compiled, not seen)
+- World bubbles (herd sign, crystal-mine «3/10», decor gifts, node yield bubble, dungeon level label) now sit at
+  canvas sortingOrder **-5**, under the HUD canvas (0): at 4/5 they drew over the top bar and panels. TRAP: a world
+  overlay canvas must stay below 0.
+- `ResourceInfoPopup` (the top chips' info): closes by itself after `ui_info_close_sec` (7, sheet); the people panel
+  dropped «Довольство» (happiness is off) for «Болеют» (`#resinfo_people_sick`: Infirmary patients in the sandbox, else
+  CitizenManager.SickPopulation) and «Солдаты» (`#resinfo_people_soldiers`, ArmyManager.SoldierCount).
+- The booster row and the offer badge moved from y -150 to -180 (sat on the resource chips).
+- Loading screen: `WideFrom` 1.55 -> 1.72 (a 5:3 tablet took the 20:9 map and lost the compass off the left), and the
+  map's pivot (0,1) so the envelope's overflow goes right/down -- the top-left compass always shows.
+- FPS counter hidden on the Splash scene (`OnSplash`), from the main menu on as before.

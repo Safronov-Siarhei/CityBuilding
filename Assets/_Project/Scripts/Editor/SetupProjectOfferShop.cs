@@ -531,11 +531,11 @@ namespace CityBuilder.EditorTools
             StretchFull((RectTransform)holder.transform);
             holder.AddComponent<SandboxOnly>();
 
-            // the badge: same row as the running boosters (BuildBoosterHud: y -150), a bit bigger, glowing
+            // the badge: same row as the running boosters (BuildBoosterHud: y -180; the user 2026-11-22: -150 sat on the resource chips), a bit bigger, glowing
             const float disc = 104f;
             var badgeRect = new GameObject("Badge", typeof(RectTransform)).GetComponent<RectTransform>();
             badgeRect.SetParent(holder.transform, false);
-            Anchor(badgeRect, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -150f), new Vector2(disc, disc));
+            Anchor(badgeRect, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -180f), new Vector2(disc, disc));
             var badgeGroup = badgeRect.gameObject.AddComponent<CanvasGroup>();
             var glow = CreateImage(badgeRect, "Glow", Color.white);
             glow.sprite = ShopSprite("Glow");
@@ -623,7 +623,7 @@ namespace CityBuilder.EditorTools
             var infoPanel = uiRoot.Find("BuildingInfoPanel");
             if (infoPanel != null) rowGO.transform.SetSiblingIndex(infoPanel.GetSiblingIndex());
             var row = (RectTransform)rowGO.transform;
-            Anchor(row, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -150f), new Vector2(10f, 10f));
+            Anchor(row, new Vector2(0.5f, 1f), new Vector2(0.5f, 0.5f), new Vector2(0f, -180f), new Vector2(10f, 10f));
             rowGO.AddComponent<SandboxOnly>();
             const int count = 11;
             const float disc = 92f;

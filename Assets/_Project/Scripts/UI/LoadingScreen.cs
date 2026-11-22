@@ -24,8 +24,10 @@ namespace CityBuilder.UI
     {
         private const string ResourcePath = "LoadingScreen";
         private const string MapsPath = "LoadingMaps/Map_";
-        // a screen at least this wide for its height takes the Wide map (phones, 16:9 and wider), else the Tall one
-        private const float WideFrom = 1.55f;
+        // a screen at least this wide for its height takes the Wide map (phones, 16:9 and wider), else the Tall one.
+        // 1.72 is halfway (geometric) between the art's 20:9 and 4:3: a 16:10 / 5:3 tablet (Redmi Pad 1.67) took the
+        // Wide map and lost its compass off the left (the user, 2026-11-22)
+        private const float WideFrom = 1.72f;
         private const float MaxReadySeconds = 15f;
         private const float FadeSeconds = 0.25f;
         private const float TipSeconds = 4f;
@@ -101,6 +103,8 @@ namespace CityBuilder.UI
                 map.sprite = _mapSprite;
                 map.color = Color.white;
                 if (mapFitter != null) mapFitter.aspectRatio = _mapSprite.rect.width / _mapSprite.rect.height;
+                // the envelope's overflow goes right and down: the compass rose in the top-left corner always shows
+                map.rectTransform.pivot = new Vector2(0f, 1f);
             }
             _tip = tips.Length > 0 ? Random.Range(0, tips.Length) : 0;
             ShowTip();

@@ -60,14 +60,24 @@ namespace CityBuilder.UI
             label.GetComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.8f);
 
             GraphicsQuality.ShowFpsChanged += Show;
+            UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnSceneChanged;
             Show();
         }
 
-        private void OnDestroy() => GraphicsQuality.ShowFpsChanged -= Show;
+        private void OnDestroy()
+        {
+            GraphicsQuality.ShowFpsChanged -= Show;
+            UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= OnSceneChanged;
+        }
+
+        private void OnSceneChanged(UnityEngine.SceneManagement.Scene from, UnityEngine.SceneManagement.Scene to) => Show();
+
+        /// <summary>The studio's splash is no place for it: from the main menu on (the user, 2026-11-22).</summary>
+        private static bool OnSplash => UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == "Splash";
 
         private void Show()
         {
-            var on = GraphicsQuality.ShowFps;
+            var on = GraphicsQuality.ShowFps && !OnSplash;
             if (_text != null) _text.enabled = on;
             enabled = on;
             _clock = 0f;

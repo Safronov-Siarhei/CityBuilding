@@ -340,9 +340,29 @@ namespace CityBuilder.Maps
             Populate(herd, herd.Total);
             _herds.Add(herd);
             _lastIsland = island;
-            EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_herd_appeared", HerdName(kind)),
+            // only where the player lives (the user, 2026-11-22: a notice for a herd on an empty island read as a herd
+            // that was not there)
+            if (PlayerBuildsOn(island))
+                EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_herd_appeared", HerdName(kind)),
                 EventSeverity.Good, EventGlyph.Star, "Herd" + kind, centre));
             return true;
+        }
+
+        /// <summary>
+        /// The Hunter's Hut's card line: a hunter's chance to hit each kind (the user, 2026-11-22); null for any other building.
+        /// </summary>
+        public static string CardLine(BuildingInstance building)
+        {
+            if (building == null || building.Data == null || building.Data.buildingName != BuildingIds.HunterHut || Config == null) return null;
+            return Localization.Format("#hunt_card_chances", Config.HuntHitPct(0), Config.HuntHitPct(1), Config.HuntHitPct(2));
+        }
+
+        /// <summary>Has the player a building of his own on this island?</summary>
+        private static bool PlayerBuildsOn(int island)
+        {
+            foreach (var b in BuildingInstance.All)
+                if (b != null && !b.IsBot && HousePeople.IslandOf(b) == island) return true;
+            return false;
         }
 
         public static string HerdName(Kind kind) => Localization.Get("#herd_" + kind.ToString().ToLowerInvariant());
@@ -466,7 +486,7 @@ namespace CityBuilder.Maps
             go.transform.SetParent(transform, false);
             _canvas = go.GetComponent<Canvas>();
             _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = 4;   // over the world, under the HUD and the panels (as the crystal mine's bubble)
+            _canvas.sortingOrder = -5;   // over the world, UNDER the HUD (its canvas is at 0; the user 2026-11-22: bubbles drew over the interface)
             var scaler = go.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
@@ -510,6 +530,8 @@ namespace CityBuilder.Maps
         {
             if (herd == null || herd.Leaving) return;
             herd.LitLeft = LitSeconds;
+            // and the camera to it (the user, 2026-11-22)
+            CameraControl.RTSCameraController.Instance?.FocusOn(herd.Centre);
             var left = Mathf.CeilToInt(Mathf.Max(0f, herd.Life));
             EventLogManager.Instance?.Post(GameEvent.At(Localization.Format("#log_herd_status", HerdName(herd.Kind), herd.Alive, herd.Total,
                     $"{left / 60}:{left % 60:00}"), EventSeverity.Good, EventGlyph.Star, "Herd" + herd.Kind, herd.Centre));

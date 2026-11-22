@@ -212,3 +212,8 @@ EditMode `SicknessAndFireTests`; PlayMode `HazardTests`.
 - Mock-up of the wanted look (the user picked variant 1, 2026-11-19): `Design/ui/Fire_Banner_Comp.png` — under the text a plaque, «+ на отстройку:» on its own line, then the numbers and resource icons 4 to a row, wrapping (up to 7 kinds: wood, stone, coins, the three bars...). WAITING for the user's approval; then the plaque gets built in the banner prefab.
 
 **2026-11-20 (the user: a fire out in 2 s, three times):** `FireManager.Arrived` counted a firefighter who merely STOPPED as arrived wherever he stood, so a walk that never started filled and poured at once. Now: arrived within 0.7 m, or stopped within 4 m (a door in the footprint, the water's edge); stopped farther he is sent again once a second and let go after 8 s (`Crew.Stuck`). Not seen.
+
+## 2026-11-22: Infirmary bed buttons
+- The patient's face is clipped by a circle_mask `FaceMask` (0.74 of the button) and the treatment ring is centred on
+  the round button's disc (+3, not +8: round.png is 192x202 with a 10 px shadow) at 0.86 of the button, inside the
+  rim -- the faces stuck out and the ring was thicker on one side (SetupProjectHud, FocusHireBar Healer).

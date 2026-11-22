@@ -283,11 +283,27 @@ namespace CityBuilder.EditorTools
                     picked[i] = lit.gameObject;
                 }
 
-                var face = CreateImage(button.transform, "Face", Color.white);
+                // the round button's disc sits 3 above the rect's centre (round.png is 192x202, a 10 px shadow below)
+                const float discCentre = 3f;
+                Transform faceParent = button.transform;
+                var faceAt = new Vector2(0f, 8f);
+                if (kind == FocusHireBar.Kind.Healer)
+                {
+                    // the patient's face clipped to a circle inside the rim (the user, 2026-11-22: faces stuck out of the circle)
+                    var clip = CreateImage(button.transform, "FaceMask", Color.white);
+                    clip.sprite = SkinSprite("circle_mask");
+                    clip.raycastTarget = false;
+                    Anchor(clip.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, discCentre), new Vector2(size * 0.74f, size * 0.74f));
+                    clip.gameObject.AddComponent<Mask>().showMaskGraphic = false;
+                    faceParent = clip.transform;
+                    faceAt = Vector2.zero;
+                }
+                var face = CreateImage(faceParent, "Face", Color.white);
                 face.sprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{UiTextureImport.IconsFolder}/{portraits[i]}.png");
                 face.preserveAspect = true;
                 face.raycastTarget = false;
-                Anchor(face.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 8f), new Vector2(size * 0.78f, size * 0.78f));
+                Anchor(face.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), faceAt,
+                    kind == FocusHireBar.Kind.Healer ? new Vector2(size * 0.74f, size * 0.74f) : new Vector2(size * 0.78f, size * 0.78f));
                 faces[i] = face;
 
                 if (kind == FocusHireBar.Kind.Healer)
@@ -300,7 +316,7 @@ namespace CityBuilder.EditorTools
                     ring.fillOrigin = (int)Image.Origin360.Top;
                     ring.fillClockwise = true;
                     ring.raycastTarget = false;
-                    Anchor(ring.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, 8f), new Vector2(size * 0.92f, size * 0.92f));
+                    Anchor(ring.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0f, discCentre), new Vector2(size * 0.86f, size * 0.86f));   // on the disc's centre, inside the rim: even all round
                     ring.gameObject.SetActive(false);
                     rings[i] = ring;
                 }

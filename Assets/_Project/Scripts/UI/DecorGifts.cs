@@ -68,7 +68,7 @@ namespace CityBuilder.UI
             go.transform.SetParent(transform, false);
             _canvas = go.GetComponent<Canvas>();
             _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            _canvas.sortingOrder = 4; // over the world, under the HUD and every panel
+            _canvas.sortingOrder = -5; // over the world, UNDER the HUD (its canvas is at 0; the user 2026-11-22: bubbles drew over the interface)
             var scaler = go.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);

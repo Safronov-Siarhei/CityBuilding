@@ -27,6 +27,7 @@ namespace CityBuilder.UI
         private Image _icon;
         private Text _title;
         private Text _store;
+        private float _openFor;
         private readonly List<(Text left, Text right)> _rows = new List<(Text, Text)>();
         private Text _note;
         private int _key = int.MinValue;
@@ -116,6 +117,7 @@ namespace CityBuilder.UI
             _root.SetActive(true);
             Fill();
             _refreshIn = 0.5f;
+            _openFor = 0f;
         }
 
         public void Close()
@@ -129,6 +131,13 @@ namespace CityBuilder.UI
             if (_root == null || !_root.activeSelf) return;
             // a film, a window or a pause takes the HUD: the note goes with it
             if (_chip == null || !_chip.gameObject.activeInHierarchy || Campaign.FilmSkip.FilmShowing)
+            {
+                Close();
+                return;
+            }
+            // it closes by itself after ui_info_close_sec (the user, 2026-11-22: 7 s)
+            _openFor += Time.unscaledDeltaTime;
+            if (BalanceConfig.Instance != null && _openFor >= BalanceConfig.Instance.UiInfoCloseSeconds)
             {
                 Close();
                 return;
@@ -232,8 +241,11 @@ namespace CityBuilder.UI
             var free = Mathf.Max(0, people.Capacity - people.TotalPopulation);
             Row(Localization.Get("#resinfo_people_idle"), people.IdlePopulation.ToString(), people.IdlePopulation > 0 ? UiTheme.Good : UiTheme.Ink);
             Row(Localization.Get("#resinfo_people_room"), free.ToString(), free > 0 ? UiTheme.Good : UiTheme.Danger);
-            var mood = HappinessManager.Instance != null ? HappinessManager.Instance.HappinessPercent : 100;
-            Row(Localization.Get("#resinfo_people_mood"), mood + "%", mood >= 50 ? UiTheme.Good : UiTheme.Danger);
+            // happiness is off: the sick and the soldiers instead (the user, 2026-11-22)
+            var sick = Infirmary.Active && Infirmary.Instance != null ? Infirmary.Instance.Patients.Count : people.SickPopulation;
+            Row(Localization.Get("#resinfo_people_sick"), sick.ToString(), sick > 0 ? UiTheme.Danger : UiTheme.Ink);
+            var soldiers = Combat.ArmyManager.Instance != null ? Combat.ArmyManager.Instance.SoldierCount : 0;
+            Row(Localization.Get("#resinfo_people_soldiers"), soldiers.ToString(), UiTheme.Ink);
             if (free <= 0) _note.text = Localization.Get("#resinfo_people_need_houses");
         }
 

@@ -809,7 +809,9 @@ namespace CityBuilder.EditorTools
 
             // One dot in the middle of the screen (the user, 2026-11-09): the building's centre
             // rides it. Four bars round it read as a frame the building sat off-centre in.
-            var dot = SkinSprite("circle_mask");
+            // its own small anti-aliased dot (Tools/ui/make_skin.py aim_dot; the user, 2026-11-22: the 256 px mask shrunk
+            // to 16 read as angular on a tablet); the mask is the fallback
+            var dot = SkinSprite("aim_dot") ?? SkinSprite("circle_mask");
             var rim = CreateAimBar(root.transform, "DotRim", Vector2.zero, new Vector2(26f, 26f), new Color(0.1f, 0.08f, 0.05f, 0.75f));
             var core = CreateAimBar(root.transform, "Dot", Vector2.zero, new Vector2(16f, 16f), new Color(1f, 1f, 1f, 0.95f));
             rim.sprite = dot;

@@ -122,6 +122,11 @@ namespace CityBuilder.Shop
         public static bool IsOpen => _current != null;
 
         private static BalanceConfig.OfferBundle _pendingShortage;
+        // what the shortage was for, done once the goods are bought and the window is gone -- an upgrade
+        // starts by itself (the user, 2026-11-22)
+        private static System.Action _pendingAfter;
+        private System.Action _afterBought;
+        private bool _shortageBought;
         private OfferSlot _shortageSlot;
         private float _closeIn = -1f;
 
@@ -129,14 +134,16 @@ namespace CityBuilder.Shop
         /// Puts up «Не хватает ресурсов» with this offer (OfferShop.ShortageFor): picking a building the
         /// player cannot afford sends them here; buying closes it and they go on placing the building.
         /// </summary>
-        public static void ShowShortage(BalanceConfig.OfferBundle bundle)
+        public static void ShowShortage(BalanceConfig.OfferBundle bundle, System.Action afterBought = null)
         {
             if (bundle == null || _current != null || OfferShop.Instance == null || !OfferShop.Allowed) return;
             var prefab = UnityEngine.Resources.Load<OfferShopWindow>(ShortagePath);
             if (prefab == null) return;
             _pendingShortage = bundle;
+            _pendingAfter = afterBought;
             _current = Instantiate(prefab);
             _pendingShortage = null;
+            _pendingAfter = null;
         }
 
         /// <summary>Puts the window up on its «Бустеры» tab.</summary>
@@ -188,6 +195,7 @@ namespace CityBuilder.Shop
             if (picture != null) picture.sprite = UnityEngine.Resources.Load<Sprite>(pictureName + ThemeId());
             if (shortage)
             {
+                _afterBought = _pendingAfter;
                 _shortageSlot = new OfferSlot { Bundle = _pendingShortage, EndsAt = (OfferShop.Instance != null ? OfferShop.Instance.Now : 0) + 1e6 };
                 // no timer: the offer lasts as long as the window
                 if (slots.Length > 0 && slots[0].timer != null) slots[0].timer.transform.parent.gameObject.SetActive(false);
@@ -319,6 +327,7 @@ namespace CityBuilder.Shop
             {
                 if (slot != OfferShop.ShortageSlot || _shortageSlot == null || bundle != _shortageSlot.Bundle) return;
                 _shortageSlot.Taken = true;
+                _shortageBought = true;
                 _closeIn = ShortageCloseDelay;
                 slot = 0;
             }
@@ -712,9 +721,12 @@ namespace CityBuilder.Shop
             Boosters.Changed -= Redraw;
             ShowTheInterfaceBehind();
             if (!_closing) Time.timeScale = _timeScaleBefore;
-            if (_current != this) return;
-            _current = null;
-            UnityEngine.Resources.UnloadUnusedAssets();
+            if (_current == this)
+            {
+                _current = null;
+                UnityEngine.Resources.UnloadUnusedAssets();
+            }
+            if (_shortageBought) _afterBought?.Invoke();
         }
     }
 }

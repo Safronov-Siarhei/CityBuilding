@@ -422,7 +422,7 @@ namespace CityBuilder.UI
             var empty = _work.NothingLeftInReach;
             if (_bandRow != null) _bandRow.SetActive(!HidesBand && (converts || !string.IsNullOrEmpty(makes)));
             var food = FoodOutput.IsProducer(_work.BuildingId) || FoodOutput.IsBooster(_work.BuildingId);
-            var healer = Infirmary.CardLine(_building) != null || Remains.CardLine(_building) != null;
+            var healer = Infirmary.CardLine(_building) != null || Remains.CardLine(_building) != null || Maps.Hunting.CardLine(_building) != null;
             var icon = healer || iconLibrary == null ? null : iconLibrary.GetIcon(food ? ResourceType.Food : _work.ProducesResource);
             _bandIconHolder.SetActive(!converts && icon != null);
             _bandIcon.sprite = icon;

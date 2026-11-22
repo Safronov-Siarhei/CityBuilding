@@ -573,3 +573,8 @@ Not checked against the live Play Console -- re-read Google's pages before actin
   - Cheat: Читы -> «Подарок от разработчиков» (shows it now, counts as given when claimed).
 
 **2026-11-20:** the booster hint is no longer a strip over the build menu: a round badge under the resource bar opens a card in the screen's middle (the user's version of Design/ui/Concept_BoosterScroll.png) -- details in hud-and-ui.md; the moments and limits above are unchanged.
+
+## 2026-11-22: shortage -> upgrade
+- `OfferShopWindow.ShowShortage(bundle, afterBought)`: the building card's Upgrade passes a callback; once the shortfall
+  is bought (crystals or ad) and the window is gone, the upgrade starts by itself (`TryUpgrade`) and the card closes.
+  Other shortage callers (placing, research, ruins) pass none.

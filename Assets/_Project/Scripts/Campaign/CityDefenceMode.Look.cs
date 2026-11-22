@@ -111,7 +111,6 @@ namespace CityBuilder.Campaign
                         fine.RemoveRange(k + 1, fine.Count - k - 1);
                         break;
                     }
-                var along = 0f;
                 var start = v.Count;
                 for (var k = 0; k < fine.Count; k++)
                 {
@@ -119,7 +118,6 @@ namespace CityBuilder.Campaign
                     dir.y = 0f;
                     dir = dir.sqrMagnitude > 1e-6f ? dir.normalized : Vector3.forward;
                     var side = new Vector3(dir.z, 0f, -dir.x) * (width * 0.5f);
-                    if (k > 0) along += Flat(fine[k] - fine[k - 1]);
                     var l = fine[k] - side;
                     var r = fine[k] + side;
                     // the middle road a hair over the side ones where they join it (no flicker)
@@ -128,8 +126,10 @@ namespace CityBuilder.Campaign
                     r.y = GroundAt(r) + lift;
                     v.Add(l);
                     v.Add(r);
-                    uv.Add(new Vector2(along / width, -0.5f));
-                    uv.Add(new Vector2(along / width, 0.5f));
+                    // one plain world-space sand, no ruts along each ribbon: where a side road ends on the middle one
+                    // the two read as one road (the user, 2026-11-22: the joints looked like separate pieces)
+                    uv.Add(new Vector2(0f, 5f));
+                    uv.Add(new Vector2(0f, 5f));
                     if (k == 0) continue;
                     var i = start + 2 * k;
                     tri.Add(i - 2); tri.Add(i); tri.Add(i - 1);
@@ -271,6 +271,7 @@ namespace CityBuilder.Campaign
                                     var ear = Instantiate(wheatEars, earsRoot);
                                     ear.transform.SetPositionAndRotation(at, Quaternion.Euler(0f, 90f * Random.Range(0, 4), 0f) * wheatEars.transform.rotation);
                                     ear.transform.localScale = wheatEars.transform.localScale * CineScale;
+                                    Core.SceneryShadows.DisableCasting(ear);   // thin blades in the shadow map flickered (the user, 2026-11-22)
                                     earsLeft--;
                                 }
                             }

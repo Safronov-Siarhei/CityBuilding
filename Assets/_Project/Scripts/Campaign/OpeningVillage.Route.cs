@@ -268,6 +268,8 @@ namespace CityBuilder.Campaign
                             !Inside(poly, c + new Vector2(-half, half)) || !Inside(poly, c + new Vector2(half, -half))) continue;
                         var e = Instantiate(ears, earsRoot);
                         e.name = "Ears";
+                        // no shadows from the ears: thin swaying blades in the shadow map flickered (the user, 2026-11-22)
+                        Core.SceneryShadows.DisableCasting(e);
                         // a quarter turn now and then, so the tiles do not repeat in rows
                         e.transform.SetPositionAndRotation(new Vector3(c.x, 0f, c.y), Quaternion.Euler(0f, 90f * _rnd.Next(4), 0f) * ears.transform.rotation);
                         if (windy != null && Mathf.Repeat(Mathf.Sin(c.x * 12.9898f + c.y * 78.233f) * 43758.55f, 1f) < f.sway)
@@ -286,7 +288,9 @@ namespace CityBuilder.Campaign
             var go = new GameObject("WheatBody", typeof(MeshFilter), typeof(MeshRenderer));
             go.transform.SetParent(_root, false);
             go.GetComponent<MeshFilter>().sharedMesh = mesh;
-            go.GetComponent<MeshRenderer>().sharedMaterial = wheatBody;
+            var bodyRenderer = go.GetComponent<MeshRenderer>();
+            bodyRenderer.sharedMaterial = wheatBody;
+            bodyRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;   // its own shadow on its top flickered
         }
 
         // ------------------------------------------------------------ the forest

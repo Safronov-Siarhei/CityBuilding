@@ -31,6 +31,7 @@ namespace CityBuilder.UI
         private bool _skipping;
         private float _skipFrom, _skipT;
         private bool _released;
+        private bool _groundMade;
 
         private static readonly int RadiusId = Shader.PropertyToID("_Radius");
 
@@ -83,6 +84,12 @@ namespace CityBuilder.UI
             }
 
             if (_data == null) return;
+            // the campaign ground's noise, made under the finished logo rather than before the first frame
+            if (!_groundMade && _t >= _data.fadeOut[0] - 0.6f)
+            {
+                _groundMade = true;
+                Campaign.CineGroundNoise.Ensure();
+            }
             // hold the finished logo on the paper while the menu is still loading
             if (_t + dt >= _data.fadeOut[0] && !menuReady) _t = Mathf.Max(_t, _data.fadeOut[0] - 1e-3f);
             else _t += dt;

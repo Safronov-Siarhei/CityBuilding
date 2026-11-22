@@ -53,7 +53,7 @@ namespace CityBuilder.UI
             var go = new GameObject("NodeYieldBubble", typeof(Canvas), typeof(CanvasScaler));
             var canvas = go.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 5; // over the world, under every panel
+            canvas.sortingOrder = -5; // over the world, UNDER the HUD (its canvas is at 0; the user 2026-11-22: bubbles drew over the interface)
             var scaler = go.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);

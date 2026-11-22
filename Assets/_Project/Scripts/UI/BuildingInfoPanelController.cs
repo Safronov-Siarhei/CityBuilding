@@ -258,9 +258,14 @@ namespace CityBuilder.UI
             if (_currentInstance.NextLevelResearched && _currentInstance.IsOperational
                 && _currentInstance.Site == null && Shop.OfferShop.Instance != null)
             {
-                // too poor for it (sandbox only): «Не хватает ресурсов» with exactly the shortfall; after
-                // buying the player presses Upgrade again (the user, 2026-11-11)
-                Shop.OfferShopWindow.ShowShortage(Shop.OfferShop.Instance.ShortageFor(_currentInstance.GetUpgradeCost()));
+                // too poor for it (sandbox only): «Не хватает ресурсов» with exactly the shortfall; once bought
+                // (ad or crystals) the upgrade starts by itself (the user, 2026-11-22)
+                var building = _currentInstance;
+                Shop.OfferShopWindow.ShowShortage(Shop.OfferShop.Instance.ShortageFor(building.GetUpgradeCost()), () =>
+                {
+                    if (building == null || !building.TryUpgrade()) return;
+                    if (_currentInstance == building) Close();
+                });
             }
             Refresh();
         }
@@ -461,7 +466,8 @@ namespace CityBuilder.UI
         private string FoodLine()
         {
             // the sandbox Лечебница: beds taken, the treatment and the wait (the user, 2026-11-13)
-            var heal = Citizens.Infirmary.CardLine(_currentInstance) ?? Citizens.Remains.CardLine(_currentInstance);
+            var heal = Citizens.Infirmary.CardLine(_currentInstance) ?? Citizens.Remains.CardLine(_currentInstance)
+                       ?? Maps.Hunting.CardLine(_currentInstance);   // the Hunter's Hut: the hit chances
             if (heal != null) return heal;
             var id = _currentProduction != null ? _currentProduction.BuildingId : null;
             if (id == null) return null;

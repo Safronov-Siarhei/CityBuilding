@@ -62,6 +62,15 @@ def rounded(name, w, h, r, fill, edge, edge_w, shadow=0, band=None, band_w=0):
     BORDERS[name] = [r + 2, r + shadow + 2, r + 2, top_border + 2]
 
 
+def aim_dot(name, size):
+    S = size * SS
+    img = Image.new("RGBA", (S, S), (255, 255, 255, 0))
+    m = 2 * SS
+    ImageDraw.Draw(img).ellipse([m, m, S - 1 - m, S - 1 - m], fill="#ffffff")
+    img.resize((size, size), Image.LANCZOS).save(os.path.join(OUT, name + ".png"))
+    BORDERS[name] = [0, 0, 0, 0]
+
+
 def circle(name, size, fill, edge=None, edge_w=0, inner=None, inner_w=0, hole=False):
     S = size * SS
     img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
@@ -126,6 +135,9 @@ def main():
     rounded("bar_fill", 40, 24, 8, "#ffffff", "#ffffff", 0)
     # the round minimap: a mask and the ring drawn over its edge
     circle("circle_mask", 256, "#ffffff")
+    # the placement aim dot (the user, 2026-11-22: the 256 mask shrunk to 16 px read as angular on a tablet):
+    # small, so the screen's bilinear filter has few texels to skip, with a clear margin round the anti-aliased edge
+    aim_dot("aim_dot", 32)
     circle("minimap_ring", 256, None, edge=WOOD_EDGE, edge_w=8, inner=GOLD, inner_w=6, hole=True)
     # the event feed's round icon: a parchment disc in a dark wooden track, the white ring that
     # fills that track (tinted by the event, drained radially as its time runs out), and the

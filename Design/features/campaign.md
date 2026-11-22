@@ -1151,3 +1151,13 @@ the layout is the same. Seen on the Redmi Pad, 40 fps.
 **Mission 2 perf (2026-11-21):** the darkness draws without the depth texture (`_NoDepth`, ground plane = GridManager
 GroundHeight) -- ~2 ms; the FPS counter survives the scenes' canvas sweep (Intro/Capital/SupportOfferWindow skip
 FpsCounter). Redmi Pad ~40 fps in play; Low tier: NO SUN SHADOWS in mission 2 (the user, 2026-11-21; `NoShadowsOnLow`) -> 54-55 fps in play.
+
+## Playtest 2026-11-22 (built, not compiled, not seen)
+- Minimap tap does nothing in the campaign (`MinimapHomeTap`: CityDefenceMode.IsActive or a MissionOne present).
+- Wheat: the ear tiles (mission 1 and 2) and mission 1's WheatBody cast no shadows -- the thin swaying blades and
+  the raised body's own shadow flickered.
+- Sand roads: mission 1's sand streets (cobble streets AND the village lanes + ring while `sandStreets`) and
+  mission 2's three sand roads are drawn as one plain world-space sand (uv (0,5) = no ruts/grass ridge, one seed):
+  overlapping ribbons now read as one road instead of separate pieces. The route's track keeps its ruts.
+- `CineGroundNoise` is no longer built before the first scene: on `sceneLoaded` of any non-Splash scene, or by the
+  splash under its finished logo (the user: a long blank screen before the studio logo).

@@ -18,8 +18,17 @@ namespace CityBuilder.Campaign
         private const int PerCell = 8;     // texels a cell at the first octave: the fourth octave is one texel a cell
         private static Texture2D _tex;
 
+        // Not before the first scene any more (the user, 2026-11-22: a long blank screen before the studio logo): the
+        // fbm tile (a million lerps) and the painted tiles are made while the splash holds its finished logo
+        // (SplashInk), or as any other scene loads -- whichever comes first; Ensure is cheap once done.
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void Boot() => Ensure();
+        private static void Boot()
+        {
+            UnityEngine.SceneManagement.SceneManager.sceneLoaded += (scene, mode) =>
+            {
+                if (scene.name != "Splash") Ensure();
+            };
+        }
 
 #if UNITY_EDITOR
         [UnityEditor.InitializeOnLoadMethod]

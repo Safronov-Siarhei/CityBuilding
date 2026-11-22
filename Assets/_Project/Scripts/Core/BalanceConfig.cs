@@ -674,6 +674,7 @@ namespace CityBuilder.Core
         [SerializeField] private float shopBonusChance = 0.15f;
         [SerializeField] private float shopBonusMinSeconds = 300f;
         [SerializeField] private float shopNoticeSeconds = 30f;
+        [SerializeField] private float uiInfoCloseSeconds = 7f;
         [SerializeField] private float shopStarterDelaySeconds = 120f;
         [SerializeField] private float shopAdStubSeconds = 2f;
         // the boosters tab's keys («Песочница (Лавка): Бустеры», the user 2026-11-12)
@@ -1609,6 +1610,8 @@ namespace CityBuilder.Core
         public float ShopBonusChance => shopBonusChance;
         public float ShopBonusMinSeconds => shopBonusMinSeconds;
         public float ShopNoticeSeconds => shopNoticeSeconds;
+        /// <summary>A top-bar chip's info panel closes by itself after this (ui_info_close_sec; the user, 2026-11-22: 7).</summary>
+        public float UiInfoCloseSeconds => uiInfoCloseSeconds;
         public float ShopStarterDelaySeconds => shopStarterDelaySeconds;
         public float ShopAdStubSeconds => shopAdStubSeconds;
         public int BoosterSlots => Mathf.Max(1, boosterSlots);
@@ -2982,6 +2985,7 @@ namespace CityBuilder.Core
             shopBonusChance = Read(economy, "shop_bonus_chance", shopBonusChance);
             shopBonusMinSeconds = Read(economy, "shop_bonus_min_seconds", shopBonusMinSeconds);
             shopNoticeSeconds = Read(economy, "shop_notice_seconds", shopNoticeSeconds);
+            uiInfoCloseSeconds = Read(economy, "ui_info_close_sec", uiInfoCloseSeconds);
             shopStarterDelaySeconds = Read(economy, "shop_starter_delay_seconds", shopStarterDelaySeconds);
             shopAdStubSeconds = Read(economy, "shop_ad_stub_seconds", shopAdStubSeconds);
             boosterSlots = Mathf.RoundToInt(Read(economy, "booster_slots", boosterSlots));
