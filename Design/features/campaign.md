@@ -1180,7 +1180,7 @@ FpsCounter). Redmi Pad ~40 fps in play; Low tier: NO SUN SHADOWS in mission 2 (t
 - The Captain goes WITH Ардан.
 - The King NOTICES Ардан's amulet. The King wears the same stone: the «son» line is for later, with no words now.
 
-**Storyboard draft (~60 s), lines to be approved:**
+**Storyboard (~60 s): APPROVED by the user 2026-11-22 («Утверждаю»), lines included. Next: renders of the cage cart and the glade set.**
 1. Wide (5 s): the burnt town, soldiers gather; the King on his white horse rides at a walk onto the square, with his retinue.
 2. Square (10 s): Ардан and the Captain on foot; the Captain holds his side (the champion's blow).
    - King: «Я выступил, как только прибыл гонец. Но такого я не ждал… Город уничтожен. Что это за чудовища?»
@@ -1202,6 +1202,6 @@ FpsCounter). Redmi Pad ~40 fps in play; Low tier: NO SUN SHADOWS in mission 2 (t
 **Assets:**
 - Have: CineKing + CineKingRide, the cavalry with horses, Ардан, the Captain, M2Guard, the monsters, CineElder, mission 2's town with ruins, and the cages of the orc camps (for the glade).
 - New, renders first:
-  - the cage cart;
+  - the cage cart: `Tools/blender/cinematic/cage_cart.py` CineCageCart (four spoked wheels, shafts, driver's bench; a timber-framed cage with iron bars, a door with a chain and padlock, a plank roof with iron straps, straw, the King's blue pennon, a lantern; grown by SET_SCALE x 0.55 to the figures). v1 renders SENT 2026-11-22, not approved yet; the cart horses in the render are the cavalry's caparisoned warhorses;
   - the glade set;
   - anims: the King talking from the saddle, the monster in the cage, prisoners in cages, volunteers stepping out, the amulet close-up.
