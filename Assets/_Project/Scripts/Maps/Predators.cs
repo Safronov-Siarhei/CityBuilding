@@ -71,6 +71,8 @@ namespace CityBuilder.Maps
         private readonly List<Raid> _raids = new List<Raid>();
         private float _clock, _next = -1f;
         private bool _cavesMade;
+        private float _caveRetry;
+        private const float CaveRetrySeconds = 5f;
         private OrcUnit _hunterBlow;
 
         public IReadOnlyList<Cave> Caves => _caves;
@@ -100,7 +102,11 @@ namespace CityBuilder.Maps
             if (dt <= 0f || !Active || Config == null || GridManager.Instance == null || MeshMapApplier.Instance == null
                 || Hunting.Instance == null) return;
             _clock += dt;
-            if (!_cavesMade) _cavesMade = MakeCaves();
+            if (!_cavesMade && (_caveRetry -= dt) <= 0f)
+            {
+                _caveRetry = CaveRetrySeconds;
+                _cavesMade = MakeCaves();
+            }
             if (_next < 0f) _next = Config.PredFirstAttackSeconds;
             if (_cavesMade && _clock >= _next)
                 _next = _clock + (Attack() ? Random.Range(Config.PredAttackMinSeconds, Mathf.Max(Config.PredAttackMinSeconds, Config.PredAttackMaxSeconds)) : RetrySeconds);
@@ -140,10 +146,17 @@ namespace CityBuilder.Maps
                 _caves.Add(new Cave { Island = island, Position = at, Yaw = yaw });
             }
             foreach (var cave in _caves) Raise(cave);
-            return true;
+            // none found (the NavMesh not baked yet): again in a moment
+            return _caves.Count > 0;
         }
 
-        /// <summary>A flat free cell at the island's edge (water within two cells), away from buildings, the mouth turned inland.</summary>
+        /// <summary>
+        /// A spot near the island's edge for its cave (the user, 2026-11-22: not on the beach, not behind the mountains):
+        /// flat free GRASS (no sand under it or before its mouth), the sea 3..`CaveEdgeCells` cells away, away from
+        /// buildings, the mouth turned inland onto land -- and from before the mouth the beasts can walk (NavMesh) to most
+        /// of the island and to the Town Hall on the player's island. No such spot on a map without the archipelago's
+        /// grass: the same without the grass test.
+        /// </summary>
         private bool FindCaveSpot(int island, out Vector3 at, out float yaw)
         {
             at = Vector3.zero;
@@ -151,28 +164,102 @@ namespace CityBuilder.Maps
             var cells = Hunting.Instance.CellsOf(island);
             if (cells == null || cells.Count == 0) return false;
             var grid = GridManager.Instance;
-            var map = MeshMapApplier.Instance;
             var centre = Vector3.zero;
             foreach (var c in cells) centre += grid.GetFootprintCenterWorld(c, Vector2Int.one);
             centre /= cells.Count;
-            for (var t = 0; t < 200; t++)
+            var anchors = Anchors(island, cells, out var hall);
+            return Search(cells, centre, anchors, hall, true, out at, out yaw) || Search(cells, centre, anchors, hall, false, out at, out yaw);
+        }
+
+        private const int CaveEdgeCells = 5, CaveTries = 300, AnchorCount = 6;
+
+        private bool Search(List<Vector2Int> cells, Vector3 centre, List<Vector3> anchors, bool hall, bool grass, out Vector3 at, out float yaw)
+        {
+            at = Vector3.zero;
+            yaw = 0f;
+            var grid = GridManager.Instance;
+            var map = MeshMapApplier.Instance;
+            for (var t = 0; t < CaveTries; t++)
             {
                 var cell = cells[Random.Range(0, cells.Count)];
-                var shore = false;
-                for (var dz = -2; dz <= 2 && !shore; dz++)
-                for (var dx = -2; dx <= 2 && !shore; dx++)
-                    if (map.IsWaterCell(cell + new Vector2Int(dx, dz))) shore = true;
-                if (!shore) continue;
+                var sea = WaterWithin(map, cell, CaveEdgeCells);
+                if (sea < 3) continue;   // none in reach: not the edge; nearer than 3: the beach
                 var p = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
                 if (!Hunting.OnLand(p, out var y) || !Hunting.FarFromBuildings(p, CaveGapCells * Cell)) continue;
                 var inland = (centre - p).WithY(0f);
+                if (inland.sqrMagnitude < 0.01f) continue;
+                var front = p + inland.normalized * Cell;
                 // the mouth must open onto land, not the water it backs onto
-                if (inland.sqrMagnitude < 0.01f || !Hunting.OnLand(p + inland.normalized * Cell, out _)) continue;
+                if (!Hunting.OnLand(front, out var frontY)) continue;
+                if (grass && (!OnGrass(p) || !OnGrass(front))) continue;
+                if (!Reaches(new Vector3(front.x, frontY, front.z), anchors, hall)) continue;
                 at = new Vector3(p.x, y, p.z);
                 yaw = Quaternion.LookRotation(inland).eulerAngles.y;
                 return true;
             }
             return false;
+        }
+
+        /// <summary>How many cells away the nearest water is (a ring search up to `max`); max + 1 when none.</summary>
+        private static int WaterWithin(MeshMapApplier map, Vector2Int cell, int max)
+        {
+            for (var r = 1; r <= max; r++)
+            for (var dz = -r; dz <= r; dz++)
+            for (var dx = -r; dx <= r; dx++)
+            {
+                if (Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dz)) != r) continue;
+                if (map.IsWaterCell(cell + new Vector2Int(dx, dz))) return r;
+            }
+            return max + 1;
+        }
+
+        /// <summary>The archipelago's grass under this point (not sand, rock, a cliff).</summary>
+        private static bool OnGrass(Vector3 p)
+        {
+            var map = MeshMapApplier.Instance;
+            var ray = new Ray(new Vector3(p.x, p.y + 50f, p.z), Vector3.down);
+            return map.TryRaycastGround(ray, out var hit) && hit.collider is MeshCollider
+                   && Archipelago.ArchipelagoMeshes.IsGrassUv(hit.textureCoord);
+        }
+
+        /// <summary>Points of the island the beasts must be able to walk to from the cave: the Town Hall's door on the player's island, a few open spots of its land.</summary>
+        private static List<Vector3> Anchors(int island, List<Vector2Int> cells, out bool hallFirst)
+        {
+            var anchors = new List<Vector3>();
+            hallFirst = false;
+            var hall = BuildingInstance.TownHall;
+            if (hall != null && !hall.IsBot && HousePeople.IslandOf(hall) == island)
+            {
+                var visuals = CitizenVisualsManager.Instance;
+                anchors.Add(visuals != null ? visuals.DoorOf(hall) : hall.transform.position);
+                hallFirst = true;
+            }
+            var grid = GridManager.Instance;
+            for (var t = 0; t < 60 && anchors.Count < AnchorCount; t++)
+            {
+                var p = grid.GetFootprintCenterWorld(cells[Random.Range(0, cells.Count)], Vector2Int.one);
+                if (Hunting.OnLand(p, out var y)) anchors.Add(new Vector3(p.x, y, p.z));
+            }
+            return anchors;
+        }
+
+        private static readonly UnityEngine.AI.NavMeshPath Path = new UnityEngine.AI.NavMeshPath();
+
+        /// <summary>From `from` a full NavMesh path to the Town Hall (if it is an anchor) and to most of the others.</summary>
+        private static bool Reaches(Vector3 from, List<Vector3> anchors, bool hall)
+        {
+            if (anchors.Count == 0) return true;
+            if (!UnityEngine.AI.NavMesh.SamplePosition(from, out var start, Cell, UnityEngine.AI.NavMesh.AllAreas)) return false;
+            var reached = 0;
+            for (var i = 0; i < anchors.Count; i++)
+            {
+                var ok = UnityEngine.AI.NavMesh.SamplePosition(anchors[i], out var end, Cell * 1.5f, UnityEngine.AI.NavMesh.AllAreas)
+                         && UnityEngine.AI.NavMesh.CalculatePath(start.position, end.position, UnityEngine.AI.NavMesh.AllAreas, Path)
+                         && Path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete;
+                if (ok) reached++;
+                else if (i == 0 && hall) return false;
+            }
+            return reached * 3 >= anchors.Count * 2;
         }
 
         private void Raise(Cave cave)
@@ -276,6 +363,8 @@ namespace CityBuilder.Maps
             {
                 var p = grid.GetFootprintCenterWorld(cells[Random.Range(0, cells.Count)], Vector2Int.one);
                 if (!Hunting.OnLand(p, out var y)) continue;
+                // walkable to the cave, so not behind the mountains (the user, 2026-11-22)
+                if (cave.Root != null && !Walkable(new Vector3(p.x, y, p.z), cave.Position)) continue;
                 var near = NearestBuilding(p);
                 if (near >= gap)
                 {
@@ -286,6 +375,15 @@ namespace CityBuilder.Maps
             }
             if (NearestBuilding(cave.Position) > best) at = cave.Position;
             return true;
+        }
+
+        /// <summary>A full NavMesh path between the two points.</summary>
+        private static bool Walkable(Vector3 a, Vector3 b)
+        {
+            return UnityEngine.AI.NavMesh.SamplePosition(a, out var from, Cell, UnityEngine.AI.NavMesh.AllAreas)
+                   && UnityEngine.AI.NavMesh.SamplePosition(b, out var to, Cell * 1.5f, UnityEngine.AI.NavMesh.AllAreas)
+                   && UnityEngine.AI.NavMesh.CalculatePath(from.position, to.position, UnityEngine.AI.NavMesh.AllAreas, Path)
+                   && Path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete;
         }
 
         private static float NearestBuilding(Vector3 p)
