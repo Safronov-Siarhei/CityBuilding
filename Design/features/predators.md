@@ -37,7 +37,9 @@
 > - Cheats «Орки» tab: «Хищники сейчас» (`Predators.AttackNow`) + the countdown.
 > - Numbers: `pred_*` + `mon_pred_*` on «Еда и голод» (rows 68-97), texts on «Тексты: журнал событий» (116-121).
 >
-> **Traps:** a new OrcKind goes at the END of the enum (saves store the int). `IsMonster` now includes predators --
+> **Traps:** never `new NavMeshPath()` in a field initializer of a MonoBehaviour (static ones too): Unity throws
+> «InitializeNavMeshPath is not allowed... from a MonoBehaviour constructor» and the class is dead -- no cave was ever set
+> (2026-11-22); `Path` is made on first use. a new OrcKind goes at the END of the enum (saves store the int). `IsMonster` now includes predators --
 > PiggyRunner / InvasionWaves treat them as monsters (no orc-kill task). The cave's mouth is Blender -y, turned 180 like
 > the figures. Hunters' herd logic is skipped while a predator is on their island.
 

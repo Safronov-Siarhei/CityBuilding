@@ -243,7 +243,10 @@ namespace CityBuilder.Maps
             return anchors;
         }
 
-        private static readonly UnityEngine.AI.NavMeshPath Path = new UnityEngine.AI.NavMeshPath();
+        // made on first use, never in a field initializer: Unity forbids a NavMeshPath while the MonoBehaviour is being
+        // constructed (the user's console, 2026-11-22 -- it broke the whole class and no cave was ever set)
+        private static UnityEngine.AI.NavMeshPath _path;
+        private static UnityEngine.AI.NavMeshPath Path => _path ??= new UnityEngine.AI.NavMeshPath();
 
         /// <summary>From `from` a full NavMesh path to the Town Hall (if it is an anchor) and to most of the others.</summary>
         private static bool Reaches(Vector3 from, List<Vector3> anchors, bool hall)
