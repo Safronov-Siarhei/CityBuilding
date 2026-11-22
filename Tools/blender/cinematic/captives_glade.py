@@ -221,12 +221,14 @@ def _trees():
     return out
 
 
-def make():
+def make(camp=True):
+    """The set; `camp` False leaves out the game's static orcs (CAMP) -- the animated take (glade_anim.py) puts
+    cine monsters there instead."""
     import bpy
     objs = [fg.install_static(OBJ, glade(), scale=1.0)]
     for name, x, y, turn, k in DECOR:
         objs.append(_copy(name, x, y, turn, k))
-    for name, x, y, turn, k in CAMP:
+    for name, x, y, turn, k in (CAMP if camp else []):
         objs.append(_copy(name, x, y, turn, k))
     for name, x, y, turn, k in _trees():
         objs.append(_copy(name, x, y, turn, S * k))

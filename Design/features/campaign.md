@@ -1218,8 +1218,20 @@ FpsCounter). Redmi Pad ~40 fps in play; Low tier: NO SUN SHADOWS in mission 2 (t
      - Videos SENT 2026-11-22; **APPROVED by the user 2026-11-22**.
      - The volunteers are lookouts with spears: the storyboard's ARCHER has no cine model yet.
      - TRAP: cavalry lances at a halt need `lance_up` (the fist hanging by the horse's shoulder). `ra.seated`'s arm lays the lance almost flat across everyone.
-  - The cine CHIEF `CineOrcChief` (orcs_cast.chief, scale 1.4: the game's approved OrcChief on the cine rig -- harness, fur mantle + rust cloak, gold-rimmed horned pauldrons, bone-horn crown, topknot, greataxe upright in the right fist, trophy pole with banner and skull). Renders SENT 2026-11-22 (`orcs_cast.py -- render_chief <out>`), not approved yet.
-  - Still to do:
-    - group 3: the glade (prisoners in the cages, monsters about the camp, the chief) -- this needs cine versions of the chief and the game orcs. For the film the chief and the extra monsters will need cine versions on the rig (now the game's static models).
+  - The cine CHIEF `CineOrcChief` (orcs_cast.chief, scale 1.4: the game's approved OrcChief on the cine rig -- harness, fur mantle + rust cloak, gold-rimmed horned pauldrons, bone-horn crown, topknot, greataxe upright in the right fist, trophy pole with banner and skull). Renders SENT 2026-11-22 (`orcs_cast.py -- render_chief <out>`); **APPROVED by the user 2026-11-22**.
+  3. `glade_anim.py` «Поляна» (shot 6, 8 s, ONE shot): the camera comes in along the track and pushes in on the old man's face between the bars. Rendering for the user 2026-11-22.
+     - The set is `captives_glade.make(camp=False)`: the game's static orcs are out, 8 cine monsters are in, plus the 2 seated at the fire (decor).
+     - The monsters:
+       - the CHIEF raises his greataxe and bellows at the cages (3.0-4.6 s);
+       - the champion breathes;
+       - a spearman paces along the cages' fronts, another jabs at the first cage;
+       - a torchbearer walks in to the fire;
+       - the others are idle.
+     - The prisoners:
+       - the peasant grips the bars and flinches at the jabs;
+       - the woman crouches holding the girl;
+       - the merchant sits with his head in his hands, the boy rubs his eyes;
+       - the OLD MAN stands by the front bars, the left hand on a bar, the staff low, head bowed; he lifts his head at 6.0 s.
+     - TRAP: `ea.idle` carries the staff's `aim.*` keys, which `ka.apply` rejects. The elder rig needs `bend=ea.stoop` (not `elder.stoop`). For the film the chief and the extra monsters will need cine versions on the rig (now the game's static models).
     TRAP: importing orccage1.py (or kit.borrow of it) runs its main() and orcstone1's, which SAVE the open .blend -- the repo copy Blender/Buildings-Size1-Models.blend got overwritten once and was restored from the Drive by blend_sync. captives_glade loads them through `_quiet` (main() cut out), and renders run on a COPY of the .blend;
   - anims: the King talking from the saddle, the monster in the cage, prisoners in cages, volunteers stepping out, the amulet close-up.
