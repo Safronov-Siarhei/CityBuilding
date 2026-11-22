@@ -22,7 +22,7 @@ for name in NAMES:
     sc=bpy.context.scene
     cam=bpy.data.objects.new('cam',bpy.data.cameras.new('cam')); sc.collection.objects.link(cam)
     cam.data.type='ORTHO'; cam.data.ortho_scale=size*1.25
-    for yaw,tag in ((30,'a'),(150,'b'),(-80,'c'),(80,'d'),(-150,'e')):
+    for yaw,tag in ((30,'a'),(150,'b'),(-80,'c'),(80,'d'),(-150,'e'),(0,'f')):   # f: straight on, as the game camera
         d=Vector((math.sin(math.radians(yaw))*math.cos(math.radians(50)), -math.cos(math.radians(yaw))*math.cos(math.radians(50)), math.sin(math.radians(50))))
         cam.location=ctr+d*size*4
         cam.rotation_euler=(-d).to_track_quat('-Z','Y').to_euler()

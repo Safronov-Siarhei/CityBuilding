@@ -114,3 +114,4 @@
 - [Studio logo + splash (2026-11-21)](project_studio_splash.md) — Depigo Games logo kit committed; «Чернильное перо» splash v2 (7.6 s, NO sound) BUILT as first scene Splash.unity (not seen); edit via (more in file)
 - [Hunting (2026-11-21)](project_hunting.md) — sandbox herds + Hunter's Hut BUILT (Maps/Hunting.cs), not seen
 - [Playtest 2026-11-22](project_pending_2026_11_22.md) — 17 items done in code, NOT compiled (no build asked); setup x2 pending
+- [Predators (2026-11-22)](project_predators.md) — wolves/bears on 3 cave islands; DESIGN AGREED, card predators.md; concepts next, not built
