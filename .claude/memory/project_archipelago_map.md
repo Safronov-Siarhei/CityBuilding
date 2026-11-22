@@ -47,3 +47,5 @@ Related: [[project_maps_roadmap]], [[project_fog_clouds]], [[project_constructio
 **2026-10-31 later:** denser forest (1 tree/6 forest cells, 600-3000) and boulders (1/5 stony cells, 250-900, 30% scattered) — keys archipelago_* in economy; SceneryStreamer draws them only in 24-cell squares near the camera. Not yet measured on a phone.
 - SHIPYARD MODEL «Стапель» (2026-11-12): user rejected the old bare slipway, chose concept B, liked the building but called the ship «скучный» -> staged ship() (ribs/band/stern castle/gun ports/gold rail); APPROVED and IN THE GAME same day (Tools/blender/shipyard1.py via ships.py, 5 levels + icons), not seen in the game.
 - LIGHTHOUSE levels 2-5 (lighthouse1.py) APPROVED and IN THE GAME 2026-11-12 with icons; TaxHouse L2-5 icons too. Every active building now has 5 level icons.
+
+2026-11-22 (the user): nothing is built under the fog -- the footprint must be open RIGHT NOW (citizens, heroes, ships, and now player soldiers clear it only while there); the hero-on-island rule stays (variant A). Card archipelago-and-ships.md «Building under the fog».

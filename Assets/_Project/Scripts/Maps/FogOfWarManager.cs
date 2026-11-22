@@ -14,7 +14,7 @@ namespace CityBuilder.Maps
     /// Buildings permanently clear a radius around themselves (BuildingData.fogRevealRadius,
     /// applied from BuildingInstance.Initialize -- the single hook point for both fresh placement
     /// and save/load, so no separate persistence is needed here). Citizens temporarily clear a
-    /// radius around themselves that closes back up once they move on.
+    /// radius around themselves that closes back up once they move on; so do the player's soldiers (2026-11-22).
     ///
     /// **How it looks.** It used to be a flat black lid hovering 5 m over the map, cut to the 1 m
     /// grid: the explored land read as an island floating in a void, its edge was a staircase,
@@ -444,6 +444,15 @@ namespace CityBuilder.Maps
                     if (mapApplierForFog != null && mapApplierForFog.IsWaterCell(cell) && !mapApplierForFog.IsWaterPlacementZone(cell)) continue;
                     RevealCircleInto(fresh, cell, CitizenRevealRadiusCells, _width, _depth);
                 }
+            }
+            // the player's soldiers too, the citizens' radius (the user, 2026-11-22: «это такие же персонажи как жители»);
+            // never the bot's garrison, nor one aboard or put away
+            foreach (var soldier in Combat.SoldierUnit.All)
+            {
+                if (soldier == null || !soldier.gameObject.activeInHierarchy || soldier.CurrentHealth <= 0 || Bot.BotGarrison.Owns(soldier)) continue;
+                var cell = grid.WorldToCell(soldier.transform.position);
+                if (mapApplierForFog != null && mapApplierForFog.IsWaterCell(cell) && !mapApplierForFog.IsWaterPlacementZone(cell)) continue;
+                RevealCircleInto(fresh, cell, CitizenRevealRadiusCells, _width, _depth);
             }
             foreach (var walker in _walkers)
             {

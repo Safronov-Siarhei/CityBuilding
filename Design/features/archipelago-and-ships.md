@@ -333,6 +333,18 @@ Installed: ships.py MODELS from `lighthouse1.LEVELS` (L5 in GILDED), exported, p
   the scout; only if wanted for its own sake). Mirrored islands.
 - Bot settlement, monsters/dungeons on islands, the orc base redo.
 
+## Building under the fog (the user, 2026-11-22) -- in the code, not seen
+- Nothing is placed under the fog: EVERY cell of the footprint must be open to view RIGHT NOW
+  (`BuildingPlacer.InView` -> `FogOfWarManager.IsCellRevealed` = a building's permanent clearing OR a villager,
+  hero, ship or -- new -- a player's soldier standing near; they clear only while there, the fog closes behind
+  them and the place is shut again). `#place_blocked_fog` «Сначала разведайте это место». Exempt: the Town
+  Hall and the start chain (`IsPlacingMandatoryBuilding`), any map with no fog on. Roads/fences piece by piece.
+- Player soldiers clear the fog round themselves with the citizens' radius (7 cells; `UpdateCitizenReveal`
+  walks `SoldierUnit.All`, never `BotGarrison.Owns`, none aboard/put away, none standing in deep water).
+- The user picked variant A: the hero rule below STAYS on top of the fog rule (scout + land a hero for the
+  first building on an island). Points 2-4 of that talk: nothing changes (buildings clear fog round
+  themselves; residents per island as is; stores shared across the archipelago).
+
 ## Rules of round 8 (the user, 2026-11-02) -- BUILT, not seen, untested
 - An island with NONE of the player's buildings takes a building only while a living hero stands on
   it (`BuildingPlacer.IslandOpenToBuild`, rechecked twice a second while placing; the Town Hall and

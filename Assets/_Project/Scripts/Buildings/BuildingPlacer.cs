@@ -804,6 +804,7 @@ namespace CityBuilder.Buildings
                 if (OnePerIslandTaken(cell, footprint)) return Localization.Get("#place_blocked_one_per_island");
                 if (IsTownHall(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return Localization.Get("#place_blocked_start_zone");
                 if (OreDeposit.KindForBuilding(_selectedBuilding.buildingName).HasValue) return Localization.Get("#place_blocked_vein");
+                if (!InView(cell, footprint)) return Localization.Get("#place_blocked_fog");
                 var mapApplier = MeshMapApplier.Instance;
                 if (mapApplier != null && !IslandOpenToBuild(mapApplier, cell, footprint)) return Localization.Get("#place_blocked_no_hero");
                 if (mapApplier != null && !FoodSiteAllowed(mapApplier, cell, footprint))
@@ -818,6 +819,21 @@ namespace CityBuilder.Buildings
             if (!canAfford) return Localization.Format("#place_blocked_cost", MissingResourcesText());
 
             return string.Empty;
+        }
+
+        /// <summary>
+        /// Nothing goes up under the fog (the user, 2026-11-22): every cell of the footprint open to view RIGHT NOW --
+        /// a building's own clearing, or a villager, hero or ship standing near; when they walk off and the fog closes
+        /// again, the place is shut again. The Town Hall and the start chain are exempt; so is a map with no fog on.
+        /// </summary>
+        private bool InView(Vector2Int cell, Vector2Int footprint)
+        {
+            var fog = FogOfWarManager.Instance;
+            if (fog == null || !fog.IsActive || IsPlacingMandatoryBuilding) return true;
+            for (var x = 0; x < footprint.x; x++)
+            for (var z = 0; z < footprint.y; z++)
+                if (!fog.IsCellRevealed(cell + new Vector2Int(x, z))) return false;
+            return true;
         }
 
         /// <summary>
@@ -1084,6 +1100,8 @@ namespace CityBuilder.Buildings
             // the mandatory lighthouse goes in the same yellow zone, anywhere on its land -- not only
             // at the shore (the user, 2026-11-02)
             if (wholeFootprintRules && IsPlacingLighthouse && IsLighthouse(_selectedBuilding) && !StartZone.Allows(cell, footprint)) return false;
+
+            if (!InView(cell, footprint)) return false;
 
             var mapApplier = MeshMapApplier.Instance;
             if (mapApplier == null) return true;

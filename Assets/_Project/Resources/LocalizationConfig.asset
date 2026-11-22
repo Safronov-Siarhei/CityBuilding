@@ -3417,6 +3417,11 @@ MonoBehaviour:
     - "\u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0441\u0430\u0434\u0438\u0442\u0435
       \u043D\u0430 \u043E\u0441\u0442\u0440\u043E\u0432 \u0433\u0435\u0440\u043E\u044F"
     - Land a hero on this island first
+  - key: '#place_blocked_fog'
+    values:
+    - "\u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u0440\u0430\u0437\u0432\u0435\u0434\u0430\u0439\u0442\u0435
+      \u044D\u0442\u043E \u043C\u0435\u0441\u0442\u043E"
+    - Scout this place first
   - key: '#place_blocked_inland'
     values:
     - "\u041D\u0435 \u0443 \u0441\u0430\u043C\u043E\u0439 \u0432\u043E\u0434\u044B"
@@ -4318,6 +4323,28 @@ MonoBehaviour:
     values:
     - "\u041A\u0430\u0431\u0430\u043D \u0443\u0431\u0438\u043B \u043E\u0445\u043E\u0442\u043D\u0438\u043A\u0430"
     - A boar has killed a hunter
+  - key: '#herd_hare'
+    values:
+    - "\u0437\u0430\u0439\u0446\u0435\u0432"
+    - hares
+  - key: '#herd_deer'
+    values:
+    - "\u043E\u043B\u0435\u043D\u0435\u0439"
+    - deer
+  - key: '#herd_boar'
+    values:
+    - "\u043A\u0430\u0431\u0430\u043D\u043E\u0432"
+    - boars
+  - key: '#log_fire_torch'
+    values:
+    - "\u041E\u0440\u043A-\u0444\u0430\u043A\u0435\u043B\u044C\u0449\u0438\u043A
+      \u043F\u043E\u0434\u0436\u0451\u0433: {0}"
+    - 'An orc torchbearer set fire to: {0}'
+  - key: '#log_fire_lightning'
+    values:
+    - "\u041C\u043E\u043B\u043D\u0438\u044F \u0443\u0434\u0430\u0440\u0438\u043B\u0430
+      \u0432 {0}!"
+    - Lightning struck {0}!
   - key: '#log_pred_wolves'
     values:
     - "\u041D\u0430 \u043E\u0441\u0442\u0440\u043E\u0432\u0435 \u043F\u043E\u044F\u0432\u0438\u043B\u0438\u0441\u044C
@@ -4347,28 +4374,6 @@ MonoBehaviour:
     values:
     - "\u0425\u0438\u0449\u043D\u0438\u043A \u0443\u0431\u0438\u043B \u043E\u0445\u043E\u0442\u043D\u0438\u043A\u0430"
     - A predator has killed a hunter
-  - key: '#herd_hare'
-    values:
-    - "\u0437\u0430\u0439\u0446\u0435\u0432"
-    - hares
-  - key: '#herd_deer'
-    values:
-    - "\u043E\u043B\u0435\u043D\u0435\u0439"
-    - deer
-  - key: '#herd_boar'
-    values:
-    - "\u043A\u0430\u0431\u0430\u043D\u043E\u0432"
-    - boars
-  - key: '#log_fire_torch'
-    values:
-    - "\u041E\u0440\u043A-\u0444\u0430\u043A\u0435\u043B\u044C\u0449\u0438\u043A
-      \u043F\u043E\u0434\u0436\u0451\u0433: {0}"
-    - 'An orc torchbearer set fire to: {0}'
-  - key: '#log_fire_lightning'
-    values:
-    - "\u041C\u043E\u043B\u043D\u0438\u044F \u0443\u0434\u0430\u0440\u0438\u043B\u0430
-      \u0432 {0}!"
-    - Lightning struck {0}!
   - key: '#log_fire_victim'
     values:
     - "\u0416\u0438\u0442\u0435\u043B\u044C \u0441\u0433\u043E\u0440\u0435\u043B
