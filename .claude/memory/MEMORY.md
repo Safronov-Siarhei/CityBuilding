@@ -116,3 +116,4 @@
 - [Playtest 2026-11-22](project_pending_2026_11_22.md) — 17 items done in code, NOT compiled (no build asked); setup x2 pending
 - [Predators (2026-11-22)](project_predators.md) — wolves/bears on 3 cave islands; BUILT in code (Maps/Predators.cs), not seen
 - [Orc tribute + table waves (2026-11-22)](project_orc_tribute.md) — «Орки: волны» tab drives archipelago raids; tribute scroll/badge, siege off the moat, heavy-wave help; BUILT, not seen
+- [Swamp island idea (2026-11-22)](project_swamp_island.md) — PARKED: own resource, proposed herbs→potions; card swamp-island.md
