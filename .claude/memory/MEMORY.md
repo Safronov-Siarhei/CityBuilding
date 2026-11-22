@@ -76,7 +76,7 @@
 - [Do every item, verify where it lands](feedback_do_every_item.md) — user angry 2026-11-06: a fix went into the wrong function; check each list item in the real code path.
 - [Playtest list 2026-11-10](project_pending_2026_11_10.md) — 16 phone items: notices 4 s, orc-base FPS+ravens, fog culling of everything, starving leave one by one, selection buttons, food bonus preview, fisher (more in file)
 - [Localization fit before release](feedback_localization_fit_before_release.md) — pre-release: check every language's texts fit their boxes.
-- [Campaign mode (2026-11-10)](project_campaign.md) — cutscenes+story+levels; mission 1 done; mission 2 scenes 1-2 in Unity; END SCENE «Подкрепление» IN UNITY 2026-11-16 (not seen); details in the file.
+- [Campaign mode (2026-11-10)](project_campaign.md) — cutscenes+story+levels; missions 1-2 built; LEVEL 3 = prologue «Пленные» + two branches (Ардан/King), storyboard in discussion; «чудовища» not «орки» in campaign texts
 - [Mission 1 playtest 2026-11-11](project_pending_2026_11_11_mission1.md) — the user's first Unity playtest of mission 1: 26 items (loading screen, orcs stuck, darkness corridor, red eye, Ардан icon, music, mage at bridge (more in file)
 - [Mission 1 playtest 2 (2026-11-11)](project_pending_2026_11_11b_mission1.md) — second Unity playtest, 17 items -- ALL BUILT round 58 (church trio, start after 1 m, kill, forest orcs, sandbox HUD kit, run clock + records (more in file)
 - [Feature cards](feedback_feature_cards.md) — project split into Design/features cards (2026-10-21): read the index, then one card; update cards after every task.
