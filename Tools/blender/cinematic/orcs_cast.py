@@ -277,11 +277,122 @@ def spearman(armed=True):
     return parts(waist, chest, head_fn, arm_parts(bracer=o.TIMBER, hold=hold))
 
 
+# ---------------------------------------------------------------- the chief of the captives' glade
+
+def chief():
+    """The level-3 prologue's mini-boss (the user, 2026-11-22: «вождь орков как минибосс»): the game's OrcChief
+    (orcchief.py, approved) on the cine rig -- a gold-buckled war harness, a fur mantle with a rust cloak behind,
+    gold-rimmed iron pauldrons with bone horns, a crown of bone horns over a war-painted brow, a gold-ringed topknot,
+    a double-bladed greataxe upright in the right fist, a trophy pole with a rust banner and a skull on his back."""
+    import math
+    gold = 'gold'
+
+    def waist(b):
+        kilt(b, wide=1.12, skulls=3)
+        b.box(-0.03, 0.03, -0.09, -0.08, 0.2, 0.24, gold)                                   # the belt's gold plate
+
+    def chest(b):
+        barrel(b, bare=True)
+        for k in (-1, 1):                                                                   # the war harness
+            b.rod((k * 0.12, -0.1, 0.41), (-k * 0.08, -0.088, 0.24), 0.026, o.TIMBER)
+        b.box(-0.03, 0.03, -0.125, -0.1, 0.3, 0.36, gold)
+        # the fur mantle over the shoulders, its ruff, the rust cloak falling behind to the calves
+        b.obox((0, 0.01, 0.415), (1, 0, 0), (0, 0.97, 0.24), (0, -0.24, 0.97), 0.175, 0.105, 0.035, o.HIDE, bevel=0.025)
+        for i in range(9):
+            a = math.pi * (0.1 + 0.8 * i / 8)
+            b.ball(0.16 * math.cos(a), 0.01 - 0.1 * math.sin(a), 0.43, 0.03, 0.035, o.HIDE, sides=5)
+        b.prism([(-0.15, 0.42), (0.15, 0.42), (0.19, 0.06), (0.06, 0.1), (-0.05, 0.05), (-0.19, 0.08)],
+                (0, 0.095, 0), (1, 0, 0), (0, 0, 1), 0.016, o.RUST, back_cap=True)
+        # the pauldrons: iron domes, gold rims, two bone horns each
+        for k in (-1, 1):
+            x = k * 0.165
+            b.ball(x, -0.01, 0.34, 0.078, 0.1, o.METAL, sides=7)
+            b.cylinder(x, -0.01, 0.35, 0.365, 0.083, gold, sides=7)
+            for dx, dy in ((k, 0), (k * 0.4, -0.9)):
+                o.horn(b, (x + dx * 0.03, -0.01 + dy * 0.03, 0.43), (dx, dy, 0), 0.075, 0.016, up=1.4)
+        # the trophy pole on his back, a rust banner, a skull
+        b.cylinder(0.06, 0.1, 0.25, 0.88, 0.012, o.TIMBER, sides=5)
+        b.prism([(0.0, 0.86), (0.14, 0.86), (0.14, 0.71), (0.07, 0.74), (0.0, 0.71)],
+                (0.066, 0.1, 0), (1, 0, 0), (0, 0, 1), 0.008, o.RUST, back_cap=True)
+        o.skull(b, 0.06, 0.09, 0.64, s=0.05)
+
+    def head_fn(b):
+        hy = -0.07
+        head(b, paint=True)
+        b.box(-0.066, 0.066, hy - 0.072, hy - 0.06, 0.492, 0.508, o.RUST)                  # the war-painted brow
+        b.cylinder(0, hy, 0.515, 0.54, 0.074, o.TIMBER, sides=8)                             # the crown's band
+        for i, (dx, dy, ln) in enumerate(((-1, 0.0, 0.12), (1, 0.0, 0.12), (-0.5, -0.8, 0.07),
+                                          (0.5, -0.8, 0.07), (0.0, -1.0, 0.085))):
+            o.horn(b, (dx * 0.06, hy + dy * 0.06, 0.53), (dx or 0.01, dy, 0), ln, 0.018, up=1.8 if i < 2 else 2.6)
+        o.tube(b, [(0, hy + 0.04, 0.54), (0, hy + 0.08, 0.61), (0, hy + 0.13, 0.63)], [0.026, 0.02, 0], o.HAIR, sides=5)
+        b.cylinder(0, hy + 0.06, 0.57, 0.59, 0.026, gold, sides=6)
+
+    def greataxe(b, k, wr):
+        if k != -1:
+            b.cylinder(wr.x, wr.y, wr.z + 0.02, wr.z + 0.05, 0.044, gold, sides=8)          # a gold arm-ring
+            return
+        # held upright through the right fist: the haft from the ground, the twin crescent blades up top
+        x, y, z = wr.x, wr.y - 0.012, wr.z - 0.06
+        b.cylinder(x, y, z - 0.2, z + 0.44, 0.016, o.TIMBER, sides=6)
+        b.cylinder(x, y, z + 0.08, z + 0.12, 0.02, o.RUST, sides=6)
+        for kk in (-1, 1):
+            b.prism([(0.01, z + 0.24), (0.01, z + 0.34), (0.11, z + 0.4), (0.13, z + 0.29), (0.1, z + 0.18)],
+                    (x, y - 0.006, 0), (kk, 0, 0), (0, 0, 1), 0.012, o.METAL, back_cap=True)
+            b.prism([(0.12, z + 0.4), (0.145, z + 0.395), (0.145, z + 0.175), (0.12, z + 0.18)],
+                    (x, y - 0.005, 0), (kk, 0, 0), (0, 0, 1), 0.01, 'stone_light', back_cap=True)
+        b.box(x - 0.022, x + 0.022, y - 0.022, y + 0.022, z + 0.26, z + 0.32, gold)
+        o.tube(b, [(x, y, z + 0.44), (x, y, z + 0.52)], [0.016, 0.0], o.METAL, sides=4)
+
+    return parts(waist, chest, head_fn, arm_parts(bracer=o.METAL, spikes=True, hold=greataxe))
+
+
+def render(out):
+    """The chief beside the champion, a spearman and Ардан for scale: front, three-quarter, back."""
+    import bpy
+    import math
+    import ardan
+    os.makedirs(out, exist_ok=True)
+    objs = [make("CineOrcChief", (0, 0, 0)), make("CineOrcChampion", (1.1, 0.2, 0)), make("CineOrcSpear", (-1.0, 0.2, 0)),
+            ardan.make(Vector((-1.8, 0.2, 0)))]
+    sc = bpy.context.scene
+    keep = set()
+    for ob in objs:
+        keep |= {ob.name} | {c.name for c in ob.children_recursive}
+    for ob in sc.objects:
+        ob.hide_render = ob.name not in keep
+    sc.render.engine = 'BLENDER_EEVEE'
+    sc.render.resolution_x, sc.render.resolution_y = 1600, 900
+    sc.view_settings.view_transform = 'Standard'
+    for name, energy, rx, rz in (("SetSun", 3.5, 50, -25), ("SetFill", 1.0, 70, 150)):
+        light = bpy.data.objects.new(name, bpy.data.lights.new(name, 'SUN'))
+        light.data.energy = energy
+        sc.collection.objects.link(light)
+        light.rotation_euler = (math.radians(rx), 0, math.radians(rz))
+    w = sc.world or bpy.data.worlds.new("W")
+    sc.world = w
+    w.use_nodes = True
+    w.node_tree.nodes["Background"].inputs[0].default_value = (0.8, 0.82, 0.88, 1)
+    cam = bpy.data.objects.new("SetCam", bpy.data.cameras.new("SetCam"))
+    sc.collection.objects.link(cam)
+    sc.camera = cam
+    for name, at, off, lens in (("chief_lineup", (-0.35, 0.1, 0.45), (0.0, -4.6, 1.2), 40),
+                                ("chief_front", (0, 0, 0.55), (0.0, -2.2, 0.75), 45),
+                                ("chief_three_quarter", (0, 0, 0.55), (1.5, -1.6, 0.9), 45),
+                                ("chief_back", (0, 0, 0.55), (-1.2, 1.9, 0.9), 45)):
+        at = Vector(at)
+        cam.location = at + Vector(off)
+        cam.data.lens = lens
+        cam.rotation_euler = (at - cam.location).to_track_quat('-Z', 'Y').to_euler()
+        sc.render.filepath = os.path.join(out, name + ".png")
+        bpy.ops.render.render(write_still=True)
+
+
 FIGURES = {
     "CineOrcChampion": (champion, 1.3),
     "CineOrcTorch": (torchbearer, 1.0),
     "CineOrcSpear": (spearman, 1.0),
     "CineOrcCaptive": (lambda: spearman(armed=False), 1.0),
+    "CineOrcChief": (chief, 1.4),
 }
 
 
@@ -291,5 +402,9 @@ def make(name, location=(0, 0, 0)):
 
 
 if __name__ == "__main__":
-    for n in FIGURES:
-        make(n)
+    argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+    if argv and argv[0] == "render_chief":
+        render(argv[1])
+    else:
+        for n in FIGURES:
+            make(n)

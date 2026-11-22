@@ -1215,9 +1215,10 @@ FpsCounter). Redmi Pad ~40 fps in play; Low tier: NO SUN SHADOWS in mission 2 (t
      - Two messengers gallop in from +x and pull up.
      - Ардан steps forward; the King's amulet look and his hand to his own stone.
      - Two of the 4 line soldiers volunteer; the Captain steps up; the King wheels round and rides off.
-     - Rendering for the user 2026-11-22.
+     - Videos SENT 2026-11-22; **APPROVED by the user 2026-11-22**.
      - The volunteers are lookouts with spears: the storyboard's ARCHER has no cine model yet.
      - TRAP: cavalry lances at a halt need `lance_up` (the fist hanging by the horse's shoulder). `ra.seated`'s arm lays the lance almost flat across everyone.
+  - The cine CHIEF `CineOrcChief` (orcs_cast.chief, scale 1.4: the game's approved OrcChief on the cine rig -- harness, fur mantle + rust cloak, gold-rimmed horned pauldrons, bone-horn crown, topknot, greataxe upright in the right fist, trophy pole with banner and skull). Renders SENT 2026-11-22 (`orcs_cast.py -- render_chief <out>`), not approved yet.
   - Still to do:
     - group 3: the glade (prisoners in the cages, monsters about the camp, the chief) -- this needs cine versions of the chief and the game orcs. For the film the chief and the extra monsters will need cine versions on the rig (now the game's static models).
     TRAP: importing orccage1.py (or kit.borrow of it) runs its main() and orcstone1's, which SAVE the open .blend -- the repo copy Blender/Buildings-Size1-Models.blend got overwritten once and was restored from the Drive by blend_sync. captives_glade loads them through `_quiet` (main() cut out), and renders run on a COPY of the .blend;
