@@ -131,6 +131,19 @@ def ground(b):
                    'leaf' if rnd.random() < 0.5 else 'grass')
 
 
+def track(b):
+    """The way in: a trodden dirt track from the clearing out through the forest to -y, grass at its edges (ruts drew as
+    road markings: dropped)."""
+    y0, y1 = -14.0, 0.4 - CLEARING + 0.7
+    b.box(-PATH_HALF, PATH_HALF, y0, y1, 0.004, 0.008, 'burlap')
+    rnd = random.Random(9)
+    for _ in range(40):
+        y = rnd.uniform(y0, y1)
+        x = rnd.choice((-1, 1)) * rnd.uniform(PATH_HALF - 0.1, PATH_HALF + 0.15)
+        h = rnd.uniform(0.05, 0.12)
+        b.obox((x, y, h / 2), (1, 0, 0), (0, 1, 0), (rnd.uniform(-0.3, 0.3), 0, 1), 0.008, 0.008, h / 2, 'leaf')
+
+
 def loot(b):
     """The townsfolk's goods thrown down by the tent: sacks, a barrel on its side, a cart wheel, a chest."""
     for x, y, r in ((-2.3, -1.0, 0.12), (-2.05, -1.2, 0.1), (-2.45, -1.3, 0.11), (-2.2, -0.75, 0.09)):
@@ -152,6 +165,7 @@ def loot(b):
 def glade():
     b = Builder()
     ground(b)
+    track(b)
     loot(b)
     return b
 
@@ -170,17 +184,33 @@ def _copy(name, x, y, turn_deg, scale):
     return o
 
 
+PATH_HALF = 0.75               # the one way into the glade: a track out through the forest to -y (the camera's side)
+
+
 def _trees():
+    """A DENSE forest all round the glade (the user, 2026-11-22: «густой лес, проход с одной стороны, некоторые деревья
+    сухие»): trees packed at least TREE_GAP apart from the clearing's edge out to 13 units, a gap only for the track at
+    -y; about one in six is a dead tree (the game's OrcDeadTree1, grey-blue and bare)."""
     rnd = random.Random(11)
-    out = []
-    kinds = ("Tree3", "Tree10", "Tree2", "Tree1", "Tree5", "Tree7")
-    for i in range(46):
+    out, placed = [], []
+    kinds = ("Tree3", "Tree10", "Tree2", "Tree1", "Tree5", "Tree7", "Tree4", "Tree8")
+    dead = ("OrcDeadTree1-A", "OrcDeadTree1-B", "OrcDeadTree1-C")
+    gap = 0.75
+    tries = 0
+    while len(placed) < 230 and tries < 20000:
+        tries += 1
         a = rnd.uniform(0, 6.283)
-        r = rnd.uniform(CLEARING + 1.0, CLEARING + 7.0)
+        r = CLEARING + 1.1 + (13.0 - CLEARING) * rnd.random() ** 1.4      # thickest at the edge, clear of the camp
         x, y = r * math.cos(a), 0.4 + r * math.sin(a)
-        if y < -CLEARING and abs(x) < 2.2:                                          # the camera's way in stays open
+        if y < 0.0 and abs(x) < PATH_HALF + 0.35 + 0.08 * max(0.0, -y - CLEARING):   # the track, a little wider out
             continue
-        out.append((kinds[i % len(kinds)], x, y, rnd.uniform(0, 360), rnd.uniform(0.9, 1.25)))
+        if any((x - px) ** 2 + (y - py) ** 2 < gap * gap for px, py in placed):
+            continue
+        placed.append((x, y))
+        if rnd.random() < 0.17:
+            out.append((rnd.choice(dead), x, y, rnd.uniform(0, 360), rnd.uniform(0.5, 0.7)))
+        else:
+            out.append((kinds[len(placed) % len(kinds)], x, y, rnd.uniform(0, 360), rnd.uniform(0.85, 1.3)))
     for i in range(12):                                                           # stones at the edge
         a = rnd.uniform(0, 6.283)
         r = rnd.uniform(CLEARING - 0.2, CLEARING + 0.6)
@@ -273,9 +303,9 @@ def render(out):
     sc.collection.objects.link(cam)
     sc.camera = cam
     ex, ey, _, _, _ = CAGES[ELDER_CAGE]
-    for name, at, frm, lens in (("glade_wide", (0, 1.0, 0.3), (0.0, -6.5, 3.0), 28),
-                                ("glade_high", (0, 0.8, 0), (-5.0, -7.0, 7.5), 26),
-                                ("glade_side", (0, 1.0, 0.4), (5.5, -2.5, 1.6), 30),
+    for name, at, frm, lens in (("glade_wide", (0, 1.0, 0.3), (0.0, -6.0, 2.6), 28),
+                                ("glade_high", (0, 0.2, 0), (-4.0, -11.0, 12.0), 26),
+                                ("glade_side", (0, 1.0, 0.4), (2.9, -2.0, 1.4), 26),
                                 ("glade_elder", (ex, ey, 0.55), (ex - 0.25, ey - 1.6, 0.65), 40),
                                 ("glade_chief", (2.2, 0.55, 0.7), (0.4, -1.6, 1.0), 35)):
         at, frm = Vector(at), Vector(frm)
