@@ -65,15 +65,15 @@ def wolf_body(b):
 
 
 def wolf_leg(b, x, y, front):
-    if front:
-        o.tube(b, [(x, y, 0.29), (x, y, 0.1)], [0.024, 0.019], GREY, sides=6, tip=False)
-        o.tube(b, [(x, y, 0.1), (x, y - 0.008, 0.018)], [0.017, 0.014], GREY_LIGHT, sides=6, tip=False)
-    else:
-        o.tube(b, [(x, y, 0.3), (x, y + 0.04, 0.17)], [0.035, 0.026], GREY, sides=6, tip=False)   # the thigh
-        o.tube(b, [(x, y + 0.04, 0.17), (x, y + 0.01, 0.018)], [0.017, 0.014], GREY_LIGHT, sides=6, tip=False)  # hock down
-    b.box(x - 0.019, x + 0.019, y - 0.038, y + 0.012, 0.0, 0.022, GREY_DARK, bevel=0.007)          # the paw
+    """A straight leg into the middle of its paw (the user, 2026-11-22: straight legs, joined to the paws)."""
+    top = 0.29 if front else 0.3
+    if not front:
+        oval(b, (x, y, 0.25), 0.03, 0.04, 0.055, GREY, 0.02)                         # the thigh
+    o.tube(b, [(x, y, top), (x, y, 0.11)], [0.024, 0.019], GREY, sides=6, tip=False)
+    o.tube(b, [(x, y, 0.12), (x, y, 0.01)], [0.017, 0.015], GREY_LIGHT, sides=6, tip=False)
+    b.box(x - 0.02, x + 0.02, y - 0.03, y + 0.016, 0.0, 0.024, GREY_DARK, bevel=0.007)         # the paw, under the leg
     for i in (-1, 1):
-        b.box(x + i * 0.009 - 0.003, x + i * 0.009 + 0.003, y - 0.044, y - 0.036, 0.0, 0.008, CLAW)
+        b.box(x + i * 0.009 - 0.003, x + i * 0.009 + 0.003, y - 0.036, y - 0.028, 0.0, 0.008, CLAW)
 
 
 def wolf_head(b):
@@ -125,15 +125,16 @@ def bear_body(b):
 
 
 def bear_leg(b, x, y, front):
+    """A straight thick leg down into the middle of its paw (the user, 2026-11-22: joined to the paws)."""
     if front:
-        o.tube(b, [(x, y, 0.34), (x, y, 0.08)], [0.05, 0.042], BROWN, sides=7, tip=False)
-        oval(b, (x, y - 0.005, 0.22), 0.042, 0.042, 0.06, BROWN_DARK, 0.02)          # the shaggy forearm
+        o.tube(b, [(x, y, 0.34), (x, y, 0.03)], [0.05, 0.042], BROWN, sides=7, tip=False)
+        oval(b, (x, y, 0.21), 0.046, 0.046, 0.065, BROWN_DARK, 0.02)                 # the shaggy forearm
     else:
-        o.tube(b, [(x, y, 0.34), (x, y + 0.035, 0.18)], [0.085, 0.06], BROWN, sides=7, tip=False)   # the haunch
-        o.tube(b, [(x, y + 0.035, 0.18), (x, y + 0.01, 0.05)], [0.045, 0.04], BROWN, sides=7, tip=False)
-    b.box(x - 0.045, x + 0.045, y - 0.07, y + 0.035, 0.0, 0.055, BROWN_DARK, bevel=0.016)        # the paw
+        oval(b, (x, y, 0.27), 0.075, 0.08, 0.09, BROWN, 0.035)                       # the haunch
+        o.tube(b, [(x, y, 0.3), (x, y, 0.03)], [0.055, 0.044], BROWN, sides=7, tip=False)
+    b.box(x - 0.045, x + 0.045, y - 0.06, y + 0.04, 0.0, 0.055, BROWN_DARK, bevel=0.016)         # the paw, under the leg
     for i in (-1.5, -0.5, 0.5, 1.5):
-        o.tube(b, [(x + i * 0.02, y - 0.066, 0.02), (x + i * 0.02, y - 0.096, 0.004)], [0.007, 0.0], CLAW, sides=4)
+        o.tube(b, [(x + i * 0.02, y - 0.056, 0.02), (x + i * 0.02, y - 0.086, 0.004)], [0.007, 0.0], CLAW, sides=4)
 
 
 def bear_head(b):
@@ -142,9 +143,11 @@ def bear_head(b):
     oval(b, (0, -0.35, 0.37), 0.1, 0.05, 0.05, BROWN_DARK, 0.025)                   # the jowls
     oval(b, (0, -0.45, 0.4), 0.048, 0.055, 0.036, MUZZLE, 0.018)                     # the upper muzzle
     b.box(-0.02, 0.02, -0.51, -0.49, 0.405, 0.43, NOSE, bevel=0.006)                 # the nose
-    oval(b, (0, -0.445, 0.3), 0.044, 0.052, 0.018, MUZZLE, 0.009)                    # the lower jaw, wide open
-    oval(b, (0, -0.445, 0.343), 0.042, 0.05, 0.034, MOUTH, 0.012)                    # the throat, deep red
-    oval(b, (0, -0.45, 0.322), 0.026, 0.038, 0.007, TONGUE, 0.003)                   # the tongue
+    # the lower jaw, wide open but hinged on the head: it runs back under the jowls (the user, 2026-11-22: it hung apart)
+    oval(b, (0, -0.43, 0.312), 0.044, 0.065, 0.018, MUZZLE, 0.009)
+    oval(b, (0, -0.385, 0.335), 0.05, 0.035, 0.035, BROWN_DARK, 0.015)              # the hinge, into the jowls
+    oval(b, (0, -0.445, 0.35), 0.036, 0.044, 0.03, MOUTH, 0.01)                      # the throat, inside the jaws
+    oval(b, (0, -0.465, 0.333), 0.017, 0.02, 0.005, TONGUE, 0.003)                   # a small tongue on the jaw
     for k in (-1, 1):
         fang(b, k * 0.03, -0.492, 0.382, 0.034, w=0.012)                              # fangs from above
         fang(b, k * 0.029, -0.488, 0.312, 0.028, down=False, w=0.011)                 # and from below
@@ -182,13 +185,14 @@ def cave():
     arch = [(-0.17, 0.0), (0.17, 0.0)] + [(0.17 * math.cos(math.radians(d)), 0.17 + 0.15 * math.sin(math.radians(d)))
                                           for d in range(0, 181, 20)]
     b.prism(arch, (0.0, -0.22, 0.0), (1, 0, 0), (0, 0, 1), 0.12, HOLE, back_cap=True)
-    # rough stones round the arch
-    for i, d in enumerate(range(0, 181, 30)):
+    # rough stones round the arch, close together and set into the rock (the user, 2026-11-22: they stood apart)
+    for i, d in enumerate(range(0, 181, 18)):
         a = math.radians(d)
-        cx, cz = 0.2 * math.cos(a), 0.17 + 0.18 * math.sin(a)
-        oval(b, (cx, -0.345, cz), 0.05, 0.035, 0.04, ROCK_LIGHT if i % 2 else ROCK, 0.018)
+        cx, cz = 0.2 * math.cos(a), 0.17 + 0.175 * math.sin(a)
+        tilted(b, (cx, -0.33, cz), 0.046, 0.05, 0.036, ROCK_LIGHT if i % 2 else ROCK, roll=d - 90, bevel=0.014)
     for k in (-1, 1):
-        oval(b, (k * 0.21, -0.345, 0.06), 0.055, 0.04, 0.06, ROCK_DARK, 0.02)
+        for z in (0.035, 0.105):
+            oval(b, (k * 0.205, -0.33, z), 0.045, 0.05, 0.04, ROCK_DARK if z < 0.05 else ROCK, 0.016)
     # trodden earth before the mouth, bones and a skull on it
     for (x, y, rx, ry) in ((0.0, -0.4, 0.17, 0.09), (-0.1, -0.48, 0.12, 0.07), (0.12, -0.47, 0.1, 0.06)):
         pts = [(rx * math.cos(a) * (1 + 0.12 * math.sin(3 * a)), ry * math.sin(a)) for a in

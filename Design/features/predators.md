@@ -4,9 +4,10 @@
 > Concepts `Design/concepts/predators/Pred_1..3` APPROVED («Да, к моделям»). MODEL RENDERS sent for approval 2026-11-22
 > (`Design/concepts/predators/models/`, `Tools/blender/render_predators.py`, never saves): `FaunaWolf` (308 tris),
 > `FaunaBear` (314 tris, roaring mouth), `FaunaCave` (913 tris, ~1.2 x 1.05, 0.6 high), the angry-bear icon rendered from
-> the bear's head; builders in `Tools/blender/predators.py` (jointed LegFL/FR/BL/BR + Head). Attack = FigureAnimator's
-> quadruped bite (head dips and snaps) for both; the bear's paw swipe (LegFR up and down) is to be added to
-> FigureAnimator when building. The Invasion's WildWolf/WildBear (wild.py, old blocky) stay as they are.
+> the bear's head; builders in `Tools/blender/predators.py` (jointed LegFL/FR/BL/BR + Head). Round 2 (the user's notes): straight legs
+> joined to the paws, the bear's lower jaw hinged under the jowls with a small tongue, the cave's arch stones set close.
+> ATTACK (the user): NO leg animation -- a jerk of the whole body at the target (thrown forward ~0.1, nose down 6-7
+> degrees, the head snapping), then back; to add to FigureAnimator for these two (the trot while walking stays). The Invasion's WildWolf/WildBear (wild.py, old blocky) stay as they are.
 > NOT installed/exported until approved.
 
 Read with: [hunting](hunting.md) (the Hunter's Hut, hunters, hides), [resources-and-storage](resources-and-storage.md)

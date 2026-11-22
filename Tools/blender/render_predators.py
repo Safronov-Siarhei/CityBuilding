@@ -48,12 +48,13 @@ def obj(name, builder, mat, loc, scale=1.0, yaw=0.0):
     return ob
 
 
-def jointed(spec, mat, loc, yaw=0.0, pose=None):
+def jointed(spec, mat, loc, yaw=0.0, pose=None, pitch=0.0):
     """The figure as the game gets it: the body, each part a child at its joint; `pose` = {part: degrees about x}."""
     name, scale, body, parts = spec
     bb = Builder()
     body(bb)
     root = obj(f"{name}_{len(bpy.data.objects)}", bb, mat, loc, yaw=yaw)
+    root.rotation_euler = (0, math.radians(pitch), math.radians(yaw))
     kids = [root]
     for pname, fn, pivot in parts:
         b = Builder()
@@ -137,12 +138,13 @@ def main():
     keep += jointed(p.WOLF, mat, wolf_pos)
     keep += jointed(p.BEAR, mat, bear_pos)
 
-    # the attack, three poses each: ready / wind-up / strike (Head and LegFR turned about x; + = down)
+    # the attack (the user, 2026-11-22: no leg animation -- a jerk of the whole body at the target): ready, the lunge
+    # (the body thrown forward and down at the nose, the head snapping), back. Facing -x here; a faint mark = where it stood
     wa, ba = base + Vector((20, 0, 0)), base + Vector((26, 0, 0))
-    for i, pose in enumerate(({}, {"Head": -18, "LegFL": 10, "LegFR": 10}, {"Head": 26, "LegFL": -25, "LegFR": -25})):
-        keep += jointed(p.WOLF, mat, wa + Vector((i * 0.75, 0, 0)), yaw=-90, pose=pose)
-    for i, pose in enumerate(({}, {"Head": -22, "LegFR": -95}, {"Head": 20, "LegFR": -35})):
-        keep += jointed(p.BEAR, mat, ba + Vector((i * 1.1, 0, 0)), yaw=-90, pose=pose)
+    for i, (shift, pitch, head) in enumerate(((0.0, 0, 0), (0.09, -7, 14), (0.02, 0, -4))):
+        keep += jointed(p.WOLF, mat, wa + Vector((i * 0.75 - shift, 0, 0)), yaw=-90, pose={"Head": head}, pitch=pitch)
+    for i, (shift, pitch, head) in enumerate(((0.0, 0, 0), (0.13, -6, 12), (0.03, 0, -4))):
+        keep += jointed(p.BEAR, mat, ba + Vector((i * 1.1 - shift, 0, 0)), yaw=-90, pose={"Head": head}, pitch=pitch)
 
     # the cave, with a hunter and a wolf for scale
     cave_pos = base + Vector((36, 0, 0))
