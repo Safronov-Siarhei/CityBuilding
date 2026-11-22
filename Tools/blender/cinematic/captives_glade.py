@@ -12,7 +12,8 @@ Laid out in FIGURE units (Ардан 0.6 tall), the camera's side at -y:
     game prisoners, grown to the townsfolk's size), the cine townsfolk inside; the OLD MAN (CineElder) alone
     in the third one, gripping the bars -- the shot's push-in ends on him;
   - the townsfolk's loot by the tent: sacks, a barrel, a cart wheel;
-  - two monster guards standing (CineOrcSpear, CineOrcTorch).
+  - about ten monsters (the user): two at the fire, two cine guards, and the game's orcs (CAMP) -- the CHIEF as the
+    mini-boss before his bone throne, a brute, grunts, a thrower, a torchbearer.
 
     blender --background <a COPY of Buildings-Size1-Models.blend> --python captives_glade.py -- render <out dir>
 """
@@ -49,18 +50,31 @@ ELDER_CAGE = 2
 DECOR = [
     ("OrcCampfire1", 0.0, 0.1, 15, GAME_ORC),
     ("OrcWarTent1-lvl1", -3.0, -0.2, 70, GAME_ORC),
-    ("OrcMeatRack1", 2.9, 0.4, -80, GAME_ORC),
+    ("OrcMeatRack1", 3.3, 1.7, -100, GAME_ORC),
     ("OrcHideRack1", -2.9, 1.5, 110, GAME_ORC),
     ("OrcTotem1-lvl1", 0.0, 3.1, 180, GAME_ORC),
     ("OrcSkullStake1", -2.3, -1.6, 10, GAME_ORC * 0.7),
     ("OrcSkullStake1", 2.4, -1.5, -15, GAME_ORC * 0.7),
-    ("OrcWarDrum1", 2.7, -0.4, -40, GAME_ORC * 0.55),
+    ("OrcWarDrum1", 1.7, -1.4, -30, GAME_ORC * 0.55),
+    ("OrcBoneThrone1", 2.45, 0.85, -60, GAME_ORC),
     ("OrcDeadTree1-A", -3.6, 2.9, 30, GAME_ORC),
     ("OrcDeadTree1-C", 3.8, 2.6, 200, GAME_ORC),
 ]
 
 # guards standing: (figure, x, y, facing degrees about z; 0 = facing -y, to the camera)
 GUARDS = [("CineOrcSpear", -1.25, 1.0, 20), ("CineOrcTorch", 1.35, 0.95, -25)]
+
+# the rest of the camp, the game's own orc models grown like the decor (the user, 2026-11-22: about TEN monsters in
+# all, the CHIEF as a mini-boss): (object, x, y, turn, scale). With the two at the fire and the two guards: 10.
+# The chief (the game's OrcChief, ~1.7x a monster) stands before his bone throne on the right.
+CAMP = [
+    ("OrcChief", 2.2, 0.55, -55, GAME_ORC),
+    ("OrcBrute", 3.0, 0.1, -80, GAME_ORC),
+    ("OrcGrunt", -3.35, 0.7, -75, GAME_ORC),
+    ("OrcThrower", -2.0, -0.35, -60, GAME_ORC),
+    ("OrcTorchbearer", -0.25, -1.45, 170, GAME_ORC),
+    ("OrcGrunt", 0.95, -0.95, 140, GAME_ORC),
+]
 
 
 def cage_mesh(kind):
@@ -182,6 +196,8 @@ def make():
     objs = [fg.install_static(OBJ, glade(), scale=1.0)]
     for name, x, y, turn, k in DECOR:
         objs.append(_copy(name, x, y, turn, k))
+    for name, x, y, turn, k in CAMP:
+        objs.append(_copy(name, x, y, turn, k))
     for name, x, y, turn, k in _trees():
         objs.append(_copy(name, x, y, turn, S * k))
     cages = {}
@@ -260,7 +276,8 @@ def render(out):
     for name, at, frm, lens in (("glade_wide", (0, 1.0, 0.3), (0.0, -6.5, 3.0), 28),
                                 ("glade_high", (0, 0.8, 0), (-5.0, -7.0, 7.5), 26),
                                 ("glade_side", (0, 1.0, 0.4), (5.5, -2.5, 1.6), 30),
-                                ("glade_elder", (ex, ey, 0.55), (ex - 0.25, ey - 1.6, 0.65), 40)):
+                                ("glade_elder", (ex, ey, 0.55), (ex - 0.25, ey - 1.6, 0.65), 40),
+                                ("glade_chief", (2.2, 0.55, 0.7), (0.4, -1.6, 1.0), 35)):
         at, frm = Vector(at), Vector(frm)
         cam.location = frm
         cam.data.lens = lens
