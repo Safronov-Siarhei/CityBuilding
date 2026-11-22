@@ -7,7 +7,9 @@
 >
 > **How it is built:**
 > - `Scripts/Maps/Predators.cs` -- the manager (managers object, SetupProjectCityScene; `caveModel`). Picks the cave
->   islands once the Town Hall stands (Hunting.PlayerIsland + random LandIslands, not orc/bot). Cave spot (fix 2026-11-22,
+>   islands once the Town Hall stands (Hunting.PlayerIsland + random LandIslands, not orc/bot). Cave spot (fix 2 2026-11-22: the mouth to the CAMERA,
+>   the OPEN SEA behind it -- land 2+ cells, water by 5, then 6 cells of water, so not a lake in the middle; failing
+>   that without grass, then sea on any side; a loaded cave is turned to the camera too. Fix 1
 >   the user saw one on the beach): GRASS under it and before its mouth (ArchipelagoMeshes.IsGrassUv; without the grass
 >   test only when none is found), the sea 3..5 cells away (not the beach), mouth turned inland onto land, and from
 >   before the mouth a full NavMesh path to the Town Hall (player's island) and to 2/3 of 6 random spots of the island

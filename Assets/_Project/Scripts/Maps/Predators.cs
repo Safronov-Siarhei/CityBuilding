@@ -151,11 +151,12 @@ namespace CityBuilder.Maps
         }
 
         /// <summary>
-        /// A spot near the island's edge for its cave (the user, 2026-11-22: not on the beach, not behind the mountains):
-        /// flat free GRASS (no sand under it or before its mouth), the sea 3..`CaveEdgeCells` cells away, away from
-        /// buildings, the mouth turned inland onto land -- and from before the mouth the beasts can walk (NavMesh) to most
-        /// of the island and to the Town Hall on the player's island. No such spot on a map without the archipelago's
-        /// grass: the same without the grass test.
+        /// A spot at the island's edge for its cave (the user, 2026-11-22: not on the beach, not behind the mountains, not
+        /// in the middle, the mouth to the camera): flat free GRASS under it and before its mouth; its mouth turned to the
+        /// camera (which never turns), the OPEN SEA behind it -- `CaveSeaFrom`..`CaveSeaTo` cells back, then water on for
+        /// `CaveSeaRun` cells (a lake inside the island is not the sea); away from buildings; and from before the mouth the
+        /// beasts can walk (NavMesh) to most of the island and to the Town Hall on the player's island. Failing that, the
+        /// same without the grass test, then with the sea on any side.
         /// </summary>
         private bool FindCaveSpot(int island, out Vector3 at, out float yaw)
         {
@@ -163,54 +164,72 @@ namespace CityBuilder.Maps
             yaw = 0f;
             var cells = Hunting.Instance.CellsOf(island);
             if (cells == null || cells.Count == 0) return false;
-            var grid = GridManager.Instance;
-            var centre = Vector3.zero;
-            foreach (var c in cells) centre += grid.GetFootprintCenterWorld(c, Vector2Int.one);
-            centre /= cells.Count;
             var anchors = Anchors(island, cells, out var hall);
-            return Search(cells, centre, anchors, hall, true, out at, out yaw) || Search(cells, centre, anchors, hall, false, out at, out yaw);
+            var look = TowardCamera();
+            return Search(cells, anchors, hall, look, true, false, out at, out yaw)
+                   || Search(cells, anchors, hall, look, false, false, out at, out yaw)
+                   || Search(cells, anchors, hall, look, false, true, out at, out yaw);
         }
 
-        private const int CaveEdgeCells = 5, CaveTries = 300, AnchorCount = 6;
+        private const int CaveSeaFrom = 2, CaveSeaTo = 5, CaveSeaRun = 6, CaveTries = 400, AnchorCount = 6;
 
-        private bool Search(List<Vector2Int> cells, Vector3 centre, List<Vector3> anchors, bool hall, bool grass, out Vector3 at, out float yaw)
+        /// <summary>Flat, toward the player's camera (its forward turned round): where a cave's mouth looks.</summary>
+        private static Vector3 TowardCamera()
+        {
+            var cam = Camera.main != null ? Camera.main.transform : null;
+            var look = cam != null ? -cam.forward : Vector3.back;
+            look.y = 0f;
+            return look.sqrMagnitude > 0.01f ? look.normalized : Vector3.back;
+        }
+
+        private bool Search(List<Vector2Int> cells, List<Vector3> anchors, bool hall, Vector3 mouth, bool grass, bool anySide,
+            out Vector3 at, out float yaw)
         {
             at = Vector3.zero;
             yaw = 0f;
             var grid = GridManager.Instance;
-            var map = MeshMapApplier.Instance;
             for (var t = 0; t < CaveTries; t++)
             {
                 var cell = cells[Random.Range(0, cells.Count)];
-                var sea = WaterWithin(map, cell, CaveEdgeCells);
-                if (sea < 3) continue;   // none in reach: not the edge; nearer than 3: the beach
                 var p = grid.GetFootprintCenterWorld(cell, Vector2Int.one);
+                var sea = false;
+                if (OpenSeaBehind(p, -mouth)) sea = true;
+                else if (anySide)
+                    for (var k = 0; k < 8 && !sea; k++)
+                        sea = OpenSeaBehind(p, Quaternion.Euler(0f, k * 45f, 0f) * Vector3.forward);
+                if (!sea) continue;
                 if (!Hunting.OnLand(p, out var y) || !Hunting.FarFromBuildings(p, CaveGapCells * Cell)) continue;
-                var inland = (centre - p).WithY(0f);
-                if (inland.sqrMagnitude < 0.01f) continue;
-                var front = p + inland.normalized * Cell;
-                // the mouth must open onto land, not the water it backs onto
+                var front = p + mouth * Cell;
+                // the mouth must open onto land
                 if (!Hunting.OnLand(front, out var frontY)) continue;
                 if (grass && (!OnGrass(p) || !OnGrass(front))) continue;
                 if (!Reaches(new Vector3(front.x, frontY, front.z), anchors, hall)) continue;
                 at = new Vector3(p.x, y, p.z);
-                yaw = Quaternion.LookRotation(inland).eulerAngles.y;
+                yaw = Quaternion.LookRotation(mouth).eulerAngles.y;
                 return true;
             }
             return false;
         }
 
-        /// <summary>How many cells away the nearest water is (a ring search up to `max`); max + 1 when none.</summary>
-        private static int WaterWithin(MeshMapApplier map, Vector2Int cell, int max)
+        /// <summary>Going `dir` from `p`: land for at least `CaveSeaFrom` cells (no beach under the cave), water by
+        /// `CaveSeaTo`, and water on for `CaveSeaRun` cells after it -- the open sea, not a lake.</summary>
+        private static bool OpenSeaBehind(Vector3 p, Vector3 dir)
         {
-            for (var r = 1; r <= max; r++)
-            for (var dz = -r; dz <= r; dz++)
-            for (var dx = -r; dx <= r; dx++)
+            var map = MeshMapApplier.Instance;
+            var grid = GridManager.Instance;
+            dir.y = 0f;
+            dir.Normalize();
+            var first = -1;
+            for (var k = 1; k <= CaveSeaTo; k++)
             {
-                if (Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dz)) != r) continue;
-                if (map.IsWaterCell(cell + new Vector2Int(dx, dz))) return r;
+                if (!map.IsWaterCell(grid.WorldToCell(p + dir * (k * Cell)))) continue;
+                first = k;
+                break;
             }
-            return max + 1;
+            if (first < CaveSeaFrom) return false;
+            for (var k = first; k < first + CaveSeaRun; k++)
+                if (!map.IsWaterCell(grid.WorldToCell(p + dir * (k * Cell)))) return false;
+            return true;
         }
 
         /// <summary>The archipelago's grass under this point (not sand, rock, a cliff).</summary>
@@ -495,7 +514,8 @@ namespace CityBuilder.Maps
             if (caves == null) return;
             foreach (var s in caves)
             {
-                var cave = new Cave { Island = s.Island, Position = new Vector3(s.X, s.Y, s.Z), Yaw = s.Yaw };
+                // the mouth to the camera whatever the save says (an older save turned it inland)
+                var cave = new Cave { Island = s.Island, Position = new Vector3(s.X, s.Y, s.Z), Yaw = Quaternion.LookRotation(TowardCamera()).eulerAngles.y };
                 _caves.Add(cave);
                 Raise(cave);
             }

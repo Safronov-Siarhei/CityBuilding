@@ -189,10 +189,12 @@ def cave():
     for i, d in enumerate(range(0, 181, 18)):
         a = math.radians(d)
         cx, cz = 0.2 * math.cos(a), 0.17 + 0.175 * math.sin(a)
-        tilted(b, (cx, -0.33, cz), 0.046, 0.05, 0.036, ROCK_LIGHT if i % 2 else ROCK, roll=d - 90, bevel=0.014)
+        # deep enough to reach back into the rock: from above no dark strip of the hole between them and the
+        # crag (the user, 2026-11-22: «у входа в пещеру до сих пор есть зазор»)
+        tilted(b, (cx, -0.30, cz), 0.046, 0.085, 0.036, ROCK_LIGHT if i % 2 else ROCK, roll=d - 90, bevel=0.014)
     for k in (-1, 1):
         for z in (0.035, 0.105):
-            oval(b, (k * 0.205, -0.33, z), 0.045, 0.05, 0.04, ROCK_DARK if z < 0.05 else ROCK, 0.016)
+            oval(b, (k * 0.205, -0.30, z), 0.045, 0.085, 0.04, ROCK_DARK if z < 0.05 else ROCK, 0.016)
     # trodden earth before the mouth, bones and a skull on it
     for (x, y, rx, ry) in ((0.0, -0.4, 0.17, 0.09), (-0.1, -0.48, 0.12, 0.07), (0.12, -0.47, 0.1, 0.06)):
         pts = [(rx * math.cos(a) * (1 + 0.12 * math.sin(3 * a)), ry * math.sin(a)) for a in
