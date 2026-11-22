@@ -297,6 +297,8 @@ namespace CityBuilder.Maps
                 var model = Instantiate(caveModel, root, false);
                 // modelled with its mouth to Blender's -y, like the figures: turned round to face the root's forward
                 model.transform.localRotation = Quaternion.Euler(0f, 180f, 0f) * model.transform.localRotation;
+                // the map's theme, like the dungeons' mouths (the user, 2026-11-22: the moss stayed summer-green in autumn)
+                SeasonStyle.DressAny(model);
                 SceneryShadows.DisableCasting(model);
             }
             // nothing is built on it

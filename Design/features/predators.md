@@ -13,7 +13,8 @@
 >   the user saw one on the beach): GRASS under it and before its mouth (ArchipelagoMeshes.IsGrassUv; without the grass
 >   test only when none is found), the sea 3..5 cells away (not the beach), mouth turned inland onto land, and from
 >   before the mouth a full NavMesh path to the Town Hall (player's island) and to 2/3 of 6 random spots of the island
->   (not behind the mountains); none found -> tries again every 5 s. Its cell occupied, FogCulling. Beasts spawn only
+>   (not behind the mountains); none found -> tries again every 5 s. Its cell occupied, FogCulling, `SeasonStyle.DressAny`
+>   (the map's theme recolours it, like the dungeons' mouths). Beasts spawn only
 >   where they can walk to the cave. Clock (sandbox only, `Infirmary.Active`):
 >   first `pred_first_attack_sec`, then `pred_attack_min/max_sec`; an attack goes to a cave island with residents
 >   (HousePeople.CitizensOn) and no raid on. `GroupFor`: wolves = ceil(res/10), bears = res>10 ? 1+(res-1)/40 : 0.
