@@ -83,6 +83,22 @@ namespace CityBuilder.Combat
         /// <summary>0 standing .. 1 running, as shown this frame -- for the tests.</summary>
         public float Run { get; private set; }
 
+        /// <summary>The sandbox's predators (the user, 2026-11-22): a blow is a jerk of the whole body at the target -- thrown forward and nose down, the head snapping -- with no leg in it.</summary>
+        public bool Lunges { get; set; }
+
+        /// <summary>How far, in world units, the lunge throws the body forward at its peak.</summary>
+        public const float LungeReach = 0.1f;
+        /// <summary>How far, in degrees, the lunge pitches the body nose down at its peak.</summary>
+        public const float LungePitch = 7f;
+
+        /// <summary>The lunge through one blow, 0..1: thrown out fast, held a moment, eased back.</summary>
+        public static float LungeAmount(float t)
+        {
+            if (t < 0.25f) return Mathf.SmoothStep(0f, 1f, t / 0.25f);
+            if (t < 0.4f) return 1f;
+            return 1f - Mathf.SmoothStep(0f, 1f, (t - 0.4f) / 0.6f);
+        }
+
         /// <summary>A blow is being shown.</summary>
         public bool IsStriking => _strike >= 0f;
 
@@ -210,11 +226,17 @@ namespace CityBuilder.Combat
 
             var sword = Run * ArmSwing * step - stand * 2.5f * breath;
             var head = stand * 2f * Mathf.Sin(_breath * 0.5f) + Run * 4f;
+            var lunge = 0f;
             if (_strike >= 0f)
             {
                 _strike += dt;
                 var t = _strike / StrikeSeconds;
                 if (t >= 1f) _strike = -1f;
+                else if (Lunges)
+                {
+                    lunge = LungeAmount(t);
+                    head += 14f * lunge;
+                }
                 else if (_armSword != null) sword = _draws ? DrawAngle(t) : StrikeAngle(t);
                 else head = BiteAngle(t);      // a beast with no arm to swing bites
             }
@@ -266,7 +288,8 @@ namespace CityBuilder.Combat
                     bob -= 0.12f * fall;
                 }
             }
-            _figure.localPosition = _figurePos + Vector3.up * (bob / _unitScale) + Offset;
+            pitch += Forward * LungePitch * lunge;
+            _figure.localPosition = _figurePos + Vector3.up * (bob / _unitScale) + Vector3.forward * (LungeReach * lunge / _unitScale) + Offset;
             // about the figure's OWN side axis: the model may stand turned on its root
             _figure.localRotation = _figureRot * Quaternion.AngleAxis(pitch, Vector3.right);
         }

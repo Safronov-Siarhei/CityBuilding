@@ -64,7 +64,7 @@ namespace CityBuilder.UI
             {
                 foreach (var orc in Combat.OrcUnit.All)
                 {
-                    if (orc == null || orc.CurrentHealth <= 0) continue;
+                    if (orc == null || orc.CurrentHealth <= 0 || Combat.OrcUnit.IsPredator(orc.Kind)) continue;   // no mark for the predators (the user, 2026-11-22)
                     var p = orc.transform.position;
                     if (!land.OnStartIsland(grid.WorldToCell(p))) continue;
                     var near = false;

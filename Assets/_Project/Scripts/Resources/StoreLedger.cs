@@ -268,6 +268,23 @@ namespace CityBuilder.Resources
             return keep;
         }
 
+        /// <summary>
+        /// A predator's blow (Maps/Predators, the user 2026-11-22): the store's `type` follows its health -- it keeps
+        /// `share` (its health after the blow over before it) of what lay in it, the rest eaten for good (a red «-N»).
+        /// Returns how much went.
+        /// </summary>
+        public static int Eat(BuildingInstance store, ResourceType type, float share)
+        {
+            if (store == null || !Stock.TryGetValue(store, out var stock)) return 0;
+            var t = (int)type;
+            var lost = stock[t] - Mathf.FloorToInt(stock[t] * Mathf.Clamp01(share));
+            if (lost <= 0) return 0;
+            stock[t] -= lost;
+            UI.ResourceGainPopups.Instance?.ShowLoss(store.transform.position, lost, type);
+            ResourceManager.Instance?.DropKept(type, lost);
+            return lost;
+        }
+
         /// <summary>What a hand demolition of this store would lose: what the other stores have no room for.</summary>
         public static List<ResourceAmount> WouldLose(BuildingInstance store)
         {

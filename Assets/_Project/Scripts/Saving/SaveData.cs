@@ -169,6 +169,10 @@ namespace CityBuilder.Saving
         /// <summary>The sandbox hunt (Maps/Hunting): seconds of play so far, and the herds standing.</summary>
         public float huntClock;
         public List<HerdEntry> herds = new List<HerdEntry>();
+        /// <summary>The sandbox predators (Maps/Predators): seconds of play, when the next attack is due (0: not set), the caves. The beasts are not kept.</summary>
+        public float predClock;
+        public float predNext;
+        public List<PredatorCaveEntry> predCaves = new List<PredatorCaveEntry>();
 
         /// <summary>
         /// Everything alight, and how far into its burn it is. Without this a reload was a fire
@@ -419,6 +423,14 @@ namespace CityBuilder.Saving
         public int health;
         /// <summary>The main base's great portal (4x4). Absent in older saves, which had none.</summary>
         public bool main;
+    }
+
+    /// <summary>One predators' cave (Maps/Predators): its island and where it stands.</summary>
+    [Serializable]
+    public class PredatorCaveEntry
+    {
+        public int island;
+        public float x, y, z, yaw;
     }
 
     [Serializable]

@@ -467,6 +467,14 @@ namespace CityBuilder.Saving
                         herds.Add(new Maps.Hunting.SavedHerd { Kind = h.kind, Size = h.size, Total = h.total, Alive = h.alive, Island = h.island, X = h.x, Z = h.z, Life = h.life });
                 Maps.Hunting.Instance.RestoreFromSave(data.huntClock, herds);
             }
+            if (Maps.Predators.Instance != null)
+            {
+                var caves = new List<Maps.Predators.SavedCave>();
+                if (data.predCaves != null)
+                    foreach (var c in data.predCaves)
+                        caves.Add(new Maps.Predators.SavedCave { Island = c.island, X = c.x, Y = c.y, Z = c.z, Yaw = c.yaw });
+                Maps.Predators.Instance.RestoreFromSave(data.predClock, data.predNext > 0f ? data.predNext : -1f, caves);
+            }
         }
 
         /// <summary>The sandbox Лечебница's patients, each back in his house and his bed with his clocks (after the buildings).</summary>
@@ -959,6 +967,8 @@ namespace CityBuilder.Saving
             {
                 // A camp's guards are not raiders: the tent musters them again on load.
                 if (orc == null || orc.IsGuard) continue;
+                // nor the sandbox's predators: they go back to their cave, a load starts without them
+                if (Combat.OrcUnit.IsPredator(orc.Kind)) continue;
                 orcIndices[orc] = data.orcs.Count;
                 data.orcs.Add(new OrcEntry { position = orc.transform.position, level = orc.Level, currentHealth = orc.CurrentHealth, kind = orc.Kind });
             }
@@ -1057,6 +1067,13 @@ namespace CityBuilder.Saving
                 Maps.Hunting.Instance.Capture(out data.huntClock, herds);
                 foreach (var h in herds)
                     data.herds.Add(new HerdEntry { kind = h.Kind, size = h.Size, total = h.Total, alive = h.Alive, island = h.Island, x = h.X, z = h.Z, life = h.Life });
+            }
+            if (Maps.Predators.Instance != null)
+            {
+                var caves = new List<Maps.Predators.SavedCave>();
+                Maps.Predators.Instance.Capture(out data.predClock, out data.predNext, caves);
+                foreach (var c in caves)
+                    data.predCaves.Add(new PredatorCaveEntry { island = c.Island, x = c.X, y = c.Y, z = c.Z, yaw = c.Yaw });
             }
             if (Citizens.Plague.Instance != null)
                 foreach (var o in Citizens.Plague.Instance.Outbreaks)

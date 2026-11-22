@@ -1,6 +1,6 @@
 ---
 name: project-predators
-description: "Sandbox predators (2026-11-22, in discussion) -- wolves/bears spawn at random spots on 3 cave islands, attack citizens and stores (stock lost in proportion to hp damage), retreat to a cave; nothing built"
+description: "Sandbox predators (2026-11-22) -- BUILT in code (Maps/Predators.cs, OrcKind.PredatorWolf/Bear, setup x2), not seen; card predators.md"
 metadata:
   node_type: memory
   type: project
@@ -17,7 +17,7 @@ The user's idea 2026-11-22, decided so far:
 - Kill reward: some food always; hides only if a HUNTER killed it (wolf +2, bear +5). Hunters get real hp + damage:
   a bear can kill a hunter, a hunter has a chance to kill a bear.
 - Bear and wolf need attack animations; models go as renders for approval first ([[feedback-approve-models-first]]).
-All 15 answered -> the card; concepts approved; MODEL RENDERS sent 2026-11-22 (Tools/blender/predators.py, render_predators.py), waiting for approval. Related: [[project-hunting]].
+All 15 answered -> the card; concepts + models approved (round 2). BUILT 2026-11-22: Maps/Predators.cs + PredatorErrand (steered OrcUnits), hunters fight them, cheat «Хищники сейчас»; not seen by the user, no tests. Open: +1 bear per 40 and predators-before-herds to confirm. Related: [[project-hunting]].
 
 **Why:** a real threat in the sandbox's peaceful time; ties into hunting (hides), cemetery/plague (bodies).
 **How to apply:** do not re-ask the decided points; card Design/features/predators.md once agreed.

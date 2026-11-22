@@ -1,14 +1,41 @@
 # Predators: wolves and bears on the islands (sandbox)
 
-> **Status (2026-11-22): DESIGN AGREED with the user (15 answers), concepts in work, NOTHING BUILT.**
-> Concepts `Design/concepts/predators/Pred_1..3` APPROVED («Да, к моделям»). MODEL RENDERS sent for approval 2026-11-22
-> (`Design/concepts/predators/models/`, `Tools/blender/render_predators.py`, never saves): `FaunaWolf` (308 tris),
-> `FaunaBear` (314 tris, roaring mouth), `FaunaCave` (913 tris, ~1.2 x 1.05, 0.6 high), the angry-bear icon rendered from
-> the bear's head; builders in `Tools/blender/predators.py` (jointed LegFL/FR/BL/BR + Head). Round 2 (the user's notes): straight legs
-> joined to the paws, the bear's lower jaw hinged under the jowls with a small tongue, the cave's arch stones set close.
-> ATTACK (the user): NO leg animation -- a jerk of the whole body at the target (thrown forward ~0.1, nose down 6-7
-> degrees, the head snapping), then back; to add to FigureAnimator for these two (the trot while walking stays). The Invasion's WildWolf/WildBear (wild.py, old blocky) stay as they are.
-> NOT installed/exported until approved.
+> **Status (2026-11-22): BUILT IN CODE (setup x2 run, NOT seen by the user, no tests).** Models approved after round 2
+> («Да, дальше»): `Models/Fauna/FaunaWolf.fbx`, `FaunaBear.fbx`, `FaunaCave.fbx` (Tools/blender/predators.py builders,
+> `predators_install.py` puts them in the .blend's «Хищники» collection, then export_fbx.py); notice icon
+> `UI/Icons/PredatorBear.png` (cropped from the approved Icon_AngryBear render).
+>
+> **How it is built:**
+> - `Scripts/Maps/Predators.cs` -- the manager (managers object, SetupProjectCityScene; `caveModel`). Picks the cave
+>   islands once the Town Hall stands (Hunting.PlayerIsland + random LandIslands, not orc/bot), cave on a shore cell
+>   (water within 2 cells), mouth turned inland, its cell occupied, FogCulling. Clock (sandbox only, `Infirmary.Active`):
+>   first `pred_first_attack_sec`, then `pred_attack_min/max_sec`; an attack goes to a cave island with residents
+>   (HousePeople.CitizensOn) and no raid on. `GroupFor`: wolves = ceil(res/10), bears = res>10 ? 1+(res-1)/40 : 0.
+> - The beasts are **OrcUnits** of new kinds `OrcKind.PredatorWolf = 44 / PredatorBear = 45` (IsMonster, IsPredator;
+>   stats `mon_pred_wolf_*` / `mon_pred_bear_*` via MonsterIds), spawned by `OrcRaidManager.SpawnOrcOfKind`
+>   (models `predatorWolfModel/predatorBearModel`, SetupProjectOrcs). So soldiers, heroes, the King, towers fight them,
+>   hp bars and corpses come free. `Steered = true` + `PredatorErrand` (same file) drives them: `OrcUnit.DefendSelf()`
+>   (new: fights a soldier in aggro radius the usual way), else a hunter in aggro radius, a villager near (bear only
+>   within 2.5x reach), the island's nearest Granary/BigGranary (goes to its door), any villager of the island; nothing
+>   -> home. Wolf bite = `Infirmary.Wound(agent)` (new: the bitten figure itself becomes the patient,
+>   `CitizenVisualsManager.TakeThisForPatient`); bear = `KillAgent` (body, cemetery/plague as they are). Store bite =
+>   `TryDamage` then `StoreLedger.Eat(store, Food, after/before)` (new). Success / 4 min -> `SteerTo(cave)` -> Destroy.
+> - Rewards on `OrcUnit.Died`: food always; hides only when the killing blow was a hunter's (`Predators.HunterHit`).
+> - Hunters (Hunting.cs): health `pred_hunter_health`; predators on their island come FIRST (before herds): walk within
+>   `pred_hunter_range_cells`, an arrow every `pred_hunter_shot_sec`, always hits for `pred_hunter_damage`.
+>   `HurtHunter` -> `KillHunter(h, "#log_hunter_killed_pred", "PredatorBear")`.
+> - Lunge: `FigureAnimator.Lunges` (set for predators in SpawnOrc): a blow = body forward 0.1, nose down 7 deg, head
+>   +14 deg (LungeAmount curve); legs only trot with the walk.
+> - Not on the minimap (MinimapAttackAlerts skips IsPredator); not saved as orcs (GameSaveController skips them) --
+>   the save keeps `predClock`, `predNext`, `predCaves`; a load starts with no beasts out.
+> - Notices (`#log_pred_wolves/_bear/_bears`, `#log_pred_bear_killed`, `#log_pred_store` once a raid) with the
+>   PredatorBear picture; the appear-notice follows the first beast (tap flies the camera).
+> - Cheats «Орки» tab: «Хищники сейчас» (`Predators.AttackNow`) + the countdown.
+> - Numbers: `pred_*` + `mon_pred_*` on «Еда и голод» (rows 68-97), texts on «Тексты: журнал событий» (116-121).
+>
+> **Traps:** a new OrcKind goes at the END of the enum (saves store the int). `IsMonster` now includes predators --
+> PiggyRunner / InvasionWaves treat them as monsters (no orc-kill task). The cave's mouth is Blender -y, turned 180 like
+> the figures. Hunters' herd logic is skipped while a predator is on their island.
 
 Read with: [hunting](hunting.md) (the Hunter's Hut, hunters, hides), [resources-and-storage](resources-and-storage.md)
 (Кладовая = Granary / BigGranary, StoreLedger per-store stock), [hazards-fire-sickness](hazards-fire-sickness.md)
@@ -52,5 +79,6 @@ Read with: [hunting](hunting.md) (the Hunter's Hut, hunters, hides), [resources-
 13. **Models:** wolf and bear, each with walk AND attack animations; the small animal cave. Renders for approval first.
 
 ## Open
-- Bears past 50 residents (rule 5's «и так далее») -- confirm Claude's +1 per 40.
-- What a hunter does against a predator vs a herd at the same time (proposed: predators first).
+- Bears past 50 residents (rule 5's «и так далее») -- Claude's +1 per 40 is built (pred_bear_per_residents), to confirm.
+- A hunter with both a herd and a predator on his island: predators first (built that way), to confirm.
+- Not seen in the game: the cave's look/placement on the shore, the lunge, the balance (bear vs a 110-hp Кладовая = 3 blows to half).

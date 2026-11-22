@@ -616,6 +616,28 @@ namespace CityBuilder.Citizens
             return null;
         }
 
+        /// <summary>This very villager falls ill (bitten by a wolf, Infirmary.Wound): out of the idle or working lists, the Infirmary walks him from now on. False if he is not one of them.</summary>
+        public bool TakeThisForPatient(CitizenAgent agent)
+        {
+            if (agent == null || !_allAgents.Contains(agent)) return false;
+            if (_idleAgents.Remove(agent)) return true;
+            foreach (var pair in _workingAgents)
+            {
+                if (!pair.Value.Remove(agent)) continue;
+                UnsubscribeWorkVisit(agent);
+                if (_claimedNodes.TryGetValue(agent, out var claimed))
+                {
+                    claimed.Release();
+                    _claimedNodes.Remove(agent);
+                }
+                if (pair.Key != null) pair.Key.LayOffWorker();
+                agent.gameObject.SetActive(true);
+                agent.SetIdleWander(agent.Home != null && agent.Home.CurrentHealth > 0 ? CentreOf(agent.Home) : agent.transform.position);
+                return true;
+            }
+            return false;
+        }
+
         /// <summary>The figures working at this building now (a Пожарная бригада's crew, FireManager).</summary>
         public void WorkersAt(ProductionBuilding building, List<CitizenAgent> into)
         {

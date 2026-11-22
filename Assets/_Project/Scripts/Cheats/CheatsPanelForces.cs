@@ -140,6 +140,15 @@ namespace CityBuilder.Cheats
                 if (Button($"Ждать набега: {Mathf.CeilToInt(raids.SecondsUntilNextRaid)} с → 0")) { raids.EndRaidWait(); Say("набег идёт"); }
                 GUILayout.EndHorizontal();
 
+                var predators = CityBuilder.Maps.Predators.Instance;
+                if (predators != null && CityBuilder.Maps.Predators.Active)
+                {
+                    GUILayout.BeginHorizontal();
+                    Label($"Хищники: пещер {predators.Caves.Count}, через {Mathf.CeilToInt(predators.SecondsToAttack)} с", 360f);
+                    if (Button("Хищники сейчас")) Say(predators.AttackNow() ? "хищники вышли" : "некуда (нет пещеры с жителями)");
+                    GUILayout.EndHorizontal();
+                }
+
                 Header("Набег сейчас");
                 GUILayout.BeginHorizontal();
                 Label($"Орков: {_raidSize}", 160f);

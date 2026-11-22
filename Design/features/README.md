@@ -34,7 +34,7 @@ game; batchmode loop). Read those two only when changing data or running Unity.
 | [gathering](gathering.md) | trees/rocks stock per node, ore veins, harvest radius, gatherer walk, manual tap-to-gather | лес, камень, сбор, радиус, лесопилка, жила, рудник |
 | [food-and-hunger](food-and-hunger.md) | eating, diet, starvation deaths, food variety | еда, голод, рацион |
 | [hunting](hunting.md) | sandbox herds (hares/deer/boars) on the islands, Hunter's Hut, bow hunting by chance, food + hides; BUILT 2026-11-21 (Maps/Hunting.cs), not seen | охота, стая, охотник, хижина охотника, шкуры, олени, кабаны, зайцы |
-| [predators](predators.md) | sandbox wolves/bears on 3 cave islands: wound/kill citizens, eat food stores by hp damage, back to the cave; hunters fight them (hides); DESIGN AGREED 2026-11-22, not built | хищники, волки, медведь, пещера, нападение зверей |
+| [predators](predators.md) | sandbox wolves/bears on 3 cave islands: wound/kill citizens, eat food stores by hp damage, back to the cave; hunters fight them (hides); BUILT 2026-11-22 (Maps/Predators.cs, OrcKind.PredatorWolf/Bear), not seen | хищники, волки, медведь, пещера, нападение зверей |
 | **Population** | | |
 | [citizens-and-workforce](citizens-and-workforce.md) | headcount, workers, workforce panel, citizen agents, tiers | жители, рабочие, назначить |
 | [happiness-and-migration](happiness-and-migration.md) | 6-factor happiness, arrivals/departures | довольство, миграция |

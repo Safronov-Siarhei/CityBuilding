@@ -137,6 +137,14 @@ namespace CityBuilder.EditorTools
                 if (model == null) Debug.LogWarning($"[SetupProject] {path} is missing -- run Tools/blender/tide.py and export_fbx.py.");
                 so.FindProperty(field).objectReferenceValue = model;
             }
+            // the sandbox's predators (Tools/blender/predators.py; Maps/Predators)
+            foreach (var (field, file) in new[] { ("predatorWolfModel", "FaunaWolf"), ("predatorBearModel", "FaunaBear") })
+            {
+                var path = $"Assets/_Project/Models/Fauna/{file}.fbx";
+                var model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (model == null) Debug.LogWarning($"[SetupProject] {path} is missing -- run Tools/blender/predators_install.py and export_fbx.py.");
+                so.FindProperty(field).objectReferenceValue = model;
+            }
             // the upgrade crystal's look (the user, 2026-11-01: bright, glowing, juicy -- it is paid content)
             so.FindProperty("crystalMaterial").objectReferenceValue = CrystalMaterial("Crystal", "CityBuilder/Crystal", null);
             so.FindProperty("crystalHaloMaterial").objectReferenceValue = CrystalMaterial("CrystalHalo", "CityBuilder/CrystalHalo", null);

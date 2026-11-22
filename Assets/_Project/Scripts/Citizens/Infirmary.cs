@@ -65,6 +65,25 @@ namespace CityBuilder.Citizens
         // the islands today's illness struck, one entry a person (SicknessManager): new patients come from there
         private readonly Queue<int> _expected = new Queue<int>();
 
+        // bitten by a wolf (Maps/Predators): these very figures are the next patients
+        private readonly Queue<CitizenAgent> _wounded = new Queue<CitizenAgent>();
+
+        /// <summary>
+        /// A wolf's bite (the sandbox predators, the user 2026-11-22): this villager is a patient now -- the town's sick
+        /// count one up, and the bitten figure itself goes for a bed. False if he could not be (already one, nobody well).
+        /// </summary>
+        public bool Wound(CitizenAgent agent)
+        {
+            if (agent == null || IsPatient(agent) || _wounded.Contains(agent)) return false;
+            var citizens = CitizenManager.Instance;
+            if (citizens == null || citizens.AddSick(1) == 0) return false;
+            _wounded.Enqueue(agent);
+            return true;
+        }
+
+        /// <summary>Bitten and not yet a patient (the predators leave him alone).</summary>
+        public bool IsWounded(CitizenAgent agent) => agent != null && (_wounded.Contains(agent) || IsPatient(agent));
+
         /// <summary>So many fell ill on this island today: the next patients are its people.</summary>
         public void Expect(int island, int count)
         {
@@ -274,6 +293,15 @@ namespace CityBuilder.Citizens
                 else saved.Inside = false;
                 HousePeople.Instance?.LayOffIslandExcess();
                 return saved;
+            }
+            while (_wounded.Count > 0)
+            {
+                var bitten = _wounded.Dequeue();
+                if (bitten == null || IsPatient(bitten) || visuals == null || !visuals.TakeThisForPatient(bitten)) continue;
+                var wounded = new Patient { Figure = bitten, Order = ++_order, Home = bitten.Home };
+                wounded.Island = bitten.Home != null ? HousePeople.IslandOf(bitten.Home) : HousePeople.IslandOf(bitten.transform.position);
+                HousePeople.Instance?.LayOffIslandExcess();
+                return wounded;
             }
             var island = _expected.Count > 0 ? _expected.Dequeue() : -1;
             var figure = visuals != null ? visuals.TakeForPatient(this, null, island) : null;

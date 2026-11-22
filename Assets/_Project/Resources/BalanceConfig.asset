@@ -2153,6 +2153,130 @@ MonoBehaviour:
       seconds: 180
     - coins: 70
       seconds: 240
+  - id: HunterHut
+    displayName: "\u0425\u0438\u0436\u0438\u043D\u0430 \u043E\u0445\u043E\u0442\u043D\u0438\u043A\u0430"
+    category: 5
+    cost:
+    - type: 0
+      amount: 40
+    - type: 1
+      amount: 10
+    recipes: []
+    productionIntervalSeconds: 6
+    fogRevealRadius: 6
+    citizensOnBuild: 0
+    storageGroup: 0
+    maxCount: 0
+    fireproofLevel: 0
+    levels:
+    - maxHealth: 100
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 1
+      beds: 0
+      graves: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      residentCoins: 0
+      intervalSeconds: 6
+      happiness: 0
+      buildSeconds: 20
+    - maxHealth: 160
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 2
+      beds: 0
+      graves: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      residentCoins: 0
+      intervalSeconds: 6
+      happiness: 0
+      buildSeconds: 30
+    - maxHealth: 250
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 3
+      beds: 0
+      graves: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      residentCoins: 0
+      intervalSeconds: 6
+      happiness: 0
+      buildSeconds: 40
+    - maxHealth: 360
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 4
+      beds: 0
+      graves: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      residentCoins: 0
+      intervalSeconds: 6
+      happiness: 0
+      buildSeconds: 50
+    - maxHealth: 500
+      defense: 0
+      housingCapacity: 0
+      maxWorkers: 5
+      beds: 0
+      graves: 0
+      batchesPerWorkerPerTick: 0
+      storageCapacity: 0
+      harvestRadius: 0
+      serviceRadius: 0
+      residentCoins: 0
+      intervalSeconds: 6
+      happiness: 0
+      buildSeconds: 60
+    requiredBuildingId: 
+    upgradeToLevel2Cost:
+    - type: 0
+      amount: 60
+    - type: 1
+      amount: 30
+    upgradeToLevel3Cost:
+    - type: 0
+      amount: 90
+    - type: 1
+      amount: 60
+    upgradeToLevel4Cost:
+    - type: 0
+      amount: 130
+    - type: 1
+      amount: 100
+    - type: 3
+      amount: 20
+    upgradeToLevel5Cost:
+    - type: 0
+      amount: 180
+    - type: 1
+      amount: 150
+    - type: 3
+      amount: 50
+    startsUnlocked: 0
+    unlockResearch:
+      coins: 40
+      seconds: 60
+    levelResearch:
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
+    - coins: 0
+      seconds: 0
   - id: Farm
     displayName: "\u041F\u043E\u043B\u0435"
     category: 5
@@ -9630,6 +9754,8 @@ MonoBehaviour:
   drawbridgeRaiseDegrees: 75
   drawbridgeRaiseSeconds: 1.5
   islandStartRocks: 40
+  rockRespawnSeconds: 180
+  rockRespawnShare: 0.5
   tutorialRewardCrystals: 25
   tutorialOfferWindowSeconds: 1200
   tutorialOfferHallSeconds: 60
@@ -9645,6 +9771,7 @@ MonoBehaviour:
   shopBonusChance: 0.15
   shopBonusMinSeconds: 300
   shopNoticeSeconds: 30
+  uiInfoCloseSeconds: 7
   shopStarterDelaySeconds: 120
   shopAdStubSeconds: 2
   boosterSlots: 4
@@ -9683,6 +9810,7 @@ MonoBehaviour:
   - 4
   - 4
   - 8
+  - 0
   - 0
   loadingSecondsEnter: 10
   loadingSecondsExit: 5
@@ -10150,6 +10278,44 @@ MonoBehaviour:
   foodFertileBonus: 1
   fisherShoreCells: 2
   foodInlandCells: 2
+  predFirstAttackSeconds: 900
+  predAttackMinSeconds: 360
+  predAttackMaxSeconds: 480
+  predCaves: 3
+  predSpawnGapCells: 10
+  predWolfPerResidents: 10
+  predBearFromResidents: 10
+  predBearPerResidents: 40
+  predBearChancePct: 33
+  predRetreatSeconds: 240
+  predWolfSuccessPct: 10
+  predStoreSuccessShare: 0.5
+  predWolfFood: 2
+  predBearFood: 6
+  predWolfHides: 2
+  predBearHides: 5
+  predHunterHealth: 60
+  predHunterDamage: 12
+  predHunterShotSeconds: 1.5
+  predHunterRangeCells: 5
+  huntFirstHerdSeconds: 600
+  huntHerds: 3
+  huntHerdLifeSeconds: 480
+  huntCheckSeconds: 10
+  huntShotSeconds: 30
+  huntShotRangeCells: 5
+  huntHerdRadiusCells: 7
+  huntBuildingGapCells: 10
+  huntSizeSmallPct: 50
+  huntSizeMediumPct: 35
+  huntCount: 040000000600000008000000030000000500000007000000020000000300000005000000
+  huntHitPct:
+  - 25
+  - 15
+  - 10
+  huntFood: 010000000200000003000000
+  huntHides: 010000000200000003000000
+  huntBoarAttackPct: 2
   tideWakeRadius: 14
   tideShamanHeal: 12
   tideShamanHealEverySeconds: 4
@@ -10585,6 +10751,18 @@ MonoBehaviour:
     attackIntervalSeconds: 1.6
     attackRange: 5
     walkSpeed: 1.5
+  - id: pred_wolf
+    maxHealth: 40
+    attackDamage: 6
+    attackIntervalSeconds: 1.2
+    attackRange: 0.8
+    walkSpeed: 1.6
+  - id: pred_bear
+    maxHealth: 220
+    attackDamage: 25
+    attackIntervalSeconds: 1.8
+    attackRange: 1
+    walkSpeed: 1.2
   invasionCamp1Monsters: 3
   invasionCamp2Monsters: 2
   invasionCamp3Monsters: 2

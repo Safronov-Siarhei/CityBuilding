@@ -173,6 +173,9 @@ namespace CityBuilder.Combat
         [SerializeField] private GameObject botArcherModel;
         // Стражи Глубин, the caches' guards (Tools/blender/tide.py)
         [SerializeField] private GameObject tideCrabModel;
+        // the sandbox's predators (Tools/blender/predators.py, Maps/Predators)
+        [SerializeField] private GameObject predatorWolfModel;
+        [SerializeField] private GameObject predatorBearModel;
         [SerializeField] private GameObject tideSharkModel;
         [SerializeField] private GameObject tideShamanModel;
         [SerializeField] private GameObject tidePufferModel;
@@ -647,7 +650,12 @@ namespace CityBuilder.Combat
                 Maps.SeasonStyle.NoSnow(figure);
                 // the jungle's beasts are jointed: they stand, run and strike; an orc is one mesh,
                 // and waddles and lunges as a whole
-                if (OrcUnit.IsMonster(kind)) root.AddComponent<FigureAnimator>().Bind(figure.transform);
+                if (OrcUnit.IsMonster(kind))
+                {
+                    var animator = root.AddComponent<FigureAnimator>();
+                    animator.Bind(figure.transform);
+                    animator.Lunges = OrcUnit.IsPredator(kind);
+                }
                 else root.AddComponent<OrcBodyAnimator>().Bind(figure.transform);
             }
             else
@@ -716,6 +724,8 @@ namespace CityBuilder.Combat
                 case OrcKind.BotSoldier: return botSoldierModel;
                 case OrcKind.BotArcher: return botArcherModel;
                 case OrcKind.TideCrab: return tideCrabModel;
+                case OrcKind.PredatorWolf: return predatorWolfModel;
+                case OrcKind.PredatorBear: return predatorBearModel;
                 case OrcKind.TideShark: return tideSharkModel;
                 case OrcKind.TideShaman: return tideShamanModel;
                 case OrcKind.TidePuffer: return tidePufferModel;

@@ -1109,6 +1109,28 @@ namespace CityBuilder.Core
         [SerializeField] private int foodFertileBonus = 1;
         [SerializeField] private int fisherShoreCells = 2;
         [SerializeField] private int foodInlandCells = 2;
+        // the sandbox's predators (the user, 2026-11-22; Maps/Predators, card predators.md): pred_* on «Еда и голод»;
+        // the beasts' own stats are mon_pred_wolf_* / mon_pred_bear_*.
+        [SerializeField] private float predFirstAttackSeconds = 900f;
+        [SerializeField] private float predAttackMinSeconds = 360f;
+        [SerializeField] private float predAttackMaxSeconds = 480f;
+        [SerializeField] private int predCaves = 3;
+        [SerializeField] private float predSpawnGapCells = 10f;
+        [SerializeField] private int predWolfPerResidents = 10;
+        [SerializeField] private int predBearFromResidents = 10;
+        [SerializeField] private int predBearPerResidents = 40;
+        [SerializeField] private float predBearChancePct = 33f;
+        [SerializeField] private float predRetreatSeconds = 240f;
+        [SerializeField] private float predWolfSuccessPct = 10f;
+        [SerializeField] private float predStoreSuccessShare = 0.5f;
+        [SerializeField] private int predWolfFood = 2;
+        [SerializeField] private int predBearFood = 6;
+        [SerializeField] private int predWolfHides = 2;
+        [SerializeField] private int predBearHides = 5;
+        [SerializeField] private int predHunterHealth = 60;
+        [SerializeField] private int predHunterDamage = 12;
+        [SerializeField] private float predHunterShotSeconds = 1.5f;
+        [SerializeField] private float predHunterRangeCells = 5f;
         // the sandbox hunt (the user, 2026-11-21; Maps/Hunting, card hunting.md): hunt_* on «Еда и голод».
         // Kinds in Hunting.Kind order: hare, deer, boar; sizes small, medium, large.
         [SerializeField] private float huntFirstHerdSeconds = 600f;
@@ -1214,6 +1236,7 @@ namespace CityBuilder.Core
             "tide_crab", "tide_shark", "tide_shaman", "tide_puffer", "tide_serpent",
             "drowned_rat", "dwarf_skeleton", "stone_guard", "drowned_dwarf", "eel", "forge_spirit", "dwarf_king", "canal_serpent",
             "fire_imp", "lava_hound", "salamander", "obsidian_golem", "ember_cultist", "magma_spawn", "dragon", "lava_titan",
+            "pred_wolf", "pred_bear",
         };
 
         [SerializeField] private List<MonsterStats> monsters = new List<MonsterStats>
@@ -2389,6 +2412,27 @@ namespace CityBuilder.Core
         public int HuntFood(int kind) => huntFood[Mathf.Clamp(kind, 0, 2)];
         public int HuntHides(int kind) => huntHides[Mathf.Clamp(kind, 0, 2)];
         public float HuntBoarAttackPct => huntBoarAttackPct;
+        // the sandbox's predators (Maps/Predators)
+        public float PredFirstAttackSeconds => predFirstAttackSeconds;
+        public float PredAttackMinSeconds => predAttackMinSeconds;
+        public float PredAttackMaxSeconds => predAttackMaxSeconds;
+        public int PredCaves => predCaves;
+        public float PredSpawnGapCells => predSpawnGapCells;
+        public int PredWolfPerResidents => predWolfPerResidents;
+        public int PredBearFromResidents => predBearFromResidents;
+        public int PredBearPerResidents => predBearPerResidents;
+        public float PredBearChancePct => predBearChancePct;
+        public float PredRetreatSeconds => predRetreatSeconds;
+        public float PredWolfSuccessPct => predWolfSuccessPct;
+        public float PredStoreSuccessShare => predStoreSuccessShare;
+        public int PredWolfFood => predWolfFood;
+        public int PredBearFood => predBearFood;
+        public int PredWolfHides => predWolfHides;
+        public int PredBearHides => predBearHides;
+        public int PredHunterHealth => predHunterHealth;
+        public int PredHunterDamage => predHunterDamage;
+        public float PredHunterShotSeconds => predHunterShotSeconds;
+        public float PredHunterRangeCells => predHunterRangeCells;
         public float TideWakeRadius => tideWakeRadius;
         public int TideShamanHeal => tideShamanHeal;
         public float TideShamanHealEverySeconds => tideShamanHealEverySeconds;
@@ -3376,6 +3420,26 @@ namespace CityBuilder.Core
             foodFertileBonus = (int)Read(economy, "food_fertile_bonus", foodFertileBonus);
             fisherShoreCells = (int)Read(economy, "fisher_shore_cells", fisherShoreCells);
             foodInlandCells = (int)Read(economy, "food_inland_cells", foodInlandCells);
+            predFirstAttackSeconds = Read(economy, "pred_first_attack_sec", predFirstAttackSeconds);
+            predAttackMinSeconds = Read(economy, "pred_attack_min_sec", predAttackMinSeconds);
+            predAttackMaxSeconds = Read(economy, "pred_attack_max_sec", predAttackMaxSeconds);
+            predCaves = (int)Read(economy, "pred_caves", predCaves);
+            predSpawnGapCells = Read(economy, "pred_spawn_gap_cells", predSpawnGapCells);
+            predWolfPerResidents = (int)Read(economy, "pred_wolf_per_residents", predWolfPerResidents);
+            predBearFromResidents = (int)Read(economy, "pred_bear_from_residents", predBearFromResidents);
+            predBearPerResidents = (int)Read(economy, "pred_bear_per_residents", predBearPerResidents);
+            predBearChancePct = Read(economy, "pred_bear_chance_pct", predBearChancePct);
+            predRetreatSeconds = Read(economy, "pred_retreat_sec", predRetreatSeconds);
+            predWolfSuccessPct = Read(economy, "pred_wolf_success_pct", predWolfSuccessPct);
+            predStoreSuccessShare = Read(economy, "pred_store_success_share", predStoreSuccessShare);
+            predWolfFood = (int)Read(economy, "pred_wolf_food", predWolfFood);
+            predBearFood = (int)Read(economy, "pred_bear_food", predBearFood);
+            predWolfHides = (int)Read(economy, "pred_wolf_hides", predWolfHides);
+            predBearHides = (int)Read(economy, "pred_bear_hides", predBearHides);
+            predHunterHealth = (int)Read(economy, "pred_hunter_health", predHunterHealth);
+            predHunterDamage = (int)Read(economy, "pred_hunter_damage", predHunterDamage);
+            predHunterShotSeconds = Read(economy, "pred_hunter_shot_sec", predHunterShotSeconds);
+            predHunterRangeCells = Read(economy, "pred_hunter_range_cells", predHunterRangeCells);
             huntFirstHerdSeconds = Read(economy, "hunt_first_herd_sec", huntFirstHerdSeconds);
             huntHerds = (int)Read(economy, "hunt_herds", huntHerds);
             huntHerdLifeSeconds = Read(economy, "hunt_herd_life_sec", huntHerdLifeSeconds);

@@ -103,6 +103,9 @@ namespace CityBuilder.Maps
             public float Timer, CheckClock, ShotClock;
             public float Loose = -1f;
             public bool Dead;
+            /// <summary>Against the predators (pred_hunter_health): a bear's or a wolf's blows take it.</summary>
+            public int Health;
+            public OrcUnit Beast;
         }
 
         private sealed class Arrow
@@ -111,6 +114,7 @@ namespace CityBuilder.Maps
             public Animal Prey;
             public bool Hit;
             public float Left;
+            public OrcUnit Beast;
         }
 
         private readonly List<Herd> _herds = new List<Herd>();
@@ -238,13 +242,13 @@ namespace CityBuilder.Maps
             }
         }
 
-        private static int IslandOfCell(Vector2Int? cell)
+        internal static int IslandOfCell(Vector2Int? cell)
         {
             var map = MeshMapApplier.Instance;
             return cell.HasValue && map != null && map.IslandLabels != null ? map.IslandAt(cell.Value) : int.MinValue;
         }
 
-        private static int PlayerIsland()
+        internal static int PlayerIsland()
         {
             foreach (var b in BuildingInstance.All)
                 if (b != null && !b.IsBot && b.Data != null && b.Data.buildingName == BuildingIds.TownHall) return HousePeople.IslandOf(b);
@@ -268,6 +272,21 @@ namespace CityBuilder.Maps
             return candidates.Count == 0 ? int.MinValue : candidates[Random.Range(0, candidates.Count)];
         }
 
+        /// <summary>The map's land islands (sampled every other cell), for the predators' caves.</summary>
+        internal IEnumerable<int> LandIslands()
+        {
+            LearnIslands();
+            foreach (var pair in _islandCells)
+                if (pair.Value.Count >= 40) yield return pair.Key;
+        }
+
+        /// <summary>The island's land cells (every other one), or null.</summary>
+        internal List<Vector2Int> CellsOf(int island)
+        {
+            LearnIslands();
+            return _islandCells.TryGetValue(island, out var cells) ? cells : null;
+        }
+
         private Herd HerdOn(int island, bool includeLeaving = false)
         {
             foreach (var h in _herds)
@@ -276,7 +295,7 @@ namespace CityBuilder.Maps
         }
 
         /// <summary>Open flat land with nothing on it (the Wildlife's own test), and its height.</summary>
-        private static bool OnLand(Vector3 p, out float y)
+        internal static bool OnLand(Vector3 p, out float y)
         {
             y = 0f;
             var map = MeshMapApplier.Instance;
@@ -287,7 +306,7 @@ namespace CityBuilder.Maps
             return Mathf.Abs(y - grid.GroundHeight) < 0.6f && grid.IsAreaFree(cell, Vector2Int.one);
         }
 
-        private static bool FarFromBuildings(Vector3 p, float gap)
+        internal static bool FarFromBuildings(Vector3 p, float gap)
         {
             foreach (var b in BuildingInstance.All)
             {
@@ -647,7 +666,7 @@ namespace CityBuilder.Maps
             }
             return new Hunter
             {
-                Hut = hut, Root = root, Animator = animator, Timer = Random.Range(1f, 4f),
+                Hut = hut, Root = root, Animator = animator, Timer = Random.Range(1f, 4f), Health = Mathf.Max(1, Config.PredHunterHealth),
                 CheckClock = Random.Range(0f, Config.HuntCheckSeconds),
             };
         }
@@ -671,7 +690,32 @@ namespace CityBuilder.Maps
             if (h.Loose >= 0f)
             {
                 h.Loose -= dt;
-                if (h.Loose < 0f) Shoot(h);
+                if (h.Loose < 0f)
+                {
+                    if (h.Beast != null) ShootBeast(h);
+                    else Shoot(h);
+                }
+                return;
+            }
+
+            // predators on his island come first (card predators.md, rule 9): he goes within range and shoots
+            var predators = Predators.Instance;
+            h.Beast = predators != null ? predators.NearestOn(h.Hut.Island, h.Root.position) : null;
+            if (h.Beast != null)
+            {
+                var reach = Config.PredHunterRangeCells * Cell;
+                var toBeast = (h.Beast.transform.position - h.Root.position).WithY(0f);
+                h.ShotClock -= dt;
+                if (toBeast.magnitude > reach * 0.9f)
+                {
+                    WalkTo(h, h.Beast.transform.position, HunterHurry, dt, reach * 0.8f);
+                    return;
+                }
+                Face(h.Root, toBeast, dt * 6f);
+                if (h.ShotClock > 0f) return;
+                h.ShotClock = Config.PredHunterShotSeconds;
+                if (h.Animator != null) h.Animator.OnStruck();
+                h.Loose = LooseDelay;
                 return;
             }
 
@@ -753,6 +797,40 @@ namespace CityBuilder.Maps
             _arrows.Add(new Arrow { From = h, Prey = prey, Hit = hit, Left = ArrowFlight });
         }
 
+        private void ShootBeast(Hunter h)
+        {
+            var beast = h.Beast;
+            if (beast == null || beast.CurrentHealth <= 0) return;
+            CombatProjectiles.FireAt(ProjectileKind.Arrow, CombatProjectiles.MuzzleOfUnit(h.Root), beast.transform, Vector3.up * 0.25f);
+            _arrows.Add(new Arrow { From = h, Beast = beast, Hit = true, Left = ArrowFlight });
+        }
+
+        /// <summary>The nearest live hunter of this island within `radius` of `from` (a predator's target), or null.</summary>
+        public Transform NearestHunter(int island, Vector3 from, float radius)
+        {
+            Transform best = null;
+            var bestD = radius * radius;
+            foreach (var h in _hunters)
+            {
+                if (h.Dead || h.Root == null || !HousePeople.Same(h.Hut.Island, island)) continue;
+                var d = (h.Root.position - from).sqrMagnitude;
+                if (d < bestD) { bestD = d; best = h.Root; }
+            }
+            return best;
+        }
+
+        /// <summary>A predator's blow on a hunter: past his pred_hunter_health he is dead.</summary>
+        public void HurtHunter(Transform hunter, int damage)
+        {
+            foreach (var h in _hunters)
+            {
+                if (h.Root != hunter || h.Dead) continue;
+                h.Health -= Mathf.Max(1, damage);
+                if (h.Health <= 0) KillHunter(h, "#log_hunter_killed_pred", Predators.NoticeIcon);
+                return;
+            }
+        }
+
         private void TickArrows(float dt)
         {
             for (var i = _arrows.Count - 1; i >= 0; i--)
@@ -761,6 +839,11 @@ namespace CityBuilder.Maps
                 arrow.Left -= dt;
                 if (arrow.Left > 0f) continue;
                 _arrows.RemoveAt(i);
+                if (arrow.Beast != null)
+                {
+                    Predators.Instance?.HunterHit(arrow.Beast, Config.PredHunterDamage);
+                    continue;
+                }
                 var prey = arrow.Prey;
                 if (prey == null || prey.Root == null || prey.State == 3) continue;
                 if (arrow.Hit)
@@ -797,10 +880,10 @@ namespace CityBuilder.Maps
             boar.State = 2;
             boar.Timer = Mathf.Clamp(to.magnitude / (BoarSpeed * 6f), 0.4f, 1.5f);
             boar.Velocity = to.normalized * BoarSpeed * 6f;
-            KillHunter(h);
+            KillHunter(h, "#log_hunter_killed", "HerdBoar");
         }
 
-        private void KillHunter(Hunter h)
+        private void KillHunter(Hunter h, string notice, string picture)
         {
             h.Dead = true;
             var at = h.Root.position;
@@ -811,8 +894,8 @@ namespace CityBuilder.Maps
                 var died = citizens.KillCitizens(1, true);
                 if (died > 0) Remains.Instance?.Drop(at);
             }
-            EventLogManager.Instance?.Post(GameEvent.At(Localization.Get("#log_hunter_killed"), EventSeverity.Danger,
-                EventGlyph.Skull, "HerdBoar", at));
+            EventLogManager.Instance?.Post(GameEvent.At(Localization.Get(notice), EventSeverity.Danger,
+                EventGlyph.Skull, picture, at));
             if (h.Root != null) Destroy(h.Root.gameObject);
         }
 

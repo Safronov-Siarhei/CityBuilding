@@ -1030,6 +1030,14 @@ namespace CityBuilder.EditorTools
             huntingSO.FindProperty("highlightMaterial").objectReferenceValue = huntLit;
             huntingSO.ApplyModifiedPropertiesWithoutUndo();
 
+            // the sandbox predators (the user, 2026-11-22; card predators.md): the animal cave (Tools/blender/predators.py);
+            // the wolf and the bear are OrcRaidManager's (predatorWolfModel / predatorBearModel)
+            var predators = managers.AddComponent<CityBuilder.Maps.Predators>();
+            var predatorsSO = new SerializedObject(predators);
+            predatorsSO.FindProperty("caveModel").objectReferenceValue =
+                AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Fauna/FaunaCave.fbx");
+            predatorsSO.ApplyModifiedPropertiesWithoutUndo();
+
             // sandbox fires v2 (the user, 2026-11-14): the opening film's flames and smoke on the roof,
             // a fire mark over it (UI/Icons/FireMark.png, Tools/ui/sick_mark_icon.py), the firefighters'
             // buckets; residents stepping into buildings; the thunderstorm

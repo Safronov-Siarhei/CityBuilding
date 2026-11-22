@@ -132,6 +132,13 @@ namespace CityBuilder.Combat
 
         /// <summary>The raid's fire-raiser (sandbox fires, the user 2026-11-14): runs from building to building setting them alight (TorchErrand).</summary>
         Torchbearer = 43,
+
+        // the sandbox's predators (Maps/Predators, card predators.md; the user, 2026-11-22): come out on the cave
+        // islands, bite the people and the food stores, go back to the cave (PredatorErrand steers them). Stats mon_pred_*.
+        /// <summary>A wolf of the sandbox: wounds the people, gnaws the food stores.</summary>
+        PredatorWolf = 44,
+        /// <summary>A bear of the sandbox: kills the people, breaks the food stores open.</summary>
+        PredatorBear = 45,
     }
 
     /// <summary>
@@ -204,12 +211,17 @@ namespace CityBuilder.Combat
                 case OrcKind.LavaTitan: return "lava_titan";
                 case OrcKind.BotSoldier: return "bot_soldier";
                 case OrcKind.BotArcher: return "bot_archer";
+                case OrcKind.PredatorWolf: return "pred_wolf";
+                case OrcKind.PredatorBear: return "pred_bear";
                 default: return "orc";
             }
         }
 
         /// <summary>One of the Invasion jungle's monsters rather than an orc.</summary>
-        public static bool IsMonster(OrcKind kind) => (kind >= OrcKind.Wolf && kind <= OrcKind.Giant) || IsDungeonMonster(kind) || IsTide(kind) || IsBotSide(kind);
+        public static bool IsMonster(OrcKind kind) => (kind >= OrcKind.Wolf && kind <= OrcKind.Giant) || IsDungeonMonster(kind) || IsTide(kind) || IsBotSide(kind) || IsPredator(kind);
+
+        /// <summary>One of the sandbox's predators (Maps/Predators): no minimap mark, no raid's business.</summary>
+        public static bool IsPredator(OrcKind kind) => kind == OrcKind.PredatorWolf || kind == OrcKind.PredatorBear;
 
         /// <summary>The bot kingdom's soldiers at war (the user, 2026-11-04): the town's enemies, never the bot's.</summary>
         public static bool IsBotSide(OrcKind kind) => kind == OrcKind.BotSoldier || kind == OrcKind.BotArcher;
@@ -520,6 +532,33 @@ namespace CityBuilder.Combat
             FaceAlong(to);
             return true;
         }
+
+        /// <summary>
+        /// For a steered one that still fights back (the sandbox's predators, PredatorErrand): a soldier,
+        /// hero or the King in its aggro radius is fought the usual way. True while one is being fought.
+        /// </summary>
+        public bool DefendSelf()
+        {
+            _soldierScanTimer -= Time.deltaTime;
+            if ((_soldierTarget != null && _soldierTarget.CurrentHealth <= 0) || _soldierScanTimer <= 0f)
+            {
+                _soldierScanTimer = SoldierScanIntervalSeconds * (0.75f + 0.5f * Random.value);
+                if (!_retaliating || !StillWorthChasing(_soldierTarget))
+                {
+                    _retaliating = false;
+                    _soldierTarget = FindNearestSoldierInAggroRange();
+                }
+            }
+            if (_soldierTarget == null) return false;
+            FightSoldier();
+            return true;
+        }
+
+        /// <summary>Turns to `target` and shows a blow (the figure's animators hear Struck); the damage is the caller's.</summary>
+        public void ShowStrike(Vector3 target) => StrikeAt(target);
+
+        /// <summary>The aggro radius: how near a defender must come before it is fought.</summary>
+        public float AggroRadius => _soldierAggroRadius;
 
         private void FaceAlong(Vector3 direction)
         {
