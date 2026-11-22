@@ -177,19 +177,20 @@ def prisoner_pose(name, t):
         q["hips_loc"] = [0, 0, 0.0]
         return q
     if name == "CinePeasantWoman":
-        q = ka.crouch(0.75)
-        for s, k in (("L", 1), ("R", -1)):                                # arms round the girl
-            q["upper_arm." + s] = [-60, k * 22, 0]
-            q["forearm." + s] = [-70, 0, 0]
-        q["chest"][0] += 15 + 3 * math.sin(TAU * t / 1.4)
-        q["head"][0] += 10
+        q = ra.stand(t)
+        for s, k in (("L", 1), ("R", -1)):                                # her arms round the girl's back
+            q["upper_arm." + s] = [-38, k * 12, 0]
+            q["forearm." + s] = [-62, 0, k * 25]
+        q["chest"][0] += 14 + 3 * math.sin(TAU * t / 1.4)
+        q["head"][0] += 24                                                 # looking down at her
         return q
     if name == "CineGirl":
-        q = ra.stand(t)
-        q["chest"][0] += 18
-        q["head"][2] += 30
-        q["upper_arm.L"] = [-40, 10, 0]
-        q["forearm.L"] = [-60, 0, 0]
+        q = ra.stand(t)                                                    # her face in her mother's skirt
+        q["chest"][0] += 10
+        q["head"][0] += 8
+        for s, k in (("L", 1), ("R", -1)):
+            q["upper_arm." + s] = [-55, k * 22, 0]
+            q["forearm." + s] = [-40, 0, 0]
         return q
     if name == "CineMerchant":
         q = ka.crouch(0.95)                                               # sunk on the floor
@@ -222,14 +223,58 @@ CAM_FROM = (Vector((0.0, -6.0, 2.6)), Vector((0.0, 1.0, 0.3)), 28.0)
 def cam_to():
     """The push's end: on the old man's face between the bars."""
     ex, ey = ELDER_CAGE[0], ELDER_CAGE[1]
-    at = ELDER_AT + Vector((0, 0, 0.62))
-    return at + Vector((0.06, -1.3, 0.06)), at, 45.0
+    at = ELDER_AT + Vector((0, 0, 0.42))                          # his chest and face in the middle of the frame
+    fwd = facing(cg.ELDER_CAGE)
+    return at + fwd * 1.45 + Vector((0.04, 0.0, 0.08)), at, 42.0
+
+
+PEASANT_AT = None
 
 
 def camera(t):
+    look = os.environ.get("GLADE_LOOK", "")
+    if look.startswith("cage"):                                               # a check of one cage's prisoners
+        i = int(look[4:])
+        at = cage_point(i, 0, 0) + Vector((0, 0, 0.35))
+        return at + facing(i) * 1.7 + Vector((0, 0, 0.35)), at, 30.0
+    if os.environ.get("GLADE_LOOK") == "peasant" and PEASANT_AT is not None:   # a check of his grip, not the film
+        at = PEASANT_AT + Vector((0, 0, 0.4))
+        return at + facing(0) * float(os.environ.get("GLADE_SIDE", "1")) * 1.3 + Vector((0, 0, 0.1)), at, 42.0
     (p0, a0, l0), (p1, a1, l1) = CAM_FROM, cam_to()
     u = ease(env(t, 0.8, 6.6))
     return p0.lerp(p1, u), a0.lerp(a1, u), l0 + (l1 - l0) * u
+
+
+def facing(i):
+    """The way the people in cage i face (they are turned by the cage's `turn`; a figure faces -y): the bars they
+    hold are on that side."""
+    a = math.radians(cg.CAGES[i][2])
+    return Vector((math.sin(a), -math.cos(a), 0.0))
+
+
+GRIPPERS = {"CineElder": ("L",), "CinePeasant": ("L", "R")}
+BARS = cg.GAME_FOLK * 0.37 - 0.012          # the cage's front bars from its middle (orccage1.HALF, grown)
+BAR_STEP = cg.GAME_FOLK * 0.74 / 6          # orccage1.ring_of_bars: 6 gaps on the side the people face (no door)
+
+
+def to_bars(p):
+    """Moves a prisoner along his cage's forward line so his gripping hand(s) sit on the front bars."""
+    i = p["cage"]
+    centre = cage_point(i, 0.0, 0.0)
+    fwd = facing(i)
+    arm = p["arm"]
+    for _ in range(2):
+        arm.matrix_world = Matrix.Translation(p["pos"]) @ Matrix.Rotation(math.radians(p["turn"]), 4, 'Z')
+        aa.rest(arm)
+        ka.apply(arm, prisoner_pose(p["name"], 0.0), p["scale"])
+        bpy.context.view_layer.update()
+        hands = [arm.matrix_world @ arm.pose.bones["forearm." + s].tail for s in GRIPPERS[p["name"]]]
+        reach = max((h - centre).dot(fwd) for h in hands)
+        # and sideways, so the hand closes on a bar, not between two (the bars every BAR_STEP across that side)
+        side = Vector((-fwd.y, fwd.x, 0.0))
+        lat = [(h - centre).dot(side) for h in hands]
+        shift = sum(round(s / BAR_STEP) * BAR_STEP - s for s in lat) / len(lat)
+        p["pos"] = p["pos"] + fwd * (BARS - reach) + side * shift
 
 
 # ---------------------------------------------------------------- the take
@@ -265,9 +310,26 @@ def build():
             else:
                 scale = tf.FIGURES[name][1]
                 arm = ka.rig_figure(tf.make(name, (0, 0, 0)), scale)
+            extra = 0.0
             if name == "CineElder":
                 dy = ELDER_DY
-            folk.append({"arm": arm, "scale": scale, "name": name, "pos": cage_point(i, dx, dy), "turn": turn})
+            if name == "CinePeasantWoman":
+                dx, dy = 0.0, 0.05
+            if name == "CineGirl":
+                dx, dy, extra = 0.0, -0.1, 180.0                          # close in front of her mother, facing her
+            folk.append({"arm": arm, "scale": scale, "name": name, "pos": cage_point(i, dx, dy), "turn": turn + extra, "cage": i})
+    # the ones who hold the bars stand where their hands MEET the front bars (the user: «держат воздух»)
+    for p in folk:
+        if p["name"] in GRIPPERS:
+            to_bars(p)
+            global ELDER_AT, PEASANT_AT
+            if p["name"] == "CineElder":
+                ELDER_AT = p["pos"]
+            if p["name"] == "CinePeasant":
+                PEASANT_AT = p["pos"]
+            if os.environ.get("GLADE_DEBUG"):
+                print("DBG", p["name"], tuple(round(v, 3) for v in p["pos"]), "centre", tuple(round(v, 3) for v in cage_point(p["cage"], 0, 0)),
+                      "facing", tuple(round(v, 3) for v in facing(p["cage"])), "rotz", round(math.degrees(p["arm"].matrix_world.to_euler().z), 1))
     for o in orcs + folk:
         act(o["arm"])
     cam = bpy.data.objects.new("GladeCam", bpy.data.cameras.new("GladeCam"))

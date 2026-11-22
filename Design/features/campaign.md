@@ -1232,6 +1232,13 @@ FpsCounter). Redmi Pad ~40 fps in play; Low tier: NO SUN SHADOWS in mission 2 (t
        - the woman crouches holding the girl;
        - the merchant sits with his head in his hands, the boy rubs his eyes;
        - the OLD MAN stands by the front bars, the left hand on a bar, the staff low, head bowed; he lifts his head at 6.0 s.
-     - TRAP: `ea.idle` carries the staff's `aim.*` keys, which `ka.apply` rejects. The elder rig needs `bend=ea.stoop` (not `elder.stoop`). For the film the chief and the extra monsters will need cine versions on the rig (now the game's static models).
+     - TRAP: `ea.idle` carries the staff's `aim.*` keys, which `ka.apply` rejects. The elder rig needs `bend=ea.stoop` (not `elder.stoop`).
+     - v2 (the user: the old man does not hold a bar, he stands back; the camera ends with only his head at the bottom; the others hold the air):
+       - `to_bars` moves each bar-holder (the old man: left hand; the peasant: both) along the way he faces, so the hand sits on the bars;
+       - it also moves him sideways onto the nearest bar (`BAR_STEP`);
+       - the push ends on the old man's chest and face in the middle;
+       - the mother stands holding the girl, who is close in front of her, facing her.
+     - The people in a cage face where the cage's `turn` points (`facing(i)`); the cage's door is on their back side.
+     - Check modes (not the film): `GLADE_LOOK=cage<i>` frames one cage from the front; `GLADE_LOOK=peasant`; `GLADE_DEBUG=1`. For the film the chief and the extra monsters will need cine versions on the rig (now the game's static models).
     TRAP: importing orccage1.py (or kit.borrow of it) runs its main() and orcstone1's, which SAVE the open .blend -- the repo copy Blender/Buildings-Size1-Models.blend got overwritten once and was restored from the Drive by blend_sync. captives_glade loads them through `_quiet` (main() cut out), and renders run on a COPY of the .blend;
   - anims: the King talking from the saddle, the monster in the cage, prisoners in cages, volunteers stepping out, the amulet close-up.
