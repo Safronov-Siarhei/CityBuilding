@@ -17,7 +17,7 @@ The user's idea 2026-11-22, decided so far:
 - Kill reward: some food always; hides only if a HUNTER killed it (wolf +2, bear +5). Hunters get real hp + damage:
   a bear can kill a hunter, a hunter has a chance to kill a bear.
 - Bear and wolf need attack animations; models go as renders for approval first ([[feedback-approve-models-first]]).
-All 15 questions answered 2026-11-22 -> the card. Next: concept screens, then model renders (wolf, bear, cave, angry-bear icon). Related: [[project-hunting]].
+All 15 answered -> the card; concepts approved; MODEL RENDERS sent 2026-11-22 (Tools/blender/predators.py, render_predators.py), waiting for approval. Related: [[project-hunting]].
 
 **Why:** a real threat in the sandbox's peaceful time; ties into hunting (hides), cemetery/plague (bodies).
 **How to apply:** do not re-ask the decided points; card Design/features/predators.md once agreed.

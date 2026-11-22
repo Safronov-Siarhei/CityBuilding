@@ -1,8 +1,13 @@
 # Predators: wolves and bears on the islands (sandbox)
 
 > **Status (2026-11-22): DESIGN AGREED with the user (15 answers), concepts in work, NOTHING BUILT.**
-> Next: concept screens `Design/concepts/predators/` -> the user's yes -> model renders (wolf, bear with walk + attack
-> animations, the small animal cave, the «angry bear» notice icon) for approval -> build.
+> Concepts `Design/concepts/predators/Pred_1..3` APPROVED («Да, к моделям»). MODEL RENDERS sent for approval 2026-11-22
+> (`Design/concepts/predators/models/`, `Tools/blender/render_predators.py`, never saves): `FaunaWolf` (308 tris),
+> `FaunaBear` (314 tris, roaring mouth), `FaunaCave` (913 tris, ~1.2 x 1.05, 0.6 high), the angry-bear icon rendered from
+> the bear's head; builders in `Tools/blender/predators.py` (jointed LegFL/FR/BL/BR + Head). Attack = FigureAnimator's
+> quadruped bite (head dips and snaps) for both; the bear's paw swipe (LegFR up and down) is to be added to
+> FigureAnimator when building. The Invasion's WildWolf/WildBear (wild.py, old blocky) stay as they are.
+> NOT installed/exported until approved.
 
 Read with: [hunting](hunting.md) (the Hunter's Hut, hunters, hides), [resources-and-storage](resources-and-storage.md)
 (Кладовая = Granary / BigGranary, StoreLedger per-store stock), [hazards-fire-sickness](hazards-fire-sickness.md)
