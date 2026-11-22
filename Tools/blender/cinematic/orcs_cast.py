@@ -229,9 +229,10 @@ def torchbearer():
     return parts(waist, chest, head_fn, arm_parts(hold=hold))
 
 
-def spearman():
+def spearman(armed=True):
     """A raider behind a round hide-and-board shield with three rust claw slashes and an iron boss, a
-    spear in the right hand; a hide hood with a bone skull-cap, a spiked collar."""
+    spear in the right hand; a hide hood with a bone skull-cap, a spiked collar. Unarmed (the caged
+    monster of level 3's prologue, the user 2026-11-22: «без оружия»): iron shackles on both wrists."""
     def waist(b):
         kilt(b, skulls=2)
 
@@ -255,6 +256,10 @@ def spearman():
 
     def hold(b, k, wr):
         x, y, z = wr.x, wr.y - 0.02, wr.z - 0.06
+        if not armed:
+            b.cylinder(wr.x, wr.y, wr.z + 0.01, wr.z + 0.05, 0.042, o.METAL, sides=8)          # a shackle
+            b.ball(wr.x, wr.y - 0.045, wr.z + 0.0, 0.014, 0.02, o.METAL, sides=5)             # its ring
+            return
         if k == -1:
             b.rod((x, y + 0.02, 0.0), (x, y - 0.04, z + 0.42), 0.02, o.TIMBER_LIGHT)          # the spear shaft
             b.pyramid(x, y - 0.042, z + 0.42, 0.016, 0.006, z + 0.53, o.METAL)                 # its head
@@ -276,6 +281,7 @@ FIGURES = {
     "CineOrcChampion": (champion, 1.3),
     "CineOrcTorch": (torchbearer, 1.0),
     "CineOrcSpear": (spearman, 1.0),
+    "CineOrcCaptive": (lambda: spearman(armed=False), 1.0),
 }
 
 

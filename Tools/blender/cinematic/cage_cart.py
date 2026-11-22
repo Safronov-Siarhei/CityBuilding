@@ -137,16 +137,31 @@ def cage(b):
         b.box(x0 - 0.06, x1 + 0.06, ya, yb, zr, zr + 0.03, WOOD if i % 2 else WOOD_L, bevel=0.003)
     for y in (y0 + 0.06, (y0 + y1) / 2, y1 - 0.06):
         b.box(x0 - 0.065, x1 + 0.065, y - 0.016, y + 0.016, zr + 0.03, zr + 0.038, IRON)
-    # straw on the floor, a little hanging out between the bars
-    for x, y, r in ((-0.12, -0.25, 0.09), (0.1, 0.05, 0.11), (-0.05, 0.3, 0.1), (0.16, -0.32, 0.06), (-0.2, 0.1, 0.07)):
-        b.blob(x, y, z0, r, 0.025, 'hay', sides=6)
+    # straw on the floor: loose tufts of stalks, a few poking out between the bars
+    import random
+    rnd = random.Random(7)
+    for cx, cy, r, n in ((-0.14, -0.28, 0.1, 26), (0.12, 0.08, 0.12, 30), (-0.08, 0.32, 0.1, 24), (0.2, -0.36, 0.07, 14),
+                         (-0.24, 0.06, 0.08, 16)):
+        for _ in range(n):
+            a, rr = rnd.uniform(0, 6.283), r * rnd.random() ** 0.5
+            x, y = cx + rr * math.cos(a), cy + rr * math.sin(a)
+            t2 = rnd.uniform(0, 6.283)
+            ln = rnd.uniform(0.05, 0.1)
+            z = z0 + rnd.uniform(0.002, 0.018)
+            b.rod((x, y, z), (x + ln * math.cos(t2), y + ln * math.sin(t2), z + rnd.uniform(0.0, 0.02)), 0.006,
+                  'hay' if rnd.random() < 0.6 else 'roof_straw')
     # the King's pennon on a pole at the front left corner, a lantern at the back right
     px, py = x0 - 0.05, y0 - 0.03
     b.cylinder(px, py, z0, zr + 0.42, 0.012, WOOD_D, sides=6)
     b.ball(px, py, zr + 0.42, 0.018, 0.03, 'gold', sides=6)
-    b.prism([(0, 0), (0.0, -0.16), (0.3, -0.08)], (px, py - 0.004, zr + 0.4), (0, -1, 0), (0, 0, 1), 0.008, 'banner_blue')
-    b.box(px - 0.003, px + 0.003, py - 0.13, py - 0.11, zr + 0.25, zr + 0.36, 'gold')       # the cross, upright
-    b.box(px - 0.003, px + 0.003, py - 0.16, py - 0.08, zr + 0.31, zr + 0.33, 'gold')       # and its arm
+    # the cloth hangs from the pole's top along -y: s along -y, z down from the top; thickness on -x
+    top = zr + 0.4
+    b.prism([(0, 0), (0.0, -0.16), (0.3, -0.08)], (px, py - 0.004, top), (0, -1, 0), (0, 0, 1), 0.008, 'banner_blue')
+    # the gold cross inside the cloth (the user: it stuck out of the flag), proud of both faces by a hair
+    def cross_bar(s0, s1, za, zb):
+        b.box(px - 0.0095, px + 0.0015, py - 0.004 - s1, py - 0.004 - s0, top + za, top + zb, 'gold')
+    cross_bar(0.09, 0.11, -0.122, -0.04)                  # the upright, within the cloth at its width there
+    cross_bar(0.065, 0.135, -0.07, -0.055)                # the arm
     lx, ly = x1 + 0.05, y1 + 0.02
     b.rod((x1, ly, z1 - 0.05), (lx, ly, z1 - 0.05), 0.012, IRON)
     b.box(lx - 0.025, lx + 0.025, ly - 0.025, ly + 0.025, z1 - 0.15, z1 - 0.07, 'window_light')
@@ -204,10 +219,16 @@ def render(out):
     import orcs_cast
     sc, cam, ground = _scene(out)
     objs = [make("CineCageCart")]
-    orc = orcs_cast.make("CineOrcSpear", (0.0, 0.1, SCALE * BED_Z))
+    orc = orcs_cast.make("CineOrcCaptive", (0.0, 0.1, SCALE * BED_Z))
     objs.append(orc)
-    for i, x in enumerate((-0.16, 0.16)):
-        objs.append(cavalry.make_horse("CineWarhorse", (x, -SCALE * (HALF_L + 0.66), 0), obj="CartHorse%d" % i))
+    import horse
+    keep = horse.BLUE, horse.GOLD
+    horse.BLUE = horse.GOLD = horse.TACK          # the cart horses: a plain leather browband (the user)
+    try:
+        for i, x in enumerate((-0.16, 0.16)):
+            objs.append(cavalry.make_horse("CineWarhorse", (x, -SCALE * (HALF_L + 0.66), 0), obj="CartHorse%d" % i))
+    finally:
+        horse.BLUE, horse.GOLD = keep
     objs.append(ardan.make(Vector((0.75, -0.3, 0))))
     keep = {ground.name, "SetCam", "SetSun", "SetFill"}
     for o in objs:

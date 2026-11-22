@@ -1202,6 +1202,6 @@ FpsCounter). Redmi Pad ~40 fps in play; Low tier: NO SUN SHADOWS in mission 2 (t
 **Assets:**
 - Have: CineKing + CineKingRide, the cavalry with horses, Ардан, the Captain, M2Guard, the monsters, CineElder, mission 2's town with ruins, and the cages of the orc camps (for the glade).
 - New, renders first:
-  - the cage cart: `Tools/blender/cinematic/cage_cart.py` CineCageCart (four spoked wheels, shafts, driver's bench; a timber-framed cage with iron bars, a door with a chain and padlock, a plank roof with iron straps, straw, the King's blue pennon, a lantern; grown by SET_SCALE x 0.55 to the figures). v1 renders SENT 2026-11-22, not approved yet; the cart horses in the render are the cavalry's caparisoned warhorses;
+  - the cage cart: `Tools/blender/cinematic/cage_cart.py` CineCageCart (four spoked wheels, shafts, driver's bench; a timber-framed cage with iron bars, a door with a chain and padlock, a plank roof with iron straps, straw, the King's blue pennon, a lantern; grown by SET_SCALE x 0.55 to the figures). v1 renders SENT 2026-11-22; v2 after the user's notes (the cross inside the pennon, straw as loose stalks instead of flat blobs, the caged monster UNARMED = orcs_cast `CineOrcCaptive` (spearman(armed=False), iron shackles), the cart horses' browband plain leather -- the cavalry's own horses keep the blue one) SENT, not approved yet;
   - the glade set;
   - anims: the King talking from the saddle, the monster in the cage, prisoners in cages, volunteers stepping out, the amulet close-up.
