@@ -1240,6 +1240,7 @@ FpsCounter). Redmi Pad ~40 fps in play; Low tier: NO SUN SHADOWS in mission 2 (t
        - the mother stands holding the girl, who is close in front of her, facing her.
      - The people in a cage face where the cage's `turn` points (`facing(i)`); the cage's door is on their back side.
      - Check modes (not the film): `GLADE_LOOK=cage<i>` frames one cage from the front; `GLADE_LOOK=peasant`; `GLADE_DEBUG=1`.
+     - **v3 APPROVED by the user 2026-11-23.** All three groups of the prologue «Пленные» are approved. Next: the Unity scene (export the Cap* takes, the sets, subtitles, the hand-over to the campaign map with two flags). The open question is whether the storyboard's ARCHER volunteer gets a cine model.
      - v3 (the user):
        - the mother's arms now really go round the girl: her upper arms are AIMED at the small of the girl's back (`HUG` + `aim_apply`, bell_anim's way);
        - the MAGE from the bridge scene stands behind the old man in his cage WITHOUT his staff: `mage.make_captive` = CineMageCaptive (WITH_STAFF off), so the bridge scene's CineMage keeps its staff. For the film the chief and the extra monsters will need cine versions on the rig (now the game's static models).

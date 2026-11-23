@@ -115,3 +115,5 @@ Related: [[project-tutorial]], [[project-invasion-mode]], [[project-monetization
 
 2026-11-22: LEVEL 3 = the prologue «Пленные» (the King meets Ардан and the Captain right after mission 2's win; a caged monster; the prisoners' glade with the old man) + TWO separate branches (Ардан: rescue the prisoners, the Captain with him; King: cage to the capital). In campaign texts humans say «чудовища», never «орки». Storyboard draft in campaign.md, lines not approved yet.
 2026-11-22 later: «Пленные» storyboard APPROVED; models APPROVED: cage cart (cage_cart.py) and the captives' glade v4 (captives_glade.py: dense forest, one track, chief mini-boss, ~10 monsters). Next: cine versions of the chief/extra monsters + the scene's animations, then Unity. TRAP: importing orccage1/orcstone1 saves the open .blend -- render on a copy.
+
+2026-11-23: ALL prologue «Пленные» animations APPROVED (cage_anim, square_anim, glade_anim v3 with CineMageCaptive) + cine chief CineOrcChief. Next: the Unity scene (not started). Archer volunteer has no cine model (open).
