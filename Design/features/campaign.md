@@ -1228,7 +1228,12 @@ the mission starts. Storyboard v3 (~56 s): **APPROVED by the user 2026-11-23 («
   verge out to ~13, ~1 in 14 dead; the FELLED TREE at BLOCK_Y 5.6: a pale fresh-cut stump with chips on the left verge,
   a ROUND log (`log`, kit's hcylinder turned) across the road, its crown in the right verge. Render places the column
   (horses only, 20 + the King's white one), the cart with the captive and 4 monsters for scale. Run it on a COPY of the
-  .blend. v1 renders (wide, column, block, stump, top) SENT 2026-11-23, waiting for approval.
+  .blend. v1 renders (wide, column, block, stump, top) SENT 2026-11-23.
+  - v2 (the user, 2026-11-23: «на таком узком пространстве мы сможем показать бой?» -- 6 cells between the trees):
+    the AMBUSH CLEARING round the stopped column, ~12 cells across (`in_clearing`: a wobbly superellipse,
+    CLEAR_HALF_W 4.8 x CLEAR_HALF_L 7.0 round y -1.6), closing into the narrow road at the felled tree; lighter
+    meadow, tall grass at the rim, bushes, two old fallen trunks, rocks (cover for the monsters). The game's white
+    Stone* replaced by grey kit crags. Shots wide/clearing/column/block/stump/top. v2 SENT, waiting for approval.
   - Traps: the game's DecBush1 is a clipped hedge in a stone border (not a wild bush); `b.rod` is square (not a log).
 
 **Assets:**

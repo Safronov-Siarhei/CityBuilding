@@ -30,7 +30,19 @@ VERGE = 1.25              # grass between the road's edge and the first trees: w
 STRAIGHT = 10.0           # the straight stretch round the ambush
 BEND = 0.045              # past it the road bends: x = ±BEND * (|y| - STRAIGHT)^2
 REACH = 26.0              # the set's length each way along y
-BLOCK_Y = 5.6             # the felled tree across the road
+BLOCK_Y = 5.6             # the felled tree across the road, where the clearing closes back into the forest
+# the AMBUSH CLEARING (the user, 2026-11-23: the narrow road had no room for the fight): the forest opens round the
+# stopped column to ~11 cells across (a cell ~0.75 figure units), a rounded box (superellipse) along the road,
+# closing at the felled tree; tall grass, bushes, fallen trunks and rocks at its edges for the monsters' cover
+CLEAR_Y, CLEAR_HALF_L, CLEAR_HALF_W = -1.6, 7.0, 4.8
+
+
+def in_clearing(x, y, pad=0.0):
+    """Inside the clearing (its rim wobbles by the angle so it is not a drawn shape); `pad` grows it."""
+    dx, dy = x / (CLEAR_HALF_W + pad), (y - CLEAR_Y) / (CLEAR_HALF_L + pad)
+    a = math.atan2(dy, dx)
+    wob = 1.0 + 0.08 * math.sin(3 * a + 0.7) + 0.05 * math.sin(7 * a + 2.1)
+    return dx ** 4 + dy ** 4 < wob ** 4
 fg.plain('grass', 'grass_dark', 'burlap', 'sand', 'leaf', 'wood_dark', 'wood_mid', 'wood_light', 'stone_mid',
          'stone_dark', 'hay')
 
@@ -59,9 +71,46 @@ def road_dist(x, y):
     return min(math.hypot(x - px, y - py) for px, py in PATH)
 
 
+def clearing(b):
+    """The clearing's lighter grass, tall grass at its rim, bushes, two fallen trunks and rocks."""
+    rnd = random.Random(13)
+    for i in range(26):                                        # the lighter meadow, overlapping flat patches
+        x = rnd.uniform(-CLEAR_HALF_W + 0.8, CLEAR_HALF_W - 0.8)
+        y = CLEAR_Y + rnd.uniform(-CLEAR_HALF_L + 1.0, CLEAR_HALF_L - 1.0)
+        if in_clearing(x, y, -0.8):
+            b.blob(x, y, 0.001, rnd.uniform(1.0, 1.6), 0.002, 'grass', sides=10)
+    n = 0
+    while n < 150:                                             # tall grass clumps, thick at the rim
+        x = rnd.uniform(-CLEAR_HALF_W, CLEAR_HALF_W)
+        y = CLEAR_Y + rnd.uniform(-CLEAR_HALF_L, CLEAR_HALF_L)
+        if not in_clearing(x, y) or (in_clearing(x, y, -1.3) and rnd.random() < 0.85) or abs(x - road_x(y)) < ROAD_HALF + 0.2:
+            continue
+        n += 1
+        for _ in range(6):
+            h = rnd.uniform(0.12, 0.24)
+            b.obox((x + rnd.uniform(-0.07, 0.07), y + rnd.uniform(-0.07, 0.07), h / 2), (1, 0, 0), (0, 1, 0),
+                   (rnd.uniform(-0.35, 0.35), rnd.uniform(-0.35, 0.35), 1), 0.009, 0.009, h / 2,
+                   ('hay', 'leaf', 'grass')[rnd.randrange(3)])
+    n = 0
+    while n < 22:                                              # bushes at the rim
+        x = rnd.uniform(-CLEAR_HALF_W, CLEAR_HALF_W)
+        y = CLEAR_Y + rnd.uniform(-CLEAR_HALF_L, CLEAR_HALF_L)
+        if not in_clearing(x, y) or in_clearing(x, y, -1.0) or abs(x - road_x(y)) < ROAD_HALF + 0.6:
+            continue
+        n += 1
+        bush(b, x, y, rnd.uniform(0.3, 0.5), rnd)
+    # two old fallen trunks, moss-dark, half sunk in the grass; rocks
+    log(b, -3.3, -4.6, 0.12, 2.0, math.radians(70), 'wood_mid')
+    log(b, 2.6, 1.6, 0.11, 1.7, math.radians(-115), 'wood_mid')
+    for x, y, r, h in ((-2.6, 1.9, 0.34, 0.3), (-2.25, 2.25, 0.2, 0.18), (3.2, -3.3, 0.3, 0.26), (2.9, -6.4, 0.22, 0.2),
+                       (-3.1, -1.6, 0.18, 0.16)):
+        b.crag(x, y, r, r * 0.8, h, 'stone_mid', top='stone_dark', sides=7)
+
+
 def ground(b):
     big = 45
     b.box(-big, big, -big, big, -0.05, 0.0, 'grass_dark')
+    clearing(b)
     pts = _path(0.5)
     for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
         cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
@@ -88,6 +137,11 @@ def ground(b):
             b.obox((x + rnd.uniform(-0.05, 0.05), y + rnd.uniform(-0.05, 0.05), h / 2), (1, 0, 0), (0, 1, 0),
                    (rnd.uniform(-0.3, 0.3), rnd.uniform(-0.3, 0.3), 1), 0.008, 0.008, h / 2,
                    'leaf' if rnd.random() < 0.5 else 'grass')
+    for i in range(26):                                         # grey stones in the verges (the game's Stone* are white)
+        y = rnd.uniform(-REACH, REACH)
+        x = road_x(y) + rnd.choice((-1, 1)) * rnd.uniform(ROAD_HALF + 0.2, ROAD_HALF + VERGE + 0.6)
+        r = rnd.uniform(0.06, 0.14)
+        b.crag(x, y, r, r * 0.8, r * 0.9, 'stone_mid', top='stone_dark', sides=6, seed=i)
     for _ in range(70):                                         # ferns in the verges and under the first trees
         y = rnd.uniform(-REACH, REACH)
         side = rnd.choice((-1, 1))
@@ -213,13 +267,13 @@ def _woods():
     edge = ROAD_HALF + VERGE
     gap = 0.8
     tries = 0
-    while len(placed) < 560 and tries < 50000:
+    while len(placed) < 600 and tries < 60000:
         tries += 1
         y = rnd.uniform(-REACH - 2, REACH + 2)
         side = rnd.choice((-1, 1))
-        off = edge + 12.0 * rnd.random() ** 1.6                   # thickest at the edge
+        off = edge + 14.0 * rnd.random() ** 1.6                   # thickest at the edge
         x = road_x(y) + side * off
-        if road_dist(x, y) < edge:
+        if road_dist(x, y) < edge or in_clearing(x, y, 0.7):     # canopies overhang
             continue
         if any((x - px) ** 2 + (y - py) ** 2 < gap * gap for px, py in placed):
             continue
@@ -228,10 +282,6 @@ def _woods():
             out.append((rnd.choice(dead), x, y, rnd.uniform(0, 360), rnd.uniform(0.5, 0.7)))
         else:
             out.append((kinds[len(placed) % len(kinds)], x, y, rnd.uniform(0, 360), rnd.uniform(0.9, 1.35)))
-    for i in range(22):                                           # stones
-        y = rnd.uniform(-REACH, REACH)
-        x = road_x(y) + rnd.choice((-1, 1)) * rnd.uniform(ROAD_HALF + 0.2, edge + 0.6)
-        out.append(("Stone%d" % (1 + i % 10), x, y, rnd.uniform(0, 360), rnd.uniform(0.15, 0.26)))
     return out
 
 
@@ -284,8 +334,8 @@ def render(out):
             folk[-1].rotation_euler = (0, 0, math.radians(180))
     finally:
         horse.BLUE, horse.GOLD = keep
-    for name, x, y_, turn in (("CineOrcSpear", -2.25, 0.6, -80), ("CineOrcTorch", 2.3, -1.4, 95),
-                              ("CineOrcSpear", 2.2, 2.4, 100), ("CineOrcTorch", -2.4, -3.2, -100)):
+    for name, x, y_, turn in (("CineOrcSpear", -3.6, 0.6, -80), ("CineOrcTorch", 3.7, -1.4, 95),
+                              ("CineOrcSpear", 3.3, 2.6, 100), ("CineOrcTorch", -3.8, -3.6, -100)):
         o = orcs_cast.make(name, (x, y_, 0))
         o.rotation_euler = (0, 0, math.radians(turn))
         folk.append(o)
@@ -314,8 +364,9 @@ def render(out):
     cam.data.clip_end = 300
     sc.collection.objects.link(cam)
     sc.camera = cam
-    for name, at, frm, lens in (("road_wide", (0, -1.0, 0), (9.0, -16.0, 9.0), 26),
-                                ("road_column", (-0.2, -0.5, 0.35), (0.8, -4.6, 0.65), 26),
+    for name, at, frm, lens in (("road_wide", (0, -1.0, 0), (9.0, -17.0, 10.0), 26),
+                                ("road_column", (-0.2, -0.5, 0.35), (2.6, -4.6, 0.75), 26),
+                                ("road_clearing", (0.5, -0.5, 0.2), (-3.4, -6.6, 2.4), 24),
                                 ("road_block", (0, BLOCK_Y, 0.2), (0.6, BLOCK_Y - 4.5, 1.2), 30),
                                 ("road_stump", (-(ROAD_HALF + 0.75), BLOCK_Y - 0.25, 0.2), (-0.6, BLOCK_Y - 2.0, 0.9), 35),
                                 ("road_top", (0, 0, 0), (0.01, -0.5, 30.0), 28)):
