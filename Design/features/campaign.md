@@ -1269,7 +1269,14 @@ the mission starts. Storyboard v3 (~56 s): **APPROVED by the user 2026-11-23 («
      CART_SPOT -0.95, 0.35) facing the cage; the captive LAUGHS (45.3-47.8); SAY1 47.2-48.8 «Они пришли за ним».
      Into play: the King wheels to the felled tree (49-50), points at it, SAY2 50.0-52.8 «Убрать завал. До столицы
      ещё далеко»; the riders turn to the road; the camera rises behind him. The dropped torch's smoke is for Unity.
-     Video SENT 2026-11-23, waiting.
+     Video v1 SENT 2026-11-23. The user: «король странно двигается, не смотрит в сторону противников и в конце
+     телепортируется» -- v1 was a polyline with jumps in speed, a heading that snapped, and a 6.7-cell ride back on a
+     walk's legs (it slid). v2: the ride is three eased quadratic curves (`LEGS`: RIDE1 38.0-39.6, RIDE2 40.6-44.0,
+     BACK 44.4-48.0 at a canter); `king_track` bakes per frame the heading along the way, turned up to 40 deg to the
+     monster he is about to cut, at halts to what he faces (the monsters at the rally, the cage, the road), never
+     faster than TURN_RATE 4 rad/s; the gait by the real speed (gallop by distance / walk); his head and chest follow
+     the NEXT one he rides at. Times moved: LAST 44.0, LAUGH 46.6-49.0, SAY1 48.2-49.6, WHEEL 49.7-50.5,
+     SAY2 50.6-53.0 (the scene now ends at 53.3). v2 SENT, waiting.
   - Traps: the game's DecBush1 is a clipped hedge in a stone border (not a wild bush); `b.rod` is square (not a log).
 
 **Assets:**

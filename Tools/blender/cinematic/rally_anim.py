@@ -45,77 +45,99 @@ FPS = aa.FPS
 TAU = 2 * math.pi
 env, ease, mix = a2.env, a2.ease, a2.mix
 T0 = 38.0
-SECONDS = 15.0
+SECONDS = 15.3
 KING = 4
-GALLOP = 2.0
 LANE_OUT = -2.0                  # the King's line round the back of the -x monsters
-RALLY = (39.4, 40.5)             # he rears, the sword up: «За мной!»
-CHARGE = 40.5                    # the survivors charge from here (0.25 s apart)
-LAST = 43.3                      # the last monster falls to the King
-BACK = (44.0, 47.0)              # he walks back to the cart
+RIDE1 = (38.0, 39.6)             # out round the back of the front monsters, to the rally spot
+RALLY = (39.6, 40.6)             # he rears there, facing them, the sword up: «За мной!»
+CHARGE = 40.6                    # the survivors charge from here (0.25 s apart)
+RIDE2 = (40.6, 44.0)             # on down the -x side, cutting them down, hooking in to the last
+LAST = 44.0                      # the last monster falls to the King
+BACK = (44.4, 48.0)              # he canters back to the cart
 CART_SPOT = Vector((-0.95, 0.35, 0))
-LAUGH = (45.3, 47.8)
-SAY1 = (47.2, 48.8)
-WHEEL = (49.0, 50.0)
-SAY2 = (50.0, 52.8)
+LAUGH = (46.6, 49.0)
+SAY1 = (48.2, 49.6)
+WHEEL = (49.7, 50.5)
+SAY2 = (50.6, 53.0)
+TURN_RATE = 4.0                  # radians a second: the horse's quickest turn (the user, 2026-11-23: no snapping round)
 
 
 def win(t, w, rise=0.3):
     return env(t, w[0], w[0] + rise) * (1 - env(t, w[1] - rise, w[1]))
 
 
-# ---------------------------------------------------------------- the King's ride
+# ---------------------------------------------------------------- the King's ride (smooth curves, eased)
+# The user, 2026-11-23: «король странно двигается, не смотрит в сторону противников и в конце телепортируется» --
+# the first cut was a polyline with jumps in speed, a heading that snapped, and a 6.7-cell ride back at a walk's legs.
 
-def king_path():
-    """Waypoints (pos, arrival time): out round the back of the -x monsters (their x ~ -1.1..-1.5), a halt to rear,
-    on down to the rear, a hook in to the last one, then back to the cart at a walk."""
-    start = Vector((-ca.LANE, ca.FRONT_STOP - 1.7, 0))
-    pts = [(start, 38.2), (Vector((LANE_OUT, start.y - 0.9, 0)), 39.1), (Vector((LANE_OUT, 0.4, 0)), RALLY[0]),
-           (Vector((LANE_OUT, 0.4, 0)), RALLY[1]), (Vector((LANE_OUT, -5.0, 0)), RALLY[1] + 5.4 / GALLOP),
-           (Vector((-1.35, -6.3, 0)), LAST), (Vector((-1.35, -6.3, 0)), BACK[0]), (CART_SPOT, BACK[1])]
-    return pts
+START = Vector((-ca.LANE, ca.FRONT_STOP - 1.7, 0))
+RALLY_AT = Vector((LANE_OUT, 0.4, 0))
+LAST_AT = Vector((-1.35, -6.3, 0))
+# (time window, start, control, end): quadratic curves, each eased from a stop to a stop
+LEGS = [(RIDE1, START, Vector((LANE_OUT, 2.4, 0)), RALLY_AT),
+        (RIDE2, RALLY_AT, Vector((LANE_OUT, -6.2, 0)), LAST_AT),
+        (BACK, LAST_AT, Vector((-1.9, -2.4, 0)), CART_SPOT)]
 
 
-PATH = king_path()
+def _bez(a, c, b, u):
+    return a * (1 - u) ** 2 + c * (2 * u * (1 - u)) + b * u * u
+
+
+def king_pos(T):
+    for (t0, t1), a, c, b in LEGS:
+        if T < t0:
+            return a.copy()
+        if T <= t1:
+            return _bez(a, c, b, ease((T - t0) / (t1 - t0)))
+    return LEGS[-1][3].copy()
 
 
 def king_root(T):
-    """(pos, heading, gait 0..1 (1 a gallop), distance)."""
-    pts = PATH
-    if T <= pts[0][1]:
-        return pts[0][0].copy(), am.heading(T0, KING, -ca.LANE), 0.0, 0.0
-    dist = 0.0
-    for (p0, t0), (p1, t1) in zip(pts, pts[1:]):
-        seg = (p1 - p0).length
-        if T <= t1:
-            u = (T - t0) / max(1e-6, t1 - t0)
-            pos = p0.lerp(p1, u)
-            d = p1 - p0
-            if seg > 1e-4:
-                h = math.atan2(d.x, -d.y)
-            else:
-                h = None
-            g = 0.0 if seg < 1e-4 else (0.45 if t0 >= BACK[0] else 1.0)
-            return pos, h, g, dist + seg * u
-        dist += seg
-    return pts[-1][0].copy(), None, 0.0, dist
+    """(pos, None, 0, 0) -- for plan(); the heading and the gait come from the baked track."""
+    return king_pos(T), None, 0.0, 0.0
 
 
-def king_heading(T):
-    """Smoothed: the heading of the way ahead; at halts the last one; at the cart facing the cage (+x), then wheeling
-    to the felled tree (+y)."""
+def _wrap(a):
+    return (a + math.pi) % TAU - math.pi
+
+
+def king_track(king_kills, ms):
+    """Per frame: (pos, heading, speed, distance). The heading follows the way he rides, turned up to ~40 deg towards
+    the monster he is about to cut; at a halt it turns to what he faces (the monsters at the rally, the cage at the
+    cart, the road at the end); never faster than TURN_RATE."""
+    n = int(SECONDS * FPS) + 1
+    out, dist = [], 0.0
     h = am.heading(T0, KING, -ca.LANE)
-    for k in range(0, int((T - T0) * FPS) + 1, 3):
-        _, hh, _, _ = king_root(T0 + k / FPS)
-        if hh is not None:
-            h = hh
-    if T > BACK[1] - 0.6:
-        u = ease(env(T, BACK[1] - 0.6, BACK[1] + 0.2))
-        h = h + ((math.pi / 2) - h) * u
-    if T > WHEEL[0]:
-        u = ease(env(T, WHEEL[0], WHEEL[1]))
-        h = (math.pi / 2) + (math.pi / 2) * u
-    return h
+    prev = king_pos(T0)
+    for f in range(n):
+        T = T0 + f / FPS
+        pos = king_pos(T)
+        step = (pos - prev).length
+        dist += step
+        speed = step * FPS
+        nxt = king_pos(T + 0.15)
+        if (nxt - pos).length > 0.03:
+            want = math.atan2((nxt - pos).x, -(nxt - pos).y)
+        elif RALLY[0] - 0.2 <= T <= RALLY[1]:
+            want = math.pi / 2                                     # facing +x: the monsters, the column behind them
+        elif T >= WHEEL[0]:
+            want = math.pi                                         # the road ahead, the felled tree (+y)
+        elif T >= BACK[1] - 0.4:
+            want = math.pi / 2                                     # the cage
+        else:
+            want = h
+        for j, t in king_kills.items():                            # towards the one he is about to cut
+            w = env(T, t - 0.7, t - 0.25) * (1 - env(T, t + 0.05, t + 0.4))
+            if w > 0:
+                d = ms[j][3] - pos
+                to = math.atan2(d.x, -d.y)
+                want = want + max(-0.7, min(0.7, _wrap(to - want))) * w
+        dh = _wrap(want - h)
+        lim = TURN_RATE / FPS
+        h += max(-lim, min(lim, dh))
+        out.append((pos, h, speed, dist))
+        prev = pos
+    return out
 
 
 # ---------------------------------------------------------------- who dies how
@@ -165,6 +187,7 @@ def build():
     killer, victim, king_kills, rider_kills = plan(col, ms, survivors_at)
     killer_of = {j: slot for slot, j in killer.items()}
     rider_pos = {i: Vector((x, y, 0)) for i, _, x, y, _ in col}
+    track = king_track(king_kills, ms)
     pairs = []
     for i, kind, x, y, h0 in col:
         if kind == "king":
@@ -218,12 +241,16 @@ def build():
         for p in pairs:
             i = p["i"]
             if i == KING:
-                pos, _, g, dist = king_root(T)
-                h = king_heading(T)
-                hq = ra.gait(ra.h_blank(), (dist / (0.42 if g >= 1 else sq.WALK_STRIDE)) % 1.0, g, reach=1.0 if g >= 1 else 0.5) \
-                    if g > 0 else am.horse_pose(T, i, 0.0)
+                pos, h, speed, dist = track[f]
+                g = min(1.0, speed / 1.6)
+                if speed > 1.1:                                   # a gallop, its cycle by the distance
+                    hq = ra.gait(ra.h_blank(), (dist / ra.STRIDE) % 1.0, g)
+                elif speed > 0.05:                                # a walk / slow canter as he eases in or out
+                    hq = sq.horse_walk_pose(T, dist, min(1.0, speed / 0.6))
+                else:
+                    hq = am.horse_pose(T, i, 0.0)
                 hq["body"] = [0.0, 0.0, 0.0]
-                hq = me.rear(hq, me.rear_amount(T, RALLY[0] + 0.05), RALLY[0] + 0.05, T)
+                hq = me.rear(hq, me.rear_amount(T, RALLY[0] + 0.1), RALLY[0] + 0.1, T)
                 sq.seat(p, pos, h, hq)
                 if "king" not in reins:
                     reins["king"] = sq.solve_reins(p, ra.seated(T, 0.0, 0.0))
@@ -341,7 +368,7 @@ def pos_king_at(t):
 
 
 def king_pose(T, pos, h, reins, orc_up, king_kills, ms, g):
-    q = ra.seated(T, g, 0.0)
+    q = ra.seated(T, min(1.0, g), 0.0)
     q["upper_arm.L"], q["forearm.L"] = [list(v) for v in reins]
     # the cuts as he passes: the sword up and across at each kill
     up, down = 0.0, 0.0
@@ -356,9 +383,15 @@ def king_pose(T, pos, h, reins, orc_up, king_kills, ms, g):
     q["head"][0] -= 14 * rally
     q["chest"][0] -= 10 * rally
     # the foe he rides at; after the fight the sword lowered, the head to the cage, then to the road
-    if orc_up and T < LAST + 0.2:
-        foe = min(orc_up.values(), key=lambda v: (v - pos).length)
-        q["head"][2] += sq.look_deg(pos, h, foe) * 0.7
+    if T < LAST + 0.2:
+        nxt = [(t, j) for j, t in king_kills.items() if t > T - 0.1]
+        if nxt:
+            foe = ms[min(nxt)[1]][3]                             # the next one he rides at
+            q["head"][2] += sq.look_deg(pos, h, foe) * 0.9
+            q["chest"][2] += sq.look_deg(pos, h, foe) * 0.25
+        elif orc_up:
+            foe = min(orc_up.values(), key=lambda v: (v - pos).length)
+            q["head"][2] += sq.look_deg(pos, h, foe) * 0.9
     calm = env(T, LAST + 0.3, LAST + 1.2)
     q["upper_arm.R"] = mix({"a": q["upper_arm.R"]}, {"a": [-14, 10, 0]}, calm)["a"]
     q["forearm.R"] = mix({"a": q["forearm.R"]}, {"a": [-28, 0, 0]}, calm)["a"]
@@ -389,7 +422,7 @@ def captive_pose(T):
 # ---------------------------------------------------------------- the review: shots 9-11
 
 def camera(T):
-    kp = king_root(T)[0]
+    kp = king_pos(T)
     if T < 40.5:                                     # the King spurs out, rears: «За мной!»
         return kp + Vector((-1.6, 1.4, 0.75)), kp + Vector((0.0, 0.0, 0.7)), 30
     if T < 43.9:                                     # he rides them down; the riders charge
