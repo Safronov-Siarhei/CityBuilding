@@ -91,7 +91,7 @@ def forearm(b, k):
     b.rod(wr - d * 0.014, wr + d * 0.004, 0.056, ROBE_DARK)
     b.rod(wr - d * 0.004, wr + d * 0.006, 0.058, GOLD)
     b.ball(wr.x, wr.y, wr.z - 0.034, 0.02, 0.034, SKIN, sides=6)
-    if k == -1:
+    if k == -1 and WITH_STAFF:
         # the staff, taller than he is: a straight shaft bound in gold, a forked head round a crystal
         x, y = wr.x - 0.006, wr.y - 0.016
         b.rod((x, y, 0.0), (x, y, 0.47), 0.016, STAFF)
@@ -132,8 +132,22 @@ PARTS = [("hips", waist), ("chest", chest), ("head", head)] + fg.limbs(
     {"thigh": thigh, "shin": shin, "foot": foot, "upper_arm": upper_arm, "forearm": forearm})
 
 
+WITH_STAFF = True
+
+
 def make(location=(0, 0, 0)):
     return fg.make(OBJ, PARTS, SCALE, location)
+
+
+def make_captive(location=(0, 0, 0)):
+    """The mage taken prisoner (level 3's glade, the user 2026-11-22: «маг из сцены с мостом, но без посоха»): the
+    same figure, the staff gone -- the monsters took it."""
+    global WITH_STAFF
+    WITH_STAFF = False
+    try:
+        return fg.make(OBJ + "Captive", PARTS, SCALE, location)
+    finally:
+        WITH_STAFF = True
 
 
 if __name__ == "__main__":

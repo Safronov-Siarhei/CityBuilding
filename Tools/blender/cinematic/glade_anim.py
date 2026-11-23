@@ -178,11 +178,12 @@ def prisoner_pose(name, t):
         return q
     if name == "CinePeasantWoman":
         q = ra.stand(t)
-        for s, k in (("L", 1), ("R", -1)):                                # her arms round the girl's back
-            q["upper_arm." + s] = [-38, k * 12, 0]
-            q["forearm." + s] = [-62, 0, k * 25]
         q["chest"][0] += 14 + 3 * math.sin(TAU * t / 1.4)
         q["head"][0] += 24                                                 # looking down at her
+        for s in ("L", "R"):                                               # the arms aimed at the girl's back
+            q["forearm." + s] = [-12, 0, 0]
+            if HUG.get(s) is not None:
+                q["aim.upper_arm." + s] = list(HUG[s]) + [1.0]
         return q
     if name == "CineGirl":
         q = ra.stand(t)                                                    # her face in her mother's skirt
@@ -200,6 +201,12 @@ def prisoner_pose(name, t):
             q["upper_arm." + s] = [-55, k * 20, 0]
             q["forearm." + s] = [-115, 0, 0]
         q["chest"][0] += 3 * math.sin(TAU * t / 1.8)
+        return q
+    if name == "CineMageCaptive":
+        q = ra.stand(t + 0.9)                                              # behind the old man, watching the camp
+        q["head"][0] += 6
+        q["head"][2] += 18 * math.sin(TAU * t / 6.0)
+        q["chest"][0] += 3
         return q
     if name == "CineBoy":
         q = ra.stand(t)
@@ -250,6 +257,28 @@ def facing(i):
     hold are on that side."""
     a = math.radians(cg.CAGES[i][2])
     return Vector((math.sin(a), -math.cos(a), 0.0))
+
+
+HUG = {}                                    # the mother's upper-arm directions round the girl (set in build)
+
+
+def aim_apply(arm, pose, scale):
+    """ka.apply, then each aimed upper arm turned about its shoulder to point along its world direction
+    (bell_anim.apply's way)."""
+    aims = {k: pose[k] for k in pose if k.startswith("aim.")}
+    ka.apply(arm, {k: v for k, v in pose.items() if not k.startswith("aim.")}, scale)
+    if not aims:
+        return
+    bpy.context.view_layer.update()
+    for k, a in aims.items():
+        pb = arm.pose.bones[k[4:]]
+        m = pb.matrix.copy()
+        want = (arm.matrix_world.to_3x3().inverted() @ Vector(a[:3])).normalized()
+        now = (m.to_3x3() @ Vector((0, 1, 0))).normalized()
+        q = now.rotation_difference(want)
+        head = m.to_translation()
+        pb.matrix = Matrix.Translation(head) @ q.to_matrix().to_4x4() @ Matrix.Translation(-head) @ m
+        bpy.context.view_layer.update()
 
 
 GRIPPERS = {"CineElder": ("L",), "CinePeasant": ("L", "R")}
@@ -318,6 +347,25 @@ def build():
             if name == "CineGirl":
                 dx, dy, extra = 0.0, -0.1, 180.0                          # close in front of her mother, facing her
             folk.append({"arm": arm, "scale": scale, "name": name, "pos": cage_point(i, dx, dy), "turn": turn + extra, "cage": i})
+    # the captured mage (the bridge scene's, his staff taken) behind the old man in his cage
+    import mage
+    i = cg.ELDER_CAGE
+    fwd = facing(i)
+    side = Vector((-fwd.y, fwd.x, 0.0))
+    mm = mage.make_captive((0, 0, 0))
+    folk.append({"arm": ka.rig_figure(mm, mage.SCALE), "scale": mage.SCALE, "name": "CineMageCaptive",
+                 "pos": cage_point(i, 0.0, 0.0) - fwd * 0.2 + side * 0.13, "turn": cg.CAGES[i][2] - 15, "cage": i})
+    # the mother's arms: aimed at two points on the girl's back, a little apart, at her shoulder blades
+    girl = next((p for p in folk if p["name"] == "CineGirl"), None)
+    mother = next((p for p in folk if p["name"] == "CinePeasantWoman"), None)
+    if girl and mother:
+        fwd = facing(girl["cage"])
+        side = Vector((-fwd.y, fwd.x, 0.0))
+        gs = tf.FIGURES["CineGirl"][1]
+        for s, k in (("L", 1), ("R", -1)):
+            sh = tfa.shoulder(mother["pos"], math.radians(mother["turn"]), s, mother["scale"])
+            back = girl["pos"] + fwd * 0.07 + side * (k * 0.03) + Vector((0, 0, 0.2 * gs))   # the small of her back
+            HUG[s] = tuple((back - sh).normalized())
     # the ones who hold the bars stand where their hands MEET the front bars (the user: «держат воздух»)
     for p in folk:
         if p["name"] in GRIPPERS:
@@ -363,7 +411,7 @@ def build():
             arm = p["arm"]
             arm.matrix_world = Matrix.Translation(p["pos"]) @ Matrix.Rotation(math.radians(p["turn"]), 4, 'Z')
             aa.rest(arm)
-            ka.apply(arm, prisoner_pose(p["name"], t), p["scale"])
+            aim_apply(arm, prisoner_pose(p["name"], t), p["scale"])
             key(arm, f + 1)
         loc, at, lens = camera(t)
         cam.location = loc
