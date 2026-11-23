@@ -569,7 +569,7 @@ namespace CityBuilder.Campaign
 
         private void OnLevel(int level)
         {
-            _banner.text = Localization.Format("#m2_level_up", level);
+            _banner.text = Localization.Format(_escort ? "#m3_level_up" : "#m2_level_up", level);   // mission 3b: the King, not Ардан
             _bannerFor = 2.5f;
         }
 
@@ -586,7 +586,7 @@ namespace CityBuilder.Campaign
             _endTitle.text = Localization.Get(won ? "#m2_won" : "#m2_lost");
             _endTitle.color = won ? UiTheme.Good : UiTheme.Danger;
             var why = _mode.Loss == CityDefenceMode.LossReason.Cage ? "#m3_lost_cage"
-                : _mode.Loss == CityDefenceMode.LossReason.Arden ? "#m2_lost_arden"
+                : _mode.Loss == CityDefenceMode.LossReason.Arden ? (_escort ? "#m3_lost_king" : "#m2_lost_arden")
                 : _mode.Loss == CityDefenceMode.LossReason.Castle ? "#m2_lost_castle" : "#m2_lost_square";
             _endLine.text = Localization.Get(won ? (_escort ? "#m3_won_line" : "#m2_won_line") : why);
             _endStats.text = _escort
@@ -653,7 +653,7 @@ namespace CityBuilder.Campaign
                 _skillShade[i].fillAmount = open ? _mode.SkillCooldownShare(i) : 0f;
             }
 
-            _middle.text = _mode.RespawnLeft > 0f ? Localization.Format("#m2_respawn", Mathf.CeilToInt(_mode.RespawnLeft)) : "";
+            _middle.text = _mode.RespawnLeft > 0f ? Localization.Format(_escort ? "#m3_respawn" : "#m2_respawn", Mathf.CeilToInt(_mode.RespawnLeft)) : "";
 
             // the end card pops in, on the unscaled clock (the game is paused)
             if (_endPop >= 0f && _endCard != null)

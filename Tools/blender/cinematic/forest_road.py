@@ -119,8 +119,8 @@ def ground(b):
         ln = math.hypot(dx, dy)
         ux, uy = dx / ln, dy / ln
         # the lighter worn verge, then the dirt on it (overlapping pieces, no seams on the bends)
-        b.obox((cx, cy, 0.002 * LAYER * 2), (-uy, ux, 0), (ux, uy, 0), (0, 0, 1), ROAD_HALF + 0.35, ln / 2 + 0.06, 0.002 * LAYER, 'grass')
-        b.obox((cx, cy, 0.006 * LAYER * 2), (-uy, ux, 0), (ux, uy, 0), (0, 0, 1), ROAD_HALF, ln / 2 + 0.05, 0.002 * LAYER, 'burlap')
+        b.obox((cx, cy, 0.002 * LAYER * 2), (uy, -ux, 0), (ux, uy, 0), (0, 0, 1), ROAD_HALF + 0.35, ln / 2 + 0.06, 0.002 * LAYER, 'grass')
+        b.obox((cx, cy, 0.006 * LAYER * 2), (uy, -ux, 0), (ux, uy, 0), (0, 0, 1), ROAD_HALF, ln / 2 + 0.05, 0.002 * LAYER, 'burlap')
     rnd = random.Random(7)
     for _ in range(70):                                         # mud, darker earth, pebbles on the road
         y = rnd.uniform(-REACH + 1, REACH - 1)
@@ -167,7 +167,7 @@ def fern(b, x, y, size, turn):
         L = size * rnd.uniform(0.8, 1.1)
         c = (x + ux * L * 0.45, y + uy * L * 0.45, L * rise * 0.45 + 0.01)
         ln = math.hypot(1, rise)
-        b.obox(c, (-uy, ux, 0), (ux / ln, uy / ln, rise / ln), (0, 0, 1), 0.035 * size / 0.25, L * 0.5, 0.004,
+        b.obox(c, (uy, -ux, 0), (ux / ln, uy / ln, rise / ln), (0, 0, 1), 0.035 * size / 0.25, L * 0.5, 0.004,
                'leaf' if i % 2 else 'grass')
 
 

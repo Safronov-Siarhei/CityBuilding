@@ -86,6 +86,9 @@ namespace CityBuilder.Campaign
         private readonly HashSet<string> _beatsDone = new HashSet<string>();
         private readonly List<SoldierUnit> _riders = new List<SoldierUnit>();
         private readonly Dictionary<SoldierUnit, ArmyGroup> _riderGroup = new Dictionary<SoldierUnit, ArmyGroup>();
+        private readonly Dictionary<SoldierUnit, bool> _riderFight = new Dictionary<SoldierUnit, bool>();
+        private readonly Dictionary<SoldierUnit, Vector3> _riderSteer = new Dictionary<SoldierUnit, Vector3>();
+        private readonly Dictionary<SoldierUnit, float> _riderBack = new Dictionary<SoldierUnit, float>();
         private readonly Dictionary<SoldierUnit, float> _followUntil = new Dictionary<SoldierUnit, float>();
         private readonly List<OrcUnit> _escortOrcs = new List<OrcUnit>();
         private readonly Dictionary<OrcUnit, float> _cageSwing = new Dictionary<OrcUnit, float>();
@@ -273,7 +276,9 @@ namespace CityBuilder.Campaign
                         var go = Instantiate(capitalFigures[i], _cartModel, false);
                         go.name = piece.name;
                         go.transform.localPosition = at;
-                        go.transform.localRotation = turn;
+                        // a figure's rig faces -Z: the film turns it half round too (Intro.cs PlaceAt) -- without it
+                        // the horses and the driver went backwards (the user's playtest 2026-11-23)
+                        go.transform.localRotation = turn * Quaternion.Euler(0f, 180f, 0f);
                         var fig = go.AddComponent<CineFigure>();
                         fig.Init(capitalClips[i]);
                         var loop = _escort.rigLoop != null && _escort.rigLoop.Length == 2 ? _escort.rigLoop[0] : 0f;
@@ -428,8 +433,10 @@ namespace CityBuilder.Campaign
         private Vector3 SlotAt(int i, int count)
         {
             var c = Cell;
-            var side = RoadSide(_cartS);
-            var dir = RoadDir(_cartS);
+            // the cart's own (eased) heading, not the road's: the places swing round a bend with the cart, not ahead of it
+            var dir = _cart != null ? Flat3(_cart.forward) : RoadDir(_cartS);
+            dir = dir.sqrMagnitude > 0.0001f ? dir.normalized : RoadDir(_cartS);
+            var side = new Vector3(-dir.z, 0f, dir.x);
             var pair = i / 2;
             var left = i % 2 == 0 ? 1f : -1f;
             var rows = Mathf.Max(1, (count + 1) / 2);
@@ -466,47 +473,99 @@ namespace CityBuilder.Campaign
 
         /// <summary>
         /// The riders ride WITH the cart (the user's playtest 2026-11-23: «кавалерия двигается рывками, она должна идти с
-        /// такой же скоростью как клетка»): each is steered every frame at the cart's own pace plus a little to close on
-        /// its place; with a monster in its reach (or already fighting) it is let go to fight; called by «За мной!» it
-        /// rides by the King instead.
+        /// такой же скоростью как клетка»): each is steered at the cart's own pace plus a little to close on its place,
+        /// the steering smoothed and a small gap left alone (on the bends they swung side to side). A monster within
+        /// m3_rider_fight_cells of the rider or of what it guards (the cart; the King after «За мной!») turns it to a
+        /// FIGHT: let go, set on that monster at once, its squad's rally point kept on the cart (the second playtest:
+        /// they twitched by the fighting King striking nobody, and one rode off to its hiring place across the map).
+        /// It fights while it has a foe or one is still near, and never further than m3_rider_leash_cells from what it
+        /// guards: past that it rides back.
         /// </summary>
         private void TickRiders()
         {
             _riders.RemoveAll(r => r == null || r.CurrentHealth <= 0);
             var count = Mathf.Max(1, _riders.Count);
             var fightR = E.riderFightCells * Cell;
+            var leash = E.riderLeashCells * Cell;
+            var dt = Time.deltaTime;
+            var walk = Mathf.Max(0.1f, SoldierStats.StatsAt(SoldierType.Knight, E.riderLevel).walkSpeed);
+            var way = _cart != null ? _cart.forward : RoadDir(_cartS);
+            way.y = 0f;
+            way = way.sqrMagnitude > 0.0001f ? way.normalized : Vector3.forward;
             for (var i = 0; i < _riders.Count; i++)
             {
                 var r = _riders[i];
-                if (r.IsFighting || MonsterNear(r.transform.position, fightR))
-                {
-                    if (r.IsSteered) r.Steer = Vector3.zero;
-                    continue;
-                }
+                var at = r.transform.position;
                 var following = Arden != null && Arden.CurrentHealth > 0 && _followUntil.TryGetValue(r, out var until) && Time.time < until;
-                var slot = following ? Arden.transform.position + (r.transform.position - Arden.transform.position).normalized * 1.2f * Cell : SlotAt(i, count);
-                var to = slot - r.transform.position;
-                to.y = 0f;
+                var guard = following ? Arden.transform.position : CartPosition;
+                var slot = following ? guard + Flat3(at - guard).normalized * 1.2f * Cell : SlotAt(i, count);
+                var group = _riderGroup.TryGetValue(r, out var g) ? g : null;
+                _riderFight.TryGetValue(r, out var fighting);
+                var away = Flat(at - guard);
+                _riderBack.TryGetValue(r, out var back);
+                if (away > leash)
+                {
+                    // too far from what it guards: back to its place, deaf to fights for a moment (no dithering at the edge)
+                    if (fighting) _riderBack[r] = Time.time + 1.5f;
+                    fighting = false;
+                }
+                else if (Time.time < back) fighting = false;
+                else
+                {
+                    var foe = NearestMonster(at, fightR) ?? NearestMonster(guard, fightR);
+                    if (!fighting && foe != null)
+                    {
+                        fighting = true;
+                        group?.AttackOnItsOwn(foe);
+                    }
+                    else if (fighting && !r.IsFighting)
+                    {
+                        foe ??= NearestMonster(at, fightR * 1.6f);
+                        if (foe == null) fighting = false;
+                        else group?.AttackOnItsOwn(foe);
+                    }
+                }
+                _riderFight[r] = fighting;
+                // its squad's rally point stays on its place by the cart (idle, it walks there, not to where it was hired)
+                group?.SetHold(slot, way);
+                if (fighting)
+                {
+                    if (r.IsSteered) r.Steer = Vector3.zero;
+                    _riderSteer[r] = Vector3.zero;
+                    continue;
+                }
+                group?.DropOwnAttack();
+                var to = Flat3(slot - at);
                 var gap = to.magnitude;
-                var walk = Mathf.Max(0.1f, SoldierStats.StatsAt(SoldierType.Knight, E.riderLevel).walkSpeed);
-                // the cart's pace along the road, and the gap closed over about a second
-                var pace = following ? Vector3.zero : RoadDir(_cartS) * _cartSpeedNow;
-                var want = pace + (gap > 0.05f * Cell ? to : Vector3.zero);
+                // the cart's pace along the road; a gap over a third of a cell closed over about a second
+                var pace = following ? Vector3.zero : way * _cartSpeedNow;
+                var want = pace + (gap > 0.35f * Cell ? to : Vector3.zero);
+                _riderSteer.TryGetValue(r, out var was);
+                want = Vector3.Lerp(was, want, 1f - Mathf.Exp(-dt * 5f));
+                _riderSteer[r] = want;
                 var speed = want.magnitude;
-                if (speed < 0.02f)
+                if (speed < 0.03f)
                 {
                     if (r.IsSteered) r.Steer = Vector3.zero;
                     continue;
                 }
-                r.Steer = want / speed * Mathf.Clamp01(speed / walk);
+                r.Steer = want / speed * Mathf.Clamp(speed / walk, 0.03f, 1f);
             }
         }
 
-        private bool MonsterNear(Vector3 at, float radius)
+        private static Vector3 Flat3(Vector3 v) => new Vector3(v.x, 0f, v.z);
+
+        private OrcUnit NearestMonster(Vector3 at, float radius)
         {
+            OrcUnit best = null;
+            var bestD = radius;
             foreach (var orc in _escortOrcs)
-                if (orc != null && orc.CurrentHealth > 0 && Flat(orc.transform.position - at) <= radius) return true;
-            return false;
+            {
+                if (orc == null || orc.CurrentHealth <= 0) continue;
+                var d = Flat(orc.transform.position - at);
+                if (d <= bestD) { bestD = d; best = orc; }
+            }
+            return best;
         }
 
         // ------------------------------------------------------------------ the monsters
@@ -581,7 +640,13 @@ namespace CityBuilder.Campaign
             for (var i = 0; i < _escortOrcs.Count; i++)
             {
                 var orc = _escortOrcs[i];
-                if (orc.BusyFor > 0f) continue;   // stunned or knocked
+                if (orc.BusyFor > 0f)
+                {
+                    // stunned: a steered orc's own Update stops before it counts this down (OrcUnit.Update returns on
+                    // Steered) -- counted here, or «За мной!» froze them for good (the user's playtest 2026-11-23)
+                    orc.BusyFor -= dt;
+                    continue;
+                }
                 var brute = orc.Kind == OrcKind.Brute;
                 if (!brute && !orc.IsRanged && orc.DefendSelf()) continue;
                 var to = cart - orc.transform.position;

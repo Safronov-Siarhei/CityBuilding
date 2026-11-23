@@ -120,6 +120,19 @@ GATE = P(*PLAN["gate"])
 TOWN_PAD = (CAPITAL[0] - 1.0, CAPITAL[1] - 1.0, CAPITAL[2] + 1.0, CAPITAL[3] + 1.0)   # the capital's ground, flat
 MOAT_IN, MOAT_OUT = 1.6, 3.6                          # the moat's ring round the pad (cells out from the walls)
 START = P(*PLAN["road"][0])                           # the ambush clearing, where the column sets out
+# The mission starts where the opening scene ends, just past the felled tree (the user, 2026-11-23: «миссия
+# начинается возле воды, хотя я просил сделать начало возле места за бревном у катсцены»): behind the start the
+# scene's AMBUSH CLEARING (~11 cells across), the felled trunk dragged onto the verge, the stump on the other side,
+# and the road the column came by running back west through the deep forest; the land reaches far past the plan's
+# west and south edges there, so no sea shows from the start.
+_sd = (ROAD_LINE[6][0] - START[0], ROAD_LINE[6][1] - START[1])
+_sl = math.hypot(*_sd)
+START_DIR = (_sd[0] / _sl, _sd[1] / _sl)
+START_LEFT = (-START_DIR[1], START_DIR[0])
+START_CLEARING = (START[0] - START_DIR[0] * 7.0, START[1] - START_DIR[1] * 7.0, 5.5)
+LEAD_LINE = [START] + [(START[0] - START_DIR[0] * d, START[1] - START_DIR[1] * d + 1.6 * math.sin(d / 9.0) * (d > 13))
+                       for d in range(2, 40, 2)]
+WEST_EXTRA, SOUTH_EXTRA = 30.0, 14.0                 # more land past the plan there (cells)
 FORDS = list(BRIDGES)              # the crossing under the bridge works as a ford (ground everyone walks)
 FORD_R = 3.4
 BRIDGE_HALF = 1.4                   # the crossing's half-width (cells): the cart and a rider abreast
@@ -144,8 +157,10 @@ def _seg(px, py, ax, ay, bx, by):
 # the road's segments in 6-cell buckets: the distance asked at every grid corner and decor try stays cheap
 _BUCKET = 6.0
 _ROAD_B = {}
-for _i in range(len(ROAD_LINE) - 1):
-    (_ax, _ay), (_bx, _by) = ROAD_LINE[_i], ROAD_LINE[_i + 1]
+CLEARINGS.append(START_CLEARING)
+_SEGS = [(ROAD_LINE[i], ROAD_LINE[i + 1]) for i in range(len(ROAD_LINE) - 1)] +         [(LEAD_LINE[i], LEAD_LINE[i + 1]) for i in range(len(LEAD_LINE) - 1)]
+for _i in range(len(_SEGS)):
+    (_ax, _ay), (_bx, _by) = _SEGS[_i]
     for _gx in range(int(min(_ax, _bx) // _BUCKET) - 1, int(max(_ax, _bx) // _BUCKET) + 2):
         for _gy in range(int(min(_ay, _by) // _BUCKET) - 1, int(max(_ay, _by) // _BUCKET) + 2):
             _ROAD_B.setdefault((_gx, _gy), []).append(_i)
@@ -156,7 +171,7 @@ def road_dist(x, y):
     segs = _ROAD_B.get((int(x // _BUCKET), int(y // _BUCKET)))
     if not segs:
         return 99.0
-    return min(_seg(x, y, *ROAD_LINE[i], *ROAD_LINE[i + 1])[0] for i in segs)
+    return min(_seg(x, y, *_SEGS[i][0], *_SEGS[i][1])[0] for i in segs)
 
 
 def river(px, py):
@@ -180,7 +195,7 @@ def _ellipse_sd(x, y, cx, cy, rx, ry, wobble, seed):
 
 def coast_sd(x, y):
     """Signed distance from the sea, positive on land: the plan's rectangle and a margin, its edge wobbling."""
-    x0, y0, x1, y1 = OX - EDGE, OY - PH - EDGE, OX + PW + EDGE, OY + EDGE
+    x0, y0, x1, y1 = OX - EDGE - WEST_EXTRA, OY - PH - EDGE - SOUTH_EXTRA, OX + PW + EDGE, OY + EDGE
     wob = 2.4 * (fbm(x / 9, y / 9, 63) - 0.5) + 5.0 * (fbm(x / 26, y / 26, 65) - 0.5)
     return min(x - x0, x1 - x, y - y0, y1 - y) + wob
 
@@ -610,6 +625,18 @@ def scatter_decor(flat, forest_cells, rnd):
                     add("bush", x, y, rnd.uniform(0.7, 1.1))
                 elif r < 0.10 and flowers > 0.52 and not town:
                     add("flowers", x, y)
+    # the felled tree the column cleared at the start: the trunk dragged onto the left verge along the road, the stump
+    # on the right, chips and branches round them
+    fx, fy = START[0] + START_DIR[0] * 0.5, START[1] + START_DIR[1] * 0.5
+    turn = math.atan2(START_DIR[1], START_DIR[0])
+    for k, (along, side, s) in enumerate(((-1.6, 2.4, 2.6), (1.4, 2.7, 2.2))):
+        items.append(("log", fx + START_DIR[0] * along + START_LEFT[0] * side,
+                      fy + START_DIR[1] * along + START_LEFT[1] * side, turn + 0.15 * (k * 2 - 1), s))
+    items.append(("stump", fx - START_LEFT[0] * 2.4, fy - START_LEFT[1] * 2.4, 0.4, 2.0))
+    for _ in range(6):
+        a, d = rnd.uniform(0, 6.283), rnd.uniform(0.6, 1.6)
+        items.append(("pebbles", fx - START_LEFT[0] * 2.4 + math.cos(a) * d, fy - START_LEFT[1] * 2.4 + math.sin(a) * d,
+                      rnd.uniform(0, 6.283), 0.8))
     return items
 
 

@@ -138,6 +138,8 @@ def king_rig():
             "idle": {"take": "Column", "from": 15.6, "to": 16.9, "speed": 0.0},
             "gallop": {"take": "Rally", "from": 7.3, "to": 9.0, "speed": 2.65},
             "cry": {"take": "Rally", "from": 1.6, "to": 2.9, "speed": 0.0},
+            # a blow: his last cut in the charge (rally_anim LAST 44.0 = Rally 6.0: the sword up from 5.6, down by 6.04)
+            "strike": {"take": "Rally", "from": 5.5, "to": 6.35, "speed": 0.0},
             "seatColumn": seats["Column"], "seatRally": seats["Rally"]}
 
 

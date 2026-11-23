@@ -16,7 +16,7 @@ namespace CityBuilder.Campaign
         {
             public string horse, rider;
             public float fps = 30f;
-            public KingPiece walk, idle, gallop, cry;
+            public KingPiece walk, idle, gallop, cry, strike;
             public float[] seatColumn, seatRally;
         }
 
@@ -25,8 +25,9 @@ namespace CityBuilder.Campaign
         private Transform _kingFigure;
         private CineFigure _kingHorse, _kingRider;
         private KingPiece _kingNow;
-        private float _kingT, _kingActLeft, _kingSpeed;
+        private float _kingT, _kingActLeft, _kingSpeed, _strikeT, _strikeLeft;
         private Vector3 _kingWas;
+        private static readonly Quaternion Half = Quaternion.Euler(0f, 180f, 0f);
 
         private void DressKing()
         {
@@ -46,15 +47,18 @@ namespace CityBuilder.Campaign
             _kingActLeft = 0f;
             _kingWas = Arden.transform.position;
             _kingSpeed = 0f;
+            _strikeLeft = 0f;
             SkillUsed -= OnKingSkill;
             SkillUsed += OnKingSkill;
+            Arden.Struck -= OnKingStruck;
+            Arden.Struck += OnKingStruck;
 
             CineFigure Figure(int i, string name)
             {
                 var go = Instantiate(capitalFigures[i], _kingFigure, false);
                 go.name = name;
                 go.transform.localPosition = Vector3.zero;
-                go.transform.localRotation = Quaternion.identity;
+                go.transform.localRotation = Half;                 // the rig faces -Z (as the film turns it)
                 var fig = go.AddComponent<CineFigure>();
                 fig.Init(capitalClips[i]);
                 return fig;
@@ -71,6 +75,18 @@ namespace CityBuilder.Campaign
             _kingActLeft = rig.cry.to - rig.cry.from;
         }
 
+        /// <summary>A blow (the user's playtest 2026-11-23: «у короля нет никаких анимаций атаки»): the rider plays one of
+        /// his cuts from the scene's charge (Rally, the sword up and across) while the horse goes on with its own piece.</summary>
+        private void OnKingStruck()
+        {
+            var rig = _escort != null ? _escort.king : null;
+            if (rig == null || rig.strike == null || _kingRider == null || _kingActLeft > 0f || _strikeLeft > 0f) return;
+            _strikeT = rig.strike.from;
+            _strikeLeft = rig.strike.to - rig.strike.from;
+            _kingRider.Play(rig.strike.take, 0.08f, 0f, _strikeT);
+            _kingRider.SetTime(_strikeT);
+        }
+
         private void KingPlay(KingPiece piece)
         {
             if (piece == null || piece == _kingNow) return;
@@ -78,9 +94,9 @@ namespace CityBuilder.Campaign
             _kingNow = piece;
             _kingT = piece.from;
             _kingHorse.Play(piece.take, fade, 0f, piece.from);
-            _kingRider.Play(piece.take, fade, 0f, piece.from);
+            if (_strikeLeft <= 0f) _kingRider.Play(piece.take, fade, 0f, piece.from);
             _kingHorse.SetTime(piece.from);
-            _kingRider.SetTime(piece.from);
+            if (_strikeLeft <= 0f) _kingRider.SetTime(piece.from);
         }
 
         private void TickKingFigure(float dt)
@@ -107,7 +123,18 @@ namespace CityBuilder.Campaign
                 else _kingT = piece.from + (_kingT - piece.to) % Mathf.Max(0.05f, piece.to - piece.from);
             }
             _kingHorse.SetTime(_kingT);
-            _kingRider.SetTime(_kingT);
+            if (_strikeLeft > 0f)
+            {
+                _strikeLeft -= dt;
+                _strikeT += dt;
+                if (_strikeLeft > 0f) _kingRider.SetTime(_strikeT);
+                else
+                {
+                    _kingRider.Play(piece.take, 0.12f, 0f, _kingT);
+                    _kingRider.SetTime(_kingT);
+                }
+            }
+            else _kingRider.SetTime(_kingT);
             _kingHorse.Tick(dt);
             _kingRider.Tick(dt);
             // the rider where the take seats him on the horse at this moment
@@ -116,7 +143,7 @@ namespace CityBuilder.Campaign
             {
                 var f = Mathf.Clamp(Mathf.FloorToInt(_kingT * rig.fps), 0, seat.Length / 7 - 1) * 7;
                 _kingRider.transform.localPosition = new Vector3(seat[f], seat[f + 1], seat[f + 2]);
-                _kingRider.transform.localRotation = new Quaternion(seat[f + 3], seat[f + 4], seat[f + 5], seat[f + 6]);
+                _kingRider.transform.localRotation = new Quaternion(seat[f + 3], seat[f + 4], seat[f + 5], seat[f + 6]) * Half;
             }
         }
     }

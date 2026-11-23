@@ -1317,7 +1317,31 @@ broken); the player plays the KING.
        from the takes. No sword-strike clip yet (the knight's blows show no swing).
     5. the road starts in the deep forest at the west edge (GUIDE starts (-2, 78)), no start clearing; NO ore veins
        on a campaign map (`OreDepositSpawner` returns when CityDefenceMode is pending/active). Map regenerated.
-  - OPEN: the King's sword strikes, the felled tree's model at the block (only a halt + banner now), the bridge model, the King's mounted
+  - **The user's second look in Unity (2026-11-23), 9 notes -> fixed (setup, not seen):**
+    1. «всё ещё нет дороги в сцене»: the real cause -- `forest_road.ground()` built the road's verge/dirt strips (and
+       the ferns) with a LEFT-handed axis set `(-uy, ux, 0), (ux, uy, 0), (0, 0, 1)`: inside-out boxes, invisible in
+       Unity (back faces culled; Blender renders both sides), only their edges showed as thin lines. Now `(uy, -ux, 0)`.
+       TRAP for any `kit.obox`: ax x ay must equal az. M3RoadSet re-exported.
+    2. the mission's cart horses and driver went backwards: a cine figure's rig faces -Z and the film turns every
+       figure half round (Intro.cs `PlaceAt`); `RaiseCart` and the King's figures (`DressKing`, the seat) now do too.
+    3. the King had no blows: `KingRig.strike` = Rally 5.5-6.35 (his last cut in the charge, rally_anim LAST 44.0);
+       `Arden.Struck` -> the RIDER alone plays it, the horse goes on with its own piece.
+    4. riders jerked side to side on bends / 5. twitched by the fighting King striking nobody / 6. one rode off to
+       the far edge: `TickRiders` rewritten -- places from the cart's eased heading, steering smoothed (exp 5/s),
+       gaps under 0.35 cell left alone; a monster within m3_rider_fight_cells of the rider or of what it guards (the
+       cart, the King after «За мной!») = FIGHT: steering off, `group.AttackOnItsOwn(foe)` at once, the squad's
+       `SetHold` kept on its place by the cart every frame (idle soldiers walked back to the HIRING point); leash
+       `m3_rider_leash_cells` 6 (economy + sheet row 146), past it back to the place, deaf to fights 1.5 s.
+    7. «после использования способности орки просто зависли»: steered orcs (`orc.Steered`) never count BusyFor down
+       (OrcUnit.Update returns on Steered first) -> the stun of «За мной!»/the charge froze them forever;
+       `TickEscortOrcs` counts it down itself. TRAP for any mode that steers orcs and stuns them.
+    8. «Ардан» texts in escort -> `#m3_respawn`, `#m3_level_up`, `#m3_lost_king` (texts tab rows 140-142).
+    9. «миссия начинается возле воды» (the user asked for the start right past the felled tree of the scene):
+       mission3b.py -- behind the start the scene's AMBUSH CLEARING (r 5.5, 7 cells back), the road the column came
+       by (`LEAD_LINE`, ~38 cells west, in `road_dist`), the land 30 cells further west and 14 further south
+       (`WEST_EXTRA`, `SOUTH_EXTRA`), the felled trunk as two big `log` decor on the left verge + a `stump` with
+       chips on the right. Map regenerated + exported.
+  - OPEN: the felled tree's model at the block (only a halt + banner now), the bridge model, the King's mounted
     figure, red edge arrows (the design's HUD item), the riders' own figure (Knight for now), checkpoints (a loss
     restarts the whole mission for now), the capital's gates opening + the entry scene,
     the balance after the user's playtest.

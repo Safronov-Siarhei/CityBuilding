@@ -3957,7 +3957,7 @@ namespace CityBuilder.Core
         public int riders = 10, riderLevel = 2, postRiders = 4;
         // a rider lets go of the cart to fight a monster this near (cells); the cart's models x cartScale over the size
         // that makes its shaft horse a rider's horse
-        public float riderFightCells = 2.5f, cartScale = 1f;
+        public float riderFightCells = 2.5f, riderLeashCells = 6f, cartScale = 1f;
         // the King: health/damage at level 1 and per level, back at the cart after respawnSeconds, picks a fight this near
         public int kingHealth = 500, kingDamage = 40, kingHealthPerLevel = 60, kingDamagePerLevel = 8;
         public float kingRespawnSeconds = 12f, kingEngageCells = 3f;
@@ -3999,6 +3999,7 @@ namespace CityBuilder.Core
             riderLevel = I("m3_rider_level", riderLevel);
             postRiders = I("m3_post_riders", postRiders);
             riderFightCells = F("m3_rider_fight_cells", riderFightCells);
+            riderLeashCells = F("m3_rider_leash_cells", riderLeashCells);
             cartScale = F("m3_cart_scale", cartScale);
             kingHealth = I("m3_king_health", kingHealth);
             kingDamage = I("m3_king_damage", kingDamage);
