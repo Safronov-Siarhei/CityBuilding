@@ -1251,7 +1251,15 @@ the mission starts. Storyboard v3 (~56 s): **APPROVED by the user 2026-11-23 («
      from 20.0 20 monsters (12 spears, 8 torches, `monsters()`) break cover from the first trees (x ±5.3-6.1),
      run at 1.9 (orc_anim spear_run/torch_run) to a rider's flank and pull up braced (`braced`); 6 javelins
      (CineJavelin props) arc out of the forest and stick in the road (20.5-21.7); the riders wheel outward from 20.4
-     (each lane to its side, `heading`); the driver ducks; the captive shakes the bars. Video SENT 2026-11-23, waiting.
+     (each lane to its side, `heading`); the driver ducks; the captive shakes the bars. Video SENT; **APPROVED by the user 2026-11-23**.
+  3. `melee_anim.py` «Сеча» (shots 7-8, scene 26-38, T0 26): riders WEAKER than the monsters (the user): 10 of the 20
+     fall (`DEATHS`: slot, «dragged» -- pulled outward face down, or «speared» -- off the horse's back onto his back
+     towards the road's middle; FALL 0.75 s, the horse rears), only 3 monsters thrown back by lances (`LANCE_KILLS`)
+     and 1 cut down by the King (28.2); each death's killer is the nearest free monster (`assign`), closing on his man
+     before the blow. The BRUTE (CineOrcChampion's model with his cleaver) runs out of the trees behind the cart at 28,
+     hacks the cage at 30.6/31.2/31.8 (the cart rocks, the captive roars to him); the standard-bearer (slot 5) wheels
+     and gallops into him at 32.3 and throws him down. Two survivors' horses rear (`REARS`). 16 monsters left standing
+     for group 4. Export name CapOrcChampion. Video SENT 2026-11-23, waiting.
   - Traps: the game's DecBush1 is a clipped hedge in a stone border (not a wild bush); `b.rod` is square (not a log).
 
 **Assets:**
