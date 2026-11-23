@@ -1296,6 +1296,16 @@ the win window, in mission 2's town (the user: «сразу после побе�
     They stop where they did, facing +y.
   - The DecTree at (51, 57) by the square stood in the shots: removed from mission 2's town for good
     (`mission2_town.py` skips it; the regenerated Mission2Town.json lost only that piece).
+- **The user's second look (2026-11-23):**
+  - The messengers now turn their horses to face the King once they pull up (`messenger_root`).
+  - The roof in the frame: the review's «wide»/«leave» cameras stood ON the cottage at (51, 54), and the cart's
+    stood inside a hovel. The square's wide, leave and cart shots are now given in PLAN cells (`plan_shot`).
+    `Tools/campaign/prologue_cam_check.py` checks every camera and its view against Mission2Town.json: run it
+    after any shot change.
+  - The scene ran under the loading screen. Capital.cs's films now hold their clock while `LoadingScreen.Busy`,
+    and the music waits for it too (`musicWait`).
+  - A black band across the houses: the land-edge darkness seen from the low cameras. Off for the whole prologue
+    (`CapitalState.dark`).
 - Not checked: camera framing in the real town (houses may stand in the messengers' way from the west). The user
   should watch it with the cheat «Перемотать к концовке».
      - v3 (the user):

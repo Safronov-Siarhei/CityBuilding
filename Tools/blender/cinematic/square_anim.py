@@ -163,7 +163,15 @@ def messenger_root(i, t):
         u = min(t - brake_at, BRAKE)
         d = GALLOP_V * (brake_at - t0 + u - u * u / (2 * BRAKE))
     pos, way = _back_along(i, max(0.0, travel - d))
-    return pos, heading_to(way), d
+    h = heading_to(way)
+    # pulled up, he turns his horse to face the King (the user, 2026-11-23: «разворачиваться к нему лицом»)
+    halt_t = brake_at + BRAKE
+    w = env(t, halt_t + 0.2, halt_t + 1.3)
+    if w > 0.0:
+        k = heading_to(KING_STOP - pos)
+        diff = (k - h + math.pi) % TAU - math.pi
+        h += diff * w
+    return pos, h, d
 
 
 def messenger_horse(i, t, d):

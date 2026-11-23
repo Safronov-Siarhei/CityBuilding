@@ -119,6 +119,8 @@ namespace CityBuilder.Campaign
             public readonly HashSet<string> far = new HashSet<string>();   // the last scene's places away from the town
             public bool away;                                      // a far place's shot is on: the town's darkness off
             public readonly List<Renderer> unseen = new List<Renderer>();   // the town's living, hidden while it plays
+            public bool dark = true;                               // the darkness over the land's edge may show (the prologue: never)
+            public bool musicWait;                                 // the loading screen still up: the music waits for it
 
             bool IFilm.Playing => !done;
             float IFilm.Time => time;
@@ -276,7 +278,10 @@ namespace CityBuilder.Campaign
                 s.music.spatialBlend = 0f;
                 s.music.volume = script.musicVolume * CityBuilder.Core.GameSettings.MusicVolume;
                 s.music.ignoreListenerPause = true;
-                s.music.Play();
+                // the prologue played from the map starts under the loading screen (the user, 2026-11-23: «сцена
+                // начинается раньше чем проходит экран загрузки"): the clock and the music wait for it
+                if (LoadingScreen.Busy) s.musicWait = true;
+                else s.music.Play();
             }
             if (music2 != null && script.music2At >= 0f)
             {
@@ -359,6 +364,12 @@ namespace CityBuilder.Campaign
             if (s == null || s.done) return;
             HideCanvases(s.hidden, s.canvas);
             if (_music != null && _music.isPlaying) _music.Pause();
+            if (LoadingScreen.Busy) dt = 0f;
+            else if (s.musicWait)
+            {
+                s.musicWait = false;
+                if (s.music != null) s.music.Play();
+            }
             s.time += dt;
             var t = s.time;
             var sc = s.script;

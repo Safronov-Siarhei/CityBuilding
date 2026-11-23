@@ -71,13 +71,14 @@ for place, turn, who in (("deadA", 0, None), ("deadB", 120, ["CapFolkPeasant", "
 
 # the square's shots (in the take's frame, turned with it). Behind Ардан the castle is ~2 cells off: the reverse
 # shots stay within 1.8 of the square's middle on that side.
-WIDE = ((0.1, -0.1, 0.5), (-3.0, -3.4, 1.9), 30)                 # square_anim's review «wide»
+WIDE = ("plan", (52.6, 60.6, 2.0), (50.0, 58.0, 0.5), 28)          # from the open cells south-east of the square
+                                                                 # (the review's «wide» stood ON a cottage: the user saw a roof)
 KING = ((0.0, 0.1, 0.75), (0.9, 1.6, 0.35), 30)                  # over Ардан's shoulder up to the King
 CAPT = ((0.2, 0.95, 0.5), (0.45, -1.05, 0.3), 32)                # from the King's side onto the Captain and Ардан
 ARDAN = ((-0.3, 0.75, 0.5), (0.4, -1.0, 0.25), 34)               # onto Ардан as he steps up
 AMULET = ((-0.3, 0.75, 0.45), (0.25, -0.6, 0.35), 40)            # the King's eyes down on the amulet
 LINE = ((-1.0, 0.4, 0.45), (2.4, -2.6, 1.3), 30)                 # the soldiers' line and the volunteers
-LEAVE = ((0.0, -1.2, 0.5), (-2.8, -3.6, 2.2), 28)                # the King rides off
+LEAVE = ("plan", (52.6, 60.6, 2.4), (50.0, 56.5, 0.5), 26)        # the King rides off up the road
 
 square_plan = [(0.0, 5.0, WIDE), (5.0, 12.55, KING), (12.55, 14.0, CAPT), (14.0, CUT1, WIDE),
                (CUT1, CUT2, WIDE),
@@ -95,11 +96,28 @@ def film_end(b):
     return b - CUT2 + SQ_C
 
 
-for a, b, (at, off, lens) in square_plan:
-    shots.append(shot("square", film(a), film_end(b) if b <= SQUARE_S else END + 1, at, off, lens, SQ_TURN))
+PLACE_CELL = {"square": (50, 59), "cart": (50.5, 46.5)}
+
+
+def plan_shot(place, t0, t1, cam, at, lens):
+    """A shot given in the town plan's cells (x east, y SOUTH, h up): checked against the houses by
+    Tools/campaign/prologue_cam_check.py."""
+    cx, cy = PLACE_CELL[place]
+    f = lambda v: [round(v[0] - cx, 3), round(cy - v[1], 3), round(v[2], 3)]       # noqa: E731
+    return {"place": place, "t0": round(t0, 3), "t1": round(t1, 3), "fov": fov(lens), "from": f(cam), "at": f(at)}
+
+
+for a, b, spec in square_plan:
+    t0, t1 = film(a), film_end(b) if b <= SQUARE_S else END + 1
+    if spec[0] == "plan":
+        shots.append(plan_shot("square", t0, t1, spec[1], spec[2], spec[3]))
+    else:
+        at, off, lens = spec
+        shots.append(shot("square", t0, t1, at, off, lens, SQ_TURN))
 # the cage: cage_anim's review «wide», then «close» for the slam
-shots.append(shot("cart", CAGE_AT, CAGE_AT + 3.0, (0.1, 0.0, 0.55), (2.6, -2.2, 0.9), 30, CART_TURN))
-shots.append(shot("cart", CAGE_AT + 3.0, SQ_B, (0.2, 0.05, 0.65), (1.35, -0.75, 0.25), 28, CART_TURN))
+# (from the free cells between the cross street and the inner wall: the review's spots stood in a hovel)
+shots.append(plan_shot("cart", CAGE_AT, CAGE_AT + 3.0, (52.6, 48.9, 1.4), (50.5, 46.5, 0.5), 30))
+shots.append(plan_shot("cart", CAGE_AT + 3.0, SQ_B, (51.7, 47.7, 0.8), (50.5, 46.5, 0.6), 28))
 # the glade: glade_anim's one push-in along the track onto the old man's face (held before and after)
 cam = {"t0": 0.8, "t1": 6.6, "from": [0.0, -6.0, 2.6], "at": [0.0, 1.0, 0.3], "lens": 28.0,
        "from2": [0.0, -1.0, 0.8], "at2": [0.0, 0.5, 0.8], "lens2": 42.0}

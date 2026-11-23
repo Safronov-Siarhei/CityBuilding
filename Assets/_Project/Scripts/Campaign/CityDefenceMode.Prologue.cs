@@ -69,8 +69,12 @@ namespace CityBuilder.Campaign
             }
             try
             {
-                return StartFilm(prologueScript, prologueTakes, capitalFigures, capitalClips, capitalProps, prologueSets,
+                var on = StartFilm(prologueScript, prologueTakes, capitalFigures, capitalClips, capitalProps, prologueSets,
                     prologueMusic, prologueMusic2, null, true, End);
+                // no darkness over the land's edge: from the square's low cameras it lay as a black band across the
+                // houses (the user, 2026-11-23)
+                if (on && _capital != null) _capital.dark = false;
+                return on;
             }
             catch (Exception e)
             {
