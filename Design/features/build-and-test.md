@@ -71,6 +71,10 @@ replaced by CRLF" warnings (`core.autocrlf` is true and half the repo is LF). Se
   since its last compile are missing otherwise), run `"<Unity>/Editor/Data/DotNetSdk/dotnet.exe"
   "<...>/DotNetSdk/sdk/<ver>/Roslyn/bincore/csc.dll" -nologo @rt.rsp`; then the Editor rsp the same way with its
   `-r:` to `CityBuilder.Runtime.ref.dll` pointed at the fresh dll. Compiles only -- nothing runs (2026-11-16).
+- **TRAP (2026-11-23): the user's Windows has a user-level `UNITY_EXE` = `D:\unity\6000.1.4f1\Editor\Unity.exe`** (an
+  older editor); run.ps1 takes it before ProjectVersion's 6000.5.4f1 and setup dies in seconds on «Project has invalid
+  dependencies: com.unity.modules.adaptiveperformance ... cannot be found». Set `$env:UNITY_EXE =
+  'D:\unity\6000.5.4f1-x86_64\Editor\Unity.exe'` for the run (do not change the user's variable).
 - Call `run.ps1` from PowerShell itself (`& ./Tools/research/run.ps1 -Steps setup,setup,...`). Through
   `powershell -File` the comma list arrives as ONE step name, nothing runs, and it still prints
   `RUN FINISHED` with exit 0.
