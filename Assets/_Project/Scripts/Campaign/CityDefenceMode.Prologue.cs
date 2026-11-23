@@ -23,29 +23,60 @@ namespace CityBuilder.Campaign
         [SerializeField] private GameObject[] prologueSets = new GameObject[0];    // Models/Cinematic/L3Glade*Set.fbx
         [SerializeField] private AudioClip prologueMusic;                          // Audio/Campaign/mus_gate.ogg (the square)
         [SerializeField] private AudioClip prologueMusic2;                         // Audio/Campaign/mus_portal.ogg (from the glade)
+        // played alone from the map, the town is sacked as «Подкрепление» leaves it (Mission2Help.json's ruins, fires)
+        [SerializeField] private int prologueRuins = 7, prologueFires = 10;
+
+        /// <summary>The campaign map's film flag (Campaign/CampaignMap.json): watched once, level 3's branches open.</summary>
+        public const string PrologueId = "m3p";
 
         private bool _prologueDone;
+
+        /// <summary>Played from the campaign map's flag (the scene alone, nothing of the mission is running).</summary>
+        public bool PrologueAlone { get; private set; }
 
         /// <summary>After «Подкрепление»: the prologue, then the win (the win at once when it cannot play).</summary>
         private void AfterHelp()
         {
-            if (!StartPrologue()) Win();
+            if (!StartPrologue(() => { CampaignProgress.MarkDone(PrologueId); Win(); })) Win();
         }
 
-        private bool StartPrologue()
+        /// <summary>From the map's film flag: the town sacked as «Подкрепление» leaves it, the prologue, back to the map.</summary>
+        private void PlayPrologueAlone()
+        {
+            PrologueAlone = true;
+            // Part1, not Won: Update steps a film only in Part1 (and while one plays, nothing of the siege runs)
+            Current = Stage.Part1;
+            SackTown(null, prologueRuins, prologueFires, 1f);
+            if (!StartPrologue(PrologueOver)) PrologueOver();
+        }
+
+        private static void PrologueOver()
+        {
+            CampaignProgress.MarkDone(PrologueId);
+            Time.timeScale = 1f;
+            UI.LoadingScreen.ToCampaignMap("CampaignMap");
+        }
+
+        private bool StartPrologue(Action onEnd)
         {
             if (_prologueDone) return false;
             _prologueDone = true;
+            var ended = false;
+            void End()
+            {
+                ended = true;
+                onEnd?.Invoke();
+            }
             try
             {
                 return StartFilm(prologueScript, prologueTakes, capitalFigures, capitalClips, capitalProps, prologueSets,
-                    prologueMusic, prologueMusic2, null, true, Win);
+                    prologueMusic, prologueMusic2, null, true, End);
             }
             catch (Exception e)
             {
                 Debug.LogException(e);
                 AbortCapital();
-                return Current == Stage.Won;
+                return ended;           // the abort ran its end already: the caller must not run it again
             }
         }
     }

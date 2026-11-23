@@ -1,5 +1,5 @@
 {
- "comment": "The campaign map's level points (Tools/campaign/campaign_map.py writes this): x, y as fractions of the picture from its top left; titleKey = the level's name; the game draws a flag on each; scene = the level's scene (empty: not built yet, «Скоро»); bestKey = its best time in PlayerPrefs (empty: none). A level opens once the one before it is done (or, `after`, once that level is done); label = the medal's number (empty: its place).",
+ "comment": "The campaign map's level points (Tools/campaign/campaign_map.py writes this): x, y as fractions of the picture from its top left; titleKey = the level's name; the game draws a flag on each; scene = the level's scene (empty: not built yet, «Скоро»); bestKey = its best time in PlayerPrefs (empty: none). A level opens once the one before it is done (or, `after`, once that level is done); label = the medal's number (empty: its place); film = a story scene (a video glyph).",
  "picture": "CampaignMap_Wide",
  "levels": [
   {
@@ -10,7 +10,8 @@
    "scene": "CampaignOpening",
    "bestKey": "m1_best",
    "after": "",
-   "label": ""
+   "label": "",
+   "film": false
   },
   {
    "id": "m2",
@@ -20,7 +21,19 @@
    "scene": "CityBuilder",
    "bestKey": "",
    "after": "",
-   "label": ""
+   "label": "",
+   "film": false
+  },
+  {
+   "id": "m3p",
+   "x": 0.6167,
+   "y": 0.3056,
+   "titleKey": "#campaign_prologue",
+   "scene": "CityBuilder",
+   "bestKey": "",
+   "after": "m2",
+   "label": "",
+   "film": true
   },
   {
    "id": "m3a",
@@ -29,8 +42,9 @@
    "titleKey": "#campaign_level_3a",
    "scene": "",
    "bestKey": "",
-   "after": "m2",
-   "label": "3"
+   "after": "m3p",
+   "label": "3",
+   "film": false
   },
   {
    "id": "m3b",
@@ -39,8 +53,9 @@
    "titleKey": "#campaign_level_3b",
    "scene": "",
    "bestKey": "",
-   "after": "m2",
-   "label": "3"
+   "after": "m3p",
+   "label": "3",
+   "film": false
   }
  ]
 }

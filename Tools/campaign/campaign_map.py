@@ -72,6 +72,7 @@ FOREST = (930, 560)
 BRIDGE = (1215, 610)
 TOWN = (1420, 560)
 CASTLE = (1830, 360)
+PROLOGUE = (1480, 330)       # the level-3 prologue's film flag, above the town
 PRISONERS = (1660, 780)     # Ардан's branch of level 3: where the monsters took the prisoners
 # the road, through them (a smooth curve is drawn through these)
 ROAD = [VILLAGE, (560, 720), FIELD, (800, 690), (880, 600), FOREST, (1060, 590), BRIDGE, (1300, 590), TOWN,
@@ -82,8 +83,11 @@ LEVELS = [
     {"id": "m2", "at": TOWN, "titleKey": "#campaign_level_2", "scene": "CityBuilder", "bestKey": ""},
     # level 3 = two branches after the prologue «Пленные» (the user, 2026-11-22): Ардан's rescue out in the open land
     # south-east of the town, the King's cage to the castle; both open once level 2 is done, both numbered 3
-    {"id": "m3a", "at": PRISONERS, "titleKey": "#campaign_level_3a", "scene": "", "bestKey": "", "after": "m2", "label": "3"},
-    {"id": "m3b", "at": CASTLE, "titleKey": "#campaign_level_3b", "scene": "", "bestKey": "", "after": "m2", "label": "3"},
+    # the prologue «Пленные» is its own flag with a video glyph (the user, 2026-11-23), above the road past the town;
+    # the branches open once it is watched (it also plays right after level 2's win)
+    {"id": "m3p", "at": PROLOGUE, "titleKey": "#campaign_prologue", "scene": "CityBuilder", "bestKey": "", "after": "m2", "film": True},
+    {"id": "m3a", "at": PRISONERS, "titleKey": "#campaign_level_3a", "scene": "", "bestKey": "", "after": "m3p", "label": "3"},
+    {"id": "m3b", "at": CASTLE, "titleKey": "#campaign_level_3b", "scene": "", "bestKey": "", "after": "m3p", "label": "3"},
 ]
 FOG_FROM = 1960  # x where the unknown lands begin
 
@@ -311,9 +315,9 @@ def main():
     os.makedirs(pic, exist_ok=True)
     img.save(os.path.join(pic, "CampaignMap_Wide.png"), optimize=True)
     data = {
-        "comment": "The campaign map's level points (Tools/campaign/campaign_map.py writes this): x, y as fractions of the picture from its top left; titleKey = the level's name; the game draws a flag on each; scene = the level's scene (empty: not built yet, «Скоро»); bestKey = its best time in PlayerPrefs (empty: none). A level opens once the one before it is done (or, `after`, once that level is done); label = the medal's number (empty: its place).",
+        "comment": "The campaign map's level points (Tools/campaign/campaign_map.py writes this): x, y as fractions of the picture from its top left; titleKey = the level's name; the game draws a flag on each; scene = the level's scene (empty: not built yet, «Скоро»); bestKey = its best time in PlayerPrefs (empty: none). A level opens once the one before it is done (or, `after`, once that level is done); label = the medal's number (empty: its place); film = a story scene (a video glyph).",
         "picture": "CampaignMap_Wide",
-        "levels": [{"id": lv["id"], "x": round(lv["at"][0] / W, 4), "y": round(lv["at"][1] / H, 4), "titleKey": lv["titleKey"], "scene": lv["scene"], "bestKey": lv["bestKey"], "after": lv.get("after", ""), "label": lv.get("label", "")} for lv in LEVELS],
+        "levels": [{"id": lv["id"], "x": round(lv["at"][0] / W, 4), "y": round(lv["at"][1] / H, 4), "titleKey": lv["titleKey"], "scene": lv["scene"], "bestKey": lv["bestKey"], "after": lv.get("after", ""), "label": lv.get("label", ""), "film": lv.get("film", False)} for lv in LEVELS],
     }
     with open(os.path.join(ROOT, "Assets", "_Project", "Campaign", "CampaignMap.json"), "w", encoding="utf-8", newline="\n") as f:
         json.dump(data, f, ensure_ascii=False, indent=1)

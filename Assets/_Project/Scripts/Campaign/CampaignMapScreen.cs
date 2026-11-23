@@ -28,6 +28,7 @@ namespace CityBuilder.Campaign
             public string bestKey;
             public string after;   // opens once this level is done (the level-3 branches both follow m2); empty: the one before it
             public string label;   // the medal's number (the branches share «3»); empty: its place in the list
+            public bool film;      // a story scene, not a level (the level-3 prologue): a video glyph on its medal
         }
 
         [Serializable]
@@ -188,10 +189,10 @@ namespace CityBuilder.Campaign
 
             var open = Open(i);
             var medal = MissionSkin.Round(holder, "Medal", open ? "round_main" : "round", open ? HudInk.OnMain : HudInk.OnRound,
-                open ? null : lockGlyph, new Vector2(0.5f, 0.5f), Vector2.zero, 84f);
+                open ? (lv.film ? playGlyph : null) : lockGlyph, new Vector2(0.5f, 0.5f), Vector2.zero, 84f);
             var index = i;
             medal.onClick.AddListener(() => Pick(index));
-            if (open)
+            if (open && !lv.film)
             {
                 var n = MissionSkin.Label(medal.transform, string.IsNullOrEmpty(lv.label) ? (i + 1).ToString() : lv.label, UiTheme.Heavy, 40, MissionSkin.Ink(HudInk.OnMain), TextAnchor.MiddleCenter,
                     Vector2.zero, Vector2.one, Vector2.zero);
@@ -270,6 +271,12 @@ namespace CityBuilder.Campaign
             // всегда при старте уровня»); it has its own «Пропустить», and only a restart from inside skips it
             if (_picked == 0) MissionOne.SkipFilm = false;
             // level 2 is played on the gameplay scene, on its own map (CityDefenceMode)
+            // the level-3 prologue: mission 2's town and the scene alone, then back here (the user, 2026-11-23)
+            if (_levels[_picked].film)
+            {
+                CityDefenceMode.BeginPrologue();
+                return;
+            }
             if (_levels[_picked].id == CityDefenceMode.LevelId)
             {
                 CityDefenceMode.Begin();

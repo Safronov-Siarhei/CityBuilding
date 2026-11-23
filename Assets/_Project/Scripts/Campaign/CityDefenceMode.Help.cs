@@ -95,35 +95,40 @@ namespace CityBuilder.Campaign
                     at = new Vector3(c.x, at.y, c.z + 2f);      // a 2x2 house: its face 1 north of its middle, + the step
                     Burn(best, script.fireSize);
                 }
-                // the town sacked (the user, 2026-11-16: «город не похож на атакованный орками, нет пожаров и руин»):
-                // `ruins` houses left burnt shells (some still smoking), `fires` more burning -- never the raze house's
-                // row, the take needs its walls
-                var rnd = new System.Random(11);
-                var pool = new System.Collections.Generic.List<BuildingInstance>();
-                foreach (var h in _houses)
-                    if (h != null && h != best && h.CurrentHealth > 0 && (best == null || Flat(h.transform.position - best.transform.position) > 4f))
-                        pool.Add(h);
-                for (var i = pool.Count - 1; i > 0; i--)
-                {
-                    var j = rnd.Next(i + 1);
-                    (pool[i], pool[j]) = (pool[j], pool[i]);
-                }
-                var n = 0;
-                foreach (var h in pool)
-                {
-                    if (n < script.ruins)
-                    {
-                        var spot = h.transform.position;
-                        Ruin(h);
-                        if (n % 2 == 0) Fire(new Vector3(spot.x, GroundAt(spot) + 0.3f, spot.z), Mathf.Max(0.3f, script.fireSize * 0.7f));
-                    }
-                    else if (n < script.ruins + script.fires) Burn(h, script.fireSize);
-                    else break;
-                    n++;
-                }
+                SackTown(best, script.ruins, script.fires, script.fireSize);
             }
             at.y = GroundAt(at);
             return at;
+        }
+
+        /// <summary>The town sacked (the user, 2026-11-16: «город не похож на атакованный орками, нет пожаров и руин»):
+        /// `ruins` houses left burnt shells (some still smoking), `fires` more burning -- never `best`'s row (the raze
+        /// take needs its walls). The level-3 prologue played alone from the map does it too.</summary>
+        private void SackTown(BuildingInstance best, int ruins, int fires, float fireSize)
+        {
+            var rnd = new System.Random(11);
+            var pool = new System.Collections.Generic.List<BuildingInstance>();
+            foreach (var h in _houses)
+                if (h != null && h != best && h.CurrentHealth > 0 && (best == null || Flat(h.transform.position - best.transform.position) > 4f))
+                    pool.Add(h);
+            for (var i = pool.Count - 1; i > 0; i--)
+            {
+                var j = rnd.Next(i + 1);
+                (pool[i], pool[j]) = (pool[j], pool[i]);
+            }
+            var n = 0;
+            foreach (var h in pool)
+            {
+                if (n < ruins)
+                {
+                    var spot = h.transform.position;
+                    Ruin(h);
+                    if (n % 2 == 0) Fire(new Vector3(spot.x, GroundAt(spot) + 0.3f, spot.z), Mathf.Max(0.3f, fireSize * 0.7f));
+                }
+                else if (n < ruins + fires) Burn(h, fireSize);
+                else break;
+                n++;
+            }
         }
 
         /// <summary>Flames out of a house's roof (Look.cs's fire; it burns on after the scene).</summary>

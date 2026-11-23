@@ -1272,11 +1272,21 @@ the win window, in mission 2's town (the user: «сразу после побе�
   - it runs on Capital.cs's `StartFilm(inTown)`; «Пропустить» skips it like the others;
   - the cheat «Перемотать к концовке» plays it again;
   - with `_noHelp` (the tests) there is no prologue.
-- Campaign map: level 3 is now TWO flags, both numbered 3 (`label`), both opening after m2 (`after`):
+- Campaign map: level 3 is now TWO flags, both numbered 3 (`label`), both opening after the prologue's flag (`after`):
   - `m3a` «Пленные» (Ардан), south-east of the town at (1660, 780);
   - `m3b` «Клетка» (the King), at the castle.
   - Both are «Скоро» (no scene). `#campaign_level_3` is no longer used.
   - campaign_map.py's LEVELS are updated, but the picture was NOT repainted (the JSON was edited the same way).
+- **The prologue's own flag (the user, 2026-11-23: «сцена должна быть отдельным значком на карте кампании как пролог,
+  а на ней значок видео»):**
+  - `m3p` «Пролог» (`#campaign_prologue`, `film: true`) at (1480, 330), above the town, opens after m2;
+  - its medal shows the play glyph instead of a number;
+  - «Играть» calls `CityDefenceMode.BeginPrologue()`: mission 2's scene and town, `PlayPrologueAlone` sacks it
+    (`SackTown`, shared with «Подкрепление»: 7 ruins, 10 fires);
+  - then the film alone, then back to the map, marking `m3p` done. The branches m3a/m3b open `after: "m3p"`;
+  - the film after mission 2's win marks m3p done too.
+  - TRAP: `Update` steps a film only in Stage.Part1. The film-alone run sets Part1, not Won (with Won it froze on
+    its first frame).
 - Not checked: camera framing in the real town (houses may stand in the messengers' way from the west). The user
   should watch it with the cheat «Перемотать к концовке».
      - v3 (the user):

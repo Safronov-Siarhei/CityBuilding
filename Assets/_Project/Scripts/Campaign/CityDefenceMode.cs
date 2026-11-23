@@ -210,6 +210,16 @@ namespace CityBuilder.Campaign
             UI.LoadingScreen.IntoGame(GameplayScene);
         }
 
+        /// <summary>The campaign map's film flag «Пролог» (the user, 2026-11-23: the level-3 prologue its own icon on the
+        /// map, a video glyph on it): mission 2's town, sacked, and only the prologue (Prologue.cs); then back to the map.</summary>
+        public static void BeginPrologue()
+        {
+            Begin();
+            _filmOnly = true;
+        }
+
+        private static bool _filmOnly;
+
         private void Awake()
         {
             Instance = this;
@@ -303,6 +313,12 @@ namespace CityBuilder.Campaign
             SetUpView();
             NoShadowsOnLow();
             Darkness();
+            if (_filmOnly)
+            {
+                _filmOnly = false;
+                PlayPrologueAlone();
+                return;
+            }
             RaiseHealers();
             CountOrcs();
 
