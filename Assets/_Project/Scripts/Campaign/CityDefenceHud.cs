@@ -221,7 +221,8 @@ namespace CityBuilder.Campaign
             var fallen = copy.transform.Find("Portrait/Fallen");
             if (fallen != null) fallen.gameObject.SetActive(false);
             var face = copy.transform.Find("Portrait/Mask/Face");
-            if (face != null && art.portrait != null) face.GetComponent<Image>().sprite = art.portrait;
+            // mission 3b keeps the King's own face (the user, 2026-11-23: «сверху сейчас портрет Ардана»)
+            if (!_escort && face != null && art.portrait != null) face.GetComponent<Image>().sprite = art.portrait;
             _level = copy.transform.Find(PathUnder(source, king.LevelText.transform))?.GetComponent<Text>();
             _ardenBar = copy.transform.Find(PathUnder(source, king.HealthFill))?.GetComponent<Image>();
             _xpBar = copy.transform.Find(PathUnder(source, king.XpFill))?.GetComponent<Image>();

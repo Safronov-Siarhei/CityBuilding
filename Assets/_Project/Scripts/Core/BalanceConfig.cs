@@ -3955,6 +3955,9 @@ namespace CityBuilder.Core
         public int cageDamageRaider = 12, cageDamageThrower = 8, cageDamageBrute = 80;
         // the column: riders round the cart (the opening scene's survivors), their level; the watch-tower's riders
         public int riders = 10, riderLevel = 2, postRiders = 4;
+        // a rider lets go of the cart to fight a monster this near (cells); the cart's models x cartScale over the size
+        // that makes its shaft horse a rider's horse
+        public float riderFightCells = 2.5f, cartScale = 1f;
         // the King: health/damage at level 1 and per level, back at the cart after respawnSeconds, picks a fight this near
         public int kingHealth = 500, kingDamage = 40, kingHealthPerLevel = 60, kingDamagePerLevel = 8;
         public float kingRespawnSeconds = 12f, kingEngageCells = 3f;
@@ -3995,6 +3998,8 @@ namespace CityBuilder.Core
             riders = I("m3_riders", riders);
             riderLevel = I("m3_rider_level", riderLevel);
             postRiders = I("m3_post_riders", postRiders);
+            riderFightCells = F("m3_rider_fight_cells", riderFightCells);
+            cartScale = F("m3_cart_scale", cartScale);
             kingHealth = I("m3_king_health", kingHealth);
             kingDamage = I("m3_king_damage", kingDamage);
             kingHealthPerLevel = I("m3_king_health_per_level", kingHealthPerLevel);

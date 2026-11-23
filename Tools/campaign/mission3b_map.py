@@ -43,7 +43,9 @@ BLUE = (50, 90, 190)
 PAPER = (244, 234, 208)
 
 # the road's guide points (cells, y down): from the clearing at the bottom left to the capital's gate at the top right
-GUIDE = [(10, 74), (20, 75), (30, 70), (34, 62), (30, 54), (34, 46), (44, 42), (54, 46), (62, 54), (72, 56),
+# the road comes out of the deep forest at the map's west edge (the user, 2026-11-23: «дорога должна начинаться из
+# чащи леса»), no clearing at its start
+GUIDE = [(-2, 78), (4, 76.5), (10, 74), (20, 75), (30, 70), (34, 62), (30, 54), (34, 46), (44, 42), (54, 46), (62, 54), (72, 56),
          (80, 50), (82, 41), (78, 33), (82, 25), (92, 22), (100, 25)]
 CAPITAL = (95, 3, 117, 21)   # its walls; the gate on the bottom side at x 100
 GATE = (100, 21)
@@ -135,7 +137,7 @@ def main():
     d.rectangle((0, 0, W * S, H * S), fill=GRASS)
     river = river_pts()
     fields_from = at_minute(6.6)[0]
-    clearings = [(at_minute(0.0)[0], 7.0), (at_minute(3.0)[0], 4.0), (at_minute(4.5)[0], 5.0), (at_minute(5.4)[0], 4.5)]
+    clearings = [(at_minute(3.0)[0], 4.0), (at_minute(4.5)[0], 5.0), (at_minute(5.4)[0], 4.5)]
 
     def open_ground(x, y):
         if any(math.dist((x, y), c) < r for c, r in clearings):

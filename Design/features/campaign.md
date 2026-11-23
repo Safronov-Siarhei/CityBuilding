@@ -1297,7 +1297,27 @@ broken); the player plays the KING.
     music mus_gate then mus_attack from the horn (17.0). `SetupEscort` plays it after setting the road up (the game
     stands under it, Update ticks `TickCapital` in escort), the «Довезите клетку» banner at its end; «Заново» skips
     it (`_skipEscortFilmOnce`). Setup wires openingScript/Takes/Sets/Music.
-  - OPEN: the felled tree's model at the block (only a halt + banner now), the bridge model, the King's mounted
+  - **The user's first look in Unity (2026-11-23), 5 notes -> fixed in code (not compiled, not seen):**
+    1. «дороги нет в сцене»: the road's layers lay 2-6 mm over the grass and z-fought in Unity -> `forest_road.LAYER`
+       (export sets 2.0: layers x2-4 higher); the far place moved from (-6000, 0, 6000) to (-1500, 0, 1500).
+       Re-export the set alone: `export_m3opening.py -- <project> set`.
+    2. the cart in the mission (small, turned the wrong way, one horse, no monster inside) -> the scene's own cart:
+       Mission3Escort.json `rig` (mission3b_town.py `cart_rig` from column.json at 5 s: the body, 2 shaft horses, the
+       driver, the caged monster, 4 wheels at the hubs), figures loop `rigLoop` 3-12 s of their «Column» take at the
+       cart's pace, wheels roll by the way gone; `FitCart` sizes it so its shaft horse is as long as a rider's horse
+       (x m3_cart_scale). ALSO found: the export took the film's wheels from `cc.make()`, which returns ONE object per
+       name -- the front pair sat on the back pair; `mission3b_opening_json.py fix_wheels` recomputes the four wheel
+       tracks from the cart's track.
+    3. the riders moved in jerks (an OrderMoveTo every 0.8 s) -> steered every frame at the cart's pace + the gap to
+       their place; let go to fight a monster within m3_rider_fight_cells; the driver now sits on the bench (item 2).
+    4. we played a knight, the portrait was Ардан -> the King's portrait kept (`!_escort` in CopyHeroPortrait);
+       `CityDefenceMode.King.cs` dresses the knight unit with the scene's CapM3KingHorse + CapM3KingRide playing
+       pieces of APPROVED takes (Mission3Escort.json `king`): walk = Column 3-12 s (0.55/s), stand = Column 15.6-16.9,
+       gallop = Rally 7.3-9.0 (~2.65/s), «За мной!» = Rally 1.6-2.9 (the rear, sword up); the rider's seat per frame
+       from the takes. No sword-strike clip yet (the knight's blows show no swing).
+    5. the road starts in the deep forest at the west edge (GUIDE starts (-2, 78)), no start clearing; NO ore veins
+       on a campaign map (`OreDepositSpawner` returns when CityDefenceMode is pending/active). Map regenerated.
+  - OPEN: the King's sword strikes, the felled tree's model at the block (only a halt + banner now), the bridge model, the King's mounted
     figure, red edge arrows (the design's HUD item), the riders' own figure (Knight for now), checkpoints (a loss
     restarts the whole mission for now), the capital's gates opening + the entry scene,
     the balance after the user's playtest.

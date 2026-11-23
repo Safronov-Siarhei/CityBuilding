@@ -154,6 +154,7 @@ namespace CityBuilder.Campaign
             Arden.SteerArea = escort ? EscortArea() : LitArea(1f);
             ApplyLevel(fullHealth: true);
             if (!escort) DressArden();
+            else DressKing();       // the King on his horse from the opening scene (CityDefenceMode.King.cs)
             JumpToArden();
         }
 
@@ -242,6 +243,7 @@ namespace CityBuilder.Campaign
                 {
                     RespawnLeft = Mathf.Max(1f, Kind == Mission.Escort ? E.kingRespawnSeconds : B.ardenRespawnSeconds);
                     if (_ardenFig != null) _ardenFig.gameObject.SetActive(false);   // no death clip: he is gone from the field
+                    if (_kingFigure != null) _kingFigure.gameObject.SetActive(false);
                     _woundedByArden.RemoveWhere(o => o == null);
                     return;
                 }
@@ -256,6 +258,7 @@ namespace CityBuilder.Campaign
             }
             // the camera looks north: the stick's up is +z
             TickArdenFigure(dt);
+            TickKingFigure(dt);
             var steer = new Vector3(Stick.x, 0f, Stick.y);
             var was = Arden.IsSteered;
             Arden.Steer = steer;

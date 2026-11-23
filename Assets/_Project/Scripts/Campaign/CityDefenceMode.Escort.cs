@@ -47,7 +47,13 @@ namespace CityBuilder.Campaign
             public float[] capital;
             public float[] post;
             public List<Piece> buildings = new List<Piece>();
+            public List<RigPiece> rig = new List<RigPiece>();
+            public float rigSpeed = 0.55f, wheelRadius = 0.176f;
+            public float[] rigLoop;
+            public KingRig king;
         }
+
+        [System.Serializable] private class RigPiece { public string kind, name, take; public float[] pos, rot; }
 
         [System.Serializable] private class EscortEvent { public string id; public float minute, x, y, dx, dy; }
 
@@ -80,7 +86,6 @@ namespace CityBuilder.Campaign
         private readonly HashSet<string> _beatsDone = new HashSet<string>();
         private readonly List<SoldierUnit> _riders = new List<SoldierUnit>();
         private readonly Dictionary<SoldierUnit, ArmyGroup> _riderGroup = new Dictionary<SoldierUnit, ArmyGroup>();
-        private readonly Dictionary<SoldierUnit, float> _riderOrder = new Dictionary<SoldierUnit, float>();
         private readonly Dictionary<SoldierUnit, float> _followUntil = new Dictionary<SoldierUnit, float>();
         private readonly List<OrcUnit> _escortOrcs = new List<OrcUnit>();
         private readonly Dictionary<OrcUnit, float> _cageSwing = new Dictionary<OrcUnit, float>();
@@ -122,6 +127,7 @@ namespace CityBuilder.Campaign
             _orcsTotal = MaxLevel - 1;   // one point a level: XpAt(level) = level - 1 (the clock gives them, TickArdenXp)
             RaiseCart();
             for (var i = 0; i < e.riders; i++) HireRider(SlotAt(i, e.riders));
+            FitCart(_riders.Count > 0 ? _riders[0] : null);
 
             gameObject.AddComponent<CityDefenceHud>().Bind(this);
 
@@ -236,40 +242,87 @@ namespace CityBuilder.Campaign
 
         // ------------------------------------------------------------------ the cart
 
+        // the cart as the opening scene has it (the user's playtest 2026-11-23: «клетка маленькая, повёрнута не в ту
+        // сторону, лошадь тоже и их должно быть две как в сцене, внутри клетки нет орка ... на повозке должен сидеть
+        // солдат»): the scene's own models laid out by Mission3Escort.json `rig` (mission3b_town.py from the column take)
+        private Transform _cartModel;                    // the rig, turned and scaled under _cart
+        private readonly List<(Transform tr, Quaternion rest)> _wheels = new List<(Transform, Quaternion)>();
+        private readonly List<CineFigure> _cartFigs = new List<CineFigure>();
+        private readonly List<string> _cartTakes = new List<string>();
+        private float _cartSpeedNow, _wheelRoll, _rigScale = 1f;
+        private Transform _cartHorse;                    // its length sizes the rig to the riders' horses
+
         private void RaiseCart()
         {
             var root = new GameObject("CageCart").transform;
             root.SetParent(transform, false);
             _cart = root;
-            var cart = CapitalProp("CapPropL3CageCart");
-            var horse = CapitalProp("CapPropL3CageHorse");
-            var length = 0f;
-            if (cart != null)
+            _cartModel = new GameObject("Rig").transform;
+            _cartModel.SetParent(root, false);
+            var any = false;
+            if (_escort.rig != null)
+                foreach (var piece in _escort.rig)
+                {
+                    if (piece == null || piece.pos == null || piece.pos.Length < 3 || piece.rot == null || piece.rot.Length < 4) continue;
+                    var at = new Vector3(piece.pos[0], piece.pos[1], piece.pos[2]);
+                    var turn = new Quaternion(piece.rot[0], piece.rot[1], piece.rot[2], piece.rot[3]);
+                    if (piece.kind == "figure")
+                    {
+                        var i = System.Array.FindIndex(capitalFigures, m => m != null && m.name == piece.name);
+                        if (i < 0 || i >= capitalClips.Length || capitalClips[i] == null) continue;
+                        var go = Instantiate(capitalFigures[i], _cartModel, false);
+                        go.name = piece.name;
+                        go.transform.localPosition = at;
+                        go.transform.localRotation = turn;
+                        var fig = go.AddComponent<CineFigure>();
+                        fig.Init(capitalClips[i]);
+                        var loop = _escort.rigLoop != null && _escort.rigLoop.Length == 2 ? _escort.rigLoop[0] : 0f;
+                        fig.Play(piece.take, 0f, 0f, loop);
+                        _cartFigs.Add(fig);
+                        _cartTakes.Add(piece.take);
+                        if (piece.name == "CapM3CartHorse" && _cartHorse == null) _cartHorse = go.transform;
+                        any = true;
+                        continue;
+                    }
+                    var model = CapitalProp(piece.name);
+                    if (model == null) continue;
+                    var p = Instantiate(model, _cartModel, false);
+                    p.name = piece.name;
+                    p.transform.localPosition = at;
+                    p.transform.localRotation = turn;
+                    p.transform.localScale = model.transform.localScale;
+                    CineTwoSided.Apply(p);
+                    if (piece.kind == "wheel") _wheels.Add((p.transform, turn));
+                    any = true;
+                }
+            if (!any)
             {
-                var go = Instantiate(cart, root, false);
-                go.name = "Cart";
-                go.transform.localPosition = Vector3.zero;
-                go.transform.localScale = cart.transform.localScale * CineScale;
-                length = Extent(go.transform, root).z;
-            }
-            if (horse != null)
-            {
-                var go = Instantiate(horse, root, false);
-                go.name = "Horse";
-                go.transform.localScale = horse.transform.localScale * CineScale;
-                var horseLength = Extent(go.transform, root).z;
-                go.transform.localPosition = new Vector3(0f, 0f, 0.5f * (length + horseLength));
-            }
-            if (cart == null && horse == null)
-            {
-                // the props missing: a crate stands in, so the mission still plays
+                // the models missing: a crate stands in, so the mission still plays
                 var box = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 Destroy(box.GetComponent<Collider>());
-                box.transform.SetParent(root, false);
+                box.transform.SetParent(_cartModel, false);
                 box.transform.localScale = new Vector3(1f, 1f, 1.6f) * Cell;
                 box.transform.localPosition = Vector3.up * 0.5f * Cell;
             }
             PlaceCart();
+        }
+
+        /// <summary>The rig as big as the column round it: its shaft horse as long as a rider's horse (as in the scene,
+        /// where both are the same horse), times m3_cart_scale.</summary>
+        private void FitCart(SoldierUnit rider)
+        {
+            if (_cartModel == null) return;
+            var k = 1f;
+            if (_cartHorse != null && rider != null)
+            {
+                var horse = Extent(_cartHorse, _cartHorse);
+                var mount = Extent(rider.transform, rider.transform);
+                var a = Mathf.Max(horse.x, horse.z);
+                var b = Mathf.Max(mount.x, mount.z);
+                if (a > 0.01f && b > 0.01f) k = b / a;
+            }
+            _rigScale = Mathf.Clamp(k, 0.2f, 5f) * Mathf.Max(0.1f, E.cartScale);
+            _cartModel.localScale = Vector3.one * _rigScale;
         }
 
         private GameObject CapitalProp(string name)
@@ -279,7 +332,7 @@ namespace CityBuilder.Campaign
             return null;
         }
 
-        /// <summary>A model's size in its parent's frame (x across, z along).</summary>
+        /// <summary>A model's size in a frame (x across, z along).</summary>
         private static Vector3 Extent(Transform model, Transform frame)
         {
             var lo = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
@@ -287,6 +340,7 @@ namespace CityBuilder.Campaign
             var any = false;
             foreach (var r in model.GetComponentsInChildren<Renderer>())
             {
+                if (!r.enabled) continue;
                 var b = r.bounds;
                 for (var i = 0; i < 8; i++)
                 {
@@ -297,7 +351,7 @@ namespace CityBuilder.Campaign
                     any = true;
                 }
             }
-            return any ? hi - lo : Vector3.zero;
+            return any ? Vector3.Scale(hi - lo, frame.lossyScale) : Vector3.zero;
         }
 
         private void PlaceCart()
@@ -308,6 +362,27 @@ namespace CityBuilder.Campaign
             var dir = RoadDir(_cartS);
             var want = Quaternion.LookRotation(dir, Vector3.up);
             _cart.rotation = Quaternion.RotateTowards(_cart.rotation, want, 90f * Time.deltaTime + (_cartS <= 0f ? 360f : 0f));
+        }
+
+        /// <summary>The wheels roll with the way gone, the horses walk at the cart's pace, the driver and the monster
+        /// loop their part of the scene's take.</summary>
+        private void TickCartRig(float dt, float moved)
+        {
+            var radius = Mathf.Max(0.01f, _escort.wheelRadius * _rigScale);
+            _wheelRoll += moved / radius * Mathf.Rad2Deg;
+            foreach (var (tr, rest) in _wheels)
+                if (tr != null) tr.localRotation = rest * Quaternion.Euler(-_wheelRoll, 0f, 0f);
+            var walk = Mathf.Max(0.01f, _escort.rigSpeed * _rigScale);
+            var rate = Mathf.Clamp(_cartSpeedNow / walk, 0f, 2f);
+            var loop = _escort.rigLoop != null && _escort.rigLoop.Length == 2 ? _escort.rigLoop : new[] { 0f, 1e9f };
+            for (var i = 0; i < _cartFigs.Count; i++)
+            {
+                var fig = _cartFigs[i];
+                if (fig == null) continue;
+                fig.Play(_cartTakes[i], 0f, rate);          // the same clip again only takes the new rate
+                if (fig.ClipTime >= loop[1]) fig.SetTime(loop[0] + (fig.ClipTime - loop[1]));
+                fig.Tick(dt);
+            }
         }
 
         /// <summary>Monsters crowding the cart (they slow it).</summary>
@@ -327,7 +402,9 @@ namespace CityBuilder.Campaign
             if (_blockLeft > 0f)
             {
                 _blockLeft -= dt;
+                _cartSpeedNow = 0f;
                 PlaceCart();
+                TickCartRig(dt, 0f);
                 return;
             }
             var speed = _cartSpeed * Mathf.Max(e.minSpeed, 1f - e.slowPerOrc * CrowdAtCart());
@@ -340,7 +417,9 @@ namespace CityBuilder.Campaign
                 _cartS = block;
                 _blockLeft = e.blockSeconds;
             }
+            _cartSpeedNow = dt > 0f ? (_cartS - was) / dt : 0f;
             PlaceCart();
+            TickCartRig(dt, _cartS - was);
         }
 
         // ------------------------------------------------------------------ the column
@@ -385,22 +464,49 @@ namespace CityBuilder.Campaign
                 if (r != null && r.CurrentHealth > 0 && Flat(r.transform.position - at) <= radius) _followUntil[r] = until;
         }
 
+        /// <summary>
+        /// The riders ride WITH the cart (the user's playtest 2026-11-23: «кавалерия двигается рывками, она должна идти с
+        /// такой же скоростью как клетка»): each is steered every frame at the cart's own pace plus a little to close on
+        /// its place; with a monster in its reach (or already fighting) it is let go to fight; called by «За мной!» it
+        /// rides by the King instead.
+        /// </summary>
         private void TickRiders()
         {
             _riders.RemoveAll(r => r == null || r.CurrentHealth <= 0);
             var count = Mathf.Max(1, _riders.Count);
+            var fightR = E.riderFightCells * Cell;
             for (var i = 0; i < _riders.Count; i++)
             {
                 var r = _riders[i];
-                if (r.IsFighting) continue;
+                if (r.IsFighting || MonsterNear(r.transform.position, fightR))
+                {
+                    if (r.IsSteered) r.Steer = Vector3.zero;
+                    continue;
+                }
                 var following = Arden != null && Arden.CurrentHealth > 0 && _followUntil.TryGetValue(r, out var until) && Time.time < until;
                 var slot = following ? Arden.transform.position + (r.transform.position - Arden.transform.position).normalized * 1.2f * Cell : SlotAt(i, count);
-                if (Flat(r.transform.position - slot) <= 1.2f * Cell) continue;
-                _riderOrder.TryGetValue(r, out var next);
-                if (Time.time < next) continue;
-                _riderOrder[r] = Time.time + 0.8f;
-                if (_riderGroup.TryGetValue(r, out var group)) group.OrderMoveTo(Ground(slot));
+                var to = slot - r.transform.position;
+                to.y = 0f;
+                var gap = to.magnitude;
+                var walk = Mathf.Max(0.1f, SoldierStats.StatsAt(SoldierType.Knight, E.riderLevel).walkSpeed);
+                // the cart's pace along the road, and the gap closed over about a second
+                var pace = following ? Vector3.zero : RoadDir(_cartS) * _cartSpeedNow;
+                var want = pace + (gap > 0.05f * Cell ? to : Vector3.zero);
+                var speed = want.magnitude;
+                if (speed < 0.02f)
+                {
+                    if (r.IsSteered) r.Steer = Vector3.zero;
+                    continue;
+                }
+                r.Steer = want / speed * Mathf.Clamp01(speed / walk);
             }
+        }
+
+        private bool MonsterNear(Vector3 at, float radius)
+        {
+            foreach (var orc in _escortOrcs)
+                if (orc != null && orc.CurrentHealth > 0 && Flat(orc.transform.position - at) <= radius) return true;
+            return false;
         }
 
         // ------------------------------------------------------------------ the monsters

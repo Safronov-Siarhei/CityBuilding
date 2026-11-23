@@ -76,6 +76,8 @@ namespace CityBuilder.Maps
             if (Invasion.InvasionMode.IsActive) return;
             // nor the tutorial: wood and stone are all it teaches
             if (Tutorial.TutorialMode.IsActive) return;
+            // nor a campaign mission's map (the user, 2026-11-23, mission 3b: «не должно быть рудников никаких»)
+            if (Campaign.CityDefenceMode.IsActive || Campaign.CityDefenceMode.Pending) return;
 
             var start = map.TownHallZone.Length > 0
                 ? StartZone.Centre(map.TownHallZone)

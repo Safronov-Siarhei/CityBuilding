@@ -30,6 +30,7 @@ VERGE = 1.25              # grass between the road's edge and the first trees: w
 STRAIGHT = 10.0           # the straight stretch round the ambush
 BEND = 0.045              # past it the road bends: x = ±BEND * (|y| - STRAIGHT)^2
 REACH = 26.0              # the set's length each way along y
+LAYER = 1.0               # the ground layers' heights x this (export_m3opening.py lifts them: Unity far out z-fights thin layers)
 BLOCK_Y = 5.6             # the felled tree across the road, where the clearing closes back into the forest
 # the AMBUSH CLEARING (the user, 2026-11-23: the narrow road had no room for the fight): the forest opens round the
 # stopped column to ~11 cells across (a cell ~0.75 figure units), a rounded box (superellipse) along the road,
@@ -78,7 +79,7 @@ def clearing(b):
         x = rnd.uniform(-CLEAR_HALF_W + 0.8, CLEAR_HALF_W - 0.8)
         y = CLEAR_Y + rnd.uniform(-CLEAR_HALF_L + 1.0, CLEAR_HALF_L - 1.0)
         if in_clearing(x, y, -0.8):
-            b.blob(x, y, 0.001, rnd.uniform(1.0, 1.6), 0.002, 'grass', sides=10)
+            b.blob(x, y, 0.001 * LAYER, rnd.uniform(1.0, 1.6), 0.002 * LAYER, 'grass', sides=10)
     n = 0
     while n < 150:                                             # tall grass clumps, thick at the rim
         x = rnd.uniform(-CLEAR_HALF_W, CLEAR_HALF_W)
@@ -118,16 +119,16 @@ def ground(b):
         ln = math.hypot(dx, dy)
         ux, uy = dx / ln, dy / ln
         # the lighter worn verge, then the dirt on it (overlapping pieces, no seams on the bends)
-        b.obox((cx, cy, 0.002), (-uy, ux, 0), (ux, uy, 0), (0, 0, 1), ROAD_HALF + 0.35, ln / 2 + 0.06, 0.002, 'grass')
-        b.obox((cx, cy, 0.006), (-uy, ux, 0), (ux, uy, 0), (0, 0, 1), ROAD_HALF, ln / 2 + 0.05, 0.002, 'burlap')
+        b.obox((cx, cy, 0.002 * LAYER * 2), (-uy, ux, 0), (ux, uy, 0), (0, 0, 1), ROAD_HALF + 0.35, ln / 2 + 0.06, 0.002 * LAYER, 'grass')
+        b.obox((cx, cy, 0.006 * LAYER * 2), (-uy, ux, 0), (ux, uy, 0), (0, 0, 1), ROAD_HALF, ln / 2 + 0.05, 0.002 * LAYER, 'burlap')
     rnd = random.Random(7)
     for _ in range(70):                                         # mud, darker earth, pebbles on the road
         y = rnd.uniform(-REACH + 1, REACH - 1)
         x = road_x(y) + rnd.uniform(-ROAD_HALF + 0.15, ROAD_HALF - 0.15)
         if rnd.random() < 0.55:
-            b.blob(x, y, 0.006, rnd.uniform(0.07, 0.18), 0.01, 'wood_dark', sides=8)
+            b.blob(x, y, 0.006 * LAYER * 2, rnd.uniform(0.07, 0.18), 0.01, 'wood_dark', sides=8)
         else:
-            b.blob(x, y, 0.006, rnd.uniform(0.02, 0.04), 0.025, 'stone_mid', sides=5)
+            b.blob(x, y, 0.006 * LAYER * 2, rnd.uniform(0.02, 0.04), 0.025, 'stone_mid', sides=5)
     for _ in range(260):                                        # grass tufts along both edges
         y = rnd.uniform(-REACH, REACH)
         side = rnd.choice((-1, 1))

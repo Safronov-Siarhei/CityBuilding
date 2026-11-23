@@ -66,6 +66,81 @@ def build(plan):
     return t, (tx, ty)
 
 
+def cart_rig():
+    """The cage cart as the opening scene has it (Campaign/M3Opening/column.json, the column on the move at 5 s): each
+    piece relative to the cart's place in the take's frame (Unity, +z = the way it rides) -- the body, the two shaft
+    horses, the driver on the bench, the caged monster; the wheels are the body's hubs (mission3b_opening_json.py)."""
+    import math as _m
+    path = os.path.join(ROOT, 'Assets', '_Project', 'Campaign', 'M3Opening', 'column.json')
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding='utf-8') as f:
+        take = json.load(f)
+    fr = 150
+    cart = next(p for p in take["props"] if p["piece"] == "CapPropM3CageCartBare")["m"][fr * 7:fr * 7 + 7]
+    rig = [{"kind": "prop", "name": "CapPropM3CageCartBare", "take": "", "pos": [0, 0, 0], "rot": cart[3:7]}]
+    for fig in take["figures"]:
+        if fig["figure"] not in ("CapM3CartHorse", "CapM3GuardStand", "CapM3OrcCaptive"):
+            continue
+        r = fig["root"][fr * 7:fr * 7 + 7]
+        rig.append({"kind": "figure", "name": fig["figure"], "take": fig["take"],
+                    "pos": [round(r[i] - cart[i], 4) for i in range(3)], "rot": r[3:7]})
+    k = 1.6 * 0.55
+    for wy in (-0.34, 0.34):
+        for sx in (-1, 1):
+            hub = (sx * 0.39 * k, 0.2 * k, wy * k)
+            # the hub turned with the body (its rotation is a half turn about y: x and z flip)
+            q = cart[3:7]
+            x, y, z, w = q
+            vx = (1 - 2 * (y * y + z * z)) * hub[0] + 2 * (x * y - w * z) * hub[1] + 2 * (x * z + w * y) * hub[2]
+            vy = 2 * (x * y + w * z) * hub[0] + (1 - 2 * (x * x + z * z)) * hub[1] + 2 * (y * z - w * x) * hub[2]
+            vz = 2 * (x * z - w * y) * hub[0] + 2 * (y * z + w * x) * hub[1] + (1 - 2 * (x * x + y * y)) * hub[2]
+            rig.append({"kind": "wheel", "name": "CapPropM3CageWheel" + ("L" if sx < 0 else "R"), "take": "",
+                        "pos": [round(vx, 4), round(vy, 4), round(vz, 4)], "rot": q})
+    return rig
+
+
+def king_rig():
+    """The King on his horse from the opening scene's takes (the user's playtest 2026-11-23: «мы играем за рыцаря на
+    коне, а должны за короля»): which pieces of which take the mission plays -- the walk (the column, 0.55 a second),
+    the stand (the column halted), the gallop (his charge back, ~2.65 a second), «За мной!» (his rear with the sword
+    up) -- and, per frame of each take, the rider's seat relative to the horse (it rises in the rear)."""
+    def qmul(a, b):
+        ax, ay, az, aw = a
+        bx, by, bz, bw = b
+        return (aw * bx + ax * bw + ay * bz - az * by, aw * by - ax * bz + ay * bw + az * bx,
+                aw * bz + ax * by - ay * bx + az * bw, aw * bw - ax * bx - ay * by - az * bz)
+
+    def qrot(q, v):
+        x, y, z, w = qmul(qmul(q, (v[0], v[1], v[2], 0.0)), (-q[0], -q[1], -q[2], q[3]))
+        return (x, y, z)
+
+    seats = {}
+    for group, take in (("column", "Column"), ("rally", "Rally")):
+        path = os.path.join(ROOT, 'Assets', '_Project', 'Campaign', 'M3Opening', group + '.json')
+        if not os.path.exists(path):
+            return None
+        with open(path, encoding='utf-8') as f:
+            d = json.load(f)
+        h = next(x for x in d["figures"] if x["figure"] == "CapM3KingHorse")["root"]
+        r = next(x for x in d["figures"] if x["figure"] == "CapM3KingRide")["root"]
+        out = []
+        for i in range(len(h) // 7):
+            hp, hq = h[i * 7:i * 7 + 3], h[i * 7 + 3:i * 7 + 7]
+            rp, rq = r[i * 7:i * 7 + 3], r[i * 7 + 3:i * 7 + 7]
+            inv = (-hq[0], -hq[1], -hq[2], hq[3])
+            v = qrot(inv, [rp[k] - hp[k] for k in range(3)])
+            q = qmul(inv, rq)
+            out += [round(c, 4) for c in v] + [round(c, 5) for c in q]
+        seats[take] = out
+    return {"horse": "CapM3KingHorse", "rider": "CapM3KingRide", "fps": 30,
+            "walk": {"take": "Column", "from": 3.0, "to": 12.0, "speed": 0.55},
+            "idle": {"take": "Column", "from": 15.6, "to": 16.9, "speed": 0.0},
+            "gallop": {"take": "Rally", "from": 7.3, "to": 9.0, "speed": 2.65},
+            "cry": {"take": "Rally", "from": 1.6, "to": 2.9, "speed": 0.0},
+            "seatColumn": seats["Column"], "seatRally": seats["Rally"]}
+
+
 def main():
     with open(PLAN, encoding='utf-8') as f:
         plan = json.load(f)
@@ -83,6 +158,9 @@ def main():
         "gate": plan["gate"],
         "capital": plan["capital"],
         "post": [round(post[0], 2), round(post[1], 2)],
+        # the cart as in the opening scene; its figures loop `rigLoop` seconds of their take, played at the cart's speed
+        # over the scene's walk (`rigSpeed`, column_anim V)
+        "rig": cart_rig(), "king": king_rig(), "rigSpeed": 0.55, "rigLoop": [3.0, 12.0], "wheelRadius": round(0.2 * 1.6 * 0.55, 4),
         "buildings": [{k: v for k, v in it.items() if k != "district"} for it in t.items],
     }
     with open(OUT, 'w', encoding='utf-8') as f:

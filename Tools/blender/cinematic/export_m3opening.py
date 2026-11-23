@@ -135,6 +135,7 @@ def main():
 
     # the set first: the forest road as one mesh
     import forest_road as fr
+    fr.LAYER = 2.0          # the road's layers apart from the grass (thin ones z-fought in Unity: «дороги нет в сцене»)
     set_objs = fr.make()
     pieces = {}
     for o in set_objs:
@@ -144,6 +145,9 @@ def main():
             pieces[x.name] = x
     lib.export_piece(join_set("M3RoadSet", list(pieces.values())), model_dir)
     park(set_objs, "Set")
+    if len(argv) > 1 and argv[1] == "set":
+        print("EXPORT M3 SET DONE")
+        return
 
     keepers, takes = {}, {}
     exported = set()
