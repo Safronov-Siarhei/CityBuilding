@@ -1287,6 +1287,15 @@ the win window, in mission 2's town (the user: «сразу после побе�
   - the film after mission 2's win marks m3p done too.
   - TRAP: `Update` steps a film only in Stage.Part1. The film-alone run sets Part1, not Won (with Won it froze on
     its first frame).
+- **The user's first look in Unity (2026-11-23):**
+  - Figures «vanished» at the cage and the glade: the square's shot before each cut ended at `film(CUT)`. That is
+    where the square RESUMES, so the square camera covered the cutaway while its figures were hidden.
+    Fixed with `film_end`.
+  - The two messengers rode out of a house (the church and the cottages are west of the square). They now come down
+    the road behind the King: `square_anim.MSG_WAY`, along the road's middle, then up the right of his horsemen.
+    They stop where they did, facing +y.
+  - The DecTree at (51, 57) by the square stood in the shots: removed from mission 2's town for good
+    (`mission2_town.py` skips it; the regenerated Mission2Town.json lost only that piece).
 - Not checked: camera framing in the real town (houses may stand in the messengers' way from the west). The user
   should watch it with the cheat «Перемотать к концовке».
      - v3 (the user):

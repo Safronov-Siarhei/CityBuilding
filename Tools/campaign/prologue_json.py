@@ -84,8 +84,19 @@ square_plan = [(0.0, 5.0, WIDE), (5.0, 12.55, KING), (12.55, 14.0, CAPT), (14.0,
                (CUT2, 27.9, ARDAN), (27.9, 33.55, KING), (33.55, 37.7, AMULET), (37.7, 41.55, KING),
                (41.55, 45.5, LINE), (45.5, SQUARE_S + 1, LEAVE)]
 shots = []
+def film_end(b):
+    """A piece's end as film time: a shot ending at a cut ends where the cut begins (film(CUT1) is where the square
+    RESUMES -- used as an end it ran the square's shot over the cage and the glade, the user, 2026-11-23: «пропадают
+    модельки»)."""
+    if b <= CUT1:
+        return b
+    if b <= CUT2:
+        return b - CUT1 + SQ_B
+    return b - CUT2 + SQ_C
+
+
 for a, b, (at, off, lens) in square_plan:
-    shots.append(shot("square", film(a), film(b) if b <= SQUARE_S else END + 1, at, off, lens, SQ_TURN))
+    shots.append(shot("square", film(a), film_end(b) if b <= SQUARE_S else END + 1, at, off, lens, SQ_TURN))
 # the cage: cage_anim's review «wide», then «close» for the slam
 shots.append(shot("cart", CAGE_AT, CAGE_AT + 3.0, (0.1, 0.0, 0.55), (2.6, -2.2, 0.9), 30, CART_TURN))
 shots.append(shot("cart", CAGE_AT + 3.0, SQ_B, (0.2, 0.05, 0.65), (1.35, -0.75, 0.25), 28, CART_TURN))

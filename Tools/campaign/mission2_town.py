@@ -115,6 +115,9 @@ def build_town():
             # none before the gate towers' doors (the user's tenth playtest: «дерево стоит у входа в башню»)
             if any(abs(gx - 50) <= 4 and 0 < gy - gy0 <= 3 for gy0 in (ot, it)):
                 continue
+            # none by the square: the tree at (51, 57) stood in the level-3 prologue's shots (the user, 2026-11-23)
+            if pick == "DecTree" and (gx, gy) == (51, 57):
+                continue
             put(t, pick, gx, gy, 1, "decor")
 
     # barns by the fields (props; the fields themselves are the ground's colour)

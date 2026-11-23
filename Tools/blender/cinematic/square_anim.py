@@ -132,18 +132,38 @@ def horse_walk_pose(t, dist, moving):
     return q
 
 
+# the messengers' way in (the user, 2026-11-23, in Unity: they rode out of a house by the square): down the town's road
+# behind the King, the way he came (-y, the road's middle about x 0.25), then right of his horsemen up to their stop.
+# Points from the stop back along the way; the first leg is long enough for the whole gallop.
+MSG_WAY = [(Vector((0.85, -2.2, 0)), Vector((0.25, -5.0, 0))),
+           (Vector((1.05, -2.6, 0)), Vector((0.25, -5.4, 0)))]
+
+
+def _back_along(i, back):
+    """The point `back` units behind messenger i's stop along his way in, and the way he rides there."""
+    stop = MESSENGERS[i][2]
+    pts = [stop] + list(MSG_WAY[i])
+    for k in range(len(pts) - 1):
+        a, b = pts[k], pts[k + 1]
+        seg = (b - a).length
+        if back <= seg or k == len(pts) - 2:
+            d = (b - a).normalized()
+            return a + d * back, -d
+        back -= seg
+
+
 def messenger_root(i, t):
     t0, brake_at, stop, frm = MESSENGERS[i]
     travel = GALLOP_V * (brake_at - t0 + BRAKE / 2)
-    start = stop + frm * travel
     if t < t0 - 0.05:
-        return stop + frm * 40.0, heading_to(-frm), 0.0                  # not yet on the set
+        return stop + frm * 40.0, 0.0, 0.0                                # not yet on the set
     if t < brake_at:
         d = GALLOP_V * max(0.0, t - t0)
     else:
         u = min(t - brake_at, BRAKE)
         d = GALLOP_V * (brake_at - t0 + u - u * u / (2 * BRAKE))
-    return start - frm * d, heading_to(-frm), d
+    pos, way = _back_along(i, max(0.0, travel - d))
+    return pos, heading_to(way), d
 
 
 def messenger_horse(i, t, d):
