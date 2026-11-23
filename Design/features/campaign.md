@@ -1228,7 +1228,13 @@ broken); the player plays the KING.
 - Screen: the cage's hp bar top centre, under it the way to the capital (a strip with the cart); red edge arrows
   where the cage is being hit and where a brute is.
 - Two checkpoints (after the block, after the bridge); a loss goes back to the last one.
-- Next: the map plan (a picture like mission2_map_v2.png) for approval.
+- Map plan v1 SENT 2026-11-23: `Design/mission3b_map_v1.png` (`Tools/campaign/mission3b_map.py`): 120 x 86 cells;
+  a winding forest road ~154 cells from the opening scene's clearing (bottom left) to the capital's gate (top
+  right), the cart at ~0.32 cells/s plain (8 min; slower under attack -- the sheet); events placed where the cart is
+  at each minute (ticks on the road): ambushes 1:20-2:40, throwers 2:20, the block 3:00 + checkpoint 1, the bridge
+  over the river 3:40 (ambush from the far bank) + checkpoint 2, level 5 ~4:00, the watch-tower 4:30, the brute 5:20,
+  both sides 6:00, the chase over the fields 6:30-8:00, the capital (moat, walls, archers over the gate) 8:00.
+  Waiting for approval.
 
 **Mission 3b «Клетка» -- the opening scene (the user, 2026-11-23):** a column of riders on a forest road with the
 cage cart; suddenly a big horde of monsters attacks; about half the riders survive and kill every attacker; then
