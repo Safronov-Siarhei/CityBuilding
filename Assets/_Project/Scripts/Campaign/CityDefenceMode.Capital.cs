@@ -50,6 +50,11 @@ namespace CityBuilder.Campaign
                 music2At = -1f, musicCross = 1f,     // the throne room's music from music2At, the streets' fading out before it
                 hornAt = -1f, fireSize = 1f;         // the last scene: the King's horn; the burning houses' flames
             public int subSize, fires, ruins;        // the last scene: more houses burning besides the razed one, houses in ruins
+            // the prologue: the sack round the square (`sackNear` plan cell, `sackJitter`), its gates broken, a smoke-dark sky
+            public float[] sackNear;
+            public float sackJitter;
+            public bool breakGates;
+            public Gloom gloom;
         }
 
         /// <summary>A set and where it stands (Unity, far from the town) -- or, for the last scene, a spot in the
@@ -523,6 +528,14 @@ namespace CityBuilder.Campaign
             if (!s.inTown) JumpToArden();
             if (s.root != null) Destroy(s.root.gameObject);
             s.onEnd?.Invoke();
+        }
+
+        /// <summary>A smoke-darkened sky while a film plays (the prologue, the user 2026-11-23: «небо темнее как будто от
+        /// дыма»): the sky a flat colour, linear fog of it, the sun and the ambient dimmed (multipliers).</summary>
+        [Serializable] private class Gloom
+        {
+            public float[] sky, sunColor;
+            public float sun = 1f, ambient = 1f, fogStart, fogEnd;
         }
 
         /// <summary>A shot of the second scene: in a place's Blender frame.</summary>

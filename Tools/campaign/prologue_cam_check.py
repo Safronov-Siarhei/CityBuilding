@@ -44,4 +44,19 @@ for s in film["shots"]:
         if msg:
             bad += 1
         print("%-6s %5.1f-%5.1f cam plan (%.1f, %.1f, h %.1f) %s" % (s["place"], s["t0"], s["t1"], cam[0], cam[1], cam[2], "; ".join(msg) or "ok"))
+# the bodies laid one a use (prologue_json.BODIES): none in a house
+import math  # noqa: E402
+OFF = {"CapGuardStand": (0.0, 0.0), "CapOrcSpear": (0.6, -1.0)}
+for u in film["uses"]:
+    if u["group"] != "dead" or u["place"] != "square" or len(u.get("figures", [])) != 1:
+        continue
+    a = math.radians(u["turn"])
+    ox, oy = OFF[u["figures"][0]]
+    x = u["origin"][0] + ox * math.cos(a) - oy * math.sin(a)
+    y = u["origin"][1] + ox * math.sin(a) + oy * math.cos(a)
+    px, py = places["square"][0] + x, places["square"][1] - y
+    b = hit(px, py, 0.1, pad=0.3)
+    if b:
+        bad += 1
+        print("BODY %s at (%.1f, %.1f) IN %s %s,%s" % (u["figures"][0], px, py, b["id"], b["x"], b["y"]))
 print("bad", bad)

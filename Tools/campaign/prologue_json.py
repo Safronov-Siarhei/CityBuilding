@@ -69,6 +69,22 @@ for place, turn, who in (("deadA", 0, None), ("deadB", 120, ["CapFolkPeasant", "
         u["figures"] = who
     uses.append(u)
 
+# more dead (the user, 2026-11-23: «трупов орков и солдат больше»): «Подкрепление»'s `dead` take, one body a use, laid
+# on free plan cells round the square, up the road and by the cart (plan x east, y SOUTH; turn = the body's heading).
+# In that take the guard lies at its origin and the spearman orc at (0.6, -1.0).
+DEAD_AT = {"CapGuardStand": (0.0, 0.0, 0.0), "CapOrcSpear": (0.6, -1.0, 0.0)}
+BODIES = [("CapGuardStand", 48.4, 57.4, 30), ("CapOrcSpear", 47.8, 56.5, 200), ("CapOrcSpear", 51.9, 57.5, 120),
+          ("CapGuardStand", 52.6, 56.6, 300), ("CapOrcSpear", 48.3, 58.7, 75), ("CapGuardStand", 53.5, 57.4, 160),
+          ("CapOrcSpear", 49.3, 53.3, 15), ("CapOrcSpear", 51.6, 53.0, 250), ("CapGuardStand", 46.6, 53.2, 90),
+          ("CapOrcSpear", 53.2, 53.4, 140), ("CapGuardStand", 47.6, 52.6, 210), ("CapOrcSpear", 45.4, 56.6, 330),
+          ("CapOrcSpear", 49.0, 48.4, 130), ("CapGuardStand", 48.2, 49.6, 220), ("CapOrcSpear", 52.9, 46.6, 300),
+          ("CapGuardStand", 54.0, 48.2, 10), ("CapOrcSpear", 47.6, 47.4, 60), ("CapGuardStand", 51.6, 50.2, 170)]
+for kind, px, py, turn in BODIES:
+    off = turned(DEAD_AT[kind], turn)
+    origin = [round(px - 50 - off[0], 3), round(59 - py - off[1], 3), 0]
+    uses.append({"group": "dead", "place": "square", "origin": origin, "turn": turn, "start": 0.0, "show": [0.0, END],
+                 "props": False, "figures": [kind]})
+
 # the square's shots (in the take's frame, turned with it). Behind Ардан the castle is ~2 cells off: the reverse
 # shots stay within 1.8 of the square's middle on that side.
 WIDE = ("plan", (52.6, 60.6, 2.0), (50.0, 58.0, 0.5), 28)          # from the open cells south-east of the square
@@ -166,6 +182,13 @@ script = {
     "lines": lines,
     "end": round(END, 2), "fadeIn": 0.6, "fade": 1.0, "subFadeIn": 0.25, "subFadeOut": 0.35,
     "musicVolume": 0.5, "music2At": round(GLADE_AT - 0.3, 2), "musicCross": 1.2, "musicFadeOut": 2.0,
+    # the town as the prologue shows it (the user, 2026-11-23: «город не выглядит разрушенным, больше сломанных зданий,
+    # пожары, небо темнее как будто от дыма, ворота должны быть сломаны»): on top of «Подкрепление»'s sack, houses
+    # round the square (nearest first, `sackJitter` cells of chance) burnt out and burning, both gates broken, a
+    # smoke-dark sky (CityDefenceMode.Prologue.cs Ravage/Ungloom)
+    "ruins": 12, "fires": 12, "fireSize": 1.1, "sackNear": [50, 58], "sackJitter": 6.0, "breakGates": True,
+    "gloom": {"sky": [0.36, 0.31, 0.29], "sunColor": [1.0, 0.72, 0.52], "sun": 0.6, "ambient": 0.68,
+              "fogStart": 6.0, "fogEnd": 40.0},
 }
 with open(OUT, "w", encoding="utf-8", newline="\n") as f:
     json.dump(script, f, ensure_ascii=False, indent=1)

@@ -103,8 +103,8 @@ namespace CityBuilder.Campaign
 
         /// <summary>The town sacked (the user, 2026-11-16: «город не похож на атакованный орками, нет пожаров и руин»):
         /// `ruins` houses left burnt shells (some still smoking), `fires` more burning -- never `best`'s row (the raze
-        /// take needs its walls). The level-3 prologue played alone from the map does it too.</summary>
-        private void SackTown(BuildingInstance best, int ruins, int fires, float fireSize)
+        /// take needs its walls). The level-3 prologue does it too, round the square (`near`).</summary>
+        private void SackTown(BuildingInstance best, int ruins, int fires, float fireSize, Vector3? near = null, float jitter = 0f)
         {
             var rnd = new System.Random(11);
             var pool = new System.Collections.Generic.List<BuildingInstance>();
@@ -115,6 +115,14 @@ namespace CityBuilder.Campaign
             {
                 var j = rnd.Next(i + 1);
                 (pool[i], pool[j]) = (pool[j], pool[i]);
+            }
+            // `near` (the prologue: the square): the houses nearest it first, `jitter` cells of chance in the order
+            if (near.HasValue)
+            {
+                var c = near.Value;
+                var key = new System.Collections.Generic.Dictionary<BuildingInstance, float>();
+                foreach (var h in pool) key[h] = Flat(h.transform.position - c) + (float)rnd.NextDouble() * jitter;
+                pool.Sort((x, y) => key[x].CompareTo(key[y]));
             }
             var n = 0;
             foreach (var h in pool)

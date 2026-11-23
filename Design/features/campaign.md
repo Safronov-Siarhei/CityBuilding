@@ -1306,6 +1306,16 @@ the win window, in mission 2's town (the user: «сразу после побе�
     and the music waits for it too (`musicWait`).
   - A black band across the houses: the land-edge darkness seen from the low cameras. Off for the whole prologue
     (`CapitalState.dark`).
+- **The user's third look (2026-11-23): «город не выглядит разрушенным»** -- the prologue's own sack, after the
+  film starts (Prologue.cs, all numbers in Level3Prologue.json):
+  - `Ravage`: `ruins` 12 + `fires` 12 houses, nearest the square first (`sackNear`, `sackJitter` cells of chance;
+    `SackTown` got a `near` order). This comes on top of whatever «Подкрепление» left. `breakGates`: both gates
+    become burnt ruins, with a fire each;
+  - `Ungloom`: a smoke-dark sky for the film. The camera's sky becomes a flat `gloom.sky` colour with linear fog of
+    it, and the sun and ambient go down by multipliers. The returned end puts everything back before the film's
+    end runs. It also covers the glade;
+  - 18 more bodies (orc spearmen and guards), one `dead` use each, on checked free cells round the square, up the
+    road and by the cart (`BODIES`). `prologue_cam_check.py` also checks that no body lies in a house.
 - Not checked: camera framing in the real town (houses may stand in the messengers' way from the west). The user
   should watch it with the cheat «Перемотать к концовке».
      - v3 (the user):
