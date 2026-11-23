@@ -1244,7 +1244,14 @@ the mission starts. Storyboard v3 (~56 s): **APPROVED by the user 2026-11-23 («
      bench hauling the reins at the halt; the captive sits low, lifts its head at 10.3, sniffs, rises to the bars and
      stares into the forest, grins round at the men at 14.2. Slots: 4 vanguard, the King + the standard-bearer (a
      lancer), the cart 4.0 behind the front, 15 behind (`slots()`). The review video cuts the 4 shots (`camera`).
-     Export names in build(): CapCartHorse is new (the export step must add it). Video SENT 2026-11-23, waiting.
+     Export names in build(): CapCartHorse is new (the export step must add it). Video SENT; **APPROVED by the user 2026-11-23**.
+  2. `ambush_anim.py` «Засада» (shots 5-6, scene time 17-26, the take's own clock 0-9 from T0 17): the column halted as
+     group 1 left it; the horn at 17.2 (Unity's sound): the captive roars, heads snap to the trees, the King throws his
+     sword up and shouts (SHOUT 17.6-19.6 «Засада! Держать клетку!»), lances come down from 18.6 (0.04 s a rider);
+     from 20.0 20 monsters (12 spears, 8 torches, `monsters()`) break cover from the first trees (x ±5.3-6.1),
+     run at 1.9 (orc_anim spear_run/torch_run) to a rider's flank and pull up braced (`braced`); 6 javelins
+     (CineJavelin props) arc out of the forest and stick in the road (20.5-21.7); the riders wheel outward from 20.4
+     (each lane to its side, `heading`); the driver ducks; the captive shakes the bars. Video SENT 2026-11-23, waiting.
   - Traps: the game's DecBush1 is a clipped hedge in a stone border (not a wild bush); `b.rod` is square (not a log).
 
 **Assets:**
