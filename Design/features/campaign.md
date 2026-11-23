@@ -1259,7 +1259,17 @@ the mission starts. Storyboard v3 (~56 s): **APPROVED by the user 2026-11-23 («
      before the blow. The BRUTE (CineOrcChampion's model with his cleaver) runs out of the trees behind the cart at 28,
      hacks the cage at 30.6/31.2/31.8 (the cart rocks, the captive roars to him); the standard-bearer (slot 5) wheels
      and gallops into him at 32.3 and throws him down. Two survivors' horses rear (`REARS`). 16 monsters left standing
-     for group 4. Export name CapOrcChampion. Video SENT 2026-11-23, waiting.
+     for group 4. Export name CapOrcChampion. Video SENT; **APPROVED by the user 2026-11-23**.
+     `orc_frame` (a monster's state at T) is shared with group 4.
+  4. `rally_anim.py` «Король» (shots 9-11, scene 38-53, T0 38): the King spurs out round the back of the -x monsters
+     (`king_path`, LANE_OUT -2.0, gallop 2.0) cutting down each one his ride passes (`plan`: when his y crosses
+     theirs), rears and throws up his sword at RALLY 39.4-40.5 «За мной!»; the survivors lunge out at the nearest
+     monsters from CHARGE 40.5 (one after another, 0.8 s apart per rider) and throw them down; the last falls to the
+     King at LAST 43.3. After: lances up, heads bowed; the driver sits up; the King walks back to the cart (44-47,
+     CART_SPOT -0.95, 0.35) facing the cage; the captive LAUGHS (45.3-47.8); SAY1 47.2-48.8 «Они пришли за ним».
+     Into play: the King wheels to the felled tree (49-50), points at it, SAY2 50.0-52.8 «Убрать завал. До столицы
+     ещё далеко»; the riders turn to the road; the camera rises behind him. The dropped torch's smoke is for Unity.
+     Video SENT 2026-11-23, waiting.
   - Traps: the game's DecBush1 is a clipped hedge in a stone border (not a wild bush); `b.rod` is square (not a log).
 
 **Assets:**

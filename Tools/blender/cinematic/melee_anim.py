@@ -300,6 +300,39 @@ def cart_rock(T):
     return r
 
 
+def orc_frame(j, m, ph, T, killer_of, victim, rider_pos, deaths):
+    """(root matrix, pose) of monster j at T: striking at his rider, a killer closing for his blow, a victim thrown
+    down (group 4 starts from what this gives at 38)."""
+    kind_, side, start, target, go = m
+    base_h = math.atan2((target - start).x, -(target - start).y)
+    base = Matrix.Translation(target) @ Matrix.Rotation(base_h, 4, 'Z')
+    q = strike(kind_, T, ph)
+    if j in killer_of:
+        slot = killer_of[j]
+        how, t = deaths[slot]
+        # he closes on his man before the blow, steps back with the heave
+        vic = rider_pos[slot]
+        d = vic - target
+        d.z = 0
+        close = ease(env(T, t - 0.9, t - 0.3))
+        step = d.normalized() * (max(0.0, d.length - 0.55) * close)
+        if how == "dragged":
+            step -= d.normalized() * 0.3 * ease(env(T, t - 0.05, t + 0.4))
+        base = Matrix.Translation(target + step) @ Matrix.Rotation(math.atan2(d.x, -d.y), 4, 'Z')
+        if abs(T - t) < 1.0:
+            q = killing(kind_, how, T, t)
+    if j in victim:
+        slot, t, how = victim[j]
+        if T >= t:
+            away = target - rider_pos[slot]
+            away.z = 0
+            away.normalize()
+            u = min(1.0, (T - t) / 0.55)
+            base = thrown_root(base, away, u, how)
+            q = cav_down(q, u)
+    return base, q
+
+
 # ---------------------------------------------------------------- the take
 
 def build():
@@ -418,35 +451,7 @@ def build():
         cq["head"][2] += 40 * sag
         ka.apply(arm, cq, captive["scale"])
         for o in orcs:
-            j = o["j"]
-            kind_, side, start, target, go = o["m"]
-            to = rider_pos.get(killer_of.get(j, -1))
-            base_h = math.atan2((target - start).x, -(target - start).y)
-            base = Matrix.Translation(target) @ Matrix.Rotation(base_h, 4, 'Z')
-            q = strike(kind_, T, o["ph"])
-            if j in killer_of:
-                slot = killer_of[j]
-                how, t = deaths[slot]
-                # he closes on his man before the blow, steps back with the heave
-                vic = rider_pos[slot]
-                d = vic - target
-                d.z = 0
-                close = ease(env(T, t - 0.9, t - 0.3))
-                step = d.normalized() * (max(0.0, d.length - 0.55) * close)
-                if how == "dragged":
-                    step -= d.normalized() * 0.3 * ease(env(T, t - 0.05, t + 0.4))
-                base = Matrix.Translation(target + step) @ Matrix.Rotation(math.atan2(d.x, -d.y), 4, 'Z')
-                if abs(T - t) < 1.0:
-                    q = killing(kind_, how, T, t)
-            if j in victim:
-                slot, t, how = victim[j]
-                if T >= t:
-                    away = target - rider_pos[slot]
-                    away.z = 0
-                    away.normalize()
-                    u = min(1.0, (T - t) / 0.55)
-                    base = thrown_root(base, away, u, how)
-                    q = cav_down(q, u)
+            base, q = orc_frame(o["j"], o["m"], o["ph"], T, killer_of, victim, rider_pos, deaths)
             o["arm"].matrix_world = base
             aa.rest(o["arm"])
             ka.apply(o["arm"], q, o["scale"])
