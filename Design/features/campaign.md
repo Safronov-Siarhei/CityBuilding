@@ -1321,6 +1321,13 @@ the win window, in mission 2's town (the user: «сразу после побе�
   x 0 = the road's middle, through the broken inner gate), then right of the King's horsemen to the stop. Before
   t0 he waits 50 units UNDER the ground (no longer 40 to the side). The body at (49.3, 53.3) moved off the road to
   (48.5, 53.4).
+- **Fires a yellow glow; the second run an empty map (the user, 2026-11-23):**
+  - The films stop the game (timeScale 0), so fires lit then (Ravage) froze on their first frame. `Looping`
+    particles now run on unscaled time.
+  - Start waits for a physics step, which never comes at timeScale 0. A stopped game carried into the next launch
+    (likely the pause menu that focus loss opens) left the mission active but its town never raised: an empty map
+    asking for a castle. Fix: `Begin` and `Start` force timeScale 1, and the focus-loss menu stays shut in the
+    film-alone run.
 - Not checked: camera framing in the real town (houses may stand in the messengers' way from the west). The user
   should watch it with the cheat «Перемотать к концовке».
      - v3 (the user):

@@ -201,6 +201,10 @@ namespace CityBuilder.Campaign
         /// <summary>The campaign map's «Играть» on level 2: the gameplay scene on this mission's map.</summary>
         public static void Begin()
         {
+            // never into the mission with the game stopped: Start waits for a physics step, and at timeScale 0 none
+            // comes -- the town was never raised (the user, 2026-11-23: the prologue started again showed an empty map
+            // asking for a castle)
+            Time.timeScale = 1f;
             _skipIntroOnce = false;
             GameSessionIntent.SaveNameToLoad = null;
             GameSessionIntent.NewGameMapId = MapId;
@@ -247,7 +251,7 @@ namespace CityBuilder.Campaign
         {
             // not over the opening scene: it hides the HUD, so the menu would pause the game unseen (the user's first look,
             // 2026-11-15: «сцена не проигрывается» -- the screenshot's lost focus opened it)
-            if (!paused || Current != Stage.Part1 || _intro != null || _capital != null) return;
+            if (!paused || Current != Stage.Part1 || _intro != null || _capital != null || PrologueAlone) return;   // the film alone: no mission to pause
             var menu = FindAnyObjectByType<UI.GameMenuController>();
             if (menu != null && !menu.IsOpen) menu.Open();
         }
@@ -275,6 +279,7 @@ namespace CityBuilder.Campaign
         private IEnumerator Start()
         {
             if (!_active) yield break;
+            if (Time.timeScale <= 0f) Time.timeScale = 1f;
             for (var frame = 0; frame < 600; frame++)
             {
                 var applier = MeshMapApplier.Instance;

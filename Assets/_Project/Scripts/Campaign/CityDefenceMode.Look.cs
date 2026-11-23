@@ -387,6 +387,9 @@ namespace CityBuilder.Campaign
             var main = ps.main;
             main.loop = true;
             main.duration = 5f;
+            // on unscaled time: the films stop the game (timeScale 0), and a fire lit then stood frozen on its first
+            // frame, a yellow glow with no flames or smoke (the user, 2026-11-23, the prologue)
+            main.useUnscaledTime = true;
             main.startLifetime = new ParticleSystem.MinMaxCurve(lifeMin, lifeMax);
             main.startSpeed = new ParticleSystem.MinMaxCurve(speedMin, speedMax);
             main.startSize = new ParticleSystem.MinMaxCurve(sizeMin, sizeMax);
