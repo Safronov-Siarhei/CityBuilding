@@ -513,6 +513,17 @@ namespace CityBuilder.Campaign
             if (!_active || Current == Stage.Setup || Current == Stage.Won || Current == Stage.Lost) return;
             if (Kind == Mission.Escort)
             {
+                // the opening scene (Capital.cs's film machinery): the game stands under it, it steps on unscaled time
+                if (_capital != null)
+                {
+                    try { TickCapital(Time.unscaledDeltaTime); }
+                    catch (System.Exception e)
+                    {
+                        Debug.LogException(e);
+                        AbortCapital();
+                    }
+                    return;
+                }
                 TickEscort(Time.deltaTime);
                 return;
             }
@@ -861,6 +872,7 @@ namespace CityBuilder.Campaign
             if (Kind == Mission.Escort)
             {
                 BeginEscort();
+                _skipEscortFilmOnce = true;   // «Заново» goes straight to the road
                 return;
             }
             Begin();

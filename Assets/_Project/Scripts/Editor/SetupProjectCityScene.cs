@@ -780,6 +780,17 @@ namespace CityBuilder.EditorTools
                 AssetDatabase.LoadAssetAtPath<GameObject>(cine + "L3GladeOrcSet.fbx"),
                 AssetDatabase.LoadAssetAtPath<GameObject>(cine + "L3GladeIsleSet.fbx"),
             });
+            // mission 3b «Клетка»'s opening scene (the forest ambush, approved 2026-11-23; export_m3opening.py,
+            // mission3b_opening_json.py, CityDefenceMode.Escort.cs): its figures (CapM3*) and props are among the Cap* above
+            cityDefenceSO.FindProperty("openingScript").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Mission3Opening.json");
+            cityDefenceSO.FindProperty("openingMusic").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_gate.ogg");
+            cityDefenceSO.FindProperty("openingMusic2").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_attack.ogg");
+            var openingTakes = new System.Collections.Generic.List<Object>();
+            if (System.IO.Directory.Exists("Assets/_Project/Campaign/M3Opening"))
+                foreach (var file in System.IO.Directory.GetFiles("Assets/_Project/Campaign/M3Opening", "*.json"))
+                    openingTakes.Add(AssetDatabase.LoadAssetAtPath<TextAsset>(file.Replace('\\', '/')));
+            WriteArray(cityDefenceSO.FindProperty("openingTakes"), openingTakes.ToArray());
+            WriteArray(cityDefenceSO.FindProperty("openingSets"), new Object[] { AssetDatabase.LoadAssetAtPath<GameObject>(cine + "M3RoadSet.fbx") });
             cityDefenceSO.ApplyModifiedPropertiesWithoutUndo();
 
             // The dungeon (Dungeon/DungeonMode): idle in a town; when DungeonTravel sent the heroes

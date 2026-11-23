@@ -1285,10 +1285,22 @@ broken); the player plays the KING.
     renders for approval first).
   - Sheet: 44 rows m3_* on «Кампания: оборона города» (rows 100-143), 15 texts on «Тексты: обучение и сюжет»
     (rows 120-134), same rows in economy.csv / localization.csv.
+  - **Stage 6, the opening scene in Unity (2026-11-23, not compiled by Unity, not seen):**
+    `Tools/blender/cinematic/export_m3opening.py` (on a COPY of the .blend) exports the four approved groups as takes
+    `Campaign/M3Opening/{column,ambush,melee,rally}.json` (each with `start` = its scene time T0 and `cam` = the
+    approved review camera per frame), figures `Cast/CapM3*.fbx` (one FBX holds a figure's takes from all four
+    groups) + OpeningCast.json entries, props `CapPropM3CageCart` / `CapPropM3CageWheelL/R` / `CapPropM3Javelin`, and
+    the forest road as one mesh `M3RoadSet.fbx`. `Tools/campaign/mission3b_opening_json.py` -> `Campaign/
+    Mission3Opening.json`: one far place «road» (-6000, 0, 6000), the four uses back to back (0-17-26-38-53.3), one
+    shot per group with a `path` (NEW in Capital.cs: `CapitalShot.path` 7 floats a sample + `pathFps`, eased between
+    samples unless a cut apart -- `PathCamera`), 5 subtitles `#cine_m3_*` («Тексты: обучение и сюжет» rows 52-56),
+    music mus_gate then mus_attack from the horn (17.0). `SetupEscort` plays it after setting the road up (the game
+    stands under it, Update ticks `TickCapital` in escort), the «Довезите клетку» banner at its end; «Заново» skips
+    it (`_skipEscortFilmOnce`). Setup wires openingScript/Takes/Sets/Music.
   - OPEN: the felled tree's model at the block (only a halt + banner now), the bridge model, the King's mounted
     figure, red edge arrows (the design's HUD item), the riders' own figure (Knight for now), checkpoints (a loss
-    restarts the whole mission for now), the capital's gates opening + the entry scene, the opening scene in Unity
-    (stage 6), the balance after the user's playtest.
+    restarts the whole mission for now), the capital's gates opening + the entry scene,
+    the balance after the user's playtest.
 
 **Mission 3b «Клетка» -- the opening scene (the user, 2026-11-23):** a column of riders on a forest road with the
 cage cart; suddenly a big horde of monsters attacks; about half the riders survive and kill every attacker; then

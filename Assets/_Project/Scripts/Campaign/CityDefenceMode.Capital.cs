@@ -459,6 +459,11 @@ namespace CityBuilder.Campaign
                 if (t >= sh.t0 && t < sh.t1) { shot = sh; break; }
             if (shot == null) shot = shots[shots.Length - 1];
             s.away = s.far.Contains(shot.place ?? "");
+            if (shot.path != null && shot.path.Length >= 7)
+            {
+                PathCamera(s, shot, t);
+                return;
+            }
             var u = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((t - shot.t0) / Mathf.Max(0.01f, shot.t1 - shot.t0)));
             var from = PlacePoint(s, shot.place, shot.from);
             var at = PlacePoint(s, shot.place, shot.at);
@@ -544,6 +549,39 @@ namespace CityBuilder.Campaign
             public string place;
             public float t0, t1, fov, fov2;    // fov2: the lens eased to it with the move (the prologue's push-in)
             public float[] from, at, from2, at2;
+            // a camera moving its own way (mission 3b's opening, the approved review cameras): per sample, in the place's
+            // Blender frame, from x, y, z, at x, y, z, Blender lens (mm); `pathFps` samples a second from t0
+            public float[] path;
+            public float pathFps;
+        }
+
+        /// <summary>A shot with its own path: the sample at the film time, eased between two samples unless they are a
+        /// cut apart.</summary>
+        private static void PathCamera(CapitalState s, CapitalShot shot, float t)
+        {
+            var n = shot.path.Length / 7;
+            var k = Mathf.Clamp((t - shot.t0) * Mathf.Max(1f, shot.pathFps), 0f, n - 1);
+            var i = Mathf.Min(n - 1, Mathf.FloorToInt(k));
+            var j = Mathf.Min(n - 1, i + 1);
+            var p = shot.path;
+            Vector3 V(int at, int o) => new Vector3(p[at * 7 + o], p[at * 7 + o + 1], p[at * 7 + o + 2]);
+            var fromA = V(i, 0);
+            var atA = V(i, 3);
+            var lens = p[i * 7 + 6];
+            var u = k - i;
+            if (j != i && (V(j, 0) - fromA).sqrMagnitude < 0.36f)
+            {
+                fromA = Vector3.Lerp(fromA, V(j, 0), u);
+                atA = Vector3.Lerp(atA, V(j, 3), u);
+                lens = Mathf.Lerp(lens, p[j * 7 + 6], u);
+            }
+            var from = PlacePoint(s, shot.place, new[] { fromA.x, fromA.y, fromA.z });
+            var at = PlacePoint(s, shot.place, new[] { atA.x, atA.y, atA.z });
+            s.cam.transform.SetParent(null, true);
+            s.cam.transform.position = from;
+            if ((at - from).sqrMagnitude > 1e-6f) s.cam.transform.rotation = Quaternion.LookRotation(at - from, Vector3.up);
+            // Blender's lens on a 36 mm sensor across a 16:9 frame as Unity's vertical field of view
+            if (lens > 1f) s.cam.fieldOfView = 2f * Mathf.Atan(18f / lens * 9f / 16f) * Mathf.Rad2Deg;
         }
     }
 }

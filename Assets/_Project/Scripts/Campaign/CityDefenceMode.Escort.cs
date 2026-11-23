@@ -25,6 +25,16 @@ namespace CityBuilder.Campaign
     public partial class CityDefenceMode
     {
         [SerializeField] private TextAsset escortPlan;   // Campaign/Mission3Escort.json
+        // the opening scene (the forest ambush, approved 2026-11-23; Tools/blender/cinematic/export_m3opening.py, laid out by
+        // Tools/campaign/mission3b_opening_json.py): its figures (CapM3*) and props are among the capital's Cap* lists
+        [SerializeField] private TextAsset openingScript;                         // Campaign/Mission3Opening.json
+        [SerializeField] private TextAsset[] openingTakes = new TextAsset[0];      // Campaign/M3Opening/*.json
+        [SerializeField] private GameObject[] openingSets = new GameObject[0];    // Models/Cinematic/M3RoadSet.fbx
+        [SerializeField] private AudioClip openingMusic;                          // the ride
+        [SerializeField] private AudioClip openingMusic2;                         // from the horn
+
+        /// <summary>«Заново»: the escort again without its opening scene.</summary>
+        private static bool _skipEscortFilmOnce;
 
         [System.Serializable] private class EscortPlan
         {
@@ -120,7 +130,25 @@ namespace CityBuilder.Campaign
             _nextWave = e.firstWaveSeconds;
             RaiseArden(SlotAt(0, 1) + RoadSide(_cartS) * 1.5f * Cell);
             StartSound();
-            PartBegan?.Invoke(1);
+            // the opening scene first (the game stands under it), then the banner; «Заново» goes straight to the road
+            var skip = _skipEscortFilmOnce;
+            _skipEscortFilmOnce = false;
+            if (skip || !StartEscortFilm()) PartBegan?.Invoke(1);
+        }
+
+        private bool StartEscortFilm()
+        {
+            try
+            {
+                return StartFilm(openingScript, openingTakes, capitalFigures, capitalClips, capitalProps, openingSets,
+                    openingMusic, openingMusic2, null, false, () => PartBegan?.Invoke(1));
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogException(e);
+                AbortCapital();
+                return false;
+            }
         }
 
         private void SortEscortPiece(Piece piece, BuildingInstance building)
