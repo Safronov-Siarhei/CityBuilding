@@ -1276,7 +1276,7 @@ the mission starts. Storyboard v3 (~56 s): **APPROVED by the user 2026-11-23 («
      monster he is about to cut, at halts to what he faces (the monsters at the rally, the cage, the road), never
      faster than TURN_RATE 4 rad/s; the gait by the real speed (gallop by distance / walk); his head and chest follow
      the NEXT one he rides at. Times moved: LAST 44.0, LAUGH 46.6-49.0, SAY1 48.2-49.6, WHEEL 49.7-50.5,
-     SAY2 50.6-53.0 (the scene now ends at 53.3). v2 SENT, waiting.
+     SAY2 50.6-53.0 (the scene now ends at 53.3). v2 SENT; **APPROVED by the user 2026-11-23**. ALL FOUR groups of the opening scene are approved. Next: Unity (export like export_prologue.py: new export names CapCartHorse, CapOrcChampion, CineJavelin props, the forest road set) and the mission itself (not designed yet).
   - Traps: the game's DecBush1 is a clipped hedge in a stone border (not a wild bush); `b.rod` is square (not a log).
 
 **Assets:**
