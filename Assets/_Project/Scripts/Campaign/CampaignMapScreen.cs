@@ -26,6 +26,8 @@ namespace CityBuilder.Campaign
             public string titleKey;
             public string scene;
             public string bestKey;
+            public string after;   // opens once this level is done (the level-3 branches both follow m2); empty: the one before it
+            public string label;   // the medal's number (the branches share «3»); empty: its place in the list
         }
 
         [Serializable]
@@ -59,7 +61,12 @@ namespace CityBuilder.Campaign
             Debug.Log($"[CampaignMap] up, {_levels.Length} levels");
         }
 
-        private bool Open(int i) => i == 0 || CampaignProgress.Done(_levels[i - 1].id);
+        private bool Open(int i)
+        {
+            var after = _levels[i].after;
+            if (!string.IsNullOrEmpty(after)) return CampaignProgress.Done(after);
+            return i == 0 || CampaignProgress.Done(_levels[i - 1].id);
+        }
         private bool Playable(int i) => Open(i) && !string.IsNullOrEmpty(_levels[i].scene);
 
         private void Build()
@@ -186,7 +193,7 @@ namespace CityBuilder.Campaign
             medal.onClick.AddListener(() => Pick(index));
             if (open)
             {
-                var n = MissionSkin.Label(medal.transform, (i + 1).ToString(), UiTheme.Heavy, 40, MissionSkin.Ink(HudInk.OnMain), TextAnchor.MiddleCenter,
+                var n = MissionSkin.Label(medal.transform, string.IsNullOrEmpty(lv.label) ? (i + 1).ToString() : lv.label, UiTheme.Heavy, 40, MissionSkin.Ink(HudInk.OnMain), TextAnchor.MiddleCenter,
                     Vector2.zero, Vector2.one, Vector2.zero);
                 n.rectTransform.anchoredPosition = new Vector2(0f, 2f);
             }

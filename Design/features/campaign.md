@@ -1162,7 +1162,7 @@ FpsCounter). Redmi Pad ~40 fps in play; Low tier: NO SUN SHADOWS in mission 2 (t
 - `CineGroundNoise` is no longer built before the first scene: on `sceneLoaded` of any non-Splash scene, or by the
   splash under its finished logo (the user: a long blank screen before the studio logo).
 
-## Level 3: two branches + the prologue «Пленные» (the user, 2026-11-22; DISCUSSION, nothing built)
+## Level 3: two branches + the prologue «Пленные» (the user, 2026-11-22; prologue BUILT in Unity 2026-11-23, not seen)
 
 **Story decisions (the user):**
 - Level 3 = a PROLOGUE scene, then the campaign map offers TWO branches: Ардан's (rescue the prisoners) and the
@@ -1241,6 +1241,44 @@ FpsCounter). Redmi Pad ~40 fps in play; Low tier: NO SUN SHADOWS in mission 2 (t
      - The people in a cage face where the cage's `turn` points (`facing(i)`); the cage's door is on their back side.
      - Check modes (not the film): `GLADE_LOOK=cage<i>` frames one cage from the front; `GLADE_LOOK=peasant`; `GLADE_DEBUG=1`.
      - **v3 APPROVED by the user 2026-11-23.** All three groups of the prologue «Пленные» are approved. Next: the Unity scene (export the Cap* takes, the sets, subtitles, the hand-over to the campaign map with two flags). The open question is whether the storyboard's ARCHER volunteer gets a cine model.
+
+**The prologue in Unity (2026-11-23, BUILT, NOT SEEN by the user):** it plays right after «Подкрепление», before
+the win window, in mission 2's town (the user: «сразу после победы»).
+- Export: `Tools/blender/cinematic/export_prologue.py` (on a COPY of the .blend). It writes:
+  - figures `Models/Cinematic/Cast/CapL3*.fbx`. The prefix L3 matters: one FBX holds ALL of a figure's takes, so
+    reusing mission 2's CapArdan/CapGuardStand... names would have wiped mission 2's takes;
+  - the cart (`CapPropL3CageCart`, it rocks) and its two horses (`CapPropL3CageHorse`) as props;
+  - the glade as THREE joined sets by the palette the game draws them in: `L3GladeSet` (ground, trees, stones),
+    `L3GladeOrcSet` (camp decor + the cages = Models/Orcs, the orcs' palette), `L3GladeIsleSet` (dead trees, skull
+    stakes = the swamp palette). In Blender all of them carry `Buildings`; `ModelImportDefaults` picks the palette
+    by the file name's end (*OrcSet / *IsleSet);
+  - takes `Campaign/L3Prologue/{cage,square,glade}.json` (glade.json also carries the push-in camera);
+  - entries in OpeningCast.json.
+  - The square's horses all came named CapWarhorse: the export names the grey ones by their mesh.
+- Layout: `Tools/campaign/prologue_json.py` -> `Campaign/Level3Prologue.json` (run it AFTER the export). The square's
+  51 s take is cut twice, its clock held: square 0-19.6 | the cage 6 s | square 19.6-24.6 | the glade 8 s | square
+  24.6-51; the film is 65 s. Places:
+  - the square = cell [50, 59], turn 180 like «Подкрепление»'s last stand. The castle is ~2 cells behind Ардан, so
+    the reverse shots stay within 1.8 of the middle;
+  - the cart in the street = [50.5, 46.5], turn 180 (horses to the north);
+  - the glade far away (-6000, 0, 6000); the darkness is off while its shot shows;
+  - «Подкрепление»'s dead lie on (its `dead` group).
+  - The glade's push-in is ONE shot with the new `fov2` (the lens eases with the move). Places can carry several
+    `sets`.
+- Subtitles: 9 lines + `#cine_name_horseman` («Всадник») on «Тексты: обучение и сюжет» (rows 42-51), «чудовища» throughout.
+- Music: mus_gate, then mus_portal from the glade on.
+- Code:
+  - `CityDefenceMode.Prologue.cs`: «Подкрепление»'s end calls `AfterHelp` -> `StartPrologue` -> `Win`;
+  - it runs on Capital.cs's `StartFilm(inTown)`; «Пропустить» skips it like the others;
+  - the cheat «Перемотать к концовке» plays it again;
+  - with `_noHelp` (the tests) there is no prologue.
+- Campaign map: level 3 is now TWO flags, both numbered 3 (`label`), both opening after m2 (`after`):
+  - `m3a` «Пленные» (Ардан), south-east of the town at (1660, 780);
+  - `m3b` «Клетка» (the King), at the castle.
+  - Both are «Скоро» (no scene). `#campaign_level_3` is no longer used.
+  - campaign_map.py's LEVELS are updated, but the picture was NOT repainted (the JSON was edited the same way).
+- Not checked: camera framing in the real town (houses may stand in the messengers' way from the west). The user
+  should watch it with the cheat «Перемотать к концовке».
      - v3 (the user):
        - the mother's arms now really go round the girl: her upper arms are AIMED at the small of the girl's back (`HUG` + `aim_apply`, bell_anim's way);
        - the MAGE from the bridge scene stands behind the old man in his cage WITHOUT his staff: `mage.make_captive` = CineMageCaptive (WITH_STAFF off), so the bridge scene's CineMage keeps its staff. For the film the chief and the extra monsters will need cine versions on the rig (now the game's static models).

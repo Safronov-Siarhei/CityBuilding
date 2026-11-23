@@ -98,6 +98,14 @@ namespace CityBuilder.EditorTools
             // material are untouched by the remap.
             var palette = AssetDatabase.LoadAssetAtPath<Material>(PaletteMaterialPath);
             if (UsesOrcPalette(assetPath)) palette = AssetDatabase.LoadAssetAtPath<Material>(OrcPaletteMaterialPath) ?? palette;
+            // a film's set joined from the game's orc models draws as they do (the level-3 prologue's glade,
+            // Tools/blender/cinematic/export_prologue.py): *OrcSet the orcs' palette, *IsleSet the swamp island's
+            if (assetPath.StartsWith(CinematicFolder))
+            {
+                var file = System.IO.Path.GetFileNameWithoutExtension(assetPath);
+                if (file.EndsWith("OrcSet")) palette = AssetDatabase.LoadAssetAtPath<Material>(OrcPaletteMaterialPath) ?? palette;
+                else if (file.EndsWith("IsleSet")) palette = AssetDatabase.LoadAssetAtPath<Material>(OrcIslandPaletteMaterialPath) ?? palette;
+            }
             if (palette != null)
             {
                 modelImporter.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), ExportedMaterialName), palette);

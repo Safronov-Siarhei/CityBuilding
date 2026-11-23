@@ -760,6 +760,24 @@ namespace CityBuilder.EditorTools
                     helpTakes.Add(AssetDatabase.LoadAssetAtPath<TextAsset>(file.Replace('\\', '/')));
             WriteArray(cityDefenceSO.FindProperty("helpTakes"), helpTakes.ToArray());
             WriteArray(cityDefenceSO.FindProperty("helpSets"), new Object[] { AssetDatabase.LoadAssetAtPath<GameObject>(cine + "M2HelpBridgeSet.fbx") });
+            // the level-3 prologue «Пленные», right after the last scene (approved 2026-11-22/23;
+            // Tools/blender/cinematic/export_prologue.py, CityDefenceMode.Prologue.cs): its figures (CapL3*) and the
+            // cart are among the Cap* above; the dead of the last scene lie on
+            cityDefenceSO.FindProperty("prologueScript").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Level3Prologue.json");
+            cityDefenceSO.FindProperty("prologueMusic").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_gate.ogg");
+            cityDefenceSO.FindProperty("prologueMusic2").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_portal.ogg");
+            var prologueTakes = new System.Collections.Generic.List<Object>();
+            if (System.IO.Directory.Exists("Assets/_Project/Campaign/L3Prologue"))
+                foreach (var file in System.IO.Directory.GetFiles("Assets/_Project/Campaign/L3Prologue", "*.json"))
+                    prologueTakes.Add(AssetDatabase.LoadAssetAtPath<TextAsset>(file.Replace('\\', '/')));
+            prologueTakes.Add(AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/M2Help/dead.json"));
+            WriteArray(cityDefenceSO.FindProperty("prologueTakes"), prologueTakes.ToArray());
+            WriteArray(cityDefenceSO.FindProperty("prologueSets"), new Object[]
+            {
+                AssetDatabase.LoadAssetAtPath<GameObject>(cine + "L3GladeSet.fbx"),
+                AssetDatabase.LoadAssetAtPath<GameObject>(cine + "L3GladeOrcSet.fbx"),
+                AssetDatabase.LoadAssetAtPath<GameObject>(cine + "L3GladeIsleSet.fbx"),
+            });
             cityDefenceSO.ApplyModifiedPropertiesWithoutUndo();
 
             // The dungeon (Dungeon/DungeonMode): idle in a town; when DungeonTravel sent the heroes

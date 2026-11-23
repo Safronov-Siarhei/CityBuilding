@@ -58,6 +58,7 @@ namespace CityBuilder.Campaign
         [Serializable] private class Place
         {
             public string name, set, anchor;
+            public string[] sets;       // more sets in the same place (the prologue's glade: one per palette)
             public float[] at, cell;
             public float[] smoke;       // the last scene's far places: fires on the horizon, [x, y, z, size] each (Blender)
         }
@@ -190,11 +191,12 @@ namespace CityBuilder.Campaign
                 place.localPosition = p.at != null && p.at.Length == 3 ? new Vector3(p.at[0], p.at[1], p.at[2]) : Vector3.zero;
                 if (inTown && p.cell != null && p.cell.Length == 2) place.position = PlaceInTown(p, script);
                 else if (inTown) s.far.Add(p.name);
-                var set = Array.Find(sets, m => m != null && m.name == p.set);
-                if (set != null)
+                foreach (var setName in p.sets != null && p.sets.Length > 0 ? p.sets : new[] { p.set })
                 {
+                    var set = Array.Find(sets, m => m != null && m.name == setName);
+                    if (set == null) continue;
                     var go = Instantiate(set, place, false);
-                    go.name = p.set;
+                    go.name = setName;
                     go.transform.localScale = set.transform.localScale;
                 }
                 s.places[p.name] = place;
@@ -449,7 +451,7 @@ namespace CityBuilder.Campaign
             s.cam.transform.SetParent(null, true);
             s.cam.transform.position = from;
             if ((at - from).sqrMagnitude > 1e-6f) s.cam.transform.rotation = Quaternion.LookRotation(at - from, Vector3.up);
-            if (shot.fov > 1f) s.cam.fieldOfView = shot.fov;
+            if (shot.fov > 1f) s.cam.fieldOfView = shot.fov2 > 1f ? Mathf.Lerp(shot.fov, shot.fov2, u) : shot.fov;
         }
 
         private static void CapitalLines(CapitalState s, float t)
@@ -516,7 +518,7 @@ namespace CityBuilder.Campaign
         [Serializable] private class CapitalShot
         {
             public string place;
-            public float t0, t1, fov;
+            public float t0, t1, fov, fov2;    // fov2: the lens eased to it with the move (the prologue's push-in)
             public float[] from, at, from2, at2;
         }
     }

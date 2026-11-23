@@ -43,6 +43,7 @@ namespace CityBuilder.Campaign
         {
             if (!_active || Current != Stage.Part1 || _capital != null) return;
             _helpDone = false;
+            _prologueDone = false;
             _noHelp = false;
             _capitalDone = true;
             TimeLeft = 0.01f;
@@ -62,7 +63,7 @@ namespace CityBuilder.Campaign
             try
             {
                 return StartFilm(helpScript, helpTakes, capitalFigures, capitalClips, capitalProps, helpSets,
-                    helpMusic, helpMusic2, introHorn, true, Win);
+                    helpMusic, helpMusic2, introHorn, true, AfterHelp);   // then the level-3 prologue (Prologue.cs), then the win
             }
             catch (Exception e)
             {
