@@ -36,6 +36,21 @@ namespace CityBuilder.Campaign
         /// <summary>Its place in the campaign (1-based): the support banner comes after won levels from the 2nd on.</summary>
         public const int LevelNumber = 2;
         public const string GameplayScene = "CityBuilder";
+
+        /// <summary>Which mission this mode plays (the user, 2026-11-23): mission 2's siege, or mission 3b «Клетка» -- the King
+        /// escorting the cage cart to the capital (CityDefenceMode.Escort.cs) on its own map (Mission3).</summary>
+        public enum Mission { Siege, Escort }
+
+        public static Mission Kind { get; private set; } = Mission.Siege;
+        public const string EscortMapId = "Mission3";
+        public const string EscortLevelId = "m3b";
+        public const int EscortLevelNumber = 3;
+
+        /// <summary>The map the mission waits for, by its kind.</summary>
+        public static string ActiveMapId => Kind == Mission.Escort ? EscortMapId : MapId;
+
+        /// <summary>Its place in the campaign, by its kind (the support banner after a win).</summary>
+        public static int CurrentLevelNumber => Kind == Mission.Escort ? EscortLevelNumber : LevelNumber;
         /// <summary>PlayerPrefs of the old two-part mission (a restart began at part 2): cleared on every start since the
         /// mission is one part (the user, 2026-11-13).</summary>
         public const string Part2Key = "m2_part2_saved";
@@ -43,7 +58,7 @@ namespace CityBuilder.Campaign
         /// <summary>Part1 = the siege, the mission's one part since 2026-11-13 (the name kept for the tests).</summary>
         public enum Stage { Setup, Part1, Won, Lost }
 
-        public enum LossReason { None, Square, Castle, Arden }
+        public enum LossReason { None, Square, Castle, Arden, Cage }
 
         /// <summary>
         /// What the player holds (the user, 2026-11-13: the two parts made one, 11 minutes): the outer gate; once it is
@@ -144,7 +159,7 @@ namespace CityBuilder.Campaign
         public int Wave { get; private set; }
 
         /// <summary>How long the town has held in this part (the end window's numbers).</summary>
-        public float HeldSeconds => Mathf.Max(0f, B.missionSeconds - TimeLeft);
+        public float HeldSeconds => Kind == Mission.Escort ? _escortClock : Mathf.Max(0f, B.missionSeconds - TimeLeft);
 
         /// <summary>The gates by lane (W, N, E). Since the user's third playtest the castle has ONE gate in each ring,
         /// so every lane's entry is that same gate (null once broken).</summary>
@@ -206,6 +221,7 @@ namespace CityBuilder.Campaign
             // asking for a castle)
             Time.timeScale = 1f;
             _skipIntroOnce = false;
+            Kind = Mission.Siege;
             GameSessionIntent.SaveNameToLoad = null;
             GameSessionIntent.NewGameMapId = MapId;
             GameSessionIntent.NewGameSeason = MapSeason.Summer;
@@ -224,6 +240,21 @@ namespace CityBuilder.Campaign
 
         private static bool _filmOnly;
 
+        /// <summary>The campaign map's «Играть» on m3b «Клетка»: the gameplay scene on the escort's map.</summary>
+        public static void BeginEscort()
+        {
+            Time.timeScale = 1f;
+            _skipIntroOnce = false;
+            _filmOnly = false;
+            Kind = Mission.Escort;
+            GameSessionIntent.SaveNameToLoad = null;
+            GameSessionIntent.NewGameMapId = EscortMapId;
+            GameSessionIntent.NewGameSeason = MapSeason.Summer;
+            GameSessionIntent.NewGameIsInvasion = false;
+            Pending = true;
+            UI.LoadingScreen.IntoGame(GameplayScene);
+        }
+
         private void Awake()
         {
             Instance = this;
@@ -234,6 +265,13 @@ namespace CityBuilder.Campaign
                 if (behaviour != null) behaviour.enabled = false;
             // fighters close in to strike (the user's third playtest: «подходили вплотную»)
             MeleeReach.Factor = B.meleeReachMult;
+            if (Kind == Mission.Escort)
+            {
+                // the escort has no town of its own people and no wall fights (its capital's walls are scenery)
+                var folk = GetComponent<Citizens.HousePeople>();
+                if (folk != null) folk.enabled = false;
+                return;
+            }
             // nobody fights across a wall (the user's fourth playtest)
             OrcUnit.WallBetween = WallBetween;
             SoldierUnit.PenBreach = Breach;
@@ -283,7 +321,7 @@ namespace CityBuilder.Campaign
             for (var frame = 0; frame < 600; frame++)
             {
                 var applier = MeshMapApplier.Instance;
-                if (applier != null && applier.CurrentMapId == MapId && GridManager.Instance != null) break;
+                if (applier != null && applier.CurrentMapId == ActiveMapId && GridManager.Instance != null) break;
                 yield return null;
             }
             yield return new WaitForFixedUpdate();
@@ -295,6 +333,11 @@ namespace CityBuilder.Campaign
 
         private void Setup()
         {
+            if (Kind == Mission.Escort)
+            {
+                SetupEscort();
+                return;
+            }
             _plan = town != null ? JsonUtility.FromJson<Blueprint>(town.text) : null;
             if (_plan == null || GridManager.Instance == null || buildingPlacer == null)
             {
@@ -350,7 +393,10 @@ namespace CityBuilder.Campaign
 
         private Vector2Int CellOf(int px, int py) => GridManager.Instance.WorldToCell(World(px + 0.5f, py + 0.5f));
 
-        private void RaiseTown()
+        private void RaiseTown() => RaisePieces(_plan.buildings, Sort);
+
+        /// <summary>A plan's buildings onto the grid (mission 2's town, mission 3b's capital); `sort` sees each standing one.</summary>
+        private void RaisePieces(List<Piece> pieces, System.Action<Piece, BuildingInstance> sort)
         {
             var catalog = new Dictionary<string, BuildingData>();
             foreach (var data in buildingPlacer.AvailableBuildings)
@@ -358,7 +404,7 @@ namespace CityBuilder.Campaign
             if (buildingPlacer.MandatoryFirstBuilding != null) catalog[buildingPlacer.MandatoryFirstBuilding.buildingName] = buildingPlacer.MandatoryFirstBuilding;
             var grid = GridManager.Instance;
             var missing = new HashSet<string>();
-            foreach (var piece in _plan.buildings)
+            foreach (var piece in pieces)
             {
                 if (!catalog.TryGetValue(piece.id, out var data) || data.prefab == null)
                 {
@@ -385,7 +431,7 @@ namespace CityBuilder.Campaign
                     for (var x = 0; x < footprint.x; x++)
                     for (var z = 0; z < footprint.y; z++)
                         RoadNetwork.Instance.RegisterRoad(origin + new Vector2Int(x, z));
-                Sort(piece, building);
+                sort(piece, building);
             }
             if (missing.Count > 0) Debug.LogWarning("CityDefenceMode: no building for " + string.Join(", ", missing) + " -- the town stands without them.");
         }
@@ -465,6 +511,11 @@ namespace CityBuilder.Campaign
         {
             TickMusic();
             if (!_active || Current == Stage.Setup || Current == Stage.Won || Current == Stage.Lost) return;
+            if (Kind == Mission.Escort)
+            {
+                TickEscort(Time.deltaTime);
+                return;
+            }
             // the second scene (CityDefenceMode.Capital.cs): the game stands under it, it steps on unscaled time
             if (_capital != null)
             {
@@ -691,6 +742,7 @@ namespace CityBuilder.Campaign
         public bool TryLaneFront(int lane, out Vector3 front)
         {
             front = Vector3.zero;
+            if (Kind == Mission.Escort) return TryEscortFront(lane, out front);
             if (lane < 0 || lane >= 3) return false;
             var best = float.MaxValue;
             var target = Castle != null ? Castle.transform.position : _square;
@@ -765,7 +817,9 @@ namespace CityBuilder.Campaign
         /// <summary>Cheat (the user, 2026-11-12): the running part's clock runs out now.</summary>
         public void CheatEndPart()
         {
-            if (_active && Current == Stage.Part1) TimeLeft = 0.01f;
+            if (!_active || Current != Stage.Part1) return;
+            if (Kind == Mission.Escort) CheatEscortAhead();   // mission 3b: the cart a minute on
+            else TimeLeft = 0.01f;
         }
 
         /// <summary>Cheat (the user, 2026-11-12): the level won on the spot.</summary>
@@ -784,7 +838,7 @@ namespace CityBuilder.Campaign
             foreach (var orc in new List<OrcUnit>(OrcUnit.All))
                 if (orc != null) orc.TakeDamage(orc.CurrentHealth * 10 + 1);
             PlayerPrefs.DeleteKey(Part2Key);
-            CampaignProgress.MarkDone(LevelId);
+            CampaignProgress.MarkDone(Kind == Mission.Escort ? EscortLevelId : LevelId);
             Core.PiggyTasks.Report(Core.PiggyTasks.CampaignWin);
             StopMusic();
             Ended?.Invoke(true);
@@ -804,6 +858,11 @@ namespace CityBuilder.Campaign
         public static void Restart()
         {
             Time.timeScale = 1f;
+            if (Kind == Mission.Escort)
+            {
+                BeginEscort();
+                return;
+            }
             Begin();
             _skipIntroOnce = true;       // «Заново» goes straight to the siege
         }

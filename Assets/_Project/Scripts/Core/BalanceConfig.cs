@@ -725,6 +725,7 @@ namespace CityBuilder.Core
         [SerializeField] private float loadingSecondsCampaignMap = 5f;
         // campaign mission 2 «Оборона города» (the economy tab «Кампания: оборона города», m2_*)
         [SerializeField] private CityDefenceBalance cityDefence = new CityDefenceBalance();
+        [SerializeField] private EscortBalance escort = new EscortBalance();
         // the tutorial's rules (tutorial_build_sec, tutorial_start_people, tutorial_king_heal_below)
         [SerializeField] private float tutorialBuildSeconds = 5f;
         [SerializeField] private int tutorialStartPeople = 3;
@@ -1699,6 +1700,8 @@ namespace CityBuilder.Core
         public float TutorialKingHealBelow => tutorialKingHealBelow;
         /// <summary>Campaign mission 2's numbers (m2_*: Campaign.CityDefenceMode).</summary>
         public CityDefenceBalance CityDefence => cityDefence ??= new CityDefenceBalance();
+        /// <summary>Campaign mission 3b «Клетка»'s numbers (m3_*: Campaign.CityDefenceMode.Escort.cs).</summary>
+        public EscortBalance Escort => escort ??= new EscortBalance();
         public float TutorialOrcDamageMult => tutorialOrcDamageMult;
         public int TutorialRaidOrcs => tutorialRaidOrcs;
 
@@ -3134,6 +3137,7 @@ namespace CityBuilder.Core
             tutorialStartPeople = (int)Read(economy, "tutorial_start_people", tutorialStartPeople);
             tutorialKingHealBelow = Read(economy, "tutorial_king_heal_below", tutorialKingHealBelow);
             CityDefence.Read(key => economy != null && economy.TryGetValue(key, out var v) ? v : (float?)null);
+            Escort.Read(key => economy != null && economy.TryGetValue(key, out var v) ? v : (float?)null);
             tutorialOrcDamageMult = Read(economy, "tutorial_orc_damage_mult", tutorialOrcDamageMult);
             tutorialOrcHealthMult = Read(economy, "tutorial_orc_health_mult", tutorialOrcHealthMult);
             tutorialGatherSeconds = Read(economy, "tutorial_gather_sec", tutorialGatherSeconds);
@@ -3931,6 +3935,94 @@ namespace CityBuilder.Core
             towerClimbSeconds = F("m2_tower_climb_sec", towerClimbSeconds);
             towerClimbGapSeconds = F("m2_tower_climb_gap_sec", towerClimbGapSeconds);
             gateCloseSeconds = F("m2_gate_close_sec", gateCloseSeconds);
+        }
+    }
+
+    /// <summary>
+    /// Campaign mission 3b «Клетка» (Design/features/campaign.md, the user's design 2026-11-23): the King escorts the cage
+    /// cart along the forest road to the capital. Keys m3_* on the economy tab.
+    /// </summary>
+    [System.Serializable]
+    public class EscortBalance
+    {
+        // the ride: the whole road at the plain pace takes rideSeconds; monsters this near the cart slow it (each by
+        // slowPerOrc, never below minSpeed of the pace); in the chase it goes chaseSpeedMult faster; at the felled tree it
+        // stands blockSeconds
+        public float rideSeconds = 480f, slowCells = 2.5f, slowPerOrc = 0.12f, minSpeed = 0.35f, chaseSpeedMult = 1.35f, blockSeconds = 15f;
+        // the cage: its health only goes down; a monster this near the cart hits it every cageHitSeconds
+        public int cageHealth = 3000;
+        public float cageReachCells = 1.4f, cageHitSeconds = 1.6f, throwReachCells = 6f;
+        public int cageDamageRaider = 12, cageDamageThrower = 8, cageDamageBrute = 80;
+        // the column: riders round the cart (the opening scene's survivors), their level; the watch-tower's riders
+        public int riders = 10, riderLevel = 2, postRiders = 4;
+        // the King: health/damage at level 1 and per level, back at the cart after respawnSeconds, picks a fight this near
+        public int kingHealth = 500, kingDamage = 40, kingHealthPerLevel = 60, kingDamagePerLevel = 8;
+        public float kingRespawnSeconds = 12f, kingEngageCells = 3f;
+        // the skills: «За мной!» at cryLevel, «Таранный бросок» at dashLevel; the clock gives a level every
+        // levelSeconds (level 5 at ~4:00); riders called by «За мной!» follow him followSeconds
+        public int cryLevel = 1, dashLevel = 5;
+        public float levelSeconds = 60f, followSeconds = 8f;
+        // the monsters: their level, toughness; the brute's extra health
+        public int orcLevel = 2;
+        public float orcHealthMult = 1f, orcDamageMult = 1f, bruteHealthMult = 3f;
+        // the waves: the first after firstWaveSeconds, then every waveGapSeconds (chaseWaveGapSeconds in the chase);
+        // waveBase monsters + waveGrowth per wave; throwers (throwersPerWave) from throwersFromSeconds; they come out of the
+        // forest spawnCells off the road, ahead of the cart by aheadCells
+        public float firstWaveSeconds = 50f, waveGapSeconds = 32f, chaseWaveGapSeconds = 18f, throwersFromSeconds = 140f;
+        public int waveBase = 3, waveGrowth = 1, throwersPerWave = 2;
+        public float spawnCells = 9f, aheadCells = 8f;
+        // the set pieces: the block's wave, the bridge's ambush from the far bank, the brutes (at the brute mark, and in
+        // the chase), the archers on the capital's walls
+        public int blockWave = 6, bridgeWave = 7, brutes = 1, chaseBrutes = 1, wallArchers = 6;
+
+        public void Read(System.Func<string, float?> get)
+        {
+            float F(string key, float d) => get(key) ?? d;
+            int I(string key, int d) => get(key).HasValue ? Mathf.RoundToInt(get(key).Value) : d;
+            rideSeconds = F("m3_ride_sec", rideSeconds);
+            slowCells = F("m3_slow_cells", slowCells);
+            slowPerOrc = F("m3_slow_per_orc", slowPerOrc);
+            minSpeed = F("m3_min_speed", minSpeed);
+            chaseSpeedMult = F("m3_chase_speed_mult", chaseSpeedMult);
+            blockSeconds = F("m3_block_sec", blockSeconds);
+            cageHealth = I("m3_cage_health", cageHealth);
+            cageReachCells = F("m3_cage_reach_cells", cageReachCells);
+            cageHitSeconds = F("m3_cage_hit_sec", cageHitSeconds);
+            throwReachCells = F("m3_throw_reach_cells", throwReachCells);
+            cageDamageRaider = I("m3_cage_dmg_raider", cageDamageRaider);
+            cageDamageThrower = I("m3_cage_dmg_thrower", cageDamageThrower);
+            cageDamageBrute = I("m3_cage_dmg_brute", cageDamageBrute);
+            riders = I("m3_riders", riders);
+            riderLevel = I("m3_rider_level", riderLevel);
+            postRiders = I("m3_post_riders", postRiders);
+            kingHealth = I("m3_king_health", kingHealth);
+            kingDamage = I("m3_king_damage", kingDamage);
+            kingHealthPerLevel = I("m3_king_health_per_level", kingHealthPerLevel);
+            kingDamagePerLevel = I("m3_king_damage_per_level", kingDamagePerLevel);
+            kingRespawnSeconds = F("m3_king_respawn_sec", kingRespawnSeconds);
+            kingEngageCells = F("m3_king_engage_cells", kingEngageCells);
+            cryLevel = I("m3_cry_level", cryLevel);
+            dashLevel = I("m3_dash_level", dashLevel);
+            levelSeconds = F("m3_level_sec", levelSeconds);
+            followSeconds = F("m3_follow_sec", followSeconds);
+            orcLevel = I("m3_orc_level", orcLevel);
+            orcHealthMult = F("m3_orc_health_mult", orcHealthMult);
+            orcDamageMult = F("m3_orc_damage_mult", orcDamageMult);
+            bruteHealthMult = F("m3_brute_health_mult", bruteHealthMult);
+            firstWaveSeconds = F("m3_first_wave_sec", firstWaveSeconds);
+            waveGapSeconds = F("m3_wave_gap_sec", waveGapSeconds);
+            chaseWaveGapSeconds = F("m3_chase_wave_gap_sec", chaseWaveGapSeconds);
+            throwersFromSeconds = F("m3_throwers_from_sec", throwersFromSeconds);
+            waveBase = I("m3_wave_base", waveBase);
+            waveGrowth = I("m3_wave_growth", waveGrowth);
+            throwersPerWave = I("m3_throwers_per_wave", throwersPerWave);
+            spawnCells = F("m3_spawn_cells", spawnCells);
+            aheadCells = F("m3_ahead_cells", aheadCells);
+            blockWave = I("m3_block_wave", blockWave);
+            bridgeWave = I("m3_bridge_wave", bridgeWave);
+            brutes = I("m3_brutes", brutes);
+            chaseBrutes = I("m3_chase_brutes", chaseBrutes);
+            wallArchers = I("m3_wall_archers", wallArchers);
         }
     }
 }

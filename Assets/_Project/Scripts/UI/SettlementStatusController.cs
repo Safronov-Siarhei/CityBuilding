@@ -52,6 +52,14 @@ namespace CityBuilder.UI
             if (Campaign.CityDefenceMode.IsActive)
             {
                 var mode = Campaign.CityDefenceMode.Instance;
+                if (Campaign.CityDefenceMode.Kind == Campaign.CityDefenceMode.Mission.Escort)
+                {
+                    // mission 3b: the way left to the capital at the cart's plain pace
+                    var eta = Mathf.Max(0, Mathf.CeilToInt(mode.EscortSecondsLeft));
+                    statusText.resizeTextForBestFit = true;
+                    statusText.text = Localization.Format("#m3_clock", $"{eta / 60}:{eta % 60:00}");
+                    return;
+                }
                 // the courier on his way, then the help on its way (the user, 2026-11-13: one part, the last 3 minutes
                 // say Подкрепление через; the capital's cutscene at that turn comes later)
                 var help = mode.HelpComing || mode.Current == Campaign.CityDefenceMode.Stage.Won;

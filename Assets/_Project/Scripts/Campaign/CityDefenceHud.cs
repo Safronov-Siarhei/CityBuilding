@@ -46,6 +46,10 @@ namespace CityBuilder.Campaign
         private int _gateHealthSeen;
         private float _gateHurtFor;
         private Image _ardenBar, _xpBar;
+        // mission 3b «Клетка»: the cage's health under the goal plaque, the way to the capital under it (a strip with the cart)
+        private bool _escort;
+        private Image _cageBar, _cageHurt, _routeFill;
+        private RectTransform _routeCart;
         private readonly Image[] _skillShade = new Image[CityDefenceMode.SkillCount];
         private readonly GameObject[] _skillLock = new GameObject[CityDefenceMode.SkillCount];
         private readonly Image[] _skillIcon = new Image[CityDefenceMode.SkillCount];
@@ -62,12 +66,14 @@ namespace CityBuilder.Campaign
         public void Bind(CityDefenceMode mode)
         {
             _mode = mode;
+            _escort = CityDefenceMode.Kind == CityDefenceMode.Mission.Escort;
             HideSandboxHud();
             Build();
             mode.PartBegan += OnPart;
             mode.Ended += OnEnded;
             mode.ArdenLeveled += OnLevel;
             mode.GoalChanged += OnGoal;
+            mode.EscortBeat += OnBeat;
         }
 
         private void OnDestroy()
@@ -77,6 +83,7 @@ namespace CityBuilder.Campaign
             _mode.Ended -= OnEnded;
             _mode.ArdenLeveled -= OnLevel;
             _mode.GoalChanged -= OnGoal;
+            _mode.EscortBeat -= OnBeat;
         }
 
         private static void HideSandboxHud()
@@ -129,7 +136,8 @@ namespace CityBuilder.Campaign
             _goal.resizeTextForBestFit = true;
             _goal.resizeTextMaxSize = 22;
             _goal.resizeTextMinSize = 12;
-            BuildGateBadge(safe, art);
+            if (_escort) BuildCageBar(safe);
+            else BuildGateBadge(safe, art);
 #if !CB_RELEASE
             _wave = MissionSkin.Label(plaque.transform, "", UiTheme.Bold, 18, Color.white, TextAnchor.MiddleCenter, new Vector2(0f, -2.25f), new Vector2(1f, -1.65f), Vector2.zero);
             _wave.raycastTarget = false;
@@ -234,10 +242,15 @@ namespace CityBuilder.Campaign
         {
             // 1.5 times smaller than at first (the user's second playtest)
             const float size = 70f, gap = 12f;
-            var width = CityDefenceMode.SkillCount * size + (CityDefenceMode.SkillCount - 1) * gap;
+            var shown = 0;
+            for (var i = 0; i < CityDefenceMode.SkillCount; i++)
+                if (CityDefenceMode.SkillInMission(i)) shown++;
+            var width = shown * size + (shown - 1) * gap;
+            var slot = 0;
             for (var i = 0; i < CityDefenceMode.SkillCount; i++)
             {
-                var x = -width * 0.5f + size * 0.5f + i * (size + gap);
+                if (!CityDefenceMode.SkillInMission(i)) continue;   // mission 3b: two of the four
+                var x = -width * 0.5f + size * 0.5f + slot++ * (size + gap);
                 _skillX[i] = x;
                 var button = MissionSkin.Round(safe, "Skill" + i, "round", HudInk.Keep, _mode.SkillGlyph(i), new Vector2(0.5f, 0f), new Vector2(x, size * 0.5f + 14f), size);
                 var skill = i;
@@ -336,7 +349,7 @@ namespace CityBuilder.Campaign
             if (_hint == null) return;
             _hint.SetActive(skill >= 0);
             if (skill < 0) return;
-            _hintTitle.text = Localization.Get("#m2_skill_" + skill);
+            _hintTitle.text = Localization.Get((_escort ? "#m3_skill_" : "#m2_skill_") + skill);   // mission 3b: «За мной!», «Таранный бросок»
             // right over its own button, kept on the screen
             var half = ((RectTransform)_hintRect.parent).rect.width * 0.5f - HintWidth * 0.5f - 8f;
             _hintRect.anchoredPosition = new Vector2(Mathf.Clamp(_skillX[skill], -half, half), _hintRect.anchoredPosition.y);
@@ -441,7 +454,7 @@ namespace CityBuilder.Campaign
             TextButton(card.transform, art, art.homeGlyph, "#m2_to_map", new Vector2(130f, 62f), () =>
             {
                 // won: the «Поддержи разработку» banner first (UI/SupportOfferWindow, from the 2nd level on), then the map
-                if (_won) SupportOfferWindow.ShowAfterWin(CityDefenceMode.LevelNumber, ToMap);
+                if (_won) SupportOfferWindow.ShowAfterWin(CityDefenceMode.CurrentLevelNumber, ToMap);
                 else ToMap();
             });
             _endPanel.SetActive(false);
@@ -481,9 +494,65 @@ namespace CityBuilder.Campaign
             return b;
         }
 
+        /// <summary>Mission 3b's set pieces as a banner: the block, the bridge, the watch-tower, the brute, the chase.</summary>
+        private void OnBeat(string beat)
+        {
+            if (beat == "gate") return;
+            _banner.text = Localization.Get("#m3_beat_" + beat);
+            _bannerFor = 3.5f;
+        }
+
+        /// <summary>
+        /// Mission 3b «Клетка» (the user, 2026-11-23: «хп клетки показывается по центру сверху экрана»): the cage's bar right
+        /// under the goal plaque, blinking red while it is struck, and the way to the capital under it -- a thin strip that
+        /// fills as the cart goes, a dot for the cart.
+        /// </summary>
+        private void BuildCageBar(RectTransform safe)
+        {
+            const float width = 420f;
+            _cageBar = Bar(safe, new Vector2(0f, -72f), new Vector2(width, 20f), new Vector2(0.5f, 1f));
+            var back = (RectTransform)_cageBar.transform.parent;
+            _cageHurt = new GameObject("Hurt", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+            _cageHurt.transform.SetParent(back, false);
+            _cageHurt.transform.SetAsFirstSibling();
+            _cageHurt.rectTransform.anchorMin = Vector2.zero;
+            _cageHurt.rectTransform.anchorMax = Vector2.one;
+            _cageHurt.rectTransform.offsetMin = new Vector2(-4f, -4f);
+            _cageHurt.rectTransform.offsetMax = new Vector2(4f, 4f);
+            _cageHurt.color = new Color(1f, 0.12f, 0.08f, 0f);
+            _cageHurt.raycastTarget = false;
+            var label = MissionSkin.Label(back, Localization.Get("#m3_cage"), UiTheme.Bold, 14, Color.white, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, Vector2.zero);
+            label.raycastTarget = false;
+            label.gameObject.AddComponent<Outline>().effectColor = new Color(0f, 0f, 0f, 0.8f);
+            _routeFill = Bar(safe, new Vector2(0f, -98f), new Vector2(width, 8f), new Vector2(0.5f, 1f));
+            _routeFill.color = UiTheme.Gold;
+            var dot = new GameObject("Cart", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+            dot.transform.SetParent(_routeFill.transform.parent, false);
+            dot.rectTransform.anchorMin = dot.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+            dot.rectTransform.sizeDelta = new Vector2(14f, 14f);
+            dot.sprite = _mode.HudArt.disc;
+            dot.color = UiTheme.OnWood;
+            dot.raycastTarget = false;
+            _routeCart = dot.rectTransform;
+        }
+
+        private void TickCageBar()
+        {
+            if (_cageBar == null) return;
+            var k = _mode.CageShare;
+            _cageBar.rectTransform.anchorMax = new Vector2(k, _cageBar.rectTransform.anchorMax.y);
+            _cageBar.color = k > 0.5f ? UiTheme.Good : k > 0.25f ? UiTheme.Warning : UiTheme.Danger;
+            if (_cageHurt != null)
+                _cageHurt.color = new Color(1f, 0.12f, 0.08f, _mode.CageStruck ? (Mathf.Sin(Time.unscaledTime * 25f) > 0f ? 0.9f : 0.25f) : 0f);
+            var r = _mode.RouteShare;
+            _routeFill.rectTransform.anchorMax = new Vector2(r, _routeFill.rectTransform.anchorMax.y);
+            _routeCart.anchorMin = _routeCart.anchorMax = new Vector2(r, 0.5f);
+            _routeCart.anchoredPosition = Vector2.zero;
+        }
+
         private void OnPart(int part)
         {
-            _banner.text = Localization.Get("#m2_part1_banner");
+            _banner.text = Localization.Get(_escort ? "#m3_banner" : "#m2_part1_banner");
             _bannerFor = 3.5f;
         }
 
@@ -515,10 +584,13 @@ namespace CityBuilder.Campaign
             _stick.Locked = true;
             _endTitle.text = Localization.Get(won ? "#m2_won" : "#m2_lost");
             _endTitle.color = won ? UiTheme.Good : UiTheme.Danger;
-            var why = _mode.Loss == CityDefenceMode.LossReason.Arden ? "#m2_lost_arden"
+            var why = _mode.Loss == CityDefenceMode.LossReason.Cage ? "#m3_lost_cage"
+                : _mode.Loss == CityDefenceMode.LossReason.Arden ? "#m2_lost_arden"
                 : _mode.Loss == CityDefenceMode.LossReason.Castle ? "#m2_lost_castle" : "#m2_lost_square";
-            _endLine.text = Localization.Get(won ? "#m2_won_line" : why);
-            _endStats.text = Localization.Format("#m2_end_stats", Mathf.Max(0, _mode.Wave - (won ? 0 : 1)), MissionSkin.Clock(_mode.HeldSeconds), _mode.ArdenLevel);
+            _endLine.text = Localization.Get(won ? (_escort ? "#m3_won_line" : "#m2_won_line") : why);
+            _endStats.text = _escort
+                ? Localization.Format("#m3_end_stats", Mathf.RoundToInt(_mode.RouteShare * 100f), MissionSkin.Clock(_mode.HeldSeconds), _mode.ArdenLevel)
+                : Localization.Format("#m2_end_stats", Mathf.Max(0, _mode.Wave - (won ? 0 : 1)), MissionSkin.Clock(_mode.HeldSeconds), _mode.ArdenLevel);
             _restartButton.SetActive(!won);
             _endPanel.SetActive(true);
             _endPop = 0f;
@@ -538,9 +610,10 @@ namespace CityBuilder.Campaign
             if (menuOpen) return;
             if (_stick != null) _mode.Stick = _stick.Locked ? Vector2.zero : _stick.Value;
 
-            _goal.text = Localization.Get(GoalKey(_mode.CurrentGoal));
-            var gate = _mode.GoalGate;
-            _gateBadge.SetActive(gate != null);
+            if (_escort) TickCageBar();
+            _goal.text = _escort ? Localization.Get(_mode.CartBlocked ? "#m3_goal_block" : "#m3_goal") : Localization.Get(GoalKey(_mode.CurrentGoal));
+            var gate = _escort ? null : _mode.GoalGate;
+            if (_gateBadge != null) _gateBadge.SetActive(gate != null);
             if (gate != null)
             {
                 var gk = gate.MaxHealth > 0 ? Mathf.Clamp01(gate.CurrentHealth / (float)gate.MaxHealth) : 0f;
@@ -572,6 +645,7 @@ namespace CityBuilder.Campaign
 
             for (var i = 0; i < CityDefenceMode.SkillCount; i++)
             {
+                if (_skillIcon[i] == null) continue;   // not in this mission
                 var open = _mode.SkillOpen(i);
                 _skillLock[i].SetActive(!open);
                 _skillIcon[i].color = open ? Color.white : new Color(0.35f, 0.35f, 0.35f, 1f);

@@ -612,6 +612,8 @@ namespace CityBuilder.EditorTools
             var cityDefenceSO = new SerializedObject(cityDefence);
             cityDefenceSO.FindProperty("buildingPlacer").objectReferenceValue = placer;
             cityDefenceSO.FindProperty("town").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Mission2Town.json");
+            // mission 3b «Клетка»: the escort's road, set pieces and capital (Tools/campaign/mission3b_town.py)
+            cityDefenceSO.FindProperty("escortPlan").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Mission3Escort.json");
             var captainModel = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/_Project/Models/Soldiers/SoldierCaptain.fbx");
             if (captainModel == null) Debug.LogWarning("[SetupProject] Models/Soldiers/SoldierCaptain.fbx is missing -- run Tools/blender/export_fbx.py.");
             cityDefenceSO.FindProperty("captainModel").objectReferenceValue = captainModel;

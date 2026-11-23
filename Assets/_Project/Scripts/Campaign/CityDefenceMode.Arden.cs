@@ -42,9 +42,19 @@ namespace CityBuilder.Campaign
 
         public bool SkillOpen(int skill) => skill >= 0 && skill < SkillCount && ArdenLevel >= SkillLevel(skill);
 
+        /// <summary>The mission has this skill at all (mission 3b: two of the four; the HUD shows only these).</summary>
+        public static bool SkillInMission(int skill) => Kind != Mission.Escort || skill == Cry || skill == Dash;
+
         /// <summary>The level a skill opens at (m2_cry_level, m2_whirl_level, m2_dash_level, m2_breath_level).</summary>
         public static int SkillLevel(int skill)
         {
+            if (Kind == Mission.Escort)
+            {
+                // «Клетка» (the user, 2026-11-23): two skills, «За мной!» first, «Таранный бросок» at level 5
+                if (skill == Cry) return E.cryLevel;
+                if (skill == Dash) return E.dashLevel;
+                return int.MaxValue;
+            }
             var b = B;
             switch (skill)
             {
@@ -132,15 +142,18 @@ namespace CityBuilder.Campaign
             var army = ArmyManager.Instance;
             if (army == null) return;
             if (NavMesh.SamplePosition(at, out var hit, 4f, NavMesh.AllAreas)) at = hit.position;
-            _ardenGroup = new ArmyGroup(SoldierType.ManAtArms, at);
-            Arden = army.SpawnHireling(SoldierType.ManAtArms, at, _ardenGroup);
+            // mission 3b: the King on horseback (for now the kingdom's knight; his own figure comes with the opening scene)
+            var escort = Kind == Mission.Escort;
+            var type = escort ? SoldierType.Knight : SoldierType.ManAtArms;
+            _ardenGroup = new ArmyGroup(type, at);
+            Arden = army.SpawnHireling(type, at, _ardenGroup);
             if (Arden == null) return;
-            Arden.name = "Arden";
+            Arden.name = escort ? "King" : "Arden";
             // he picks a fight by himself only this near (the user, 2026-11-13: «слишком далёкий радиус триггера»)
-            Arden.EngageOverride = B.ardenEngageCells * (GridManager.Instance != null ? GridManager.Instance.CellSize : 1f);
-            Arden.SteerArea = LitArea(1f);
+            Arden.EngageOverride = (escort ? E.kingEngageCells : B.ardenEngageCells) * (GridManager.Instance != null ? GridManager.Instance.CellSize : 1f);
+            Arden.SteerArea = escort ? EscortArea() : LitArea(1f);
             ApplyLevel(fullHealth: true);
-            DressArden();
+            if (!escort) DressArden();
             JumpToArden();
         }
 
@@ -153,8 +166,10 @@ namespace CityBuilder.Campaign
         private void ApplyLevel(bool fullHealth)
         {
             var b = B;
-            var max = b.ardenHealth + b.ardenHealthPerLevel * (ArdenLevel - 1);
-            var damage = b.ardenDamage + b.ardenDamagePerLevel * (ArdenLevel - 1);
+            var escort = Kind == Mission.Escort;
+            var e = E;
+            var max = escort ? e.kingHealth + e.kingHealthPerLevel * (ArdenLevel - 1) : b.ardenHealth + b.ardenHealthPerLevel * (ArdenLevel - 1);
+            var damage = escort ? e.kingDamage + e.kingDamagePerLevel * (ArdenLevel - 1) : b.ardenDamage + b.ardenDamagePerLevel * (ArdenLevel - 1);
             var share = !fullHealth && Arden.MaxHealth > 0 ? Arden.CurrentHealth / (float)Arden.MaxHealth : 1f;
             Arden.SetHeroStats(max, damage);
             Arden.SetCurrentHealth(Mathf.Max(1, Mathf.RoundToInt(max * share)));
@@ -182,6 +197,17 @@ namespace CityBuilder.Campaign
         {
             if (Current != Stage.Part1) return;
             var b = B;
+            if (Kind == Mission.Escort)
+            {
+                // «Клетка» (the user, 2026-11-23): the clock alone, a level every m3_level_sec -- level 5 (the charge) about
+                // half-way; on past it to the end, never above the last level
+                var lv = Mathf.Min(MaxLevel - 1, Mathf.FloorToInt(_escortClock / Mathf.Max(1f, E.levelSeconds)));
+                if (lv == _timeXp) return;
+                _timeXp = lv;
+                ArdenXp = _killXp + _timeXp;
+                LevelFromXp();
+                return;
+            }
             var lastSkill = 1;
             for (var s = 0; s < SkillCount; s++) lastSkill = Mathf.Max(lastSkill, SkillLevel(s));
             var span = Mathf.Max(1f, b.missionSeconds - b.skillsOpenBeforeEndSeconds);
@@ -214,7 +240,7 @@ namespace CityBuilder.Campaign
                 if (Current != Stage.Part1) return;
                 if (RespawnLeft <= 0f)
                 {
-                    RespawnLeft = Mathf.Max(1f, B.ardenRespawnSeconds);
+                    RespawnLeft = Mathf.Max(1f, Kind == Mission.Escort ? E.kingRespawnSeconds : B.ardenRespawnSeconds);
                     if (_ardenFig != null) _ardenFig.gameObject.SetActive(false);   // no death clip: he is gone from the field
                     _woundedByArden.RemoveWhere(o => o == null);
                     return;
@@ -224,7 +250,8 @@ namespace CityBuilder.Campaign
                 RespawnLeft = 0f;
                 if (Arden != null) Destroy(Arden.gameObject);
                 _ardenFig = null;
-                RaiseArden(_square);
+                // mission 3b: back at the cart (the user's design)
+                RaiseArden(Kind == Mission.Escort ? CartPosition + RoadSide(_cartS) * 1.5f * Cell : _square);
                 return;
             }
             // the camera looks north: the stick's up is +z
@@ -250,6 +277,8 @@ namespace CityBuilder.Campaign
                         if (guard != null && guard.CurrentHealth > 0 && Flat(guard.transform.position - at) <= b.cryRadius) guard.Enrage(b.cryDamageMult, b.crySeconds);
                     foreach (var orc in OrcUnit.All)
                         if (orc != null && orc.CurrentHealth > 0 && Flat(orc.transform.position - at) <= b.cryRadius) Stun(orc, b.cryStunSeconds);
+                    // mission 3b «За мной!»: the riders near him ride with him a while
+                    if (Kind == Mission.Escort) CallRiders(at, b.cryRadius);
                     break;
                 case Whirl:
                     // 2/3 of a plain level-2 orc's health (the user's thirteenth playtest: it killed nearly everyone)

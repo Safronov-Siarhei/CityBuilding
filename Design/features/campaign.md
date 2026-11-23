@@ -1249,7 +1249,46 @@ broken); the player plays the KING.
   `Blender/Map-M3.blend` (+ -decor/-spots.csv: `road` points every 4th, the events, `gate`), exported
   `export_map.py -- <project> Mission3 Map-M3` -> `Models/Mission3/`; `CreateMeshMapDefinition("Mission3", "Map-M3")`
   in SetupProjectCityScene. 200x200 grid, ~23% buildable flat, ~7000 forest cells, ground 40k tris.
-  Not yet: the capital's walls/houses, the bridge, the watch-tower (the mission JSON, stage 2).
+  The capital, the bridge crossing and the watch-tower came with stage 2 (below).
+- **Stages 2-5 BUILT IN CODE 2026-11-23 (not compiled by Unity, not played; the user builds -- `setup` TWICE: Editor
+  code + CSV changed). An offline Roslyn compile of the runtime scripts (Unity's own csc, all of Scripts/ minus
+  Editor) came out with 0 errors.**
+  - The mode = mission 2's `CityDefenceMode` with a kind: `Mission { Siege, Escort }`, static `Kind`,
+    `BeginEscort()` (map `Mission3`, level id `m3b`, number 3), `ActiveMapId`, `CurrentLevelNumber`; Awake/Start/
+    Setup/Update/Win/Restart branch on it. Campaign map: m3b's `scene` = CityBuilder, «Играть» -> `BeginEscort`.
+  - `CityDefenceMode.Escort.cs`: the road from `Campaign/Mission3Escort.json` (written by
+    `Tools/campaign/mission3b_town.py` from the plan: road, events, gate, capital, post, buildings in the bot
+    format; origin (-60, 43)); the CART is a plain transform moved along the road by distance (no NavMesh),
+    dressed with the prologue's props `CapPropL3CageCart` + `CapPropL3CageHorse` (static, no wheels/legs moving);
+    the CAGE's health is the mode's own number (only down; 0 = `LossReason.Cage`). Monsters are spawned
+    `Steered`: each frame `DefendSelf()` (spears/torches fight a rider or the King in their aggro), otherwise
+    `SteerTo` a spot by the cart; within reach they strike the CAGE every m3_cage_hit_sec (thrower from
+    m3_throw_reach_cells; the brute ignores soldiers). Crowding slows the cart (never stops); the block stops it
+    m3_block_sec. Set pieces fire as the cart nears their road point: block wave, bridge ambush (from ahead),
+    watch-tower riders (m3_post_riders Knights at `post`), brute(s), chase (faster cart, waves from behind,
+    archers `GoToWall` by the gate). Win at the road's end. Waves every m3_wave_gap_sec, waveBase + growth, one
+    side, both sides after the brute.
+  - Riders = Knight hirelings (`HireRider`, level m3_rider_level), each in its own ArmyGroup, ordered to a slot
+    round the cart when not fighting; added to `_garrison` so «За мной!» enrages them; `CallRiders` makes the ones
+    in the cry's radius follow the King m3_follow_sec.
+  - The KING = Arden.cs's hero code with `SoldierType.Knight` (no Ardan figure; his own mounted figure is an
+    OPEN item), m3_king_* stats, respawn at the cart after m3_king_respawn_sec. Skills: only Cry («За мной!»,
+    level m3_cry_level) and Dash («Таранный бросок», level m3_dash_level = 5); their effect numbers are still
+    mission 2's m2_cry_*/m2_dash_*. Levels from the clock alone: one per m3_level_sec (5 at 4:00, on to the end).
+  - HUD (`CityDefenceHud`, `_escort`): the goal plaque says «Довезите клетку до столицы» / the block line; under it
+    the cage's bar («Клетка», blinks red when struck) and the way strip with the cart's dot; only the two skills
+    (centred), titles `#m3_skill_0/2`; banners `#m3_beat_<id>`; end window `#m3_lost_cage`, `#m3_won_line`,
+    `#m3_end_stats`; the minimap plaque `#m3_clock` (time to the capital at the plain pace); minimap «!» = the
+    monster nearest the cart + a brute. Cheats: «Закончить часть» = the cart a minute on.
+  - Map change: the river crossing at `events.bridge` is a dry stone strip (a ford, `ford_at` in mission3b.py,
+    BRIDGE_HALF 1.4, BRIDGE_REACH 4.5) so everyone walks it; the BRIDGE MODEL over it is NOT made (new model ->
+    renders for approval first).
+  - Sheet: 44 rows m3_* on «Кампания: оборона города» (rows 100-143), 15 texts on «Тексты: обучение и сюжет»
+    (rows 120-134), same rows in economy.csv / localization.csv.
+  - OPEN: the felled tree's model at the block (only a halt + banner now), the bridge model, the King's mounted
+    figure, red edge arrows (the design's HUD item), the riders' own figure (Knight for now), checkpoints (a loss
+    restarts the whole mission for now), the capital's gates opening + the entry scene, the opening scene in Unity
+    (stage 6), the balance after the user's playtest.
 
 **Mission 3b «Клетка» -- the opening scene (the user, 2026-11-23):** a column of riders on a forest road with the
 cage cart; suddenly a big horde of monsters attacks; about half the riders survive and kill every attacker; then

@@ -282,6 +282,12 @@ namespace CityBuilder.Campaign
                 CityDefenceMode.Begin();
                 return;
             }
+            // level 3b «Клетка»: the same mode, the escort on its own map (the user, 2026-11-23)
+            if (_levels[_picked].id == CityDefenceMode.EscortLevelId)
+            {
+                CityDefenceMode.BeginEscort();
+                return;
+            }
             LoadingScreen.IntoGame(_levels[_picked].scene);
         }
 

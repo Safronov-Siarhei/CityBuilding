@@ -87,7 +87,7 @@ LEVELS = [
     # the branches open once it is watched (it also plays right after level 2's win)
     {"id": "m3p", "at": PROLOGUE, "titleKey": "#campaign_prologue", "scene": "CityBuilder", "bestKey": "", "after": "m2", "film": True},
     {"id": "m3a", "at": PRISONERS, "titleKey": "#campaign_level_3a", "scene": "", "bestKey": "", "after": "m3p", "label": "3"},
-    {"id": "m3b", "at": CASTLE, "titleKey": "#campaign_level_3b", "scene": "", "bestKey": "", "after": "m3p", "label": "3"},
+    {"id": "m3b", "at": CASTLE, "titleKey": "#campaign_level_3b", "scene": "CityBuilder", "bestKey": "", "after": "m3p", "label": "3"},
 ]
 FOG_FROM = 1960  # x where the unknown lands begin
 

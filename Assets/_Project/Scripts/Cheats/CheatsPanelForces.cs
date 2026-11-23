@@ -337,7 +337,7 @@ namespace CityBuilder.Cheats
             var defence = Campaign.CityDefenceMode.Instance;
             if (Campaign.CityDefenceMode.IsActive && defence != null)
             {
-                Header("Кампания: миссия 2");
+                Header(Campaign.CityDefenceMode.Kind == Campaign.CityDefenceMode.Mission.Escort ? "Кампания: миссия 3b «Клетка»" : "Кампания: миссия 2");
                 GUILayout.BeginHorizontal();
                 if (Button("Закончить часть")) { SetOpen(false); defence.CheatEndPart(); }
                 if (Button("Пройти уровень")) { SetOpen(false); defence.CheatWin(); }

@@ -120,8 +120,10 @@ GATE = P(*PLAN["gate"])
 TOWN_PAD = (CAPITAL[0] - 1.0, CAPITAL[1] - 1.0, CAPITAL[2] + 1.0, CAPITAL[3] + 1.0)   # the capital's ground, flat
 MOAT_IN, MOAT_OUT = 1.6, 3.6                          # the moat's ring round the pad (cells out from the walls)
 START = P(*PLAN["road"][0])                           # the ambush clearing, where the column sets out
-FORDS = []
+FORDS = list(BRIDGES)              # the crossing under the bridge works as a ford (ground everyone walks)
 FORD_R = 3.4
+BRIDGE_HALF = 1.4                   # the crossing's half-width (cells): the cart and a rider abreast
+BRIDGE_REACH = 4.5                  # its half-length along the road: past both banks
 PONDS = []
 LAKE = (1e5, 1e5, 1.0, 1.0)
 BEACHES = [(1e5, 1e5)]
@@ -201,7 +203,15 @@ def river_width(x, y, t):
 
 
 def ford_at(x, y):
-    return 0.0
+    """1 on the crossing under the bridge (a dry stone strip along the road's way over the river, so the cart, the
+    riders and the monsters walk it; the bridge's model stands over it), fading to 0 at its edge."""
+    best = 0.0
+    dx, dy = BRIDGE_DIR
+    for bx, by in BRIDGES:
+        along = (x - bx) * dx + (y - by) * dy
+        across = abs(-(x - bx) * dy + (y - by) * dx)
+        best = max(best, smoothstep(BRIDGE_HALF + 0.6, BRIDGE_HALF, across) * smoothstep(BRIDGE_REACH + 1.0, BRIDGE_REACH, abs(along)))
+    return best
 
 
 def in_clearing(x, y, pad=0.0):
@@ -228,6 +238,9 @@ def land_sd(x, y):
     sd = coast_sd(x, y)
     d, t = river(x, y)
     rsd = d - river_width(x, y, t)
+    f = ford_at(x, y)
+    if f > 0:
+        rsd = rsd + (0.4 - rsd) * f if rsd < 0.4 else rsd
     return min(sd, rsd, moat_sd(x, y))
 
 
