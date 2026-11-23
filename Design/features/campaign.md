@@ -1201,17 +1201,18 @@ FpsCounter). Redmi Pad ~40 fps in play; Low tier: NO SUN SHADOWS in mission 2 (t
 
 **Mission 3b «Клетка» -- the opening scene (the user, 2026-11-23):** a column of riders on a forest road with the
 cage cart; suddenly a big horde of monsters attacks; about half the riders survive and kill every attacker; then
-the mission starts. Storyboard v1 (~55 s) PROPOSED 2026-11-23, waiting for approval:
-1. Wide (5 s): over the dense forest, the road winds; the column: 2 vanguard riders, the King on the white horse with
-   a standard-bearer, the cage cart (driver, 2 horses), 6 riders behind (10 riders + the King).
+the mission starts. Storyboard v2 (~55 s) PROPOSED 2026-11-23, waiting for approval:
+1. Wide (5 s): over the dense forest, the road winds; the column (the user, 2026-11-23: 20 riders, not 10): 4 vanguard
+   riders, the King on the white horse with a standard-bearer, the cage cart (driver, 2 horses), 15 riders behind
+   (20 riders + the King).
 2. Column (5 s): a side tracking shot; the monster in the cage sits still, watching the trees; a rider glances at it.
 3. The cage (3 s): the monster lifts its head, sniffs, bares its teeth (it hears its own).
 4. The block (4 s): a felled tree across the road; the vanguard raises a hand: «Стой! Дорога завалена!»; the column halts.
 5. The horn (3 s): a war horn in the forest; the King draws his sword: «Засада! Держать клетку!»
-6. The attack (6 s): ~25 monsters pour out of the trees on both sides (spears, torches, throwers); thrown spears.
+6. The attack (6 s): ~40 monsters pour out of the trees on both sides (spears, torches, throwers); thrown spears.
 7. The melee (8 s), quick cuts: a rider dragged off his horse; a horse rears; the King cuts one down; a brute hacks
    at the cage's padlock -- a rider rams him away.
-8. The losses (4 s): riders fall one after another -- 5 of the 10.
+8. The losses (4 s): riders fall one after another -- 10 of the 20.
 9. The turn (5 s): the survivors close up round the cart and charge; the last monsters fall, the last one by the King.
 10. After (5 s): quiet, a dropped torch smoking, the dead on the road; the caged monster laughs at them.
     King: «Они пришли за ним».
