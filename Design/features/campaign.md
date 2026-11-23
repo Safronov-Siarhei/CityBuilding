@@ -1233,7 +1233,18 @@ the mission starts. Storyboard v3 (~56 s): **APPROVED by the user 2026-11-23 («
     the AMBUSH CLEARING round the stopped column, ~12 cells across (`in_clearing`: a wobbly superellipse,
     CLEAR_HALF_W 4.8 x CLEAR_HALF_L 7.0 round y -1.6), closing into the narrow road at the felled tree; lighter
     meadow, tall grass at the rim, bushes, two old fallen trunks, rocks (cover for the monsters). The game's white
-    Stone* replaced by grey kit crags. Shots wide/clearing/column/block/stump/top. v2 SENT, waiting for approval.
+    Stone* replaced by grey kit crags. Shots wide/clearing/column/block/stump/top. v2 SENT; **APPROVED by the user 2026-11-23 («Утверждаю»)**. Next: the animations, group by group as videos.
+- Animations, group by group as videos (one scene clock):
+  1. `column_anim.py` «Колонна» (shots 1-4, 0-17 s): the column at a walk (V 0.55, square_anim's walk gait and
+     lance_up) out of the narrow road into the clearing, halting row by row (HALT 13.4 + 0.12 s a row, 1.4 s to a
+     stop, the front row at BLOCK_Y - 1.2); riders glance at the trees, then every head to the block; the vanguard's
+     right-hand man throws up his hand (13.0-15.8, «Стой! Дорога завалена!»); the King's sword low, lifted at the halt.
+     The cart: `cage_cart` got `CineCageCartBare` (no wheels; the approved look otherwise) + `CineCageWheelL/R`
+     rolling by the distance; two rigged plain-harnessed horses in the shafts; a driver (the lookout's model) on the
+     bench hauling the reins at the halt; the captive sits low, lifts its head at 10.3, sniffs, rises to the bars and
+     stares into the forest, grins round at the men at 14.2. Slots: 4 vanguard, the King + the standard-bearer (a
+     lancer), the cart 4.0 behind the front, 15 behind (`slots()`). The review video cuts the 4 shots (`camera`).
+     Export names in build(): CapCartHorse is new (the export step must add it). Video SENT 2026-11-23, waiting.
   - Traps: the game's DecBush1 is a clipped hedge in a stone border (not a wild bush); `b.rod` is square (not a log).
 
 **Assets:**

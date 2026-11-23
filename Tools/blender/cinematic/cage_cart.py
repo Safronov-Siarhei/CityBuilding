@@ -51,12 +51,18 @@ def wheel(b, x, y, r=WHEEL_R):
     b.hcylinder('x', (x + (0.03 if x > 0 else -0.03), y, r), 0.008, 0.02, WOOD_D, sides=6)
 
 
-def cart(b):
-    # the axles and the wheels
-    for y in (-HALF_L + 0.16, HALF_L - 0.16):
+# the wheels' hubs in the cart's own units (WHEEL_X, WHEEL_YS): a rolling take turns separate wheels there
+WHEEL_X = HALF_W + 0.03
+WHEEL_YS = (-HALF_L + 0.16, HALF_L - 0.16)
+
+
+def cart(b, wheels=True):
+    """The cart; `wheels` False leaves the four wheels off (the axles stay) for a take that rolls them (wheel_alone)."""
+    for y in WHEEL_YS:
         b.hcylinder('x', (0, y, WHEEL_R), HALF_W + 0.02, 0.018, WOOD_D, sides=6)
-        for x in (-HALF_W - 0.03, HALF_W + 0.03):
-            wheel(b, x, y)
+        if wheels:
+            for x in (-WHEEL_X, WHEEL_X):
+                wheel(b, x, y)
     # two long beams under the bed, the bed of planks with gaps, a front and back board
     for x in (-HALF_W + 0.07, HALF_W - 0.07):
         b.box(x - 0.03, x + 0.03, -HALF_L - 0.02, HALF_L + 0.02, BED_Z - 0.09, BED_Z - 0.03, WOOD_D, bevel=0.004)
@@ -168,14 +174,25 @@ def cage(b):
     b.pyramid(lx, ly, z1 - 0.07, 0.03, 0.03, z1 - 0.03, IRON)
 
 
-def cage_cart():
+def cage_cart(wheels=True):
     b = Builder()
-    cart(b)
+    cart(b, wheels)
     cage(b)
     return b
 
 
-SETS = {"CineCageCart": cage_cart}
+def wheel_alone(side):
+    """One wheel with its hub at the origin (side -1 / 1: which side of the cart, the cap outward)."""
+    b = Builder()
+    wheel(b, side * WHEEL_X, 0.0)
+    for v in b.bm.verts:
+        v.co.x -= side * WHEEL_X
+        v.co.z -= WHEEL_R
+    return b
+
+
+SETS = {"CineCageCart": cage_cart, "CineCageCartBare": lambda: cage_cart(False),
+        "CineCageWheelL": lambda: wheel_alone(-1), "CineCageWheelR": lambda: wheel_alone(1)}
 
 
 def make(name, location=(0, 0, 0)):
