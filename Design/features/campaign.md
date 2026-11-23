@@ -1203,8 +1203,32 @@ FpsCounter). Redmi Pad ~40 fps in play; Low tier: NO SUN SHADOWS in mission 2 (t
 the cart and the cavalry ride on their own, SLOWLY; the ride to the end (the capital's gates) takes 8 MINUTES; on the
 way monsters attack the cart -- their goal is to break the CAGE (its hp bar at the top centre of the screen); the
 cavalry guards it but the monsters still damage it, so WITHOUT the player's help the mission is lost (the cage
-broken); the player plays the KING. Claude's development of it was proposed in chat the same day (see below once
-agreed).
+broken); the player plays the KING.
+**Design v1 AGREED with the user (2026-11-23):**
+- No win without the player: the attacks grow wave by wave; by mid-way the riders alone cannot hold.
+- The KING: mission 2's hero controls (joystick, on horseback, cuts the nearest monster by himself; faster than the
+  monsters on foot); falls -> rises at the cart after 10-15 s (the cage unguarded meanwhile).
+  - TWO skills: «За мной!» (riders near him hit harder and follow him for a while) and «Таранный бросок» (a short
+    charge that knocks monsters down -- to throw a brute off the cage).
+  - XP (the user): the second skill at LEVEL 5, reached about HALF-WAY through the time -- mission 2's scheme (kills +
+    the clock, `TickArdenXp`): on the clock alone level 5 at ~4:00. Which skill comes first: Claude's default
+    «За мной!» first, the charge at level 5 (not asked yet).
+- The column: the 10 riders who survived the opening scene fight by themselves round the cart; the fallen do NOT
+  come back; 3-4 riders join from a road post by a watch-tower half-way.
+- The cart SLOWS DOWN under attack (the user), never stops (the 8 minutes stay 8 minutes) -- except at a felled-tree
+  block (it stands while the riders clear it, ~15 s, under a wave).
+- The CAGE's hp only goes DOWN (the user: no repair).
+- Monsters, brought in one by one: spears and torches from the verges; throwers hitting the cage from behind the
+  trees; the BRUTE (slow, hits the cage very hard: the priority target); felled-tree blocks; at the end a big wave
+  -- the capital's gates open, archers shoot from the walls.
+- Rhythm (8 min): 0-1 calm ride + control hints + a small skirmish; 1-3 ambushes from the verges, throwers; ~3 a
+  block + a wave; 3-5 the BRIDGE over a river (kept by the user: an ambush from the far bank) and the watch-tower
+  reinforcement (kept); 5-6:30 the first brute, attacks from both sides; 6:30-8 the chase: monsters catch up from
+  behind, the cart speeds up to the gates; 8:00 the gates, archers, the entry scene.
+- Screen: the cage's hp bar top centre, under it the way to the capital (a strip with the cart); red edge arrows
+  where the cage is being hit and where a brute is.
+- Two checkpoints (after the block, after the bridge); a loss goes back to the last one.
+- Next: the map plan (a picture like mission2_map_v2.png) for approval.
 
 **Mission 3b «Клетка» -- the opening scene (the user, 2026-11-23):** a column of riders on a forest road with the
 cage cart; suddenly a big horde of monsters attacks; about half the riders survive and kill every attacker; then
