@@ -1199,6 +1199,13 @@ FpsCounter). Redmi Pad ~40 fps in play; Low tier: NO SUN SHADOWS in mission 2 (t
     «Я пойду с ним». The King turns his horse.
     Then the campaign map: two flags, «Пленные» (Ардан) and «Клетка» (King).
 
+**Mission 3b «Клетка» -- the gameplay, the user's vision (2026-11-23), under discussion:** a forest map with a road;
+the cart and the cavalry ride on their own, SLOWLY; the ride to the end (the capital's gates) takes 8 MINUTES; on the
+way monsters attack the cart -- their goal is to break the CAGE (its hp bar at the top centre of the screen); the
+cavalry guards it but the monsters still damage it, so WITHOUT the player's help the mission is lost (the cage
+broken); the player plays the KING. Claude's development of it was proposed in chat the same day (see below once
+agreed).
+
 **Mission 3b «Клетка» -- the opening scene (the user, 2026-11-23):** a column of riders on a forest road with the
 cage cart; suddenly a big horde of monsters attacks; about half the riders survive and kill every attacker; then
 the mission starts. Storyboard v3 (~56 s): **APPROVED by the user 2026-11-23 («Утверждаю»)**. Next: the forest road set (renders first):
