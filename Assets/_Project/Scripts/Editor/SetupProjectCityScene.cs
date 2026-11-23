@@ -875,6 +875,9 @@ namespace CityBuilder.EditorTools
             // Campaign mission 2's town-defence map (Tools/blender/mission2.py, plan v2 approved
             // 2026-11-12): only the campaign map's level 2 plays it (Campaign/CityDefenceMode).
             CreateMeshMapDefinition(CityBuilder.Campaign.CityDefenceMode.MapId, "Map-M2", null);
+            // Campaign mission 3b «Клетка»'s escort map (Tools/blender/mission3b.py, plan v1 approved 2026-11-23): the
+            // forest road from the ambush clearing to the capital; only the campaign map's «Клетка» plays it.
+            CreateMeshMapDefinition("Mission3", "Map-M3", null);
             // The level-1 dungeons (Tools/blender/dungeon1.py, the approved plan and variants b-d):
             // the labyrinths the heroes walk while the town waits (Dungeon/DungeonMode). Not in any
             // picker -- a mouth on the map opens one (DungeonTravel.LevelOneFor).

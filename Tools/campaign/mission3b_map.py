@@ -153,7 +153,7 @@ def main():
         col = DEAD if rnd.random() < 0.06 else rnd.choice((FOREST, FOREST, FOREST_DARK))
         d.ellipse(px((x - rr, y - rr)) + px((x + rr, y + rr)), fill=col)
     # the fields before the capital
-    for box in ((68, 26, 80, 33), (84, 28, 96, 34), (102, 26, 116, 33), (66, 8, 80, 18), (84, 10, 93, 18)):
+    for box in FIELDS:
         d.rectangle(px(box[:2]) + px(box[2:]), fill=WHEAT, outline=INK)
         yy = box[1] + 0.7
         while yy < box[3]:
@@ -286,6 +286,36 @@ def main():
         y += 26
     img.save(OUT)
     print('saved', OUT, 'road', round(LENGTH))
+    write_plan(river, clearings)
+
+
+PLAN_OUT = os.path.join(ROOT, 'Tools', 'blender', 'mission3b-plan.json')
+FIELDS = ((68, 26, 80, 33), (84, 28, 96, 34), (102, 26, 116, 33), (66, 8, 80, 18), (84, 10, 93, 18))
+
+
+def write_plan(river, clearings):
+    """The plan for the map's generator (Tools/blender/mission3b.py) and the mission: plan cells, x right, y DOWN."""
+    import json
+    events = {}
+    for name, m in (('block', 3.0), ('cp1', 3.25), ('bridge', BRIDGE_MIN), ('cp2', 3.95), ('tower', 4.5),
+                    ('brute', 5.33), ('chase', 6.6)):
+        (x, y), (dx, dy) = at_minute(m)
+        events[name] = {'minute': m, 'x': round(x, 2), 'y': round(y, 2), 'dx': round(dx, 3), 'dy': round(dy, 3)}
+    plan = {
+        'size': [W, H],
+        'road': [[round(x, 2), round(y, 2)] for x, y in ROAD_PTS],
+        'road_length': round(LENGTH, 1),
+        'ride_minutes': RIDE_MIN,
+        'river': [[round(x, 2), round(y, 2)] for x, y in river],
+        'clearings': [[round(c[0], 2), round(c[1], 2), r] for c, r in clearings],
+        'fields': [list(b) for b in FIELDS],
+        'capital': list(CAPITAL),
+        'gate': list(GATE),
+        'events': events,
+    }
+    with open(PLAN_OUT, 'w', encoding='utf-8') as f:
+        json.dump(plan, f, ensure_ascii=False, indent=1)
+    print('plan', PLAN_OUT)
 
 
 if __name__ == '__main__':

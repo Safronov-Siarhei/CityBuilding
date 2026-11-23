@@ -1234,7 +1234,22 @@ broken); the player plays the KING.
   at each minute (ticks on the road): ambushes 1:20-2:40, throwers 2:20, the block 3:00 + checkpoint 1, the bridge
   over the river 3:40 (ambush from the far bank) + checkpoint 2, level 5 ~4:00, the watch-tower 4:30, the brute 5:20,
   both sides 6:00, the chase over the fields 6:30-8:00, the capital (moat, walls, archers over the gate) 8:00.
-  Waiting for approval.
+  **APPROVED by the user 2026-11-23 («Утверждаю»).**
+- Build stages (Claude's order): 1. the map (a plan JSON from mission3b_map.py + a Blender generator like
+  mission2.py + export); 2. the mode (cart on the road, the riders, waves); 3. the King (hero, 2 skills, XP);
+  4. the HUD; 5. the sheet (numbers, texts); 6. the opening scene into Unity; then the user's playtest.
+- **Stage 1, the map -- BUILT 2026-11-23 (not compiled: the user builds):** `Tools/campaign/mission3b_map.py` also
+  writes `Tools/blender/mission3b-plan.json` (road points, river, clearings, fields, capital box, gate, events with
+  their road point + direction); `Tools/blender/mission3b.py` = mission2.py's generator with a new land section:
+  plan point (px, py) = map (px - 60, 43 - py); the whole plan rectangle + 7 cells is land, the rest sea; the river
+  across (no ford: the game's Bridge at `events.bridge`); the capital's pad in a moat ring (MOAT_IN 1.6 .. MOAT_OUT
+  3.6 cells out from its walls, a causeway at the gate); the ROAD a ground zone in the `path` colour (ROAD_HALF
+  1.25), no trees within ROAD_OPEN 3.4 of its middle, nor in the clearings, fields, capital; forest (TreesArea)
+  everywhere else; low hills away from the road. Road distance via 6-cell segment buckets (`road_dist`).
+  `Blender/Map-M3.blend` (+ -decor/-spots.csv: `road` points every 4th, the events, `gate`), exported
+  `export_map.py -- <project> Mission3 Map-M3` -> `Models/Mission3/`; `CreateMeshMapDefinition("Mission3", "Map-M3")`
+  in SetupProjectCityScene. 200x200 grid, ~23% buildable flat, ~7000 forest cells, ground 40k tris.
+  Not yet: the capital's walls/houses, the bridge, the watch-tower (the mission JSON, stage 2).
 
 **Mission 3b «Клетка» -- the opening scene (the user, 2026-11-23):** a column of riders on a forest road with the
 cage cart; suddenly a big horde of monsters attacks; about half the riders survive and kill every attacker; then
