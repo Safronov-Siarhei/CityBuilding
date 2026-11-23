@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &1546344229527202737
+--- !u!1 &1288929701190044621
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,9 +8,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 7870265595610302457}
-  - component: {fileID: 7108617511385621040}
-  - component: {fileID: 123714338218483976}
+  - component: {fileID: 8462275331577779212}
+  - component: {fileID: 3620910708257969916}
+  - component: {fileID: 2616101969464278160}
   m_Layer: 0
   m_Name: CrystalMine1-lvl1(Clone)
   m_TagString: Untagged
@@ -18,36 +18,36 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &7870265595610302457
+--- !u!4 &8462275331577779212
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1546344229527202737}
+  m_GameObject: {fileID: 1288929701190044621}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0.05351758, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 4761955685844859538}
+  m_Father: {fileID: 1152974279450247481}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &7108617511385621040
+--- !u!33 &3620910708257969916
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1546344229527202737}
+  m_GameObject: {fileID: 1288929701190044621}
   m_Mesh: {fileID: 2009356671310205703, guid: e9c9c41c678543b42913315f0f1b9dfd, type: 3}
---- !u!23 &123714338218483976
+--- !u!23 &2616101969464278160
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1546344229527202737}
+  m_GameObject: {fileID: 1288929701190044621}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -90,7 +90,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &2265914990658966460
+--- !u!1 &2094222872926290842
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -98,9 +98,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4761955685844859538}
-  - component: {fileID: 7799711393225499175}
-  - component: {fileID: 1393695642638345631}
+  - component: {fileID: 1152974279450247481}
+  - component: {fileID: 406399769211521170}
+  - component: {fileID: 5281028765131520311}
   m_Layer: 0
   m_Name: CrystalMine
   m_TagString: Untagged
@@ -108,41 +108,41 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4761955685844859538
+--- !u!4 &1152974279450247481
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2265914990658966460}
+  m_GameObject: {fileID: 2094222872926290842}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 7870265595610302457}
+  - {fileID: 8462275331577779212}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7799711393225499175
+--- !u!114 &406399769211521170
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2265914990658966460}
+  m_GameObject: {fileID: 2094222872926290842}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &1393695642638345631
+--- !u!65 &5281028765131520311
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2265914990658966460}
+  m_GameObject: {fileID: 2094222872926290842}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
