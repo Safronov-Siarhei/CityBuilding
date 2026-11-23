@@ -1201,7 +1201,7 @@ FpsCounter). Redmi Pad ~40 fps in play; Low tier: NO SUN SHADOWS in mission 2 (t
 
 **Mission 3b «Клетка» -- the opening scene (the user, 2026-11-23):** a column of riders on a forest road with the
 cage cart; suddenly a big horde of monsters attacks; about half the riders survive and kill every attacker; then
-the mission starts. Storyboard v3 (~56 s) PROPOSED 2026-11-23, waiting for approval:
+the mission starts. Storyboard v3 (~56 s): **APPROVED by the user 2026-11-23 («Утверждаю»)**. Next: the forest road set (renders first):
 1. Wide (5 s): over the dense forest, the road winds; the column (the user, 2026-11-23: 20 riders, not 10): 4 vanguard
    riders, the King on the white horse with a standard-bearer, the cage cart (driver, 2 horses), 15 riders behind
    (20 riders + the King).
@@ -1222,6 +1222,14 @@ the mission starts. Storyboard v3 (~56 s) PROPOSED 2026-11-23, waiting for appro
 11. Into play (4 s): King: «Убрать завал. До столицы ещё далеко». The camera rises behind the King; the mission begins.
 - New assets (renders first): the forest road set + the felled tree; animations: riders in a column, the ambush,
   fights, rider/horse deaths, the cage monster's reactions.
+- The forest road set: `Tools/blender/cinematic/forest_road.py` CineForestRoad (figure units, the column rides to +y):
+  a dirt road ROAD_HALF 0.9 each side, straight through the ambush (|y| < 10), bending away at both ends; grass verges
+  1.25 wide with ferns, wild leaf bushes (the monsters' cover) and stones; ~560 game trees (SET_SCALE) packed from the
+  verge out to ~13, ~1 in 14 dead; the FELLED TREE at BLOCK_Y 5.6: a pale fresh-cut stump with chips on the left verge,
+  a ROUND log (`log`, kit's hcylinder turned) across the road, its crown in the right verge. Render places the column
+  (horses only, 20 + the King's white one), the cart with the captive and 4 monsters for scale. Run it on a COPY of the
+  .blend. v1 renders (wide, column, block, stump, top) SENT 2026-11-23, waiting for approval.
+  - Traps: the game's DecBush1 is a clipped hedge in a stone border (not a wild bush); `b.rod` is square (not a log).
 
 **Assets:**
 - Have: CineKing + CineKingRide, the cavalry with horses, Ардан, the Captain, M2Guard, the monsters, CineElder, mission 2's town with ruins, and the cages of the orc camps (for the glade).
