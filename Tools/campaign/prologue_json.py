@@ -75,7 +75,7 @@ for place, turn, who in (("deadA", 0, None), ("deadB", 120, ["CapFolkPeasant", "
 DEAD_AT = {"CapGuardStand": (0.0, 0.0, 0.0), "CapOrcSpear": (0.6, -1.0, 0.0)}
 BODIES = [("CapGuardStand", 48.4, 57.4, 30), ("CapOrcSpear", 47.8, 56.5, 200), ("CapOrcSpear", 51.9, 57.5, 120),
           ("CapGuardStand", 52.6, 56.6, 300), ("CapOrcSpear", 48.3, 58.7, 75), ("CapGuardStand", 53.5, 57.4, 160),
-          ("CapOrcSpear", 49.3, 53.3, 15), ("CapOrcSpear", 51.6, 53.0, 250), ("CapGuardStand", 46.6, 53.2, 90),
+          ("CapOrcSpear", 48.5, 53.4, 15), ("CapOrcSpear", 51.6, 53.0, 250), ("CapGuardStand", 46.6, 53.2, 90),
           ("CapOrcSpear", 53.2, 53.4, 140), ("CapGuardStand", 47.6, 52.6, 210), ("CapOrcSpear", 45.4, 56.6, 330),
           ("CapOrcSpear", 49.0, 48.4, 130), ("CapGuardStand", 48.2, 49.6, 220), ("CapOrcSpear", 52.9, 46.6, 300),
           ("CapGuardStand", 54.0, 48.2, 10), ("CapOrcSpear", 47.6, 47.4, 60), ("CapGuardStand", 51.6, 50.2, 170)]

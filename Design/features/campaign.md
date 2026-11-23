@@ -1316,6 +1316,11 @@ the win window, in mission 2's town (the user: «сразу после побе�
     end runs. It also covers the glade;
   - 18 more bodies (orc spearmen and guards), one `dead` use each, on checked free cells round the square, up the
     road and by the cart (`BODIES`). `prologue_cam_check.py` also checks that no body lies in a house.
+- **Messengers out of thin air (the user, 2026-11-23: «пусть скачут по городу»):** each gallop now starts 6.6 s
+  before his braking (t0 9.0 / 14.0, stops and lines unchanged). That is ~14 units down the town's main road (take
+  x 0 = the road's middle, through the broken inner gate), then right of the King's horsemen to the stop. Before
+  t0 he waits 50 units UNDER the ground (no longer 40 to the side). The body at (49.3, 53.3) moved off the road to
+  (48.5, 53.4).
 - Not checked: camera framing in the real town (houses may stand in the messengers' way from the west). The user
   should watch it with the cheat «Перемотать к концовке».
      - v3 (the user):

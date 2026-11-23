@@ -60,8 +60,10 @@ TURN, LEAVE = (45.5, 47.5), 47.5
 WALK_STRIDE = 0.42                                  # ground covered in one walking cycle of a horse
 
 # the messengers: (start of gallop, braking starts, stop position, the way they come from)
-MESSENGERS = [(14.0, 15.6, Vector((0.85, -0.45, 0)), Vector((1, 0, 0))),
-              (19.0, 20.6, Vector((1.05, -1.35, 0)), Vector((1, 0, 0)))]
+# the gallop starts 6.6 s before the braking: ~14 units of road, from deep in the town (the user, 2026-11-23: «появляются
+# из воздуха, пусть скачут по городу»)
+MESSENGERS = [(9.0, 15.6, Vector((0.85, -0.45, 0)), Vector((1, 0, 0))),
+              (14.0, 20.6, Vector((1.05, -1.35, 0)), Vector((1, 0, 0)))]
 GALLOP_V, BRAKE = 2.0, 0.6
 SPEAK = [(16.3, 19.5), (21.3, 24.5)]
 
@@ -135,8 +137,9 @@ def horse_walk_pose(t, dist, moving):
 # the messengers' way in (the user, 2026-11-23, in Unity: they rode out of a house by the square): down the town's road
 # behind the King, the way he came (-y, the road's middle about x 0.25), then right of his horsemen up to their stop.
 # Points from the stop back along the way; the first leg is long enough for the whole gallop.
-MSG_WAY = [(Vector((0.85, -2.2, 0)), Vector((0.25, -5.0, 0))),
-           (Vector((1.05, -2.6, 0)), Vector((0.25, -5.4, 0)))]
+# In mission 2's town (turn 180, the square at plan (50, 59)) x 0 is the road's middle up through the inner gate.
+MSG_WAY = [(Vector((0.85, -2.2, 0)), Vector((0.25, -5.0, 0)), Vector((0.0, -6.2, 0)), Vector((0.0, -40.0, 0))),
+           (Vector((1.05, -2.6, 0)), Vector((0.25, -5.4, 0)), Vector((0.0, -6.6, 0)), Vector((0.0, -40.0, 0)))]
 
 
 def _back_along(i, back):
@@ -156,7 +159,7 @@ def messenger_root(i, t):
     t0, brake_at, stop, frm = MESSENGERS[i]
     travel = GALLOP_V * (brake_at - t0 + BRAKE / 2)
     if t < t0 - 0.05:
-        return stop + frm * 40.0, 0.0, 0.0                                # not yet on the set
+        return stop + Vector((0, 0, -50.0)), 0.0, 0.0                      # not yet on the set: under the ground
     if t < brake_at:
         d = GALLOP_V * max(0.0, t - t0)
     else:
