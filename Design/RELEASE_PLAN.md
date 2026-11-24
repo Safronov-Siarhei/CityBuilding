@@ -13,7 +13,10 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
 - Crystals, campaign progress and records live in PlayerPrefs (lost on reinstall); sandbox saves are local files.
 
 ## Decisions (the user, 2026-11-24)
-- The Google Play developer account ALREADY EXISTS (type / creation date not asked yet: decides the 12x14 rule).
+- The Google Play developer account ALREADY EXISTS: PERSONAL, made before Aug 2023 (the studio's first game,
+  Total Battle Ragdoll Simulator, came out 2023-08-20) -- older than Nov 13 2023, so the 12 testers x 14 days
+  closed-test rule does NOT apply: internal testing -> production directly.
+- The Play Console app is created (2026-11-24): «CityCraft», package `com.depigogames.citycraft`, game, free.
 - Store name: «CityCraft» is the main part; keywords may be added (e.g. «CityCraft: ...», title cap 30 chars).
 - First release WITH crystal purchases (Play Billing) AND rewarded ads.
 - Size: Play Asset Delivery (not slimming first).
@@ -24,7 +27,7 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
    content to Play Asset Delivery packs. Measure first: which assets weigh most.
 2. **Signing.** A real upload key is needed. The repo is PUBLIC: the keystore and its passwords must NEVER be
    committed -- kept outside the repo (+ a backup), passed to the build by environment variables.
-3. **Closed testing rule.** A PERSONAL developer account made after Nov 2023 must run a closed test with at least
+3. ~~Closed testing rule~~ (not for this account, see Decisions). A PERSONAL developer account made after Nov 2023 must run a closed test with at least
    **12 testers opted in for 14 days in a row** before production is unlocked. An ORGANIZATION account (needs a
    D-U-N-S number) is exempt. This decides the timeline.
 
