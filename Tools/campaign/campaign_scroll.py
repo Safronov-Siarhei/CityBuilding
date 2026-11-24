@@ -1,4 +1,7 @@
-"""The campaign map as the approved SCROLL (the user, 2026-11-24: «Подходит» to scroll v2, «Да, встраивай»).
+"""SUPERSEDED 2026-11-24: the user rejected the scroll («выбивается из основного стиля игры»); the level LIST
+(campaign_list_art.py) replaced it and its Scroll_* art was deleted. Kept for the record.
+
+The campaign map as the approved SCROLL (the user, 2026-11-24: «Подходит» to scroll v2, «Да, встраивай»).
 
 Bakes the art the game's CampaignMapScreen lays out at run time, and writes every level's place into
 Assets/_Project/Campaign/CampaignMap.json (its other fields kept):

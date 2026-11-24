@@ -1,92 +1,61 @@
 {
- "comment": "The campaign map = a parchment SCROLL (Tools/campaign/campaign_scroll.py writes the places): sx, sy, sw, sh = the level's scene on the paper (fractions from its top left); x, y = its medal; nx, ny = its name plaque; a done level shows its scene in colour, an open one in ink, a closed one blank paper. titleKey = the level's name; scene = the level's scene (empty: not built yet, «Скоро»); bestKey = its best time in PlayerPrefs; after = opens once that level is done (empty: the one before it); label = the medal's number (empty: its place); film = a story scene.",
- "picture": "Scroll_Paper",
+ "comment": "The campaign's level LIST (CampaignMapScreen, variant A picked by the user 2026-11-24): levels top to bottom. titleKey = the name; goalKey = the row's line under it; descKey = the picked card's short story; scene = the level's scene (empty: not built yet, «Скоро»); bestKey = its best time in PlayerPrefs; after = opens once that level is done (empty: the one before it); label = the medal's number (empty: its place); film = a story scene. The preview is UI/Campaign/Preview_<id>.png (Tools/campaign/campaign_list_art.py).",
+ "chapterKey": "#campaign_chapter_1",
  "levels": [
   {
    "id": "m1",
-   "x": 0.0542,
-   "y": 0.4622,
    "titleKey": "#campaign_level_1",
+   "goalKey": "#campaign_goal_m1",
+   "descKey": "#campaign_desc_m1",
    "scene": "CampaignOpening",
    "bestKey": "m1_best",
    "after": "",
    "label": "",
-   "film": false,
-   "sx": 0.0278,
-   "sy": 0.416,
-   "sw": 0.1556,
-   "sh": 0.289,
-   "nx": 0.1056,
-   "ny": 0.699
+   "film": false
   },
   {
    "id": "m2",
-   "x": 0.1987,
-   "y": 0.4843,
    "titleKey": "#campaign_level_2",
+   "goalKey": "#campaign_goal_m2",
+   "descKey": "#campaign_desc_m2",
    "scene": "CityBuilder",
    "bestKey": "",
    "after": "",
    "label": "",
-   "film": false,
-   "sx": 0.1722,
-   "sy": 0.439,
-   "sw": 0.1556,
-   "sh": 0.283,
-   "nx": 0.25,
-   "ny": 0.716
+   "film": false
   },
   {
    "id": "m3p",
-   "x": 0.3431,
-   "y": 0.4492,
    "titleKey": "#campaign_prologue",
+   "goalKey": "#campaign_goal_m3p",
+   "descKey": "#campaign_desc_m3p",
    "scene": "CityBuilder",
    "bestKey": "",
    "after": "m2",
    "label": "",
-   "film": true,
-   "sx": 0.3167,
-   "sy": 0.397,
-   "sw": 0.1556,
-   "sh": 0.326,
-   "nx": 0.3944,
-   "ny": 0.717
+   "film": true
   },
   {
    "id": "m3a",
-   "x": 0.5282,
-   "y": 0.213,
    "titleKey": "#campaign_level_3a",
+   "goalKey": "#campaign_goal_m3a",
+   "descKey": "#campaign_desc_m3a",
    "scene": "",
    "bestKey": "",
    "after": "m3p",
    "label": "3",
-   "film": false,
-   "sx": 0.5056,
-   "sy": 0.172,
-   "sw": 0.1333,
-   "sh": 0.256,
-   "nx": 0.5722,
-   "ny": 0.422
+   "film": false
   },
   {
    "id": "m3b",
-   "x": 0.5282,
-   "y": 0.6573,
    "titleKey": "#campaign_level_3b",
+   "goalKey": "#m3_goal",
+   "descKey": "#campaign_desc_m3b",
    "scene": "CityBuilder",
    "bestKey": "",
    "after": "m3p",
    "label": "3",
-   "film": false,
-   "sx": 0.5056,
-   "sy": 0.609,
-   "sw": 0.1333,
-   "sh": 0.302,
-   "nx": 0.5722,
-   "ny": 0.905
+   "film": false
   }
- ],
- "paperAspect": 3.6
+ ]
 }

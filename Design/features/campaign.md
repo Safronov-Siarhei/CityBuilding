@@ -1637,3 +1637,16 @@ the win window, in mission 2's town (the user: «сразу после побе�
   in the MenuSkins/Classic kit over the blurred main-menu village; previews = the colour dioramas on a sky; the
   prologue gets a play glyph, a locked «Скоро» slot shows the lock. Waiting for the user's pick; the scroll code
   (BuildScroll, Scroll_* art) stays in the repo until the list replaces it.
+- **LEVEL LIST IN THE GAME (2026-11-24, the user: «Вариант А»), code done, NOT built/seen:**
+  - `CampaignMapScreen` rewritten: blurred menu village (`UI/Campaign/List_Back.png`), title «Кампания», on the left
+    a `panel` with the chapter title and a vertical ScrollRect of `row`s (preview `Preview_<id>.png`, medal with the
+    number / play glyph for the prologue / lock, name, one line: record > goal > «Скоро» > «Пройдите предыдущий
+    уровень», a green Hud_Check once done, a red «Новый!» on a playable not-done level); on the right a `card` with the
+    picked level big (preview, plaque «Уровень N. Name», descKey story, record, «Играть» or why not). The newest open
+    level is picked on entry. Menu sprites sliced with pixelsPerUnitMultiplier 1.5 (they are drawn for 1080).
+  - `Campaign/CampaignMap.json` now: chapterKey + per level titleKey/goalKey/descKey/scene/bestKey/after/label/film
+    (the scroll's sx..ny fields and paperAspect gone). Texts: 14 keys after `#campaign_locked` in the sheet tab
+    «Тексты: обучение и сюжет» + localization.csv (descriptions are DRAFTS, the user may rewrite them).
+  - Art: `Tools/campaign/campaign_list_art.py <diorama dir>`; setup assigns `previews`, `backdrop`, `checkGlyph`.
+    The scroll's Scroll_* art deleted, `campaign_scroll.py` marked SUPERSEDED.
+  - Cheat buttons moved under the piggy bank. Offline Roslyn clean; setup not run (another Unity was running).

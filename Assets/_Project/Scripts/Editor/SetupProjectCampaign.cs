@@ -52,8 +52,8 @@ namespace CityBuilder.EditorTools
                 if (sprite == null) Debug.LogError($"[Campaign] map sprite {path} not found");
                 so.FindProperty(field).objectReferenceValue = sprite;
             }
-            // the scroll (Tools/campaign/campaign_scroll.py, the user approved scroll v2 on 2026-11-24): the paper
-            // tiles in order, the rolled end, its shade, the desk, every level's scene done/open
+            // the level list (Tools/campaign/campaign_list_art.py, the user picked variant A on 2026-11-24): every
+            // level's preview Preview_<id>, the blurred village behind the list
             void Arts(string field, IList<string> paths)
             {
                 var list = so.FindProperty(field);
@@ -62,32 +62,23 @@ namespace CityBuilder.EditorTools
                 {
                     AssetDatabase.ImportAsset(paths[k], ImportAssetOptions.ForceUpdate);
                     var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(paths[k]);
-                    if (sprite == null) Debug.LogError($"[Campaign] scroll sprite {paths[k]} not found");
+                    if (sprite == null) Debug.LogError($"[Campaign] list sprite {paths[k]} not found");
                     list.GetArrayElementAtIndex(k).objectReferenceValue = sprite;
                 }
             }
             var folder = UiTextureImport.CampaignFolder;
-            var tiles = new List<string>();
-            for (var t = 0; File.Exists($"{folder}/Scroll_Paper_{t}.png"); t++) tiles.Add($"{folder}/Scroll_Paper_{t}.png");
-            Arts("paperTiles", tiles);
-            var scenePics = new List<string>();
-            foreach (var f in Directory.GetFiles(folder, "Scroll_*.png"))
-            {
-                var file = Path.GetFileName(f);
-                if (file.EndsWith("_Color.png") || file.EndsWith("_Ink.png")) scenePics.Add($"{folder}/{file}");
-            }
-            scenePics.Sort(System.StringComparer.Ordinal);
-            Arts("scenes", scenePics);
-            foreach (var (field, file) in new[] { ("rod", "Scroll_Rod"), ("curl", "Scroll_Curl"), ("table", "Scroll_Table") })
-            {
-                AssetDatabase.ImportAsset($"{folder}/{file}.png", ImportAssetOptions.ForceUpdate);
-                Art(field, $"{folder}/{file}.png");
-            }
+            var previewPics = new List<string>();
+            foreach (var f in Directory.GetFiles(folder, "Preview_*.png")) previewPics.Add($"{folder}/{Path.GetFileName(f)}");
+            previewPics.Sort(System.StringComparer.Ordinal);
+            Arts("previews", previewPics);
+            AssetDatabase.ImportAsset($"{folder}/List_Back.png", ImportAssetOptions.ForceUpdate);
+            Art("backdrop", $"{folder}/List_Back.png");
             Art("backGlyph", UiTextureImport.GlyphsFolder + "/Hud_Back.png");
             Art("playGlyph", UiTextureImport.GlyphsFolder + "/Hud_Play.png");
             Art("replayGlyph", UiTextureImport.GlyphsFolder + "/Hud_Rotate.png");
             Art("lockGlyph", UiTextureImport.GlyphsFolder + "/Hud_Lock.png");
             Art("settingsGlyph", UiTextureImport.GlyphsFolder + "/Hud_Settings.png");
+            Art("checkGlyph", UiTextureImport.GlyphsFolder + "/Hud_Check.png");
             so.FindProperty("settings").objectReferenceValue = settings;
             so.ApplyModifiedPropertiesWithoutUndo();
             Directory.CreateDirectory(ScenesFolder);
