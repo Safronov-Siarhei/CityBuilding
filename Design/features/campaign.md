@@ -1669,3 +1669,9 @@ the win window, in mission 2's town (the user: «сразу после побе�
     / B «Ветка» / C «Два раздела» in `Design/concepts/campaign_list/extra/` (campaign_extra_concept.py) SENT, waiting.
   - The user corrected (2026-11-24): an EXTRA level = a SIDE BRANCH of the story, not the main line («Пленные», Ардан's
     road, is extra; «Клетка» is the main line). Concepts A/B/C redone on the real levels (B = the fork after the prologue).
+  - The user picked marking C (2026-11-24): json `side: true` on m3a; the list shows «Сюжет» then «💎 Побочные истории»
+    (crystal = Icons/Res_UpgradeCrystal, setup field `crystalIcon`), side rows lilac with violet names and a crystal on
+    the medal, the card's plaque lilac + the violet line «Побочная история · не влияет на сюжет» over the story. Keys
+    #campaign_story / #campaign_side / #campaign_side_note in the sheet + CSV. Buying a side story for crystals NOT built
+    (3a is closed until release anyway; the price is the user's to set). setup x2 green, mapshot checked (the batchmode
+    screen is 4:3: the panel now never narrower than 420).

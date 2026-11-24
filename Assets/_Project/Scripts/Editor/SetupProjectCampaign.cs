@@ -79,6 +79,7 @@ namespace CityBuilder.EditorTools
             Art("lockGlyph", UiTextureImport.GlyphsFolder + "/Hud_Lock.png");
             Art("settingsGlyph", UiTextureImport.GlyphsFolder + "/Hud_Settings.png");
             Art("checkGlyph", UiTextureImport.GlyphsFolder + "/Hud_Check.png");
+            Art("crystalIcon", UiTextureImport.IconsFolder + "/Res_UpgradeCrystal.png");
             so.FindProperty("settings").objectReferenceValue = settings;
             so.ApplyModifiedPropertiesWithoutUndo();
             Directory.CreateDirectory(ScenesFolder);

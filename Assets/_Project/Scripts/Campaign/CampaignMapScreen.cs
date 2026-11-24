@@ -33,6 +33,7 @@ namespace CityBuilder.Campaign
             public string label;   // the medal's number (the branches share «3»); empty: its place in the list
             public bool film;      // a story scene, not a level (the level-3 prologue): a play glyph on its medal
             public bool closed;    // shut until release whatever the progress: a lock in place of «Играть» (the user, 2026-11-24)
+            public bool side;      // a side story, not the main line (3a «Пленные», Ардан's road): listed under «Побочные истории»
         }
 
         [Serializable]
@@ -46,17 +47,17 @@ namespace CityBuilder.Campaign
         // Preview_<level id> (Tools/campaign/campaign_list_art.py) and the blurred menu village behind the list
         [SerializeField] private Sprite[] previews = new Sprite[0];
         [SerializeField] private Sprite backdrop;
-        [SerializeField] private Sprite backGlyph, playGlyph, replayGlyph, lockGlyph, settingsGlyph, checkGlyph;
+        [SerializeField] private Sprite backGlyph, playGlyph, replayGlyph, lockGlyph, settingsGlyph, checkGlyph, crystalIcon;
         // the game's own settings card, built into the scene by setup (the user: a settings button top right)
         [SerializeField] private SettingsPanelController settings;
         [SerializeField] private string menuScene = "MainMenu";
 
         private Level[] _levels = new Level[0];
         private string _chapterKey;
-        private readonly List<Image> _rows = new List<Image>();
+        private Image[] _rows = new Image[0];
         private int _picked = -1;
         private CanvasGroup _ui;
-        private Image _bigPreview, _bigLock;
+        private Image _bigPreview, _bigLock, _bigPlaque;
         private Text _bigName, _bigDesc, _record, _line;
         private Button _play;
         private GameObject _locked;
@@ -68,6 +69,10 @@ namespace CityBuilder.Campaign
         private const float Slice = 1.5f;   // the menu sprites are drawn for 1080 lines: their corners at 720
         private static readonly Color Brown = new Color(0.38f, 0.28f, 0.17f);
         private static readonly Color Shut = new Color(0.45f, 0.45f, 0.45f);
+        // the side stories' lilac (list marking C, the user 2026-11-24): their rows, plaque and words
+        private static readonly Color Lilac = new Color(0.86f, 0.78f, 0.97f);
+        private static readonly Color Violet = new Color(0.42f, 0.24f, 0.66f);
+        private const float SectionH = 34f;
 
         private void Start()
         {
@@ -146,7 +151,8 @@ namespace CityBuilder.Campaign
 
             // the safe area's width on the canvas: the panel takes up to 45% of it, the card the rest
             var safeW = Screen.height > 0 ? area.width / Screen.height * 720f : 1280f;
-            var panelW = Mathf.Min(520f, (safeW - 2f * Side - Gap) * 0.45f);
+            // never narrower than 420: on a 4:3 screen (a tablet, the batchmode photo) the names broke letter by letter
+            var panelW = Mathf.Clamp((safeW - 2f * Side - Gap) * 0.45f, 420f, 520f);
             BuildList(safe, panelW);
             BuildCard(safe, Side + panelW + Gap);
         }
@@ -178,8 +184,24 @@ namespace CityBuilder.Campaign
             content.anchorMin = new Vector2(0f, 1f);
             content.anchorMax = new Vector2(1f, 1f);
             content.pivot = new Vector2(0.5f, 1f);
-            content.sizeDelta = new Vector2(0f, _levels.Length * (RowH + RowGap));
-            for (var i = 0; i < _levels.Length; i++) Row(content, i);
+            // the main line under «Сюжет», then the side stories under «Побочные истории» (the user picked marking C)
+            _rows = new Image[_levels.Length];
+            var y = 0f;
+            for (var pass = 0; pass < 2; pass++)
+            {
+                var side = pass == 1;
+                var any = false;
+                foreach (var lv in _levels) any |= lv.side == side;
+                if (!any) continue;
+                Section(content, ref y, side);
+                for (var i = 0; i < _levels.Length; i++)
+                    if (_levels[i].side == side)
+                    {
+                        Row(content, i, y);
+                        y += RowH + RowGap;
+                    }
+            }
+            content.sizeDelta = new Vector2(0f, y);
             var scroll = view.gameObject.AddComponent<ScrollRect>();
             scroll.content = content;
             scroll.viewport = view;
@@ -188,7 +210,38 @@ namespace CityBuilder.Campaign
             scroll.decelerationRate = 0.12f;
         }
 
-        private void Row(RectTransform list, int i)
+        /// <summary>A section's title over its rows, a rule after it: «Сюжет», or «Побочные истории» with a crystal.</summary>
+        private void Section(RectTransform list, ref float y, bool side)
+        {
+            var at = 4f;
+            if (side && crystalIcon != null)
+            {
+                var c = Pic(list, "Crystal", crystalIcon);
+                c.preserveAspect = true;
+                var cr = c.rectTransform;
+                cr.anchorMin = cr.anchorMax = new Vector2(0f, 1f);
+                cr.pivot = new Vector2(0f, 0.5f);
+                cr.anchoredPosition = new Vector2(at, -y - SectionH * 0.5f);
+                cr.sizeDelta = new Vector2(28f, 28f);
+                at += 32f;
+            }
+            var t = MissionSkin.Label(list, Localization.Get(side ? "#campaign_side" : "#campaign_story"), UiTheme.Bold, 20, side ? Violet : UiTheme.Ink,
+                TextAnchor.MiddleLeft, new Vector2(0f, 1f), new Vector2(1f, 1f), Vector2.zero);
+            t.rectTransform.offsetMin = new Vector2(at, -y - SectionH);
+            t.rectTransform.offsetMax = new Vector2(0f, -y);
+            t.horizontalOverflow = HorizontalWrapMode.Overflow;
+            var rule = Pic(list, "Rule", null);
+            rule.color = new Color(0.69f, 0.55f, 0.38f);
+            var rr = rule.rectTransform;
+            rr.anchorMin = new Vector2(0f, 1f);
+            rr.anchorMax = new Vector2(1f, 1f);
+            rr.pivot = new Vector2(0f, 0.5f);
+            rr.offsetMin = new Vector2(at + t.preferredWidth + 12f, -y - SectionH * 0.5f - 1f);
+            rr.offsetMax = new Vector2(-6f, -y - SectionH * 0.5f + 1f);
+            y += SectionH + 4f;
+        }
+
+        private void Row(RectTransform list, int i, float y)
         {
             var lv = _levels[i];
             var open = Open(i);
@@ -199,14 +252,14 @@ namespace CityBuilder.Campaign
             r.anchorMin = new Vector2(0f, 1f);
             r.anchorMax = new Vector2(1f, 1f);
             r.pivot = new Vector2(0.5f, 1f);
-            r.anchoredPosition = new Vector2(0f, -i * (RowH + RowGap));
+            r.anchoredPosition = new Vector2(0f, -y);
             r.sizeDelta = new Vector2(0f, RowH);
-            if (!open) row.color = UiTheme.RowLocked;
+            row.color = !open ? UiTheme.RowLocked : lv.side ? Lilac : Color.white;
             var index = i;
             var button = row.gameObject.AddComponent<Button>();
             button.transition = Selectable.Transition.None;
             button.onClick.AddListener(() => Pick(index));
-            _rows.Add(row);
+            _rows[i] = row;
 
             // the preview, the medal on its corner
             const float thumbH = RowH - 16f, thumbW = thumbH * 588f / 340f;
@@ -217,7 +270,7 @@ namespace CityBuilder.Campaign
 
             // the name and its line
             var textX = 10f + thumbW + 14f;
-            var name = MissionSkin.Label(row.transform, Localization.Get(lv.titleKey), UiTheme.Bold, 25, open ? UiTheme.Ink : Shut, TextAnchor.LowerLeft,
+            var name = MissionSkin.Label(row.transform, Localization.Get(lv.titleKey), UiTheme.Bold, 25, !open ? Shut : lv.side ? Violet : UiTheme.Ink, TextAnchor.LowerLeft,
                 new Vector2(0f, 0.5f), new Vector2(1f, 1f), Vector2.zero);
             name.rectTransform.offsetMin = new Vector2(textX, 0f);
             name.rectTransform.offsetMax = new Vector2(-96f, -8f);
@@ -284,6 +337,7 @@ namespace CityBuilder.Campaign
             Anchor(_bigLock.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(90f, 90f));
 
             var plaque = Menu(card.transform, "Name", "plaque");
+            _bigPlaque = plaque;
             Anchor(plaque.rectTransform, new Vector2(0.5f, 0.42f), new Vector2(0f, 8f), new Vector2(360f, 54f));
             _bigName = MissionSkin.Label(plaque.transform, "", UiTheme.Bold, 24, UiTheme.Ink, TextAnchor.MiddleCenter,
                 Vector2.zero, Vector2.one, new Vector2(22f, 4f));
@@ -332,8 +386,9 @@ namespace CityBuilder.Campaign
         {
             var lv = _levels[i];
             var open = Open(i);
-            var glyph = !open || lv.closed ? lockGlyph : lv.film ? playGlyph : null;
+            var glyph = !open || lv.closed ? lockGlyph : lv.side ? crystalIcon : lv.film ? playGlyph : null;
             var medal = MissionSkin.Round(parent, "Medal", open ? "round_main" : "round", open ? HudInk.OnMain : HudInk.OnRound, glyph, anchor, at, size);
+            if (glyph != null && glyph == crystalIcon) medal.transform.Find("Icon").GetComponent<Image>().color = Color.white;
             medal.GetComponent<Image>().raycastTarget = false;
             medal.interactable = false;
             if (glyph == null)
@@ -360,12 +415,17 @@ namespace CityBuilder.Campaign
             var lv = _levels[i];
             var open = Open(i);
             var playable = Playable(i);
-            for (var k = 0; k < _rows.Count; k++) _rows[k].sprite = MenuSprite(k == i ? "row_selected" : "row");
+            for (var k = 0; k < _rows.Length; k++)
+                if (_rows[k] != null) _rows[k].sprite = MenuSprite(k == i ? "row_selected" : "row");
             _bigPreview.sprite = Preview(lv.id);
             _bigPreview.color = open ? Color.white : Shut;
             _bigLock.gameObject.SetActive(!open);
-            _bigName.text = lv.film ? Localization.Get(lv.titleKey) : Localization.Format("#campaign_level_n", Number(i), Localization.Get(lv.titleKey));
-            _bigDesc.text = Localization.Get(lv.descKey);
+            _bigName.text = lv.film || lv.side ? Localization.Get(lv.titleKey) : Localization.Format("#campaign_level_n", Number(i), Localization.Get(lv.titleKey));
+            _bigPlaque.color = lv.side ? Lilac : Color.white;
+            _bigName.color = lv.side ? Violet : UiTheme.Ink;
+            _bigDesc.text = lv.side
+                ? $"<color=#{ColorUtility.ToHtmlStringRGB(Violet)}>{Localization.Get("#campaign_side_note")}</color>\n{Localization.Get(lv.descKey)}"
+                : Localization.Get(lv.descKey);
             var best = playable && !string.IsNullOrEmpty(lv.bestKey) ? PlayerPrefs.GetFloat(lv.bestKey, 0f) : 0f;
             _record.text = best > 0f ? Localization.Format("#m1_best", MissionSkin.Clock(best)) : "";
             // a shut level says why in place of «Играть» (the user, 2026-11-12)

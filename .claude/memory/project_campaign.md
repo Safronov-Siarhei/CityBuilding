@@ -133,3 +133,4 @@ Related: [[project-tutorial]], [[project-invasion-mode]], [[project-monetization
 2026-11-24 (later 7): the user REJECTED the scroll (off the game's style); wants a LIST with a preview per level. Concepts list_a (rows + big picked) / list_b (row of cards) in Design/concepts/campaign_list/, waiting for the pick.
 2026-11-24 (later 8): the user picked list VARIANT A; it is IN THE CODE (CampaignMapScreen rewritten, json goalKey/descKey/chapterKey, 14 loc keys in the sheet + CSV, previews by campaign_list_art.py), NOT built/seen; scroll art deleted.
 2026-11-24 (later 9): previews = the user's picked scene frames (picked/ folder); levels after the prologue CLOSED until release (json closed); extra-level marking concepts A/B/C sent, waiting.
+2026-11-24 (later 10): an EXTRA level = a SIDE story branch (3a «Пленные»); the user picked marking C: «Сюжет» + «Побочные истории» sections, lilac side rows; BUILT (setup x2 green). Crystal purchase not built, price not set.
