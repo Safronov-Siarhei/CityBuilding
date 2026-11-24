@@ -2,121 +2,219 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2b1d12">
 <title>CityCraft — Privacy Policy</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<!-- Written 2026-11-24 for the Google Play listing (Design/RELEASE_PLAN.md); themed in the game's own menu kit the
+     same day (art: Tools/store/privacy_page_assets.py). Phone first. Before publishing: once the ad SDK is chosen,
+     replace [AD NETWORK] with the real network(s) and their policy links. Deploy: firebase deploy --only hosting. -->
 <style>
-  body { font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; max-width: 760px; margin: 0 auto; padding: 24px 18px 60px; line-height: 1.55; color: #2b2118; background: #fbf6ea; }
-  h1 { font-size: 1.7em; margin-bottom: 0.2em; }
-  h2 { font-size: 1.15em; margin-top: 1.6em; }
-  .muted { color: #7a6a58; font-size: 0.92em; }
-  hr { border: none; border-top: 1px solid #d9c9a8; margin: 40px 0; }
-  a { color: #8a4b12; }
+  @font-face { font-family: Rubik; src: url(assets/Rubik-Medium.ttf) format("truetype"); font-weight: 500; font-display: swap; }
+  @font-face { font-family: Rubik; src: url(assets/Rubik-Bold.ttf) format("truetype"); font-weight: 700; font-display: swap; }
+  :root { --ink: #3b2414; --soft: #7a5532; --gold: #e0a83a; --cream: #fff4d6; }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; min-height: 100vh; color: var(--ink);
+    font: 500 16px/1.6 Rubik, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #2b1d12 url(assets/bg.jpg) center top / cover no-repeat;
+  }
+  /* the village stays put behind the page without background-attachment: fixed (broken on phones) */
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: -1;
+    background: #2b1d12 url(assets/bg.jpg) center / cover no-repeat;
+  }
+  .wrap { max-width: 820px; margin: 0 auto; padding: max(18px, env(safe-area-inset-top)) 12px 40px; }
+  header { text-align: center; padding: 8px 0 4px; }
+  header .logo { width: min(320px, 78vw); height: auto; filter: drop-shadow(0 6px 10px rgba(0,0,0,.45)); }
+  .ribbon {
+    display: inline-block; margin: 6px auto 0; padding: 0 22px 4px; line-height: 1.25;
+    border: 24px solid transparent; border-image: url(assets/title.png) 48 48 56 48 fill / 24px 24px 28px 24px stretch;
+    color: var(--cream); font-weight: 700; font-size: clamp(18px, 5vw, 26px); letter-spacing: .3px;
+    text-shadow: 0 2px 0 rgba(40,20,6,.7);
+  }
+  .langs { display: flex; justify-content: center; gap: 10px; margin: 14px 0 6px; }
+  .langs button {
+    font: 700 16px Rubik, Arial, sans-serif; color: #5a3010; min-width: 118px; min-height: 52px; cursor: pointer;
+    background: none; padding: 0 18px 6px; border: 26px solid transparent;
+    border-image: url(assets/button.png) 52 52 62 52 fill / 26px 26px 31px 26px stretch;
+    filter: grayscale(.85) brightness(.85); transition: filter .15s, transform .1s;
+  }
+  .langs button[aria-pressed="true"] { filter: none; }
+  .langs button:active { transform: scale(.96); }
+  .sheet {
+    margin-top: 10px; padding: 8px 6px 14px;
+    border: 30px solid transparent; border-image: url(assets/panel.png) 46 46 56 46 fill / 30px 30px 36px 30px stretch;
+    filter: drop-shadow(0 10px 18px rgba(0,0,0,.5));
+  }
+  .meta { color: var(--soft); font-size: 14px; text-align: center; margin: 0 0 18px; }
+  h2 {
+    display: flex; align-items: center; gap: 10px; margin: 26px 0 8px;
+    font-weight: 700; font-size: 19px; line-height: 1.3;
+  }
+  h2::before {
+    content: ""; flex: none; width: 14px; height: 14px; transform: rotate(45deg);
+    background: var(--gold); border: 2px solid #8a5a1c; border-radius: 2px; box-shadow: 0 1px 0 rgba(0,0,0,.25);
+  }
+  h2::after { content: ""; flex: 1; height: 2px; background: linear-gradient(90deg, #c49a5c, transparent); }
+  p, li { margin: 0 0 10px; }
+  ul { padding-left: 22px; margin: 0 0 6px; }
+  li::marker { color: #a06a24; }
+  b { font-weight: 700; }
+  a { color: #8a3c0c; text-decoration-thickness: 1px; text-underline-offset: 2px; word-break: break-word; }
+  code { font: 500 .92em/1 Rubik, monospace; background: rgba(160,106,36,.14); padding: 2px 5px; border-radius: 5px; }
+  .contact { text-align: center; margin: 14px 0 4px; color: var(--soft); }
+  .contact a {
+    display: inline-block; margin-top: 8px; white-space: nowrap; text-decoration: none;
+    font-weight: 700; font-size: clamp(14px, 4.2vw, 18px); color: #5a3010;
+    padding: 0 10px 6px; border: 24px solid transparent;
+    border-image: url(assets/button.png) 52 52 62 52 fill / 24px 24px 29px 24px stretch;
+  }
+  footer { text-align: center; color: rgba(255,244,214,.85); font-size: 13px; margin-top: 18px; text-shadow: 0 1px 2px #000; }
+  footer img { width: 44px; height: 44px; border-radius: 11px; vertical-align: middle; margin-right: 8px; box-shadow: 0 2px 6px rgba(0,0,0,.5); }
+  /* both languages show when scripts are off; with scripts only the picked one */
+  .js article[hidden] { display: none; }
+  @media (min-width: 700px) {
+    body { font-size: 17px; }
+    .wrap { padding-top: 34px; }
+    .sheet { padding: 18px 26px 22px; border-width: 40px; border-image-width: 40px 40px 48px 40px; }
+    h2 { font-size: 21px; }
+  }
 </style>
 </head>
 <body>
-<!-- Written 2026-11-24 for the Google Play listing (Design/RELEASE_PLAN.md). Before publishing: once the ad SDK is chosen, replace [AD NETWORK] with the real network(s) and their policy links. -->
+<div class="wrap">
+  <header>
+    <img class="logo" src="assets/logo.png" alt="CityCraft" width="600" height="160">
+    <div><span class="ribbon" id="title">Privacy Policy</span></div>
+    <nav class="langs" aria-label="Language">
+      <button type="button" data-lang="en" aria-pressed="true">English</button>
+      <button type="button" data-lang="ru" aria-pressed="false">Русский</button>
+    </nav>
+  </header>
 
-<h1>CityCraft — Privacy Policy</h1>
-<p class="muted">Developer: Depigo Games · Last updated: November 24, 2026 · <a href="#ru">Русская версия ниже</a></p>
+  <main class="sheet">
+    <article lang="en" id="en">
+      <p class="meta">Developer: Depigo Games · Last updated: November 24, 2026</p>
+      <p>This policy explains what information the game CityCraft (package <code>com.depigogames.citycraft</code>,
+      "the Game") collects, how it is used and what choices you have. By playing the Game you agree to this policy.</p>
 
-<p>This policy explains what information the game CityCraft (package <code>com.depigogames.citycraft</code>, "the Game")
-collects, how it is used and what choices you have. By playing the Game you agree to this policy.</p>
+      <h2>1. Information we do not collect</h2>
+      <p>We do not ask for your name, address, phone number, contacts, photos or location. The Game has no chat and no
+      user-to-user messaging. Your towns, campaign progress and settings are stored on your device.</p>
 
-<h2>1. Information we do not collect</h2>
-<p>We do not ask for your name, address, phone number, contacts, photos or location. The Game has no chat and no
-user-to-user messaging. Your towns, campaign progress and settings are stored on your device.</p>
+      <h2>2. Third-party services</h2>
+      <p>The Game uses the services below. They may collect information on their own terms; we receive only what is
+      needed for the Game to work (for example, whether a purchase succeeded).</p>
+      <ul>
+        <li><b>Google Play Billing</b> — processes in-app purchases. Payment details are handled by Google; we never see
+            your card or payment data. <a href="https://policies.google.com/privacy">Google Privacy Policy</a>.</li>
+        <li><b>Google Play Games Services</b> — your Play Games player ID is used to save your progress and crystals in
+            the cloud and to show leaderboards. Your Play Games display name may appear on leaderboards.</li>
+        <li><b>[AD NETWORK]</b> — shows optional rewarded ads (you choose to watch an ad for an in-game reward). Ad
+            networks may collect your device's advertising ID, IP address, device model, operating system and ad
+            interactions to show and measure ads. Where the law requires it (for example in the EEA and the UK), the
+            Game asks for your consent before personalised ads are shown, and you can change your choice later in the
+            Game's settings.</li>
+      </ul>
 
-<h2>2. Information handled by third-party services</h2>
-<p>The Game uses the services below. They may collect information on their own terms; we receive only what is
-needed for the Game to work (for example, whether a purchase succeeded).</p>
-<ul>
-  <li><b>Google Play Billing</b> — processes in-app purchases. Payment details are handled by Google; we never see
-      your card or payment data. <a href="https://policies.google.com/privacy">Google Privacy Policy</a>.</li>
-  <li><b>Google Play Games Services</b> — your Play Games player ID is used to save your progress and crystals in
-      the cloud and to show leaderboards. Your Play Games display name may appear on leaderboards.</li>
-  <li><b>[AD NETWORK]</b> — shows optional rewarded ads (you choose to watch an ad for an in-game reward). Ad
-      networks may collect your device's advertising ID, IP address, device model, operating system and ad
-      interactions to show and measure ads. Where the law requires it (for example in the EEA and the UK), the Game
-      asks for your consent before personalised ads are shown, and you can change your choice later in the
-      Game's settings.</li>
-</ul>
+      <h2>3. How information is used</h2>
+      <p>To deliver purchases, keep your progress, show leaderboards, show rewarded ads, and find and fix technical
+      problems. We do not sell personal information.</p>
 
-<h2>3. How information is used</h2>
-<p>To deliver purchases, keep your progress, show leaderboards, show rewarded ads, and find and fix technical
-problems. We do not sell personal information.</p>
+      <h2>4. Children</h2>
+      <p>The Game is not directed at children under 13, and we do not knowingly collect personal information from them.
+      If you believe a child has provided us information, contact us and we will delete it.</p>
 
-<h2>4. Children</h2>
-<p>The Game is not directed at children under 13, and we do not knowingly collect personal information from them.
-If you believe a child has provided us information, contact us and we will delete it.</p>
+      <h2>5. Your choices</h2>
+      <ul>
+        <li>You can reset or turn off your advertising ID in your Android settings (Google → Ads).</li>
+        <li>You can withdraw ad consent in the Game's settings.</li>
+        <li>You can delete local data by uninstalling the Game. To delete cloud-saved progress tied to your Play Games
+            account, contact us at the address below.</li>
+      </ul>
 
-<h2>5. Your choices</h2>
-<ul>
-  <li>You can reset or turn off your advertising ID in your Android settings (Google → Ads).</li>
-  <li>You can withdraw ad consent in the Game's settings.</li>
-  <li>You can delete local data by uninstalling the Game. To delete cloud-saved progress tied to your Play Games
-      account, contact us at the address below.</li>
-</ul>
+      <h2>6. Security and retention</h2>
+      <p>Data stored by third-party services is kept under their policies. Cloud saves are kept while your account is
+      active or until you ask us to delete them.</p>
 
-<h2>6. Security and retention</h2>
-<p>Data stored by third-party services is kept under their policies. Cloud saves are kept while your account is
-active or until you ask us to delete them.</p>
+      <h2>7. Changes</h2>
+      <p>We may update this policy; the date above shows the latest version.</p>
 
-<h2>7. Changes</h2>
-<p>We may update this policy; the date above shows the latest version.</p>
+      <h2>8. Contact</h2>
+      <div class="contact">Depigo Games<br><a href="mailto:depigogames@gmail.com">depigogames@gmail.com</a></div>
+    </article>
 
-<h2>8. Contact</h2>
-<p>Depigo Games — <a href="mailto:depigogames@gmail.com">depigogames@gmail.com</a></p>
+    <article lang="ru" id="ru">
+      <p class="meta">Разработчик: Depigo Games · Обновлено: 24 ноября 2026</p>
+      <p>Эта политика объясняет, какие данные собирает игра CityCraft (пакет <code>com.depigogames.citycraft</code>,
+      «Игра»), как они используются и что вы можете изменить. Играя в Игру, вы соглашаетесь с этой политикой.</p>
 
-<hr>
+      <h2>1. Чего мы не собираем</h2>
+      <p>Мы не запрашиваем имя, адрес, телефон, контакты, фото и местоположение. В Игре нет чата и переписки между
+      игроками. Ваши города, прогресс кампании и настройки хранятся на вашем устройстве.</p>
 
-<h1 id="ru">CityCraft — Политика конфиденциальности</h1>
-<p class="muted">Разработчик: Depigo Games · Обновлено: 24 ноября 2026</p>
+      <h2>2. Сторонние сервисы</h2>
+      <p>Игра использует сервисы ниже. Они могут собирать данные по своим правилам; мы получаем только то, что нужно
+      для работы Игры (например, прошла ли покупка).</p>
+      <ul>
+        <li><b>Google Play Billing</b> — проводит покупки в Игре. Платёжные данные обрабатывает Google, мы их не видим.
+            <a href="https://policies.google.com/privacy?hl=ru">Политика конфиденциальности Google</a>.</li>
+        <li><b>Google Play Игры</b> — идентификатор игрока Play Игр нужен для облачного сохранения прогресса и
+            кристаллов и для таблиц рекордов. Ваше имя в Play Играх может быть видно в таблицах рекордов.</li>
+        <li><b>[AD NETWORK]</b> — показывает рекламу за награду только по вашему выбору. Рекламные сети могут собирать
+            рекламный идентификатор устройства, IP-адрес, модель устройства, версию системы и действия с рекламой,
+            чтобы показывать и измерять рекламу. Там, где этого требует закон (например, в ЕЭЗ и Великобритании), Игра
+            спрашивает согласие на персонализированную рекламу; изменить выбор можно в настройках Игры.</li>
+      </ul>
 
-<p>Эта политика объясняет, какие данные собирает игра CityCraft (пакет <code>com.depigogames.citycraft</code>, «Игра»),
-как они используются и что вы можете изменить. Играя в Игру, вы соглашаетесь с этой политикой.</p>
+      <h2>3. Как используются данные</h2>
+      <p>Чтобы выдать покупки, сохранить прогресс, показать таблицы рекордов и рекламу за награду, найти и исправить
+      технические ошибки. Мы не продаём персональные данные.</p>
 
-<h2>1. Чего мы не собираем</h2>
-<p>Мы не запрашиваем имя, адрес, телефон, контакты, фото и местоположение. В Игре нет чата и переписки между
-игроками. Ваши города, прогресс кампании и настройки хранятся на вашем устройстве.</p>
+      <h2>4. Дети</h2>
+      <p>Игра не предназначена для детей младше 13 лет, и мы сознательно не собираем их данные. Если ребёнок передал
+      нам данные, напишите нам, и мы их удалим.</p>
 
-<h2>2. Данные, которые обрабатывают сторонние сервисы</h2>
-<p>Игра использует сервисы ниже. Они могут собирать данные по своим правилам; мы получаем только то, что нужно для
-работы Игры (например, прошла ли покупка).</p>
-<ul>
-  <li><b>Google Play Billing</b> — проводит покупки в Игре. Платёжные данные обрабатывает Google, мы их не видим.
-      <a href="https://policies.google.com/privacy?hl=ru">Политика конфиденциальности Google</a>.</li>
-  <li><b>Google Play Игры</b> — идентификатор игрока Play Игр нужен для облачного сохранения прогресса и кристаллов
-      и для таблиц рекордов. Ваше имя в Play Играх может быть видно в таблицах рекордов.</li>
-  <li><b>[AD NETWORK]</b> — показывает рекламу за награду только по вашему выбору. Рекламные сети могут собирать
-      рекламный идентификатор устройства, IP-адрес, модель устройства, версию системы и действия с рекламой, чтобы
-      показывать и измерять рекламу. Там, где этого требует закон (например, в ЕЭЗ и Великобритании), Игра
-      спрашивает согласие на персонализированную рекламу; изменить выбор можно в настройках Игры.</li>
-</ul>
+      <h2>5. Ваш выбор</h2>
+      <ul>
+        <li>Рекламный идентификатор можно сбросить или отключить в настройках Android (Google → Реклама).</li>
+        <li>Согласие на рекламу можно отозвать в настройках Игры.</li>
+        <li>Локальные данные удаляются вместе с Игрой. Чтобы удалить облачное сохранение, связанное с аккаунтом Play
+            Игр, напишите нам.</li>
+      </ul>
 
-<h2>3. Как используются данные</h2>
-<p>Чтобы выдать покупки, сохранить прогресс, показать таблицы рекордов и рекламу за награду, найти и исправить
-технические ошибки. Мы не продаём персональные данные.</p>
+      <h2>6. Хранение</h2>
+      <p>Данные у сторонних сервисов хранятся по их правилам. Облачные сохранения хранятся, пока аккаунт активен или
+      пока вы не попросите их удалить.</p>
 
-<h2>4. Дети</h2>
-<p>Игра не предназначена для детей младше 13 лет, и мы сознательно не собираем их данные. Если ребёнок передал нам
-данные, напишите нам, и мы их удалим.</p>
+      <h2>7. Изменения</h2>
+      <p>Мы можем обновлять эту политику; дата выше показывает последнюю версию.</p>
 
-<h2>5. Ваш выбор</h2>
-<ul>
-  <li>Рекламный идентификатор можно сбросить или отключить в настройках Android (Google → Реклама).</li>
-  <li>Согласие на рекламу можно отозвать в настройках Игры.</li>
-  <li>Локальные данные удаляются вместе с Игрой. Чтобы удалить облачное сохранение, связанное с аккаунтом Play Игр,
-      напишите нам.</li>
-</ul>
+      <h2>8. Связь</h2>
+      <div class="contact">Depigo Games<br><a href="mailto:depigogames@gmail.com">depigogames@gmail.com</a></div>
+    </article>
+  </main>
 
-<h2>6. Хранение</h2>
-<p>Данные у сторонних сервисов хранятся по их правилам. Облачные сохранения хранятся, пока аккаунт активен или пока
-вы не попросите их удалить.</p>
-
-<h2>7. Изменения</h2>
-<p>Мы можем обновлять эту политику; дата выше показывает последнюю версию.</p>
-
-<h2>8. Связь</h2>
-<p>Depigo Games — <a href="mailto:depigogames@gmail.com">depigogames@gmail.com</a></p>
+  <footer><img src="assets/icon.png" alt="">© 2026 Depigo Games · CityCraft</footer>
+</div>
+<script>
+  (function () {
+    document.documentElement.classList.add('js');
+    var titles = { en: 'Privacy Policy', ru: 'Политика конфиденциальности' };
+    function show(lang) {
+      document.querySelectorAll('article').forEach(function (a) { a.hidden = a.lang !== lang; });
+      document.querySelectorAll('.langs button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.lang === lang); });
+      document.getElementById('title').textContent = titles[lang];
+      document.documentElement.lang = lang;
+    }
+    document.querySelectorAll('.langs button').forEach(function (b) {
+      b.addEventListener('click', function () { show(b.dataset.lang); history.replaceState(null, '', '#' + b.dataset.lang); });
+    });
+    var hash = location.hash.slice(1);
+    show(hash === 'ru' || hash === 'en' ? hash : ((navigator.language || 'en').toLowerCase().indexOf('ru') === 0 ? 'ru' : 'en'));
+  })();
+</script>
 </body>
 </html>
