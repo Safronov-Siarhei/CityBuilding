@@ -222,7 +222,18 @@
   on the main road south-east to the CAPITAL (castle, fortified towers and gate) -- where the next chapter starts;
   the east third under the sandbox's clouds (chapters to come). Renders `levels_overview.jpg` (medals only),
   `levels_screen1/2.jpg` (game camera + HUD, picked prologue / 3b): `campaign_island_concept.py ... levels` +
-  `campaign_island_overlay.py <dir> levels_overview <out> bare`. Waiting for the user's word.
+  `campaign_island_overlay.py <dir> levels_overview <out> bare`. The user: «мне не нравится вид уровней»; 4 fixes offered (dioramas,
+  a board-game path with stone plates, level states, island life), then other FORMATS asked for.
+- **Other level-picker formats (2026-11-24):** 5 offered (1 ink-pen scroll, 2 chronicle book, 3 carousel of
+  floating island dioramas, 4 road seen from the King's cart, 5 cathedral stained glass); the user asked to see
+  1 and 3. Concepts SENT `Design/concepts/campaign_levels/`: `scroll.jpg` (parchment scroll on the table: done
+  levels = watercolour + ink, the fork 3a/3b as two branches, 3a open in ink, 3b being drawn by the pen, a wax
+  seal «Глава 2» at the end) and `carousel.jpg` / `carousel2.jpg` (each level a floating island in the sky, the
+  picked one big in the middle with a golden glow, neighbours smaller and hazed, medal + plaque hung under the
+  island, chevrons + page dots; picked prologue / 3a). Dioramas: `Tools/blender/campaign_dioramas.py -- <out>
+  <models.blend> <cart.fbx> [keys]` (game models on a grass disc over earth+rock, colour render + a Freestyle
+  ink twin of the same view); screens: `Tools/campaign/campaign_levels_overlay.py <diorama dir> <out dir>`.
+  Waiting for the user's pick.
 - The way in: tap the campaign banner -> the loading screen -> the CAMPAIGN MAP -> tap a level point
   -> «Играть» lights up bottom centre -> the level (no separate confirmation window: the user's choice).
 - The map: a 2D painted PARCHMENT chart in the loading screen's lightly coloured look (the user's pick
