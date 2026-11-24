@@ -60,8 +60,9 @@ namespace CityBuilder.Campaign
         private Button _play;
         private float _shown;
 
-        // the list's layout on the 720-tall canvas
-        private const float Top = 112f, Bottom = 22f, Side = 34f, Gap = 22f, RowH = 86f, RowGap = 8f, HeaderH = 52f;
+        // the list's layout on the 720-tall canvas; Side keeps both blocks clear of the back button, the settings and
+        // the piggy bank at the screen's edges, the same on the left and the right (the user, 2026-11-24)
+        private const float Top = 112f, Bottom = 22f, Side = 130f, Gap = 22f, RowH = 86f, RowGap = 8f, HeaderH = 52f;
         private const float Slice = 1.5f;   // the menu sprites are drawn for 1080 lines: their corners at 720
         private static readonly Color Brown = new Color(0.38f, 0.28f, 0.17f);
         private static readonly Color Shut = new Color(0.45f, 0.45f, 0.45f);
@@ -210,7 +211,7 @@ namespace CityBuilder.Campaign
             var thumb = Pic(row.transform, "Preview", Preview(lv.id));
             Anchor(thumb.rectTransform, new Vector2(0f, 0.5f), new Vector2(10f + thumbW * 0.5f, 0f), new Vector2(thumbW, thumbH));
             if (!open) thumb.color = Shut;
-            Medal(row.transform, i, new Vector2(0f, 1f), new Vector2(12f, -12f), 36f, 18);
+            Medal(row.transform, i, new Vector2(0f, 1f), new Vector2(26f, -24f), 34f, 18);
 
             // the name and its line
             var textX = 10f + thumbW + 14f;

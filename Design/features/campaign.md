@@ -1650,3 +1650,5 @@ the win window, in mission 2's town (the user: «сразу после побе�
   - Art: `Tools/campaign/campaign_list_art.py <diorama dir>`; setup assigns `previews`, `backdrop`, `checkGlyph`.
     The scroll's Scroll_* art deleted, `campaign_scroll.py` marked SUPERSEDED.
   - Cheat buttons moved under the piggy bank. Offline Roslyn clean; setup not run (another Unity was running).
+  - 2026-11-24 the user's first look: blocks moved off the screen edges symmetrically (Side 130: the piggy bank
+    was hidden under the card), row medals pulled inside the row (the list mask clipped them).
