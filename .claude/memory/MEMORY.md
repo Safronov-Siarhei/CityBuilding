@@ -117,3 +117,4 @@
 - [Predators (2026-11-22)](project_predators.md) — wolves/bears on 3 cave islands; BUILT in code (Maps/Predators.cs), not seen
 - [Orc tribute + table waves (2026-11-22)](project_orc_tribute.md) — «Орки: волны» tab drives archipelago raids; tribute scroll/badge, siege off the moat, heavy-wave help; BUILT, not seen
 - [Swamp island idea (2026-11-22)](project_swamp_island.md) — PARKED: own resource, proposed herbs→potions; card swamp-island.md
+- [Google Play release (2026-11-24)](project_release_google_play.md) — READ FIRST for release work: Design/RELEASE_PLAN.md; app com.depigogames.citycraft created; old personal account (no 12x14 test); IAP + rewarded ads + PAD; -Store build ready, key pending
