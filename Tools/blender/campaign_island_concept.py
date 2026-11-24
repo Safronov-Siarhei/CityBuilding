@@ -193,6 +193,102 @@ ORCS = [("OrcCampfire1", 0, 0, 0), ("OrcCage1-lvl1", 1.8, 0.8, 0.5), ("OrcCage1-
 
 PROTO.update(protos({n for c in (VILLAGE, TOWN_, CAPITAL, ORCS) for n, *_ in c} | {"Flag1-lvl1"}))
 
+def clear_trees(x, y, r):
+    """The preview trees and boulders off a place (its buildings stand there)."""
+    for o in list(sc.objects):
+        if o.name.split(".")[0].startswith(("Tree", "Stone")) and math.hypot(o.location.x - x, o.location.y - y) < r:
+            bpy.data.objects.remove(o, do_unlink=True)
+
+
+def fbx_prop(path, length, x, y, rot):
+    """A cine prop (an exported FBX) stood on the map, `length` cells long."""
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.fbx(filepath=path)
+    new = [o for o in bpy.data.objects if o not in before]
+    roots = [o for o in new if o.parent is None]
+    bpy.context.view_layer.update()
+    lo = Vector((1e9, 1e9, 1e9))
+    hi = -lo
+    for o in new:
+        if o.type == 'MESH':
+            for c in o.bound_box:
+                w = o.matrix_world @ Vector(c)
+                lo = Vector((min(lo.x, w.x), min(lo.y, w.y), min(lo.z, w.z)))
+                hi = Vector((max(hi.x, w.x), max(hi.y, w.y), max(hi.z, w.z)))
+    k = length / max(0.01, max(hi.x - lo.x, hi.y - lo.y))
+    mid = Vector(((lo.x + hi.x) / 2, (lo.y + hi.y) / 2, lo.z))
+    for o in roots:
+        o.location = (o.location - mid) * k + Vector((x, y, ground_z(x, y)))
+        o.scale = o.scale * k
+        o.rotation_euler.z += rot
+    # its palette texture does not come with the FBX: the buildings' material (the same palette) instead
+    pal = next((p.active_material for p in PROTO.values() if p is not None and p.active_material is not None), None)
+    for o in new:
+        if o.type == 'MESH' and pal is not None:
+            o.data.materials.clear()
+            o.data.materials.append(pal)
+    return new
+
+
+if CONCEPT == "levels":
+    # the three levels on the empty strip (the user, 2026-11-24: «уровни были обозначены какими-то символическими
+    # зданиями на карте»), left to right: Ардан's village, the town (the prologue there too), then the fork -- the
+    # monsters' glade in the northern forest (3a) and the road south-east with the cage cart (3b) to the capital;
+    # the east under the clouds (the chapters to come)
+    load_island(ISLANDS[0])
+    bpy.context.view_layer.update()
+    PROTO.update(protos({"Church1-lvl1", "Hovel1-lvl1", "Windmill1-lvl1", "Farm1-lvl1", "Cottage1-lvl1", "Tavern1-lvl1",
+                         "Tower1-lvl1", "Gate1-lvl1", "Castle1-lvl1", "FortifiedTower1-lvl1", "FortifiedGate1-lvl1",
+                         "Manor1-lvl1", "Flag1-lvl1", "Flag1-lvl3", "OrcCampfire1", "OrcCage1-lvl1", "OrcBoneThrone1",
+                         "OrcDeadTree1-A", "OrcDeadTree1-B", "OrcHideRack1", "OrcGrunt", "OrcChief",
+                         "Stone1", "Stone2", "Stone3"}))
+    S = 2.6
+
+    def yc(x):        # the strip's middle line (islands.py `strip`)
+        return 0.035 * 300 * math.sin(x / 300 * 2 * math.pi * 1.4 + 0.7)
+    vil = (-108, yc(-108) - 2)
+    town = (-60, yc(-60) + 1)
+    fork = (-30, yc(-30))
+    glade = (-8, yc(-8) + 15)
+    cart = (2, yc(2) - 6)
+    cap = (36, yc(36) - 1)
+    for (x, y), r in ((vil, 14), (town, 13), (glade, 8), (cap, 14), (cart, 5)):
+        clear_trees(x, y, r)
+    road([vil, (-90, yc(-90) - 2), (-74, yc(-74)), town])
+    road([town, fork, (-14, yc(-14) - 4), cart, (20, yc(20) - 3), cap])
+    road([fork, (-24, yc(-24) + 8), glade], width=0.9)
+    # 1 «Бегство»: the village by the old stones -- the church, cottages, the mill, a field
+    cluster([("Church1-lvl1", 0, 0, 0), ("Hovel1-lvl1", -2.2, 1.4, 0.4), ("Hovel1-lvl1", 2.0, 1.8, -0.3),
+             ("Hovel1-lvl1", -1.0, -2.2, 0.2), ("Windmill1-lvl1", 3.0, -1.6, 0.3), ("Farm1-lvl1", -3.2, -1.2, 0)], *vil, S)
+    for k in range(7):                       # the old stones (the opening's «Эти камни старше деревни»)
+        a = k / 7 * 2 * math.pi
+        put(("Stone1", "Stone2", "Stone3")[k % 3], vil[0] - 13 + math.cos(a) * 3.2, vil[1] + 6 + math.sin(a) * 3.2, a, 1.6)
+    # 2 «Город»: walls and towers round the houses, the gate on the road
+    cluster([("Cottage1-lvl1", -1, 0.9, 0), ("Cottage1-lvl1", 1, 0.9, 0), ("Tavern1-lvl1", -1, -1, 0), ("Cottage1-lvl1", 1.1, -1, 0),
+             ("Tower1-lvl1", -2.6, 2.6, 0), ("Tower1-lvl1", 2.6, 2.6, 0), ("Tower1-lvl1", -2.6, -2.6, 0), ("Tower1-lvl1", 2.6, -2.6, 0),
+             ("Gate1-lvl1", 2.8, 0, 1.5708)], *town, S)
+    for dy in (-3.5, 3.5):                   # the prologue: the King's banners by the town's gate
+        put("Flag1-lvl3", town[0] + 12, town[1] + dy, 0.3, 3.4)
+    # 3a «Пленные»: the monsters' glade in the forest -- the fire, the cages, the chief on his throne, dead trees
+    cluster([("OrcCampfire1", 0, 0, 0), ("OrcCage1-lvl1", 1.9, 0.9, 0.5), ("OrcCage1-lvl1", -1.8, 1.1, -0.4),
+             ("OrcBoneThrone1", 0, 2.2, 3.14), ("OrcChief", 0, 1.5, 3.14), ("OrcDeadTree1-A", 2.6, -1.4, 0),
+             ("OrcDeadTree1-B", -2.6, -1.2, 0), ("OrcHideRack1", -2.4, 0.2, 0.6), ("OrcGrunt", 0.9, -0.8, 2.5),
+             ("OrcGrunt", -0.9, -0.6, 3.6)], *glade, S)
+    # 3b «Клетка»: the cage cart on the road to the capital
+    cart_fbx = os.path.join(os.path.dirname(MODELS), "CapPropL3CageCart.fbx")
+    if os.path.exists(cart_fbx):
+        fbx_prop(cart_fbx, 7.0, cart[0], cart[1], math.radians(-75))
+    # the capital at the road's end (where 3b leads)
+    cluster([("Castle1-lvl1", 0, 0.4, 0), ("FortifiedTower1-lvl1", -3.0, -1.6, 0), ("FortifiedTower1-lvl1", 3.0, -1.6, 0),
+             ("FortifiedGate1-lvl1", 0, -2.8, 0), ("Manor1-lvl1", -2.6, 2.4, 0.3), ("Cottage1-lvl1", 2.6, 2.4, -0.3)], *cap, S)
+    level("#campaign_level_1", "1", vil[0], vil[1] + 2, done=True, s=3.0)
+    level("#campaign_level_2", "2", town[0] - 2, town[1] + 2, done=True, s=3.0)
+    level("#campaign_prologue", "П", town[0] + 12, town[1] - 9, s=3.0)
+    level("#campaign_level_3a", "3", glade[0], glade[1] + 1, s=3.0)
+    level("#campaign_level_3b", "3", cart[0], cart[1], s=3.0)
+    clouds(100, yc(100), 42, 30, 140, 11, z=7)     # the chapters to come
+    frame = 128.0
+
 if CONCEPT == "strip":
     # the empty campaign strip (islands.py kind `campaign`): no levels yet, the land only
     load_island(ISLANDS[0])
@@ -305,12 +401,26 @@ if CONCEPT == "table":
     sun.data.energy = 2.6
     frame = 210.0
 
-if CONCEPT == "strip":
+if CONCEPT in ("strip", "levels"):
+    from bpy_extras.object_utils import world_to_camera_view
+
     cam = bpy.data.objects.new("Cam", bpy.data.cameras.new("Cam"))
     sc.collection.objects.link(cam)
     sc.camera = cam
     cam.data.clip_end = 3000
     os.makedirs(OUT, exist_ok=True)
+
+    def pins_for(name, w, h):
+        """Each level's flag on this picture (for the medals overlay)."""
+        bpy.context.view_layer.update()
+        out = []
+        for f in FLAGS:
+            v = world_to_camera_view(sc, cam, Vector((f["x"], f["y"], f["z"])))
+            if 0 <= v.x <= 1 and 0 <= v.y <= 1:
+                out.append(dict(f, px=round(v.x * w), py=round((1 - v.y) * h)))
+        with open(os.path.join(OUT, name + ".json"), "w", encoding="utf-8") as fo:
+            json.dump(out, fo, ensure_ascii=False)
+
     # the whole strip at once, as a wide picture
     cam.data.lens = 50
     sc.render.resolution_x, sc.render.resolution_y = 3840, 1100
@@ -318,20 +428,22 @@ if CONCEPT == "strip":
     d = Vector((0, -math.cos(pitch), math.sin(pitch)))
     cam.location = d * 540
     cam.rotation_euler = (-cam.location).to_track_quat('-Z', 'Y').to_euler()
-    sc.render.filepath = os.path.join(OUT, "strip_overview.png")
+    pins_for(CONCEPT + "_overview", 3840, 1100)
+    sc.render.filepath = os.path.join(OUT, CONCEPT + "_overview.png")
     bpy.ops.render.render(write_still=True)
-    # three screens as the game's camera sees them, scrolling left to right
+    # screens as the game's camera sees them, scrolling left to right
     cam.data.lens = 30
     sc.render.resolution_x, sc.render.resolution_y = 1920, 1080
     pitch = math.radians(52)
     d = Vector((0, -math.cos(pitch), math.sin(pitch)))
-    for k, x in enumerate((-100, 0, 100), 1):
+    for k, x in enumerate((-100, 0, 100) if CONCEPT == "strip" else (-84, -22), 1):
         look = Vector((x, 2, 0))
         cam.location = look + d * 105
         cam.rotation_euler = (look - cam.location).to_track_quat('-Z', 'Y').to_euler()
-        sc.render.filepath = os.path.join(OUT, f"strip_screen{k}.png")
+        pins_for(f"{CONCEPT}_screen{k}", 1920, 1080)
+        sc.render.filepath = os.path.join(OUT, f"{CONCEPT}_screen{k}.png")
         bpy.ops.render.render(write_still=True)
-    print("CONCEPT DONE strip")
+    print("CONCEPT DONE", CONCEPT)
     sys.exit(0)
 
 cam = bpy.data.objects.new("Cam", bpy.data.cameras.new("Cam"))

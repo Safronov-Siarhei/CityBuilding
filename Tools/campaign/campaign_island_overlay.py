@@ -18,6 +18,10 @@ GOLD = (246, 204, 92)
 TITLES = {"#campaign_level_1": "Бегство", "#campaign_level_2": "Город", "#campaign_prologue": "Пролог",
           "#campaign_level_3a": "Пленные", "#campaign_level_3b": "Клетка"}
 
+LINES = {"#campaign_level_1": "Лучший результат: 3:37", "#campaign_level_2": "Отстоять город до прихода короля",
+         "#campaign_prologue": "Сценка: король в сожжённом городе", "#campaign_level_3a": "Спасти пленных с поляны чудовищ",
+         "#campaign_level_3b": "Довезите клетку до столицы"}
+
 with open(os.path.join(SKIN, 'borders.json'), encoding='utf-8') as f:
     BORDERS = json.load(f)
 
@@ -81,6 +85,10 @@ def main():
         pl = nine('plaque', w, 58)
         shadow(base, pl, (x - w // 2, y + 44))
         text_centre(d, (x, y + 73), name, 28)
+    if picked == "bare":          # the whole map at once: the medals only
+        base.convert('RGB').save(out, quality=92)
+        print('saved', out)
+        return
     # Back, top left; the chapter's title top centre
     back = skin('round').resize((104, 110), Image.LANCZOS)
     shadow(base, back, (36, 30))
@@ -92,7 +100,7 @@ def main():
     card = nine('card', 760, 150)
     shadow(base, card, (960 - 380, 1080 - 190))
     text_centre(d, (960 - 180, 1080 - 132), TITLES.get(picked, ''), 40)
-    text_centre(d, (960 - 180, 1080 - 84), "Довезите клетку до столицы", 22, fill=(98, 72, 44))
+    text_centre(d, (960 - 180, 1080 - 84), LINES.get(picked, ""), 22, fill=(98, 72, 44))
     btn = nine('button', 300, 110)
     shadow(base, btn, (960 + 40, 1080 - 170))
     text_centre(d, (960 + 190, 1080 - 118), "Играть", 46, fill=(255, 244, 214))

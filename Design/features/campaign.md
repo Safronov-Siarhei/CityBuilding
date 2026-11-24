@@ -213,6 +213,16 @@
   renders `Design/concepts/campaign_island/strip_overview.jpg` (the whole strip) + `strip_screen1-3.jpg` (the
   game's camera at x -100 / 0 / 100: how it scrolls), via `campaign_island_concept.py ... strip <island.blend>`.
   Not in Unity yet. Next: the user places the levels (where each one stands on the strip).
+- **Levels as symbolic buildings -- PROPOSAL SENT (2026-11-24, the user: «уровни были обозначены какими-то
+  символическими зданиями на карте ... предложи расстановку»):** left to right along one road --
+  1 «Бегство» Ардан's village at the west end (church, 3 hovels, mill, field + a ring of the old stones);
+  2 «Город» the walled town (4 towers, gate, houses) ~50 cells east; «П» the prologue = the King's two banners at
+  the town's gate (it plays in that town); then a FORK: 3a «Пленные» up a narrow path north to the monsters' glade
+  (fire, 2 cages, the chief on the bone throne, dead trees, grunts), 3b «Клетка» = the cage cart (CapPropL3CageCart)
+  on the main road south-east to the CAPITAL (castle, fortified towers and gate) -- where the next chapter starts;
+  the east third under the sandbox's clouds (chapters to come). Renders `levels_overview.jpg` (medals only),
+  `levels_screen1/2.jpg` (game camera + HUD, picked prologue / 3b): `campaign_island_concept.py ... levels` +
+  `campaign_island_overlay.py <dir> levels_overview <out> bare`. Waiting for the user's word.
 - The way in: tap the campaign banner -> the loading screen -> the CAMPAIGN MAP -> tap a level point
   -> «Играть» lights up bottom centre -> the level (no separate confirmation window: the user's choice).
 - The map: a 2D painted PARCHMENT chart in the loading screen's lightly coloured look (the user's pick
