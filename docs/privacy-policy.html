@@ -51,22 +51,21 @@
   .flag { border-radius: 3px; box-shadow: 0 1px 2px rgba(0,0,0,.35); }
   .lang-list {
     position: absolute; top: calc(100% + 4px); left: 50%; transform: translateX(-50%); z-index: 5;
-    list-style: none; margin: 0; padding: 4px 2px; min-width: 230px;
-    border: 17px solid transparent; border-image: url(assets/card.png) 34 fill / 17px stretch;
-    /* the card's own parchment under the 9-slice: on phones the slices leave hair-thin gaps, and the shadow
-       below showed through them as black stripes (the user, 2026-11-24) */
-    background: linear-gradient(#ead39f, #ead39f) 4px 4px / calc(100% - 8px) calc(100% - 8px) no-repeat border-box;
-    filter: drop-shadow(0 8px 14px rgba(0,0,0,.5));
+    list-style: none; margin: 0; min-width: 230px;
+    /* plain CSS, not the card's 9-slice: on phones the slices left hair-thin seams that showed as black stripes
+       (the user, 2026-11-24); the card is only an outline and a fill, the same colours as card.png */
+    padding: 10px 8px; background: #ead39f; border: 2px solid #c79a5a; border-radius: 9px;
+    box-shadow: inset 0 0 0 1px #f3e3bd, 0 8px 18px rgba(0,0,0,.45);
   }
   .lang-list li {
     display: flex; align-items: center; gap: 12px; padding: 8px 10px; min-height: 48px; cursor: pointer;
-    font-weight: 700; font-size: 17px; border: 10px solid transparent; margin: 2px 0;
+    font-weight: 700; font-size: 17px; border: 2px solid transparent; border-radius: 7px; margin: 4px 0;
   }
   .lang-list li .flag { width: 36px; height: 24px; }
   .lang-list li .tick { width: 24px; height: 24px; margin-left: auto; visibility: hidden; }
-  .lang-list li[aria-selected="true"] { border-image: url(assets/row_selected.png) 34 fill / 10px stretch; }
+  .lang-list li[aria-selected="true"] { background: #fff3cf; border-color: #e0a83a; }  /* row_selected.png's colours */
   .lang-list li[aria-selected="true"] .tick { visibility: visible; }
-  .lang-list li:hover { background: rgba(160,106,36,.1); }
+  .lang-list li:not([aria-selected="true"]):hover { background: rgba(160,106,36,.1); }
   /* without scripts both languages show and the picker is useless */
   html:not(.js) .lang { display: none; }
   .sheet {

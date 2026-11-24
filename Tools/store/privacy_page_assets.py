@@ -26,7 +26,7 @@ def main():
     icon = Image.open(os.path.join(ROOT, 'Assets', '_Project', 'UI', 'AppIcon.png')).convert('RGB')
     icon.resize((180, 180), Image.LANCZOS).save(os.path.join(OUT, 'icon.png'), optimize=True)
     icon.resize((48, 48), Image.LANCZOS).save(os.path.join(OUT, 'favicon.png'), optimize=True)
-    for piece in ('panel', 'button', 'title', 'card', 'row_selected'):
+    for piece in ('panel', 'button', 'title'):
         shutil.copy(os.path.join(SKIN, piece + '.png'), os.path.join(OUT, piece + '.png'))
     # the main menu's language picker (UI/Icons/Flags, Tools/ui/language_flags.py): only the languages the page has
     flags = os.path.join(ROOT, 'Assets', '_Project', 'UI', 'Icons', 'Flags')
