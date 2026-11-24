@@ -17,9 +17,10 @@ metadata:
   (release build ~227 MB > 200 MB base cap); store name «CityCraft» + maybe keywords.
 - Built: `build_android.ps1 -Store` (.aab, install-time asset pack, upload key from env CB_KEYSTORE/CB_KEYSTORE_PASS/
   CB_KEY_ALIAS/CB_KEY_PASS, versionCode = git commit count) -- not built yet. Upload key MADE 2026-11-24 (D:\Keys, PKCS12, env vars set+checked).
-- Policy page live and themed (flag picker in plain CSS: 9-slice seams showed black on phones). Ads = Google AdMob
-  MEDIATION hub + UMP (the user 2026-11-24); next: the user makes the AdMob app + rewarded unit, then Claude wires
-  the plugin behind Shop/RewardedAds.
+- Policy page live and themed (flag picker in plain CSS: 9-slice seams showed black on phones). Ads = UNITY ADS via
+  LevelPlay, one network (the user 2026-11-24, «самую простую сеть»); AdMob is NOT available to the studio -- never
+  suggest it or Google demand via another mediator. Next: the user makes the LevelPlay app (app key + rewarded unit
+  id), then Claude wires it behind Shop/RewardedAds with an own EEA consent prompt.
 
 **Why:** the user wants the fastest path to release. **How to apply:** before adding content, prefer release-plan
 items; never commit keys (repo public); don't build the .aab unasked.
