@@ -274,6 +274,13 @@ Mockups for approval: `Design/store/ExitOffer_Pack1-3.png`, `ExitOffer_Packs_She
   2026-11-11: crystals are spent only in the sandbox (research lvl 3+, `DiplomacyWindow`); the Invasion
   hub only SHOWS them. Keep it so: any future Invasion purchase must be looks only.
 
+## Ad network: Google AdMob with mediation (the user, 2026-11-24)
+- «хочу подключить медиацию», then «AdMob»: AdMob is the mediation hub, Google UMP is the consent window; other
+  networks join as adapters later. Rewarded ads only. The code door is `Shop/RewardedAds` (still a stand-in: `IsReady`
+  is always true except the cheat switch). Policy page names «Google AdMob and its mediation partners».
+- NOT BUILT: the plugin, UMP, real `IsReady`/show/reward callbacks. Waits for the user's AdMob app + rewarded unit id.
+  Plan: Design/RELEASE_PLAN.md step C.
+
 ## BEFORE RELEASE (the user, 2026-11-11: «запомни»)
 Players' crystals must survive a reinstall. Today `Wallet.UpgradeCrystals` is PlayerPrefs only, so a
 reinstall or a new phone wipes it. Needs a cloud save (e.g. Google Play Games Saved Games) or our own server.

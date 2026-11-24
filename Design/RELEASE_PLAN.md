@@ -20,6 +20,10 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
 - Store name: «CityCraft» is the main part; keywords may be added (e.g. «CityCraft: ...», title cap 30 chars).
 - First release WITH crystal purchases (Play Billing) AND rewarded ads.
 - Size: Play Asset Delivery (not slimming first).
+- Ads: Google AdMob as the MEDIATION hub (the user, 2026-11-24: «хочу подключить медиацию», then «AdMob»): Google
+  UMP consent built in; other networks (Unity Ads, AppLovin, Meta, Mintegral...) added as adapters later.
+- Upload key made by the user 2026-11-24: PKCS12 at D:\Keys (outside the repo), alias `upload`, valid to 2054; the
+  four CB_* user env vars set and checked (PKCS12: key password = store password).
 
 ## Blockers found
 1. **Size.** Google Play takes an App Bundle (AAB), not an APK, and its base download is capped at **200 MB**.
@@ -40,7 +44,7 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
 ### B. Build for the store (C)
 - [x] AAB build: `Tools/research/build_android.ps1 -Store` (2026-11-24, code only, NOT built yet): .aab, CB_RELEASE,
       `splitApplicationBinary` = the data in an install-time asset pack (PAD), versionCode = git commit count.
-- [~] Release signing: the build reads CB_KEYSTORE / CB_KEYSTORE_PASS / CB_KEY_ALIAS / CB_KEY_PASS (U makes the upload
+- [x] Release signing (key made + env vars set 2026-11-24): the build reads CB_KEYSTORE / CB_KEYSTORE_PASS / CB_KEY_ALIAS / CB_KEY_PASS (U makes the upload
       key OUTSIDE the repo and keeps a backup; `*.keystore`/`*.jks` are git-ignored). Play App Signing keeps the app key.
 - [ ] Check the first .aab: base module under 200 MB, the asset pack installs with the app (internal testing track).
       Last APK build report: meshes 277 MB / textures 108 MB uncompressed of 429 MB user assets -- slimming later
@@ -52,7 +56,8 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
 - [ ] Cloud save of crystals + campaign progress (Play Games Saved Games) -- monetization card «BEFORE RELEASE».
 - [ ] Invasion leaderboards on Play Games (day / week), decided 2026-11-17.
 - [ ] Payments: Google Play Billing (Unity IAP) for crystals / offers -- only if paid items are in the first release.
-- [ ] Ads: mediation SDK + consent (GDPR/UMP) -- only if ads are in the first release.
+- [ ] Ads: Google Mobile Ads Unity plugin + UMP consent, rewarded only, behind `Shop/RewardedAds` (today a stand-in);
+      U: AdMob account, app linked to Play, rewarded ad unit id(s); mediation adapters later.
 - [ ] Old-save check: real saves kept as fixtures, loaded by a test every run (see save-load card).
 
 ### D. Quality pass (U plays, C fixes)
@@ -69,7 +74,7 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
       project citycraft-game on the user's working Google account; the user deploys from THEIR terminal --
       Claude's shell is sandboxed: run `firebase.cmd deploy --only hosting` from APPDATA npm in the project folder).
       Source `docs/privacy-policy.html` (EN + RU, 2026-11-24). Contact = depigogames@gmail.com (the user,
-      2026-11-24: the public support address, also for the Play listing); placeholder [AD NETWORK] until the SDK is chosen. Hosting: FIREBASE HOSTING (the user, 2026-11-24:
+      2026-11-24: the public support address, also for the Play listing); ads named as Google AdMob + mediation partners. Hosting: FIREBASE HOSTING (the user, 2026-11-24:
       the indie format «<project>.web.app/privacy-policy.html»): `firebase.json` serves `docs/`; the user makes the
       Firebase project on depigogames@gmail.com and runs `firebase login`; then `firebase deploy --only hosting`. Project id `citycraft-game` (.firebaserc) ->
       https://citycraft-game.web.app/privacy-policy.html
