@@ -195,6 +195,16 @@
   - Render the cast: `blender --background <Models.blend> --python Tools/blender/cinematic/render_cast.py -- <out> CineElder CinePriest`. Nothing is in the game yet; the menu banner says «Скоро».
 
 ## Entering the campaign (decided 2026-11-12; map APPROVED and the screen BUILT the same day, not seen)
+- **3D campaign island, CONCEPTS (2026-11-24, the user: «хочу изменить карту кампании ... 3д островом, где игрок
+  может выбирать уровни, визуально должна быть схожесть с песочницей»; waiting for the user's pick):**
+  `Design/concepts/campaign_island/` 1-kingdom (one sandbox island = the kingdom, every level a place on it -- the
+  village, the town, the capital, the orc camp -- dirt roads between, the next chapters under the sandbox's clouds),
+  2-archipelago (a chapter per island, dashed sea routes, the orc island half under clouds), 3-table (the kingdom
+  island as a diorama tile on the cartographer's table, as the sandbox menu's «Стол картографа»). Made from the
+  real archipelago islands (`islands.py ... preview`: start1, hilly2, orc1) + the game's models by
+  `Tools/blender/campaign_island_concept.py -- <out> <models.blend> <kingdom|archipelago|table> <island.blend>...`,
+  the HUD from the Classic skin by `Tools/campaign/campaign_island_overlay.py <render dir> <concept> <out.png>`
+  (Rubik has no ← or ✓ glyphs: drawn as shapes). The 2D chart below stays in the game until a pick.
 - The way in: tap the campaign banner -> the loading screen -> the CAMPAIGN MAP -> tap a level point
   -> «Играть» lights up bottom centre -> the level (no separate confirmation window: the user's choice).
 - The map: a 2D painted PARCHMENT chart in the loading screen's lightly coloured look (the user's pick
