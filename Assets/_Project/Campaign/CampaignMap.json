@@ -1,5 +1,5 @@
 {
- "comment": "The campaign's level LIST (CampaignMapScreen, variant A picked by the user 2026-11-24): levels top to bottom. titleKey = the name; goalKey = the row's line under it; descKey = the picked card's short story; scene = the level's scene (empty: not built yet, «Скоро»); bestKey = its best time in PlayerPrefs; after = opens once that level is done (empty: the one before it); label = the medal's number (empty: its place); film = a story scene. The preview is UI/Campaign/Preview_<id>.png (Tools/campaign/campaign_list_art.py).",
+ "comment": "The campaign's level LIST (CampaignMapScreen, variant A picked by the user 2026-11-24): levels top to bottom. titleKey = the name; goalKey = the row's line under it; descKey = the picked card's short story; scene = the level's scene (empty: not built yet, «Скоро»); bestKey = its best time in PlayerPrefs; after = opens once that level is done (empty: the one before it); label = the medal's number (empty: its place); film = a story scene; closed = shut until release whatever the progress (the user, 2026-11-24: the player plays up to the prologue; a lock in place of «Играть»). The preview is UI/Campaign/Preview_<id>.png (Tools/campaign/campaign_list_art.py).",
  "chapterKey": "#campaign_chapter_1",
  "levels": [
   {
@@ -11,7 +11,8 @@
    "bestKey": "m1_best",
    "after": "",
    "label": "",
-   "film": false
+   "film": false,
+   "closed": false
   },
   {
    "id": "m2",
@@ -22,7 +23,8 @@
    "bestKey": "",
    "after": "",
    "label": "",
-   "film": false
+   "film": false,
+   "closed": false
   },
   {
    "id": "m3p",
@@ -33,7 +35,8 @@
    "bestKey": "",
    "after": "m2",
    "label": "",
-   "film": true
+   "film": true,
+   "closed": false
   },
   {
    "id": "m3a",
@@ -44,7 +47,8 @@
    "bestKey": "",
    "after": "m3p",
    "label": "3",
-   "film": false
+   "film": false,
+   "closed": true
   },
   {
    "id": "m3b",
@@ -55,7 +59,8 @@
    "bestKey": "",
    "after": "m3p",
    "label": "3",
-   "film": false
+   "film": false,
+   "closed": true
   }
  ]
 }

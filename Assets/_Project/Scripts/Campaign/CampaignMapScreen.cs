@@ -32,6 +32,7 @@ namespace CityBuilder.Campaign
             public string after;   // opens once this level is done (the level-3 branches both follow m2); empty: the one before it
             public string label;   // the medal's number (the branches share «3»); empty: its place in the list
             public bool film;      // a story scene, not a level (the level-3 prologue): a play glyph on its medal
+            public bool closed;    // shut until release whatever the progress: a lock in place of «Играть» (the user, 2026-11-24)
         }
 
         [Serializable]
@@ -58,6 +59,7 @@ namespace CityBuilder.Campaign
         private Image _bigPreview, _bigLock;
         private Text _bigName, _bigDesc, _record, _line;
         private Button _play;
+        private GameObject _locked;
         private float _shown;
 
         // the list's layout on the 720-tall canvas; Side keeps both blocks clear of the back button, the settings and
@@ -78,10 +80,10 @@ namespace CityBuilder.Campaign
             if (FindObjectOfType<EventSystem>() == null)
                 new GameObject("EventSystem", typeof(EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
             Build();
-            // the newest open level picked from the start: the card is never empty
+            // the newest open level picked from the start (not one shut until release): the card is never empty
             var at = 0;
             for (var i = 0; i < _levels.Length; i++)
-                if (Open(i)) at = i;
+                if (Open(i) && !_levels[i].closed) at = i;
             if (_levels.Length > 0) Pick(at);
             Debug.Log($"[CampaignMap] up, {_levels.Length} levels");
         }
@@ -92,7 +94,7 @@ namespace CityBuilder.Campaign
             if (!string.IsNullOrEmpty(after)) return CampaignProgress.Done(after);
             return i == 0 || CampaignProgress.Done(_levels[i - 1].id);
         }
-        private bool Playable(int i) => Open(i) && !string.IsNullOrEmpty(_levels[i].scene);
+        private bool Playable(int i) => Open(i) && !_levels[i].closed && !string.IsNullOrEmpty(_levels[i].scene);
         private string Number(int i) => string.IsNullOrEmpty(_levels[i].label) ? (i + 1).ToString() : _levels[i].label;
 
         private void Build()
@@ -251,7 +253,7 @@ namespace CityBuilder.Campaign
         {
             var lv = _levels[i];
             if (!Open(i)) return Localization.Get("#campaign_locked_short");
-            if (string.IsNullOrEmpty(lv.scene)) return Localization.Get("#campaign_level_soon");
+            if (lv.closed || string.IsNullOrEmpty(lv.scene)) return Localization.Get("#campaign_level_soon");
             var best = !string.IsNullOrEmpty(lv.bestKey) ? PlayerPrefs.GetFloat(lv.bestKey, 0f) : 0f;
             if (best > 0f) return Localization.Format("#m1_best", MissionSkin.Clock(best));
             return Localization.Get(lv.goalKey);
@@ -310,6 +312,15 @@ namespace CityBuilder.Campaign
             var playText = MissionSkin.Label(playImg.transform, Localization.Get("#newgame_play"), UiTheme.Bold, 40, MissionSkin.Ink(HudInk.OnButton),
                 TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(16f, 8f));
             playText.rectTransform.anchoredPosition = new Vector2(0f, 4f);
+            // a level shut until release: the same button, greyed, a lock on it (the user, 2026-11-24)
+            var lockImg = Menu(card.transform, "Locked", "button");
+            lockImg.color = UiTheme.RowLocked;
+            Anchor(lockImg.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 58f), new Vector2(300f, 92f));
+            var lockIcon = Pic(lockImg.transform, "Lock", lockGlyph);
+            lockIcon.preserveAspect = true;
+            lockIcon.color = new Color(0.27f, 0.26f, 0.24f);
+            Anchor(lockIcon.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, 4f), new Vector2(54f, 54f));
+            _locked = lockImg.gameObject;
             _line = MissionSkin.Label(card.transform, "", UiTheme.Bold, 20, UiTheme.InkSoft, TextAnchor.MiddleCenter,
                 new Vector2(0f, 0f), new Vector2(1f, 0f), Vector2.zero);
             _line.rectTransform.offsetMin = new Vector2(30f, 30f);
@@ -321,7 +332,7 @@ namespace CityBuilder.Campaign
         {
             var lv = _levels[i];
             var open = Open(i);
-            var glyph = !open ? lockGlyph : lv.film ? playGlyph : null;
+            var glyph = !open || lv.closed ? lockGlyph : lv.film ? playGlyph : null;
             var medal = MissionSkin.Round(parent, "Medal", open ? "round_main" : "round", open ? HudInk.OnMain : HudInk.OnRound, glyph, anchor, at, size);
             medal.GetComponent<Image>().raycastTarget = false;
             medal.interactable = false;
@@ -358,8 +369,10 @@ namespace CityBuilder.Campaign
             var best = playable && !string.IsNullOrEmpty(lv.bestKey) ? PlayerPrefs.GetFloat(lv.bestKey, 0f) : 0f;
             _record.text = best > 0f ? Localization.Format("#m1_best", MissionSkin.Clock(best)) : "";
             // a shut level says why in place of «Играть» (the user, 2026-11-12)
-            _line.text = playable ? "" : Localization.Get(string.IsNullOrEmpty(lv.scene) ? "#campaign_level_soon" : "#campaign_locked");
+            _line.text = playable || lv.closed ? "" : Localization.Get(string.IsNullOrEmpty(lv.scene) ? "#campaign_level_soon" : "#campaign_locked");
+            if (lv.closed) _record.text = Localization.Get("#campaign_level_soon");
             _play.gameObject.SetActive(playable);
+            _locked.SetActive(lv.closed);
         }
 
 #if !CB_RELEASE

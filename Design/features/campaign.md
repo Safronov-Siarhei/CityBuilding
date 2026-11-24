@@ -1661,3 +1661,9 @@ the win window, in mission 2's town (the user: «сразу после побе�
   - Photo run WORKED once the 6000.1 process was closed: the film camera = the deepest enabled camera; the prologue and
     3b shoot right after the scene loads (their films end before the map "settles"). Sheets m1/m2/m3p/m3b in
     `Design/concepts/campaign_list/previews/` SENT for the user's pick (frames in RunLogs/previews/, not in git).
+  - 2026-11-24 the user picked the frames: level 1 = film frame 4, level 2 = 12, prologue = 5, «Клетка» = 2, «Пленные» =
+    prologue frame 8; kept in `Design/concepts/campaign_list/previews/picked/<id>.jpg`, baked by campaign_list_art.py
+    (no args now; the dioramas are no longer used). LEVELS AFTER THE PROLOGUE SHUT UNTIL RELEASE (the user: «игрок играет
+    до Пролога включительно»): json `closed: true` on m3a/m3b -> lock medal, row line «Скоро», a greyed button with a
+    lock in place of «Играть», never picked on entry. Main vs EXTRA (crystal) levels: concepts A «Кристальная строка»
+    / B «Ветка» / C «Два раздела» in `Design/concepts/campaign_list/extra/` (campaign_extra_concept.py) SENT, waiting.
