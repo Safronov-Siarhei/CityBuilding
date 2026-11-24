@@ -22,6 +22,12 @@ namespace CityBuilder.EditorTools
     ///   GPU time -- since a -nographics batchmode run measures none of it, and a desktop GPU is
     ///   the wrong shape to extrapolate from anyway (mobile GPUs are tile-based).
     ///
+    /// - **`-store`** is the Google Play upload (Design/RELEASE_PLAN.md): an App Bundle (.aab), CB_RELEASE, the game's
+    ///   data split into an install-time asset pack (Play Asset Delivery -- the user chose it, 2026-11-24: the build is
+    ///   ~227 MB and Play caps the base download at 200 MB), signed with the UPLOAD KEY from environment variables
+    ///   CB_KEYSTORE (path), CB_KEYSTORE_PASS, CB_KEY_ALIAS, CB_KEY_PASS -- never from the repo, which is public --
+    ///   and versionCode from `-versionCode N` (the wrapper passes the git commit count: always growing).
+    ///
     /// Deliberately NOT wired into SetupProject: regenerating the project is something every test
     /// run does, and a 10-20 minute IL2CPP compile has no business happening on that path.
     /// </summary>
@@ -33,7 +39,7 @@ namespace CityBuilder.EditorTools
         /// <summary>Entry point for -executeMethod. Pass -development on the same command line for the profiler-carrying build.</summary>
         public static void Run()
         {
-            Build(HasFlag("-development"));
+            Build(HasFlag("-development") && !HasFlag("-store"));
         }
 
         /// <summary>The development build, for anyone who would rather pass a method name than a flag.</summary>
@@ -52,7 +58,23 @@ namespace CityBuilder.EditorTools
             }
 
             Directory.CreateDirectory(OutputFolder);
-            var apkPath = Path.Combine(OutputFolder, development ? "CityBuilding-dev.apk" : "CityBuilding.apk");
+            var store = HasFlag("-store");
+            var apkPath = Path.Combine(OutputFolder, store ? "CityCraft.aab" : development ? "CityBuilding-dev.apk" : "CityBuilding.apk");
+            // the store upload: a bundle with the data in an install-time asset pack, signed with the upload key
+            EditorUserBuildSettings.buildAppBundle = store;
+            PlayerSettings.Android.splitApplicationBinary = store;
+            var keystoreBefore = PlayerSettings.Android.useCustomKeystore;
+            if (store && !UseUploadKey()) return;
+            if (store)
+            {
+                var code = IntArg("-versionCode");
+                if (code <= 0)
+                {
+                    Fail("-store needs -versionCode N (a number larger than every upload before it).");
+                    return;
+                }
+                PlayerSettings.Android.bundleVersionCode = code;
+            }
 
             // Telegram takes no file over 50 MB and the APK had grown past it (52,2 MB on 2026-10-16).
             // Unity stores its data in the APK uncompressed (so it can be read in place), which makes
@@ -88,7 +110,7 @@ namespace CityBuilder.EditorTools
                 options = options,
                 // a release for strangers (-release) leaves the cheat window out: CheatsPanel
                 // compiles to an empty component under CB_RELEASE (the user, 2026-10-31)
-                extraScriptingDefines = HasFlag("-release") ? new[] { "CB_RELEASE" } : null,
+                extraScriptingDefines = HasFlag("-release") || store ? new[] { "CB_RELEASE" } : null,
             };
 
             Debug.Log($"[BuildAndroid] Building {(development ? "DEVELOPMENT" : "release")} APK to {apkPath}");
@@ -109,6 +131,11 @@ namespace CityBuilder.EditorTools
             finally
             {
                 PlayerSettings.productName = editorName;
+                // the Editor and the everyday APKs keep the debug key and a plain APK
+                PlayerSettings.Android.useCustomKeystore = keystoreBefore;
+                PlayerSettings.Android.keystorePass = PlayerSettings.Android.keyaliasPass = "";
+                EditorUserBuildSettings.buildAppBundle = false;
+                PlayerSettings.Android.splitApplicationBinary = false;
             }
             var summary = report.summary;
 
@@ -125,6 +152,34 @@ namespace CityBuilder.EditorTools
             var megabytes = apkFile.Exists ? apkFile.Length / 1024f / 1024f : 0f;
             Debug.Log($"[BuildAndroid] OK: {apkPath}, {megabytes:F1} MB, took {summary.totalTime}.");
             EditorApplication.Exit(0);
+        }
+
+        /// <summary>The upload key from the environment (never stored in the project: the repo is public).</summary>
+        private static bool UseUploadKey()
+        {
+            var path = Environment.GetEnvironmentVariable("CB_KEYSTORE");
+            var storePass = Environment.GetEnvironmentVariable("CB_KEYSTORE_PASS");
+            var alias = Environment.GetEnvironmentVariable("CB_KEY_ALIAS");
+            var keyPass = Environment.GetEnvironmentVariable("CB_KEY_PASS");
+            if (string.IsNullOrEmpty(path) || !File.Exists(path) || string.IsNullOrEmpty(storePass) || string.IsNullOrEmpty(alias))
+            {
+                Fail("-store needs the upload key: set CB_KEYSTORE (an existing .keystore file), CB_KEYSTORE_PASS, CB_KEY_ALIAS and CB_KEY_PASS.");
+                return false;
+            }
+            PlayerSettings.Android.useCustomKeystore = true;
+            PlayerSettings.Android.keystoreName = path;
+            PlayerSettings.Android.keystorePass = storePass;
+            PlayerSettings.Android.keyaliasName = alias;
+            PlayerSettings.Android.keyaliasPass = string.IsNullOrEmpty(keyPass) ? storePass : keyPass;
+            return true;
+        }
+
+        private static int IntArg(string name)
+        {
+            var args = Environment.GetCommandLineArgs();
+            for (var i = 0; i < args.Length - 1; i++)
+                if (string.Equals(args[i], name, StringComparison.OrdinalIgnoreCase) && int.TryParse(args[i + 1], out var v)) return v;
+            return 0;
         }
 
         private static string[] ScenePaths()

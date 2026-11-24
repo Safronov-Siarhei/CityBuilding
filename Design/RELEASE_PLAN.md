@@ -12,6 +12,12 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
 - NO store SDKs in the project: no Play Billing / Unity IAP, no ads SDK, no Play Games Services.
 - Crystals, campaign progress and records live in PlayerPrefs (lost on reinstall); sandbox saves are local files.
 
+## Decisions (the user, 2026-11-24)
+- The Google Play developer account ALREADY EXISTS (type / creation date not asked yet: decides the 12x14 rule).
+- Store name: «CityCraft» is the main part; keywords may be added (e.g. «CityCraft: ...», title cap 30 chars).
+- First release WITH crystal purchases (Play Billing) AND rewarded ads.
+- Size: Play Asset Delivery (not slimming first).
+
 ## Blockers found
 1. **Size.** Google Play takes an App Bundle (AAB), not an APK, and its base download is capped at **200 MB**.
    227 MB does not fit: either slim the build (unused models/textures/audio, texture compression) or move big
@@ -29,9 +35,13 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
 - [ ] Payments profile (only if there will be paid items).
 
 ### B. Build for the store (C)
-- [ ] AAB build (`BuildAndroid` option), versionCode raised on every upload.
-- [ ] Release signing from a keystore outside the repo (U makes and keeps the key; C wires the build to it).
-- [ ] Get under 200 MB (size report, then cuts or asset packs).
+- [x] AAB build: `Tools/research/build_android.ps1 -Store` (2026-11-24, code only, NOT built yet): .aab, CB_RELEASE,
+      `splitApplicationBinary` = the data in an install-time asset pack (PAD), versionCode = git commit count.
+- [~] Release signing: the build reads CB_KEYSTORE / CB_KEYSTORE_PASS / CB_KEY_ALIAS / CB_KEY_PASS (U makes the upload
+      key OUTSIDE the repo and keeps a backup; `*.keystore`/`*.jks` are git-ignored). Play App Signing keeps the app key.
+- [ ] Check the first .aab: base module under 200 MB, the asset pack installs with the app (internal testing track).
+      Last APK build report: meshes 277 MB / textures 108 MB uncompressed of 429 MB user assets -- slimming later
+      (mesh compression, dungeon reliefs ~5 MB each) would still help download size.
 - [ ] Target API level = Google's current requirement; 64-bit only (already ARM64).
 - [ ] Release flags: no cheats, no PerfProbe, no debug logs (`-release` / CB_RELEASE already exists).
 

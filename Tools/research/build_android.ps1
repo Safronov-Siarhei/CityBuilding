@@ -1,7 +1,10 @@
 ﻿param(
     [switch]$Development,
     # a build for players: no cheat window, no PerfProbe (BuildAndroid's -release -> CB_RELEASE)
-    [switch]$Release
+    [switch]$Release,
+    # the Google Play upload (Design/RELEASE_PLAN.md): an .aab with an install-time asset pack, no cheats, signed with
+    # the upload key from CB_KEYSTORE / CB_KEYSTORE_PASS / CB_KEY_ALIAS / CB_KEY_PASS, versionCode = git commit count
+    [switch]$Store
 )
 
 # Builds the Android APK through CityBuilder.EditorTools.BuildAndroid.
@@ -39,6 +42,11 @@ $unityArgs = @(
 
 if ($Development) { $unityArgs += '-development' }
 if ($Release) { $unityArgs += '-release' }
+if ($Store) {
+    if (-not $env:CB_KEYSTORE -or -not (Test-Path $env:CB_KEYSTORE)) { throw "-Store needs CB_KEYSTORE (the upload .keystore, kept OUTSIDE the repo) and CB_KEYSTORE_PASS / CB_KEY_ALIAS / CB_KEY_PASS" }
+    $code = [int](git -C $project rev-list --count HEAD)
+    $unityArgs += @('-store', '-versionCode', "$code")
+}
 
 Write-Output "=== android build ($(if ($Development) { 'development' } elseif ($Release) { 'release, no cheats' } else { 'release' })) : $(Get-Date -Format o) ==="
 # WaitForExit, not -Wait: -Wait waits on Unity's helper processes too, which can outlive it and
@@ -51,6 +59,12 @@ if ($p.ExitCode -ne 0) {
     Write-Output 'FAILED -- last errors from the log:'
     Select-String -Path "$project/RunLogs/android_build.log" -Pattern 'error|Error|BuildFailedException|Unable to find' | Select-Object -Last 20
 } else {
+    if ($Store) {
+        Get-ChildItem "$project/Builds/Android" -Filter *.aab -ErrorAction SilentlyContinue |
+            Select-Object Name, @{ Name = 'MB'; Expression = { [math]::Round($_.Length / 1MB, 1) } }, LastWriteTime
+        Write-Output "versionCode $code -- upload Builds/Android/CityCraft.aab in Play Console"
+        return
+    }
     $apkName = if ($Development) { 'CityBuilding-dev.apk' } else { 'CityBuilding.apk' }
     $apkPath = Join-Path "$project/Builds/Android" $apkName
 
