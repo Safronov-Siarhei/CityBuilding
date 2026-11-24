@@ -4,6 +4,7 @@ using System.Reflection;
 using CityBuilder.Campaign;
 using CityBuilder.Core;
 using CityBuilder.Maps;
+using CityBuilder.Saving;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -21,7 +22,7 @@ namespace CityBuilder.Tests.PlayMode
     [Explicit("a photo run, not a check")]
     public class CampaignPreviewShots
     {
-        private const float Every = 1.5f, For = 48f;
+        private const float Every = 1.5f;
 
         [UnityTearDown]
         public IEnumerator Reset()
@@ -32,9 +33,9 @@ namespace CityBuilder.Tests.PlayMode
             yield return null;
         }
 
-        [UnityTest] public IEnumerator Shoot_m2() => Shoot("m2", CityDefenceMode.Mission.Siege, CityDefenceMode.MapId, false);
-        [UnityTest] public IEnumerator Shoot_m3p() => Shoot("m3p", CityDefenceMode.Mission.Siege, CityDefenceMode.MapId, true);
-        [UnityTest] public IEnumerator Shoot_m3b() => Shoot("m3b", CityDefenceMode.Mission.Escort, CityDefenceMode.EscortMapId, false);
+        [UnityTest] public IEnumerator Shoot_m2() => Shoot("m2", CityDefenceMode.Mission.Siege, CityDefenceMode.MapId, false, 48f);
+        [UnityTest] public IEnumerator Shoot_m3p() => Shoot("m3p", CityDefenceMode.Mission.Siege, CityDefenceMode.MapId, true, 90f);
+        [UnityTest] public IEnumerator Shoot_m3b() => Shoot("m3b", CityDefenceMode.Mission.Escort, CityDefenceMode.EscortMapId, false, 90f);
 
         private static void SetStatic(string name, object value)
         {
@@ -44,7 +45,7 @@ namespace CityBuilder.Tests.PlayMode
             t.GetProperty(name, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)?.SetValue(null, value);
         }
 
-        private static IEnumerator Shoot(string level, CityDefenceMode.Mission kind, string map, bool filmOnly)
+        private static IEnumerator Shoot(string level, CityDefenceMode.Mission kind, string map, bool filmOnly, float For)
         {
             Time.timeScale = 1f;
             PlayerPrefs.DeleteKey(CityDefenceMode.Part2Key);
@@ -57,7 +58,12 @@ namespace CityBuilder.Tests.PlayMode
             GameSessionIntent.NewGameIsInvasion = false;
             CityDefenceMode.Pending = true;
             SceneManager.LoadScene(CityDefenceMode.GameplayScene, LoadSceneMode.Single);
-            yield return PlayModeScene.WaitUntilMapIsPhysicsReady(map);
+            // the films start while the map would still be "settling": no wait for it there, or the prologue's films
+            // are over (the game back on the campaign map) and 3b's opening ended before the first frame
+            if (filmOnly || kind == CityDefenceMode.Mission.Escort)
+                for (var frame = 0; frame < 5; frame++) yield return null;
+            else
+                yield return PlayModeScene.WaitUntilMapIsPhysicsReady(map);
 
             var dir = Path.Combine(Directory.GetCurrentDirectory(), "RunLogs", "previews", level);
             if (Directory.Exists(dir)) Directory.Delete(dir, true);
@@ -73,8 +79,12 @@ namespace CityBuilder.Tests.PlayMode
                 t += Time.unscaledDeltaTime;
                 if (t < next) continue;
                 next += Every;
-                var cam = Camera.main;
-                if (cam == null || SceneManager.GetActiveScene().name != CityDefenceMode.GameplayScene) break;   // the prologue went back to the map
+                if (SceneManager.GetActiveScene().name != CityDefenceMode.GameplayScene) break;   // the prologue went back to the map
+                // the film's own camera when it plays (the prologue turns the main one off): the deepest enabled one
+                Camera cam = null;
+                foreach (var c in Camera.allCameras)
+                    if (c.targetTexture == null && (cam == null || c.depth > cam.depth)) cam = c;
+                if (cam == null) continue;
                 var was = cam.targetTexture;
                 cam.targetTexture = rt;
                 cam.Render();

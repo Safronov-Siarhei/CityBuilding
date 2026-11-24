@@ -1658,3 +1658,6 @@ the win window, in mission 2's town (the user: «сразу после побе�
     -Graphics -Filter CampaignPreviewShots` -> RunLogs/previews/<level>/ every 1.5 s for 48 s). It hung on licensing
     AGAIN: the background Unity 6000.1 process (F:/AC/adultchessCOPY, ac11998-render.log) keeps its licensing client
     even with every editor closed; batchmode only works once that process is gone. Level 3a has no scene: diorama stays.
+  - Photo run WORKED once the 6000.1 process was closed: the film camera = the deepest enabled camera; the prologue and
+    3b shoot right after the scene loads (their films end before the map "settles"). Sheets m1/m2/m3p/m3b in
+    `Design/concepts/campaign_list/previews/` SENT for the user's pick (frames in RunLogs/previews/, not in git).
