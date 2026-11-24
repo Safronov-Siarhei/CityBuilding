@@ -62,9 +62,12 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
 - [ ] Translations last: en ru de fr es pt it pl tr, then a check that every text fits its box.
 
 ### E. Store listing (C drafts, U approves and uploads)
-- [ ] Name, short description (80 chars), full description (4000), per language.
+- [~] Name, short description (80 chars), full description (4000), EN + RU drafts in `Design/store/listing.md`
+      (2026-11-24), waiting for the user's pick and edits; other languages with the game's translations.
 - [ ] Icon 512x512, feature graphic 1024x500, 4-8 phone screenshots (+ tablet ones).
-- [ ] Privacy policy page (a public URL; can be a page in this public repo via GitHub Pages).
+- [~] Privacy policy: `docs/privacy-policy.html` (EN + RU, 2026-11-24). Placeholders [CONTACT EMAIL] (the user's
+      public support address) and [AD NETWORK] (once the SDK is chosen). Hosting: GitHub Pages from master /docs
+      (the user enables it in the repo settings; the URL shows the GitHub user name) or the studio's own site.
 - [ ] Data safety form, content rating questionnaire (IARC), target audience (not children: avoids the Families
       policy), ads declaration.
 
