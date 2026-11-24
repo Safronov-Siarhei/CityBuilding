@@ -66,8 +66,9 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
       (2026-11-24), waiting for the user's pick and edits; other languages with the game's translations.
 - [ ] Icon 512x512, feature graphic 1024x500, 4-8 phone screenshots (+ tablet ones).
 - [~] Privacy policy: `docs/privacy-policy.html` (EN + RU, 2026-11-24). Contact = depigogames@gmail.com (the user,
-      2026-11-24: the public support address, also for the Play listing); placeholder [AD NETWORK] until the SDK is chosen. Hosting: GitHub Pages from master /docs
-      (the user enables it in the repo settings; the URL shows the GitHub user name) or the studio's own site.
+      2026-11-24: the public support address, also for the Play listing); placeholder [AD NETWORK] until the SDK is chosen. Hosting: FIREBASE HOSTING (the user, 2026-11-24:
+      the indie format «<project>.web.app/privacy-policy.html»): `firebase.json` serves `docs/`; the user makes the
+      Firebase project on depigogames@gmail.com and runs `firebase login`; then `firebase deploy --only hosting`.
 - [ ] Data safety form, content rating questionnaire (IARC), target audience (not children: avoids the Families
       policy), ads declaration.
 
