@@ -28,6 +28,37 @@ namespace CityBuilder.EditorTools
             Shoot(window.GetComponentInParent<Canvas>().rootCanvas, "diplomacy");
         }
 
+        /// <summary>The campaign scroll (run.ps1 -Steps mapshot): levels 1, 2 and the prologue done (in colour), 3a/3b
+        /// open (in ink), 3a picked. The Editor's own campaign progress is put back afterwards.</summary>
+        public static void CampaignMap()
+        {
+            EditorSceneManager.OpenScene("Assets/_Project/Scenes/CampaignMap.unity");
+            var screen = Object.FindObjectOfType<Campaign.CampaignMapScreen>();
+            if (screen == null)
+            {
+                Debug.LogError("[UiPhotos] no CampaignMapScreen in the scene");
+                return;
+            }
+            var ids = new[] { "m1", "m2", "m3p", "m3a", "m3b" };
+            var before = new int[ids.Length];
+            for (var i = 0; i < ids.Length; i++) before[i] = PlayerPrefs.GetInt("campaign_done_" + ids[i], -1);
+            try
+            {
+                for (var i = 0; i < ids.Length; i++) PlayerPrefs.SetInt("campaign_done_" + ids[i], i < 3 ? 1 : 0);
+                var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+                typeof(Campaign.CampaignMapScreen).GetMethod("Start", flags).Invoke(screen, null);
+                typeof(Campaign.CampaignMapScreen).GetMethod("Pick", flags).Invoke(screen, new object[] { 3 });
+                Shoot(screen.GetComponentInChildren<Canvas>(), "campaign_scroll");
+            }
+            finally
+            {
+                for (var i = 0; i < ids.Length; i++)
+                    if (before[i] < 0) PlayerPrefs.DeleteKey("campaign_done_" + ids[i]);
+                    else PlayerPrefs.SetInt("campaign_done_" + ids[i], before[i]);
+                PlayerPrefs.Save();
+            }
+        }
+
         private static void Shoot(Canvas canvas, string name)
         {
             const int w = 1920, h = 1080;

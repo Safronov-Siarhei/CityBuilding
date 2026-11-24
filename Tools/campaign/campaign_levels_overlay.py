@@ -211,7 +211,7 @@ def wash(col, mask, paper_region):
     return Image.composite(washed, paper_region, a)
 
 
-def doodles(paper, keep_out, seed=4):
+def doodles(paper, keep_out, seed=4, compass=(770, 110), tries=400, right=260):
     """Little ink drawings in the empty paper: tree clumps, hills, birds, a compass rose."""
     rnd = random.Random(seed)
     lay = Image.new('L', paper.size, 0)
@@ -238,8 +238,8 @@ def doodles(paper, keep_out, seed=4):
             d.line((hx, y - w * 0.32 + k * 3, hx - 6, y - w * 0.1 + k * 3), fill=255, width=1)
 
     used = []
-    for _ in range(400):
-        x, y = rnd.randint(60, paper.width - 260), rnd.randint(40, paper.height - 40)
+    for _ in range(tries):
+        x, y = rnd.randint(60, paper.width - right), rnd.randint(40, paper.height - 40)
         if not free(x, y, 46) or any(math.hypot(x - ux, y - uy) < 90 for ux, uy in used):
             continue
         used.append((x, y))
@@ -255,7 +255,7 @@ def doodles(paper, keep_out, seed=4):
                 d.arc((bx - 8, by - 4, bx, by + 4), 200, 340, fill=255, width=2)
                 d.arc((bx, by - 4, bx + 8, by + 4), 200, 340, fill=255, width=2)
     # the compass rose
-    cx, cy = 770, 110
+    cx, cy = compass
     for a, r in ((0, 44), (90, 30), (180, 30), (270, 30)):
         rad = math.radians(a - 90)
         tip = (cx + math.cos(rad) * r, cy + math.sin(rad) * r)

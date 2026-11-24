@@ -1,61 +1,92 @@
 {
- "comment": "The campaign map's level points (Tools/campaign/campaign_map.py writes this): x, y as fractions of the picture from its top left; titleKey = the level's name; the game draws a flag on each; scene = the level's scene (empty: not built yet, «Скоро»); bestKey = its best time in PlayerPrefs (empty: none). A level opens once the one before it is done (or, `after`, once that level is done); label = the medal's number (empty: its place); film = a story scene (a video glyph).",
- "picture": "CampaignMap_Wide",
+ "comment": "The campaign map = a parchment SCROLL (Tools/campaign/campaign_scroll.py writes the places): sx, sy, sw, sh = the level's scene on the paper (fractions from its top left); x, y = its medal; nx, ny = its name plaque; a done level shows its scene in colour, an open one in ink, a closed one blank paper. titleKey = the level's name; scene = the level's scene (empty: not built yet, «Скоро»); bestKey = its best time in PlayerPrefs; after = opens once that level is done (empty: the one before it); label = the medal's number (empty: its place); film = a story scene.",
+ "picture": "Scroll_Paper",
  "levels": [
   {
    "id": "m1",
-   "x": 0.1958,
-   "y": 0.5926,
+   "x": 0.0542,
+   "y": 0.4622,
    "titleKey": "#campaign_level_1",
    "scene": "CampaignOpening",
    "bestKey": "m1_best",
    "after": "",
    "label": "",
-   "film": false
+   "film": false,
+   "sx": 0.0278,
+   "sy": 0.416,
+   "sw": 0.1556,
+   "sh": 0.289,
+   "nx": 0.1056,
+   "ny": 0.699
   },
   {
    "id": "m2",
-   "x": 0.5917,
-   "y": 0.5185,
+   "x": 0.1987,
+   "y": 0.4843,
    "titleKey": "#campaign_level_2",
    "scene": "CityBuilder",
    "bestKey": "",
    "after": "",
    "label": "",
-   "film": false
+   "film": false,
+   "sx": 0.1722,
+   "sy": 0.439,
+   "sw": 0.1556,
+   "sh": 0.283,
+   "nx": 0.25,
+   "ny": 0.716
   },
   {
    "id": "m3p",
-   "x": 0.6167,
-   "y": 0.3056,
+   "x": 0.3431,
+   "y": 0.4492,
    "titleKey": "#campaign_prologue",
    "scene": "CityBuilder",
    "bestKey": "",
    "after": "m2",
    "label": "",
-   "film": true
+   "film": true,
+   "sx": 0.3167,
+   "sy": 0.397,
+   "sw": 0.1556,
+   "sh": 0.326,
+   "nx": 0.3944,
+   "ny": 0.717
   },
   {
    "id": "m3a",
-   "x": 0.6917,
-   "y": 0.7222,
+   "x": 0.5282,
+   "y": 0.213,
    "titleKey": "#campaign_level_3a",
    "scene": "",
    "bestKey": "",
    "after": "m3p",
    "label": "3",
-   "film": false
+   "film": false,
+   "sx": 0.5056,
+   "sy": 0.172,
+   "sw": 0.1333,
+   "sh": 0.256,
+   "nx": 0.5722,
+   "ny": 0.422
   },
   {
    "id": "m3b",
-   "x": 0.7625,
-   "y": 0.3333,
+   "x": 0.5282,
+   "y": 0.6573,
    "titleKey": "#campaign_level_3b",
    "scene": "CityBuilder",
    "bestKey": "",
    "after": "m3p",
    "label": "3",
-   "film": false
+   "film": false,
+   "sx": 0.5056,
+   "sy": 0.609,
+   "sw": 0.1333,
+   "sh": 0.302,
+   "nx": 0.5722,
+   "ny": 0.905
   }
- ]
+ ],
+ "paperAspect": 3.6
 }

@@ -52,9 +52,37 @@ namespace CityBuilder.EditorTools
                 if (sprite == null) Debug.LogError($"[Campaign] map sprite {path} not found");
                 so.FindProperty(field).objectReferenceValue = sprite;
             }
-            // the chart came in before its folder was a UI one: import it again as a sprite
-            AssetDatabase.ImportAsset(UiTextureImport.CampaignFolder + "/CampaignMap_Wide.png", ImportAssetOptions.ForceUpdate);
-            Art("picture", UiTextureImport.CampaignFolder + "/CampaignMap_Wide.png");
+            // the scroll (Tools/campaign/campaign_scroll.py, the user approved scroll v2 on 2026-11-24): the paper
+            // tiles in order, the rolled end, its shade, the desk, every level's scene done/open
+            void Arts(string field, IList<string> paths)
+            {
+                var list = so.FindProperty(field);
+                list.arraySize = paths.Count;
+                for (var k = 0; k < paths.Count; k++)
+                {
+                    AssetDatabase.ImportAsset(paths[k], ImportAssetOptions.ForceUpdate);
+                    var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(paths[k]);
+                    if (sprite == null) Debug.LogError($"[Campaign] scroll sprite {paths[k]} not found");
+                    list.GetArrayElementAtIndex(k).objectReferenceValue = sprite;
+                }
+            }
+            var folder = UiTextureImport.CampaignFolder;
+            var tiles = new List<string>();
+            for (var t = 0; File.Exists($"{folder}/Scroll_Paper_{t}.png"); t++) tiles.Add($"{folder}/Scroll_Paper_{t}.png");
+            Arts("paperTiles", tiles);
+            var scenePics = new List<string>();
+            foreach (var f in Directory.GetFiles(folder, "Scroll_*.png"))
+            {
+                var file = Path.GetFileName(f);
+                if (file.EndsWith("_Color.png") || file.EndsWith("_Ink.png")) scenePics.Add($"{folder}/{file}");
+            }
+            scenePics.Sort(System.StringComparer.Ordinal);
+            Arts("scenes", scenePics);
+            foreach (var (field, file) in new[] { ("rod", "Scroll_Rod"), ("curl", "Scroll_Curl"), ("table", "Scroll_Table") })
+            {
+                AssetDatabase.ImportAsset($"{folder}/{file}.png", ImportAssetOptions.ForceUpdate);
+                Art(field, $"{folder}/{file}.png");
+            }
             Art("backGlyph", UiTextureImport.GlyphsFolder + "/Hud_Back.png");
             Art("playGlyph", UiTextureImport.GlyphsFolder + "/Hud_Play.png");
             Art("replayGlyph", UiTextureImport.GlyphsFolder + "/Hud_Rotate.png");

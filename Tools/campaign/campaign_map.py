@@ -1,4 +1,7 @@
-"""The campaign's map (the user, 2026-11-12): a painted parchment chart of the kingdom in the loading
+"""SUPERSEDED 2026-11-24 by Tools/campaign/campaign_scroll.py (the map is a scroll now); do not run: it would
+overwrite CampaignMap.json's scroll places.
+
+The campaign's map (the user, 2026-11-12): a painted parchment chart of the kingdom in the loading
 screen's lightly coloured look (Tools/loading/loading_maps.py: paper, stains, ink coast, hatched sea,
 mountains, compass) -- Ардан's land on the left (his village, the wheat, the forest, the river with
 its bridge, the town), a castle on a hill beyond, and the rest of the kingdom under a parchment fog

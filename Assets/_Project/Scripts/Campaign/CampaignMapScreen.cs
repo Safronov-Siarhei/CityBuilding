@@ -10,11 +10,12 @@ namespace CityBuilder.Campaign
 {
     /// <summary>
     /// The campaign map (the user, 2026-11-12): the way in is banner -> loading screen -> THIS map -> tap
-    /// a level -> «Играть» lights up bottom centre -> the level. A painted parchment chart
-    /// (Tools/campaign/campaign_map.py) filling the screen, a flag on each level point of
-    /// Campaign/CampaignMap.json. A level opens once the one before it is done; a level without a
-    /// scene yet says «Скоро». Level 1 starts with the opening film the first time; after that a
-    /// replay button beside «Играть» shows the film again. Drawn in the sandbox HUD's kit (MissionSkin).
+    /// a level -> «Играть» lights up bottom centre -> the level. Since 2026-11-24 the map is a parchment
+    /// SCROLL on a desk (the user approved scroll v2: «Подходит», «Да, встраивай»), swiped left/right between
+    /// its two rolled ends; every level is a little scene drawn on it -- in watercolour + ink once DONE, in ink
+    /// only while OPEN, blank paper while closed -- with a medal and a name plaque (Campaign/CampaignMap.json,
+    /// art baked by Tools/campaign/campaign_scroll.py). A level opens once the one before it is done; a level
+    /// without a scene yet says «Скоро». Drawn in the sandbox HUD's kit (MissionSkin).
     /// </summary>
     public class CampaignMapScreen : MonoBehaviour
     {
@@ -29,22 +30,34 @@ namespace CityBuilder.Campaign
             public string after;   // opens once this level is done (the level-3 branches both follow m2); empty: the one before it
             public string label;   // the medal's number (the branches share «3»); empty: its place in the list
             public bool film;      // a story scene, not a level (the level-3 prologue): a video glyph on its medal
+            public float sx, sy, sw, sh;   // its scene on the paper (fractions from the paper's top left)
+            public float nx, ny;           // its name plaque
         }
 
         [Serializable]
         private class MapFile
         {
             public Level[] levels = new Level[0];
+            public float paperAspect = 3.6f;
         }
 
         [SerializeField] private TextAsset mapFile;
-        [SerializeField] private Sprite picture;
+        // the scroll (Tools/campaign/campaign_scroll.py): the paper in tiles left to right, the rolled end, the
+        // paper's shade by it, the desk; every level's scene as Scroll_<id>_Color (done) / Scroll_<id>_Ink (open)
+        [SerializeField] private Sprite[] paperTiles = new Sprite[0];
+        [SerializeField] private Sprite rod, curl, table;
+        [SerializeField] private Sprite[] scenes = new Sprite[0];
         [SerializeField] private Sprite backGlyph, playGlyph, replayGlyph, lockGlyph, settingsGlyph;
         // the game's own settings card, built into the scene by setup (the user: a settings button top right)
         [SerializeField] private SettingsPanelController settings;
         [SerializeField] private string menuScene = "MainMenu";
 
         private Level[] _levels = new Level[0];
+        private float _paperAspect = 3.6f;
+        private ScrollRect _scroll;
+        private float _paperW, _viewW;
+        // the paper's band on the 720-tall canvas: under the top buttons, over the «Играть» bar
+        private const float PaperTop = 100f, PaperBottom = 135f, RodRoom = 60f;
         private readonly List<RectTransform> _flags = new List<RectTransform>();
         private readonly List<Image> _rings = new List<Image>();
         private int _picked = -1;
@@ -55,7 +68,12 @@ namespace CityBuilder.Campaign
 
         private void Start()
         {
-            if (mapFile != null) _levels = JsonUtility.FromJson<MapFile>(mapFile.text).levels ?? new Level[0];
+            if (mapFile != null)
+            {
+                var file = JsonUtility.FromJson<MapFile>(mapFile.text);
+                _levels = file.levels ?? new Level[0];
+                if (file.paperAspect > 0f) _paperAspect = file.paperAspect;
+            }
             if (FindObjectOfType<EventSystem>() == null)
                 new GameObject("EventSystem", typeof(EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
             Build();
@@ -86,25 +104,13 @@ namespace CityBuilder.Campaign
             scaler.matchWidthOrHeight = 1f;
             var root = go.transform;
 
-            // the parchment fills the screen (cropped at the sides on a squarer screen); the flags ride on it
-            var back = Stretch(root, "Backdrop");
-            back.gameObject.AddComponent<Image>().color = new Color(0.16f, 0.11f, 0.07f);
-            // the fitter sizes a frame; the picture inside it can slide (a fitter zeroes its own position)
-            var frame = new GameObject("Frame", typeof(RectTransform), typeof(AspectRatioFitter)).GetComponent<RectTransform>();
-            frame.SetParent(root, false);
-            var map = Stretch(frame, "Picture");
-            var img = map.gameObject.AddComponent<Image>();
-            img.sprite = picture;
-            img.raycastTarget = false;
-            var fit = frame.GetComponent<AspectRatioFitter>();
-            fit.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
-            fit.aspectRatio = picture != null ? picture.rect.width / picture.rect.height : 2400f / 1080f;
-            Frame(map, fit);
-
-            // the flags on their own layer, so the settings card can hide them with the buttons
-            var flags = Stretch(map, "Flags");
-            _flagsGroup = flags.gameObject.AddComponent<CanvasGroup>();
-            for (var i = 0; i < _levels.Length; i++) Flag(flags, i);
+            // the desk, the scroll's paper band across it, the rolled ends at the screen's sides
+            var back = Stretch(root, "Desk");
+            var desk = back.gameObject.AddComponent<Image>();
+            desk.sprite = table;
+            desk.color = table != null ? Color.white : new Color(0.16f, 0.11f, 0.07f);
+            desk.raycastTarget = false;
+            BuildScroll(root);
 
             // the safe area: the buttons keep clear of a camera cut-out
             var safe = Stretch(root, "Safe");
@@ -163,6 +169,134 @@ namespace CityBuilder.Campaign
             _bar.interactable = _bar.blocksRaycasts = false;
         }
 
+        /// <summary>The paper band with the scenes, swiped sideways (a ScrollRect); centred, not scrolled,
+        /// when the whole paper fits the screen.</summary>
+        private void BuildScroll(Transform root)
+        {
+            var paperH = 720f - PaperTop - PaperBottom;
+            var canvasW = Screen.height > 0 ? Screen.width / (float)Screen.height * 720f : 1280f;
+            _paperW = paperH * _paperAspect;
+            _viewW = canvasW - 2f * RodRoom;
+
+            var view = new GameObject("Viewport", typeof(RectTransform), typeof(RectMask2D), typeof(Image)).GetComponent<RectTransform>();
+            view.SetParent(root, false);
+            view.anchorMin = Vector2.zero;
+            view.anchorMax = Vector2.one;
+            view.offsetMin = new Vector2(RodRoom, PaperBottom);
+            view.offsetMax = new Vector2(-RodRoom, -PaperTop);
+            view.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0f);   // catches the swipe between the scenes
+
+            var content = new GameObject("Paper", typeof(RectTransform)).GetComponent<RectTransform>();
+            content.SetParent(view, false);
+            content.anchorMin = new Vector2(0f, 0f);
+            content.anchorMax = new Vector2(0f, 1f);
+            content.pivot = new Vector2(0f, 0.5f);
+            content.sizeDelta = new Vector2(_paperW, 0f);
+            var n = paperTiles.Length;
+            for (var t = 0; t < n; t++)
+            {
+                var tile = new GameObject($"Tile_{t}", typeof(RectTransform), typeof(Image)).GetComponent<RectTransform>();
+                tile.SetParent(content, false);
+                tile.anchorMin = new Vector2(t / (float)n, 0f);
+                tile.anchorMax = new Vector2((t + 1) / (float)n, 1f);
+                tile.offsetMin = tile.offsetMax = Vector2.zero;
+                var img = tile.GetComponent<Image>();
+                img.sprite = paperTiles[t];
+                img.raycastTarget = false;
+            }
+            // the scenes: coloured once done, ink while open, nothing while closed; a tap on one picks it
+            for (var i = 0; i < _levels.Length; i++) Scene(content, i);
+            // the medals and plaques on their own layer, so the settings card can hide them with the buttons
+            var flags = Stretch(content, "Flags");
+            _flagsGroup = flags.gameObject.AddComponent<CanvasGroup>();
+            for (var i = 0; i < _levels.Length; i++) Flag(flags, i, paperH);
+
+            _scroll = view.gameObject.AddComponent<ScrollRect>();
+            _scroll.content = content;
+            _scroll.viewport = view;
+            _scroll.vertical = false;
+            _scroll.movementType = ScrollRect.MovementType.Elastic;
+            _scroll.inertia = true;
+            _scroll.decelerationRate = 0.12f;
+            if (_paperW <= _viewW)
+            {
+                _scroll.horizontal = false;
+                content.anchoredPosition = new Vector2((_viewW - _paperW) * 0.5f, 0f);
+            }
+            else
+            {
+                // open at the newest open level, the done ones to its left
+                var at = 0;
+                for (var i = 0; i < _levels.Length; i++)
+                    if (Open(i)) at = i;
+                var lv = _levels.Length > 0 ? _levels[at] : null;
+                var centre = lv != null ? (lv.sx + lv.sw * 0.5f) * _paperW : 0f;
+                content.anchoredPosition = new Vector2(-Mathf.Clamp(centre - _viewW * 0.5f, 0f, _paperW - _viewW), 0f);
+            }
+
+            // the rolled ends, with the paper's shade where it curls into them
+            for (var side = 0; side < 2; side++)
+            {
+                var right = side == 1;
+                if (curl != null)
+                {
+                    var c = new GameObject(right ? "CurlR" : "CurlL", typeof(RectTransform), typeof(Image)).GetComponent<RectTransform>();
+                    c.SetParent(root, false);
+                    c.anchorMin = new Vector2(right ? 1f : 0f, 0f);
+                    c.anchorMax = new Vector2(right ? 1f : 0f, 1f);
+                    c.pivot = new Vector2(0f, 0.5f);
+                    c.offsetMin = new Vector2(0f, PaperBottom);
+                    c.offsetMax = new Vector2(0f, -PaperTop);
+                    c.anchoredPosition = new Vector2(right ? -RodRoom : RodRoom, c.anchoredPosition.y);
+                    c.sizeDelta = new Vector2(40f, c.sizeDelta.y);
+                    c.localScale = new Vector3(right ? -1f : 1f, 1f, 1f);
+                    var ci = c.GetComponent<Image>();
+                    ci.sprite = curl;
+                    ci.raycastTarget = false;
+                }
+                var r = new GameObject(right ? "RodR" : "RodL", typeof(RectTransform), typeof(Image)).GetComponent<RectTransform>();
+                r.SetParent(root, false);
+                r.anchorMin = new Vector2(right ? 1f : 0f, 0f);
+                r.anchorMax = new Vector2(right ? 1f : 0f, 1f);
+                r.pivot = new Vector2(0.5f, 0.5f);
+                r.offsetMin = new Vector2(0f, PaperBottom - 18f);
+                r.offsetMax = new Vector2(0f, -PaperTop + 18f);
+                r.anchoredPosition = new Vector2(right ? -RodRoom + 6f : RodRoom - 6f, r.anchoredPosition.y);
+                r.sizeDelta = new Vector2(46f, r.sizeDelta.y);
+                var ri = r.GetComponent<Image>();
+                ri.sprite = rod;
+                ri.color = rod != null ? Color.white : new Color(0.85f, 0.75f, 0.56f);
+                ri.raycastTarget = false;
+            }
+        }
+
+        private Sprite SceneSprite(string id, string state)
+        {
+            var name = $"Scroll_{id}_{state}";
+            foreach (var s in scenes)
+                if (s != null && s.name == name) return s;
+            return null;
+        }
+
+        private void Scene(RectTransform paper, int i)
+        {
+            var lv = _levels[i];
+            if (lv.sw <= 0f) return;
+            var sprite = CampaignProgress.Done(lv.id) ? SceneSprite(lv.id, "Color") : Open(i) ? SceneSprite(lv.id, "Ink") : null;
+            if (sprite == null) return;      // closed: blank paper, its medal shows the lock
+            var r = new GameObject($"Scene_{lv.id}", typeof(RectTransform), typeof(Image), typeof(Button)).GetComponent<RectTransform>();
+            r.SetParent(paper, false);
+            r.anchorMin = new Vector2(lv.sx, 1f - lv.sy - lv.sh);
+            r.anchorMax = new Vector2(lv.sx + lv.sw, 1f - lv.sy);
+            r.offsetMin = r.offsetMax = Vector2.zero;
+            var img = r.GetComponent<Image>();
+            img.sprite = sprite;
+            var b = r.GetComponent<Button>();
+            b.transition = Selectable.Transition.None;
+            var index = i;
+            b.onClick.AddListener(() => Pick(index));
+        }
+
         private static Text Caption(Transform parent, string text, Vector2 anchor, Vector2 at)
         {
             var t = MissionSkin.Label(parent, text, UiTheme.Bold, 34, Color.white, TextAnchor.MiddleCenter, anchor, anchor, Vector2.zero);
@@ -171,7 +305,7 @@ namespace CityBuilder.Campaign
             return t;
         }
 
-        private void Flag(RectTransform map, int i)
+        private void Flag(RectTransform map, int i, float paperH)
         {
             var lv = _levels[i];
             var anchor = new Vector2(lv.x, 1f - lv.y);
@@ -206,7 +340,9 @@ namespace CityBuilder.Campaign
                 star.raycastTarget = false;
             }
 
-            var name = MissionSkin.Image(holder, "Name", "plaque", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 1f), new Vector2(0f, -46f), new Vector2(220f, 44f));
+            // the name under its scene (the medal sits at the scene's top left)
+            var under = lv.sw > 0f ? new Vector2((lv.nx - lv.x) * _paperW, (lv.y - lv.ny) * paperH) : new Vector2(0f, -68f);
+            var name = MissionSkin.Image(holder, "Name", "plaque", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), under, new Vector2(200f, 42f));
             name.raycastTarget = false;
             var t = MissionSkin.Label(name.transform, Localization.Get(lv.titleKey), UiTheme.Bold, 20, MissionSkin.Ink(HudInk.OnPlaque), TextAnchor.MiddleCenter,
                 Vector2.zero, Vector2.one, new Vector2(10f, 2f));
@@ -324,31 +460,6 @@ namespace CityBuilder.Campaign
         {
             var s = UnityEngine.Resources.Load<Sprite>($"MenuSkins/{HudSkins.Current}/{role}");
             return s != null ? s : UnityEngine.Resources.Load<Sprite>($"MenuSkins/{HudSkin.Classic}/{role}");
-        }
-
-        /// <summary>The chart fills the screen, slid sideways so every level stays on it; a screen too narrow
-        /// for all of them (a tablet) gets the whole chart with dark margins.</summary>
-        private void Frame(RectTransform map, AspectRatioFitter fit)
-        {
-            if (_levels.Length == 0 || Screen.height <= 0) return;
-            const float margin = 0.06f;
-            var min = 1f;
-            var max = 0f;
-            foreach (var lv in _levels)
-            {
-                min = Mathf.Min(min, lv.x - margin);
-                max = Mathf.Max(max, lv.x + margin);
-            }
-            var seen = Screen.width / (float)Screen.height / fit.aspectRatio;
-            if (seen >= 1f) return;
-            if (seen < max - min)
-            {
-                fit.aspectMode = AspectRatioFitter.AspectMode.FitInParent;
-                return;
-            }
-            var centre = Mathf.Clamp(0.5f, max - seen * 0.5f, min + seen * 0.5f);
-            // the canvas matches height (720 tall), so the chart is 720 * aspect wide
-            map.anchoredPosition = new Vector2((0.5f - centre) * 720f * fit.aspectRatio, 0f);
         }
 
         private static RectTransform Stretch(Transform parent, string name)

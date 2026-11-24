@@ -125,6 +125,14 @@ foreach ($step in $Steps) {
             Write-Output "=== uishot$i exit $code ($([int]((Get-Date) - $started).TotalSeconds) s)"
             Write-LogProblems $log
         }
+        'mapshot' {
+            # the campaign scroll rendered for the user (Editor/UiPhotos.CampaignMap) into RunLogs/ui/ -- needs graphics
+            $log = "$logs/mapshot_run.log"
+            $code = Invoke-Unity "mapshot$i" @('-batchmode', '-quit', '-projectPath', $project,
+                '-executeMethod', 'CityBuilder.EditorTools.UiPhotos.CampaignMap', '-logFile', $log)
+            Write-Output "=== mapshot$i exit $code ($([int]((Get-Date) - $started).TotalSeconds) s)"
+            Write-LogProblems $log
+        }
         { $_ -in 'editmode', 'playmode' } {
             $platform = if ($step -eq 'editmode') { 'EditMode' } else { 'PlayMode' }
             $suffix = if ($step -eq 'editmode') { '' } else { '_playmode' }

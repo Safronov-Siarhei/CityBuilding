@@ -242,6 +242,26 @@
   the fork to 3a/3b and on east to the wax seal «Глава 2», shading where the paper curls into the rods, an inkwell on
   the table. The carousel is parked («возможно вставим позже»). **The user APPROVED scroll v2 (2026-11-24, «Подходит»).**
   Not in Unity yet: next is building it into the game in place of the 2D chart.
+- **SCROLL IN THE GAME (2026-11-24, the user: «Да, встраивай»), code done, NOT built/seen:**
+  - Art: `Tools/campaign/campaign_scroll.py <diorama dir>` (dioramas = `campaign_dioramas.py ... flat`) bakes
+    `UI/Campaign/Scroll_Paper_0/1.png` (3600x1000 paper in two 1800 tiles: the 2048 texture limit; road, doodles,
+    compass, seal «II» baked, scene places blank), `Scroll_<id>_Color.png` (done: watercolour + ink, alpha = how it
+    covers the paper) / `Scroll_<id>_Ink.png` (open), `Scroll_Rod/Curl/Table.png`, and writes each level's
+    `sx sy sw sh` (scene), `x y` (medal), `nx ny` (plaque) + `paperAspect` into `Campaign/CampaignMap.json`.
+    The old chart `CampaignMap_Wide.png` deleted; `campaign_map.py` marked SUPERSEDED (it would overwrite the json).
+  - `CampaignMapScreen.BuildScroll`: desk image, a paper band 485 tall (canvas 720: 100 top, 135 bottom for the bar)
+    in a horizontal ScrollRect (RectMask2D viewport, 60 at each side for the rods), tiles side by side, a scene image
+    per level (Done -> Color, Open -> Ink, closed -> nothing; tapping a scene picks it), medals + plaques on the
+    `Flags` layer (plaque offset from the json), opens scrolled to the newest open level, centred and not scrolled
+    when the paper fits. Rods + curl shade fixed at the screen sides. Setup assigns `paperTiles`, `scenes`, `rod`,
+    `curl`, `table`.
+  - Photo: `run.ps1 -Steps mapshot` (`UiPhotos.CampaignMap`, needs graphics): m1/m2/m3p done, 3a picked, into
+    RunLogs/ui/campaign_scroll.png; the Editor's campaign progress is restored after.
+  - TRAP (2026-11-24): batchmode 6000.5.4f1 hung 20 min on «Connection to channel LicenseClient-borei refused» /
+    «com.unity.editor.headless was not found» while the user's OTHER Unity (6000.1.4f1, another project) was open:
+    the two editors' licensing clients clash. Setup could not run; offline Roslyn check (runtime r2.rsp clean, editor
+    e.rsp clean apart from the CS0433 ref-duplication noise). Next: setup x2 once the other editor is closed, then
+    mapshot. The pen-drawing animation on unlock is the next step after.
 - The way in: tap the campaign banner -> the loading screen -> the CAMPAIGN MAP -> tap a level point
   -> «Играть» lights up bottom centre -> the level (no separate confirmation window: the user's choice).
 - The map: a 2D painted PARCHMENT chart in the loading screen's lightly coloured look (the user's pick
