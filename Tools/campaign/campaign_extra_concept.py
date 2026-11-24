@@ -1,6 +1,8 @@
 """How MAIN story levels and EXTRA levels (opened for crystals) tell apart in the campaign list (the user
 2026-11-24: «предложи пометку для основных уровней и дополнительных, которые игрок будет открывать за кристаллы»).
-Three concept screens over the real list layout (variant A), the extras' names are only examples:
+The user then explained: an EXTRA level is a SIDE BRANCH of the story, not the main line -- level 3 splits in two:
+«Клетка» (the King's road, MAIN) and «Пленные» (Ардан goes to free the captives, EXTRA, opened for crystals).
+Three concept screens over the real list layout (variant A) with the real levels:
 
   extra_a -- «Кристальная строка»: an extra row is lilac with a crystal on its medal and a price pill «15» + crystal
   extra_b -- «Ветка»: extras hang under the story level they follow, indented, joined by a dotted line, smaller
@@ -25,16 +27,15 @@ VIOLET = (108, 62, 168)
 
 # (preview, number, name, line, state, extra)   state: done / open / buy / locked
 ROWS = [("m1", "1", "Бегство", "Рекорд: 4:03.1", "done", False),
-        ("x1", "", "Ночная вылазка", "Испытание: без единой потери", "done", True),
         ("m2", "2", "Город", "Отстоять город до прихода короля", "done", False),
-        ("x2", "", "Последний обоз", "Испытание: довести обоз за 5 минут", "buy", True),
         ("m3p", "", "Пролог", "Сценка: король в сожжённом городе", "done", False),
-        ("m3b", "3", "Клетка", "Скоро", "locked", False)]
-PICKED = 3
+        ("m3b", "3", "Клетка", "Довезите клетку до столицы", "open", False),
+        ("m3a", "", "Пленные", "История Ардана: спасти пленных", "buy", True)]
+PICKED = 4
 
 
 def thumb(key, w, h):
-    if key.startswith('x'):   # an example extra: a frame of the siege / the escort
+    if False:
         src = sorted(os.listdir(os.path.join(SHOTS, 'm2' if key == 'x1' else 'm3b')))
         from preview_sheet import crop
         pic = crop(Image.open(os.path.join(SHOTS, 'm2' if key == 'x1' else 'm3b', src[8 if key == 'x1' else 20])).convert('RGB')).convert('RGBA')
@@ -127,13 +128,11 @@ def card(base, d, rows_picked, extra_label):
         tint.putalpha(pl.getchannel('A'))
         pl = Image.blend(pl, tint, 0.5)
     shadow(base, pl, (cx + cw // 2 - 280, py))
-    text_c(d, (cx + cw // 2, py + 36), f"{extra_label}. {name}" if extra else name, 32, fill=(70, 38, 110) if extra else INK)
-    text_c(d, (cx + cw // 2, py + 120), "Обоз с зерном идёт к городу через лес.", 26, fill=BROWN)
-    text_c(d, (cx + cw // 2, py + 158), "Доведите его быстрее чем за 5 минут.", 26, fill=BROWN)
-    text_c(d, (cx + cw // 2, py + 208), "Награда за первое прохождение: 5", 22, fill=(140, 112, 80))
-    c = crystal(34)
-    tw = d.textlength("Награда за первое прохождение: 5", font=font(22))
-    base.alpha_composite(c, (int(cx + cw // 2 + tw / 2 + 4), py + 190))
+    text_c(d, (cx + cw // 2, py + 36), name, 32, fill=(70, 38, 110) if extra else INK)
+    text_c(d, (cx + cw // 2, py + 104), extra_label, 24, fill=VIOLET)
+    text_c(d, (cx + cw // 2, py + 146), "Чудовища увели жителей на свою поляну в лесу.", 26, fill=BROWN)
+    text_c(d, (cx + cw // 2, py + 182), "Ардан идёт их освобождать.", 26, fill=BROWN)
+
     # the buy button: the menu's own button, a crystal and the price
     bw, bh = 460, 118
     bx, by = cx + cw // 2 - bw // 2, cy + chh - 150
@@ -159,10 +158,10 @@ def variant_a(out):
     px, py, pw, ph = panel(base, d, "Глава I. Нашествие")
     y = py + 95
     for i, r in enumerate(ROWS):
-        row(base, d, px + 30, y, pw - 60, 120, r, i == PICKED)
-        y += 132
-    card(base, d, ROWS[PICKED], "Испытание")
-    note(d, "А. Кристальная строка: доп. уровень сиреневый, на медали кристалл, справа цена")
+        row(base, d, px + 30, y, pw - 60, 132, r, i == PICKED)
+        y += 146
+    card(base, d, ROWS[PICKED], "Побочная история · не влияет на сюжет")
+    note(d, "А. Кристальная строка: побочный уровень сиреневый, на медали кристалл, справа цена")
     base.convert('RGB').save(os.path.join(out, 'extra_a.jpg'), quality=90)
 
 
@@ -173,19 +172,18 @@ def variant_b(out):
     px, py, pw, ph = panel(base, d, "Глава I. Нашествие")
     y = py + 95
     for i, r in enumerate(ROWS):
-        extra = r[5]
-        if extra:   # hangs under its story level: indented, smaller, a dotted line from the level above
+        if i >= 3:   # the fork after the prologue: both roads hang from it, the side one lilac
             lx = px + 70
-            for yy in range(y - 18, y + 52, 12):
+            for yy in range(y - 18, y + 58, 12):
                 d.line((lx, yy, lx, yy + 6), fill=(150, 112, 70), width=4)
-            d.line((lx, y + 52, lx + 34, y + 52), fill=(150, 112, 70), width=4)
-            row(base, d, px + 110, y, pw - 140, 104, r, i == PICKED, small=True)
-            y += 116
+            d.line((lx, y + 58, lx + 34, y + 58), fill=(150, 112, 70), width=4)
+            row(base, d, px + 110, y, pw - 140, 116, r, i == PICKED, small=True)
+            y += 128
         else:
             row(base, d, px + 30, y, pw - 60, 128, r, i == PICKED)
             y += 140
-    card(base, d, ROWS[PICKED], "Испытание")
-    note(d, "Б. Ветка: доп. уровень висит под своим сюжетным уровнем, с отступом и пунктиром")
+    card(base, d, ROWS[PICKED], "Побочная история · не влияет на сюжет")
+    note(d, "Б. Развилка: побочный уровень ответвляется от того же места, что и основной")
     base.convert('RGB').save(os.path.join(out, 'extra_b.jpg'), quality=90)
 
 
@@ -206,14 +204,14 @@ def variant_c(out):
     y += 8
     c = crystal(40)
     base.alpha_composite(c, (px + 34, y - 4))
-    text_l(d, (px + 80, y + 16), "Испытания", 26, fill=(70, 38, 110))
-    d.line((px + 240, y + 18, px + pw - 40, y + 18), fill=(176, 140, 96), width=3)
+    text_l(d, (px + 80, y + 16), "Побочные истории", 26, fill=(70, 38, 110))
+    d.line((px + 380, y + 18, px + pw - 40, y + 18), fill=(176, 140, 96), width=3)
     y += 42
     for r in extras:
         row(base, d, px + 30, y, pw - 60, 112, r, r is ROWS[PICKED], small=True)
         y += 120
-    card(base, d, ROWS[PICKED], "Испытание")
-    note(d, "В. Два раздела: сначала сюжет, ниже отдельный раздел «Испытания» за кристаллы")
+    card(base, d, ROWS[PICKED], "Побочная история · не влияет на сюжет")
+    note(d, "В. Два раздела: сначала сюжет, ниже отдельный раздел «Побочные истории» за кристаллы")
     base.convert('RGB').save(os.path.join(out, 'extra_c.jpg'), quality=90)
 
 

@@ -1667,3 +1667,5 @@ the win window, in mission 2's town (the user: «сразу после побе�
     до Пролога включительно»): json `closed: true` on m3a/m3b -> lock medal, row line «Скоро», a greyed button with a
     lock in place of «Играть», never picked on entry. Main vs EXTRA (crystal) levels: concepts A «Кристальная строка»
     / B «Ветка» / C «Два раздела» in `Design/concepts/campaign_list/extra/` (campaign_extra_concept.py) SENT, waiting.
+  - The user corrected (2026-11-24): an EXTRA level = a SIDE BRANCH of the story, not the main line («Пленные», Ардан's
+    road, is extra; «Клетка» is the main line). Concepts A/B/C redone on the real levels (B = the fork after the prologue).
