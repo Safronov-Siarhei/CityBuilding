@@ -205,6 +205,14 @@
   `Tools/blender/campaign_island_concept.py -- <out> <models.blend> <kingdom|archipelago|table> <island.blend>...`,
   the HUD from the Classic skin by `Tools/campaign/campaign_island_overlay.py <render dir> <concept> <out.png>`
   (Rubik has no ← or ✓ glyphs: drawn as shapes). The 2D chart below stays in the game until a pick.
+- **Concept 1 PICKED (2026-11-24) and made concrete:** every level goes LEFT TO RIGHT, the player scrolls the
+  map to the right. First step done: an EMPTY long island to place levels on later -- `islands.py` kind
+  **`campaign`** (scale 300, frame N 420, shape `strip`: a superellipse box 0.46 x 0.11 of the scale, its middle
+  line waving north/south, ANGLE 0 = never turned; flat meadow + 6 hills, forests, outcrops, 4-5 beaches; preview
+  trees capped at 6000). Land ~276 x ~66 cells. `Blender/Islands/Isl-campaign1.blend` (+ decor/spots/cells);
+  renders `Design/concepts/campaign_island/strip_overview.jpg` (the whole strip) + `strip_screen1-3.jpg` (the
+  game's camera at x -100 / 0 / 100: how it scrolls), via `campaign_island_concept.py ... strip <island.blend>`.
+  Not in Unity yet. Next: the user places the levels (where each one stands on the strip).
 - The way in: tap the campaign banner -> the loading screen -> the CAMPAIGN MAP -> tap a level point
   -> «Играть» lights up bottom centre -> the level (no separate confirmation window: the user's choice).
 - The map: a 2D painted PARCHMENT chart in the loading screen's lightly coloured look (the user's pick

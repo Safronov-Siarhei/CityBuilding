@@ -193,7 +193,12 @@ ORCS = [("OrcCampfire1", 0, 0, 0), ("OrcCage1-lvl1", 1.8, 0.8, 0.5), ("OrcCage1-
 
 PROTO.update(protos({n for c in (VILLAGE, TOWN_, CAPITAL, ORCS) for n, *_ in c} | {"Flag1-lvl1"}))
 
-if CONCEPT in ("kingdom", "table"):
+if CONCEPT == "strip":
+    # the empty campaign strip (islands.py kind `campaign`): no levels yet, the land only
+    load_island(ISLANDS[0])
+    bpy.context.view_layer.update()
+    frame = 128.0
+elif CONCEPT in ("kingdom", "table"):
     g = load_island(ISLANDS[0])
     bpy.context.view_layer.update()
     S = 2.7
@@ -299,6 +304,35 @@ if CONCEPT == "table":
     bg.inputs[0].default_value = (0.10, 0.07, 0.05, 1)
     sun.data.energy = 2.6
     frame = 210.0
+
+if CONCEPT == "strip":
+    cam = bpy.data.objects.new("Cam", bpy.data.cameras.new("Cam"))
+    sc.collection.objects.link(cam)
+    sc.camera = cam
+    cam.data.clip_end = 3000
+    os.makedirs(OUT, exist_ok=True)
+    # the whole strip at once, as a wide picture
+    cam.data.lens = 50
+    sc.render.resolution_x, sc.render.resolution_y = 3840, 1100
+    pitch = math.radians(62)
+    d = Vector((0, -math.cos(pitch), math.sin(pitch)))
+    cam.location = d * 540
+    cam.rotation_euler = (-cam.location).to_track_quat('-Z', 'Y').to_euler()
+    sc.render.filepath = os.path.join(OUT, "strip_overview.png")
+    bpy.ops.render.render(write_still=True)
+    # three screens as the game's camera sees them, scrolling left to right
+    cam.data.lens = 30
+    sc.render.resolution_x, sc.render.resolution_y = 1920, 1080
+    pitch = math.radians(52)
+    d = Vector((0, -math.cos(pitch), math.sin(pitch)))
+    for k, x in enumerate((-100, 0, 100), 1):
+        look = Vector((x, 2, 0))
+        cam.location = look + d * 105
+        cam.rotation_euler = (look - cam.location).to_track_quat('-Z', 'Y').to_euler()
+        sc.render.filepath = os.path.join(OUT, f"strip_screen{k}.png")
+        bpy.ops.render.render(write_still=True)
+    print("CONCEPT DONE strip")
+    sys.exit(0)
 
 cam = bpy.data.objects.new("Cam", bpy.data.cameras.new("Cam"))
 sc.collection.objects.link(cam)

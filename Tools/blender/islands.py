@@ -36,7 +36,7 @@ if not os.path.exists(MODELS):     # the islands live in a folder of their own n
 PREFIX = f"Isl-{KIND}{VARIANT}"
 
 _SCALES = {'start': 130, 'orc': 125, 'bot': 160, 'flat': 150, 'hilly': 150, 'rocky': 150, 'long': 170,
-           'crescent': 150, 'atoll': 150, 'islet': 70, 'tutorial': 64}
+           'crescent': 150, 'atoll': 150, 'islet': 70, 'tutorial': 64, 'campaign': 300}
 N = int(round(_SCALES[KIND] * 1.4 / 2)) * 2
 HALF = N // 2
 WATER_Z = -0.5
@@ -114,10 +114,14 @@ KINDS = {
     # the tutorial's two small islands in one frame, drawn from Tools/blender/tutorial-plan.json
     # (Design/features/tutorial.md): flat, no rim, the plan's forest, stones and pads
     'tutorial': (54, 'plan', 'flat', 0, (0, 0), 0.0),
+    # the CAMPAIGN MAP (the user, 2026-11-24: concept 1 «остров-королевство», «все уровни у нас будут идти слева
+    # направо ... пустую вытянутую в одну сторону карту»): one long strip west to east, a meadow with a few hills,
+    # forests and outcrops, beaches along both coasts; never turned (ANGLE 0) so it scrolls left to right
+    'campaign': (300, 'strip', 'flat', 6, (4, 5), 1.2),
 }
 _spec = KINDS[KIND]
 # odd variants full size, even ones a little smaller (start/orc/bot/islet always full)
-SCALE = _spec[0] if VARIANT % 2 == 1 or KIND in ('start', 'orc', 'bot', 'islet', 'tutorial') else int(_spec[0] * 0.86)
+SCALE = _spec[0] if VARIANT % 2 == 1 or KIND in ('start', 'orc', 'bot', 'islet', 'tutorial', 'campaign') else int(_spec[0] * 0.86)
 SHAPE, RELIEF_KIND, HILL_COUNT, BEACH_COUNT, RIM = _spec[1], _spec[2], _spec[3], _spec[4], _spec[5]
 # the orcs' gloomy island (the user, 2026-11-06: "C as its heart + B round it", approved): a swamp of
 # hummocks and black pools round the main base instead of the rocky mass; the game draws it in its
@@ -132,9 +136,11 @@ _ROLL = {('orc', 2): 45, ('orc', 4): 46, ('orc', 6): 60, ('orc', 3): 10, ('orc',
 if os.environ.get('ISL_ROLL'):     # a roll to try (searching a variant a new roll)
     _ROLL[(KIND, VARIANT)] = int(os.environ['ISL_ROLL'])
 SEED = {'start': 11, 'orc': 23, 'bot': 37, 'flat': 41, 'hilly': 53, 'rocky': 67, 'long': 71,
-        'crescent': 83, 'atoll': 97, 'islet': 101, 'tutorial': 131}[KIND] * 10 + _ROLL.get((KIND, VARIANT), VARIANT)
+        'crescent': 83, 'atoll': 97, 'islet': 101, 'tutorial': 131, 'campaign': 151}[KIND] * 10 + _ROLL.get((KIND, VARIANT), VARIANT)
 _rnd = random.Random(SEED)
 ANGLE = _rnd.uniform(0, 2 * math.pi)
+if KIND == 'campaign':
+    ANGLE = 0.0                    # the strip lies west to east: the map scrolls left to right
 SQUASH = 1.0 + _rnd.random() * 0.35
 RADIUS = {'start': 0.33, 'orc': 0.38, 'bot': 0.33, 'flat': 0.33, 'hilly': 0.34, 'rocky': 0.32}.get(KIND, 0.33) * SCALE
 CHANNELS = [_rnd.uniform(0, 2 * math.pi) for _ in range(_rnd.randint(1, 2))] if SHAPE == 'atoll' else []
@@ -200,6 +206,10 @@ def shore(x, y):
             d += math.exp(-(off / 0.12) ** 2) * 2.0
     elif SHAPE == 'islet':
         d = math.hypot(u, v) / (0.16 * SCALE)
+    elif SHAPE == 'strip':
+        # a rounded long box (superellipse), its middle line waving gently north and south
+        wave = 0.035 * SCALE * math.sin(u / SCALE * 2 * math.pi * 1.4 + 0.7)
+        d = (abs(u / (0.46 * SCALE)) ** 4 + abs((v - wave) / (0.11 * SCALE)) ** 2.2) ** (1 / 2.2)
     elif SHAPE == 'plan':
         return 1.0 + plan_sd(x, y)          # WIDTH 1: coast_sd is the plan's distance in cells
     else:
@@ -211,7 +221,7 @@ def shore(x, y):
 
 
 # metres per unit of `shore` near the coast: the island's half width for its shape
-WIDTH = {'long': 0.14, 'crescent': 0.11, 'atoll': 0.09, 'islet': 0.16}.get(SHAPE, RADIUS / SCALE) * SCALE
+WIDTH = {'long': 0.14, 'crescent': 0.11, 'atoll': 0.09, 'islet': 0.16, 'strip': 0.11}.get(SHAPE, RADIUS / SCALE) * SCALE
 if SHAPE == 'plan':
     WIDTH = 1.0
 
@@ -1049,8 +1059,9 @@ def preview_population(flat, forest_cells, rocks_cells, coll_name="Preview (not 
 
     taken = set()
     cells = list(forest_cells)
-    for _ in range(600 * 40):
-        if len(taken) >= 600 or not cells:
+    cap = 600 if KIND != 'campaign' else 6000       # the long campaign strip is ~4 islands of land
+    for _ in range(cap * 40):
+        if len(taken) >= cap or not cells:
             break
         i, j = rnd.choice(cells)
         if any((i + a, j + c) in taken for a in (-1, 0, 1) for c in (-1, 0, 1)):
