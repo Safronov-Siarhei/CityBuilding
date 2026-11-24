@@ -304,7 +304,7 @@ namespace CityBuilder.EditorTools
             // identifier as the app's identity: installing this build would replace, or be replaced
             // by, any other app carrying it.
             PlayerSettings.companyName = "Depigo Games";
-            PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.depigogames.citybuilding");
+            PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.depigogames.citycraft");
 
             // Optimized Frame Pacing (Google's Swappy), off by default and wrong for this game.
             // FrameRateController caps the game at 60, and four of the six phones this is tested

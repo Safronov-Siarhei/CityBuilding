@@ -21,7 +21,7 @@ raw record. **Add every new measurement here** (the user, 2026-11-21).
    `dumpsys SurfaceFlinger --timestats -clear -enable`, wait, `--timestats -dump`, read the game layer's
    `present2present` histogram (frames over 20/34/50 ms).
 4. **Commands** (`Core/PerfProbe`): push a one-line text file to
-   `/sdcard/Android/data/com.depigogames.citybuilding/files/perf.txt`; the game reads it every second when its text
+   `/sdcard/Android/data/com.depigogames.citycraft/files/perf.txt`; the game reads it every second when its text
    changes (push a different line each time; delete the file when done -- it is re-read on the next start).
    | line | does |
    |---|---|

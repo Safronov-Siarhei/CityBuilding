@@ -63,7 +63,7 @@ user) and as a 3D render from the game's models; waiting for the user's correcti
   orc's banner above his skull staff is erased (`no_flag`). Draw order: tails, heroes, band.
 - Game: `UI/RateUsWindow.cs` -- `RateUsWindow.Show()` from anywhere (prefab `Resources/RateUsWindow`
   built by `Editor/SetupProjectRateUs.cs` from layout.json; canvas order 900, under the loading screen);
-  pops in (unscaled time); «Оценить» opens `market://details?id=com.depigogames.citybuilding` (the Android identifier SetupProject sets; the game's own page once it is published) (https Play link off
+  pops in (unscaled time); «Оценить» opens `market://details?id=com.depigogames.citycraft` (the Android identifier SetupProject sets; the game's own page once it is published) (https Play link off
   Android) and sets `Rated`; «Позже»/shade tap count `LaterCount` + `LastLaterUtc` -- all PlayerPrefs
   (device, not the save) for the future show rule. Art imported as UI art (`UiTextureImport.RateUsFolder`,
   ASTC on Android), unloaded after the window closes. Words: `#rateus_title/_body/_rate/_later`

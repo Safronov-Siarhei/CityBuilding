@@ -6,7 +6,7 @@ Status marks: [ ] not started, [~] in progress, [x] done. Who: **U** = the user 
 legal), **C** = Claude (code, builds, texts, images in the repo).
 
 ## Where the project stands (checked 2026-11-24)
-- Package `com.depigogames.citybuilding`, company «Depigo Games», productName «CityBuilding» (the menu logo says
+- Package `com.depigogames.citycraft` (the Play Console app, created 2026-11-24; was ...citybuilding), company «Depigo Games», productName «CityBuilding» (the menu logo says
   «CityCraft» -- the store name must be decided), version 0.1.0 / versionCode 1, IL2CPP, ARM64, min SDK 26.
 - Builds are APK only, signed with the DEBUG key (no custom keystore). The release APK is ~227 MB.
 - NO store SDKs in the project: no Play Billing / Unity IAP, no ads SDK, no Play Games Services.

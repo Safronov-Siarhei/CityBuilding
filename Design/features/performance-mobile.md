@@ -78,7 +78,7 @@
 > the sandbox with the GPU idle (12-14 ms) -- an unexplained ceiling below 60 to look into.
 > HyperOS trap: "USB debugging (security settings)" ON (persist.security.adbinput=1) still gave
 > INJECT_EVENTS denied (needs a phone reboot?). Workaround without taps: the dev build is debuggable,
-> so `run-as com.depigogames.citybuilding` reads/writes shared_prefs/<pkg>.v2.playerprefs.xml
+> so `run-as com.depigogames.citycraft` reads/writes shared_prefs/<pkg>.v2.playerprefs.xml
 > (graphics_tier=2 + graphics_detail.*), force-stop + relaunch = a new setting in the main menu.
 > Main-menu bug seen on device: MainMenuBackground's CreatePrimitive logs "Can't add component
 > because class 'CapsuleCollider' doesn't exist" (stripped) on every menu open.

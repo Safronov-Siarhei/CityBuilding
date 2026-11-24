@@ -104,7 +104,7 @@ category" and the APK's own entries (`data.unity3d`, `libil2cpp.so`, `libunity.s
 `Tools/research/build_android.ps1 [-Development | -Release]` (-Release = a player build: no cheat window, no PerfProbe; without it the APK carries the cheats) (`Editor/BuildAndroid.cs`) and `build_windows.ps1`
 (`Editor/BuildWindows.cs`) → `D:\Builds CB` (previous build deleted first) → Telegram via
 `send_build_to_telegram.py` (token from `TELEGRAM_BOT_TOKEN`; 50 MB cap). Identifier
-`com.depigogames.citybuilding`. The repo is PUBLIC — nothing secret in it.
+`com.depigogames.citycraft` (was ...citybuilding until 2026-11-24, when the Play Console app was created with it; old test installs are a different app). The repo is PUBLIC — nothing secret in it.
 **This machine (2026-11-12): Unity 6000.5.4f1 with Android Build Support is in
 `C:\Program Files\Unity\Hub\Editor\6000.5.4f1`** (build_android.ps1 finds it); a release APK takes ~4.5 min.
 **2026-11-18 (this machine, G:/D:):** Android module installed by hand into `D:\unity\6000.5.4f1-x86_64` (NDK r27c
