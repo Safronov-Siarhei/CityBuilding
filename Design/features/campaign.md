@@ -1629,3 +1629,11 @@ the win window, in mission 2's town (the user: «сразу после побе�
        - the MAGE from the bridge scene stands behind the old man in his cage WITHOUT his staff: `mage.make_captive` = CineMageCaptive (WITH_STAFF off), so the bridge scene's CineMage keeps its staff. For the film the chief and the extra monsters will need cine versions on the rig (now the game's static models).
     TRAP: importing orccage1.py (or kit.borrow of it) runs its main() and orcstone1's, which SAVE the open .blend -- the repo copy Blender/Buildings-Size1-Models.blend got overwritten once and was restored from the Drive by blend_sync. captives_glade loads them through `_quiet` (main() cut out), and renders run on a COPY of the .blend;
   - anims: the King talking from the saddle, the monster in the cage, prisoners in cages, volunteers stepping out, the amulet close-up.
+- **SCROLL REJECTED (2026-11-24, before the user saw it built):** «мне не нравится, выбивается из основного стиля игры
+  и смотрится не очень красиво»; asked for «уровни просто в виде списка и у каждого уровня будет своя превьюшка».
+  Concepts `Design/concepts/campaign_list/list_a.jpg` (rows with thumbnail/number/name/state on the left, the
+  picked level big on the right with a description + «Играть») and `list_b.jpg` (a row of tall cards, picked one
+  raised, «Играть» bottom centre, chapter dots), made by `Tools/campaign/campaign_list_concept.py <diorama dir> <out>`
+  in the MenuSkins/Classic kit over the blurred main-menu village; previews = the colour dioramas on a sky; the
+  prologue gets a play glyph, a locked «Скоро» slot shows the lock. Waiting for the user's pick; the scroll code
+  (BuildScroll, Scroll_* art) stays in the repo until the list replaces it.
