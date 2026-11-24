@@ -20,8 +20,11 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
 - Store name: «CityCraft» is the main part; keywords may be added (e.g. «CityCraft: ...», title cap 30 chars).
 - First release WITH crystal purchases (Play Billing) AND rewarded ads.
 - Size: Play Asset Delivery (not slimming first).
-- Ads: Google AdMob as the MEDIATION hub (the user, 2026-11-24: «хочу подключить медиацию», then «AdMob»): Google
-  UMP consent built in; other networks (Unity Ads, AppLovin, Meta, Mintegral...) added as adapters later.
+- Ads: UNITY ADS through Unity LevelPlay, one network for now (the user, 2026-11-24). AdMob was picked first, then
+  dropped: AdMob is NOT AVAILABLE to the studio -- do not suggest it again, nor Google demand through another
+  mediator (that needs AdMob too). The user: «самую простую сеть ... сможем поправить позже». LevelPlay lets more networks
+  (AppLovin, Mintegral, Liftoff...) join later from its dashboard + adapters, without touching the game code.
+  Consent: LevelPlay has no consent window of its own -- a simple in-game EEA/UK consent prompt -> SetConsent.
 - Upload key made by the user 2026-11-24: PKCS12 at D:\Keys (outside the repo), alias `upload`, valid to 2054; the
   four CB_* user env vars set and checked (PKCS12: key password = store password).
 
@@ -56,8 +59,8 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
 - [ ] Cloud save of crystals + campaign progress (Play Games Saved Games) -- monetization card «BEFORE RELEASE».
 - [ ] Invasion leaderboards on Play Games (day / week), decided 2026-11-17.
 - [ ] Payments: Google Play Billing (Unity IAP) for crystals / offers -- only if paid items are in the first release.
-- [ ] Ads: Google Mobile Ads Unity plugin + UMP consent, rewarded only, behind `Shop/RewardedAds` (today a stand-in);
-      U: AdMob account, app linked to Play, rewarded ad unit id(s); mediation adapters later.
+- [ ] Ads: Unity LevelPlay package + Unity Ads adapter, rewarded only, behind `Shop/RewardedAds` (today a stand-in),
+      own consent prompt; U: LevelPlay account (Unity Cloud), Android app -> app key, rewarded ad unit id.
 - [ ] Old-save check: real saves kept as fixtures, loaded by a test every run (see save-load card).
 
 ### D. Quality pass (U plays, C fixes)
@@ -74,7 +77,7 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
       project citycraft-game on the user's working Google account; the user deploys from THEIR terminal --
       Claude's shell is sandboxed: run `firebase.cmd deploy --only hosting` from APPDATA npm in the project folder).
       Source `docs/privacy-policy.html` (EN + RU, 2026-11-24). Contact = depigogames@gmail.com (the user,
-      2026-11-24: the public support address, also for the Play listing); ads named as Google AdMob + mediation partners. Hosting: FIREBASE HOSTING (the user, 2026-11-24:
+      2026-11-24: the public support address, also for the Play listing); ads named as Unity Ads (LevelPlay). Hosting: FIREBASE HOSTING (the user, 2026-11-24:
       the indie format «<project>.web.app/privacy-policy.html»): `firebase.json` serves `docs/`; the user makes the
       Firebase project on depigogames@gmail.com and runs `firebase login`; then `firebase deploy --only hosting`. Project id `citycraft-game` (.firebaserc) ->
       https://citycraft-game.web.app/privacy-policy.html
