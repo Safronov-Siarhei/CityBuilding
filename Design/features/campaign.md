@@ -240,7 +240,8 @@
   watercolour wash (flattened, granulated, darker drying rim) + ink; open/drawing scenes = ink only; ink doodles in
   the empty paper (tree clumps, hills with hatching, birds, a compass rose), the dashed road under the scenes with
   the fork to 3a/3b and on east to the wax seal «Глава 2», shading where the paper curls into the rods, an inkwell on
-  the table. The carousel is parked («возможно вставим позже»). Not in Unity; waiting for the user's notes.
+  the table. The carousel is parked («возможно вставим позже»). **The user APPROVED scroll v2 (2026-11-24, «Подходит»).**
+  Not in Unity yet: next is building it into the game in place of the 2D chart.
 - The way in: tap the campaign banner -> the loading screen -> the CAMPAIGN MAP -> tap a level point
   -> «Играть» lights up bottom centre -> the level (no separate confirmation window: the user's choice).
 - The map: a 2D painted PARCHMENT chart in the loading screen's lightly coloured look (the user's pick
