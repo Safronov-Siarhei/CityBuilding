@@ -1652,3 +1652,9 @@ the win window, in mission 2's town (the user: «сразу после побе�
   - Cheat buttons moved under the piggy bank. Offline Roslyn clean; setup not run (another Unity was running).
   - 2026-11-24 the user's first look: blocks moved off the screen edges symmetrically (Side 130: the piggy bank
     was hidden under the card), row medals pulled inside the row (the list mask clipped them).
+  - 2026-11-24 the user: «хочу чтобы в рамочках были кадры из соответствующих сценок» (frames for approval first).
+    Level 1: film frames sheet `Design/concepts/campaign_list/previews/m1.jpg` (Tools/campaign/preview_sheet.py). Levels
+    2 / prologue / 3b: Explicit PlayMode photo run `Tests/PlayMode/CampaignPreviewShots.cs` (`run.ps1 -Steps playmode
+    -Graphics -Filter CampaignPreviewShots` -> RunLogs/previews/<level>/ every 1.5 s for 48 s). It hung on licensing
+    AGAIN: the background Unity 6000.1 process (F:/AC/adultchessCOPY, ac11998-render.log) keeps its licensing client
+    even with every editor closed; batchmode only works once that process is gone. Level 3a has no scene: diorama stays.
