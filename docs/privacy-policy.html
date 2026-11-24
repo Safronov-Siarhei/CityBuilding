@@ -53,6 +53,9 @@
     position: absolute; top: calc(100% + 4px); left: 50%; transform: translateX(-50%); z-index: 5;
     list-style: none; margin: 0; padding: 4px 2px; min-width: 230px;
     border: 17px solid transparent; border-image: url(assets/card.png) 34 fill / 17px stretch;
+    /* the card's own parchment under the 9-slice: on phones the slices leave hair-thin gaps, and the shadow
+       below showed through them as black stripes (the user, 2026-11-24) */
+    background: linear-gradient(#ead39f, #ead39f) 4px 4px / calc(100% - 8px) calc(100% - 8px) no-repeat border-box;
     filter: drop-shadow(0 8px 14px rgba(0,0,0,.5));
   }
   .lang-list li {
