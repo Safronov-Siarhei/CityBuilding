@@ -67,8 +67,7 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
 - [ ] Icon 512x512, feature graphic 1024x500, 4-8 phone screenshots (+ tablet ones).
 - [x] Privacy policy PUBLISHED 2026-11-24 at https://citycraft-game.web.app/privacy-policy.html (Firebase Hosting,
       project citycraft-game on the user's working Google account; the user deploys from THEIR terminal --
-      Claude's shell is sandboxed: `& "$env:APPDATA
-pmirebase.cmd" deploy --only hosting` in G:\Fork\CityBuilding).
+      Claude's shell is sandboxed: run `firebase.cmd deploy --only hosting` from APPDATA npm in the project folder).
       Source `docs/privacy-policy.html` (EN + RU, 2026-11-24). Contact = depigogames@gmail.com (the user,
       2026-11-24: the public support address, also for the Play listing); placeholder [AD NETWORK] until the SDK is chosen. Hosting: FIREBASE HOSTING (the user, 2026-11-24:
       the indie format «<project>.web.app/privacy-policy.html»): `firebase.json` serves `docs/`; the user makes the
