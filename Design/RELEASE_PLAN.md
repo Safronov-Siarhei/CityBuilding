@@ -65,8 +65,8 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
 - [~] Name, short description (80 chars), full description (4000), EN + RU drafts in `Design/store/listing.md`
       (2026-11-24), waiting for the user's pick and edits; other languages with the game's translations.
 - [ ] Icon 512x512, feature graphic 1024x500, 4-8 phone screenshots (+ tablet ones).
-- [~] Privacy policy: `docs/privacy-policy.html` (EN + RU, 2026-11-24). Placeholders [CONTACT EMAIL] (the user's
-      public support address) and [AD NETWORK] (once the SDK is chosen). Hosting: GitHub Pages from master /docs
+- [~] Privacy policy: `docs/privacy-policy.html` (EN + RU, 2026-11-24). Contact = depigogames@gmail.com (the user,
+      2026-11-24: the public support address, also for the Play listing); placeholder [AD NETWORK] until the SDK is chosen. Hosting: GitHub Pages from master /docs
       (the user enables it in the repo settings; the URL shows the GitHub user name) or the studio's own site.
 - [ ] Data safety form, content rating questionnaire (IARC), target audience (not children: avoids the Families
       policy), ads declaration.
