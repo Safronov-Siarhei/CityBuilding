@@ -234,6 +234,13 @@
   <models.blend> <cart.fbx> [keys]` (game models on a grass disc over earth+rock, colour render + a Freestyle
   ink twin of the same view); screens: `Tools/campaign/campaign_levels_overlay.py <diorama dir> <out dir>`.
   Waiting for the user's pick.
+- **The SCROLL picked to work on (2026-11-24, «пока что доработай вариант свитка, карусель возможно вставим
+  позже»):** v2 `scroll.jpg` -- the scenes have NO floating rock any more (dioramas rendered with `flat`: only a
+  wide grass disc) and bleed into the parchment through a ragged oval vignette; done scenes = a real-looking
+  watercolour wash (flattened, granulated, darker drying rim) + ink; open/drawing scenes = ink only; ink doodles in
+  the empty paper (tree clumps, hills with hatching, birds, a compass rose), the dashed road under the scenes with
+  the fork to 3a/3b and on east to the wax seal «Глава 2», shading where the paper curls into the rods, an inkwell on
+  the table. The carousel is parked («возможно вставим позже»). Not in Unity; waiting for the user's notes.
 - The way in: tap the campaign banner -> the loading screen -> the CAMPAIGN MAP -> tap a level point
   -> «Играть» lights up bottom centre -> the level (no separate confirmation window: the user's choice).
 - The map: a 2D painted PARCHMENT chart in the loading screen's lightly coloured look (the user's pick

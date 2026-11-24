@@ -18,7 +18,8 @@ from mathutils import Vector
 
 argv = sys.argv[sys.argv.index("--") + 1:]
 OUT, MODELS, CART = argv[0], argv[1], argv[2]
-ONLY = argv[3:]
+FLAT = "flat" in argv[3:]          # the scroll's picture: only the ground, no floating rock (fades into the paper)
+ONLY = [a for a in argv[3:] if a != "flat"]
 sc = bpy.context.scene
 for o in list(sc.objects):
     bpy.data.objects.remove(o, do_unlink=True)
@@ -82,8 +83,11 @@ def island(coll, cx, R, seed):
     rnd = random.Random(seed)
     n = 48
     wob = [1 + 0.07 * math.sin(i / n * 2 * math.pi * 3 + seed) + rnd.uniform(-0.03, 0.03) for i in range(n)]
-    rings = [(1.0, 0.0, GRASS), (1.0, -0.35, LIP), (0.97, -0.55, EARTH), (0.88, -1.5, EARTH), (0.80, -2.0, ROCK),
-             (0.58, -3.2, ROCK), (0.34, -4.6, ROCK), (0.14, -5.9, ROCK)]
+    if FLAT:
+        rings = [(1.3, 0.0, GRASS), (1.3, -0.2, GRASS)]
+    else:
+        rings = [(1.0, 0.0, GRASS), (1.0, -0.35, LIP), (0.97, -0.55, EARTH), (0.88, -1.5, EARTH), (0.80, -2.0, ROCK),
+                 (0.58, -3.2, ROCK), (0.34, -4.6, ROCK), (0.14, -5.9, ROCK)]
     bm = bmesh.new()
     loops = []
     for k, (s, z, _m) in enumerate(rings):
@@ -100,7 +104,7 @@ def island(coll, cx, R, seed):
         for i in range(n):
             f = bm.faces.new((loops[k][i], loops[k][(i + 1) % n], loops[k + 1][(i + 1) % n], loops[k + 1][i]))
             f.material_index = mi
-    tip = bm.verts.new((cx + rnd.uniform(-0.3, 0.3), rnd.uniform(-0.3, 0.3), -7.2))
+    tip = bm.verts.new((cx + rnd.uniform(-0.3, 0.3), rnd.uniform(-0.3, 0.3), -0.3 if FLAT else -7.2))
     for i in range(n):
         f = bm.faces.new((loops[-1][i], loops[-1][(i + 1) % n], tip))
         f.material_index = 3
@@ -360,7 +364,7 @@ for key, coll, cx in LEVELS:
     base = key.lstrip("#")
     for ink in (False, True):
         ink_setup(ink)
-        sc.render.filepath = os.path.join(OUT, base + ("_ink" if ink else "") + ".png")
+        sc.render.filepath = os.path.join(OUT, base + ("_flat" if FLAT else "") + ("_ink" if ink else "") + ".png")
         bpy.ops.render.render(write_still=True)
     print("DIORAMA", base)
 print("DIORAMAS DONE")
