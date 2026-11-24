@@ -26,8 +26,12 @@ def main():
     icon = Image.open(os.path.join(ROOT, 'Assets', '_Project', 'UI', 'AppIcon.png')).convert('RGB')
     icon.resize((180, 180), Image.LANCZOS).save(os.path.join(OUT, 'icon.png'), optimize=True)
     icon.resize((48, 48), Image.LANCZOS).save(os.path.join(OUT, 'favicon.png'), optimize=True)
-    for piece in ('panel', 'button', 'title'):
+    for piece in ('panel', 'button', 'title', 'card', 'row_selected'):
         shutil.copy(os.path.join(SKIN, piece + '.png'), os.path.join(OUT, piece + '.png'))
+    # the main menu's language picker (UI/Icons/Flags, Tools/ui/language_flags.py): only the languages the page has
+    flags = os.path.join(ROOT, 'Assets', '_Project', 'UI', 'Icons', 'Flags')
+    for f in ('Flag_en', 'Flag_ru', 'Tick', 'Chevron'):
+        shutil.copy(os.path.join(flags, f + '.png'), os.path.join(OUT, f + '.png'))
     for font in ('Rubik-Medium.ttf', 'Rubik-Bold.ttf', 'Rubik-OFL.txt'):
         shutil.copy(os.path.join(FONTS, font), os.path.join(OUT, font))
     total = sum(os.path.getsize(os.path.join(OUT, f)) for f in os.listdir(OUT))

@@ -34,15 +34,38 @@
     color: var(--cream); font-weight: 700; font-size: clamp(18px, 5vw, 26px); letter-spacing: .3px;
     text-shadow: 0 2px 0 rgba(40,20,6,.7);
   }
-  .langs { display: flex; justify-content: center; gap: 10px; margin: 14px 0 6px; }
-  .langs button {
-    font: 700 16px Rubik, Arial, sans-serif; color: #5a3010; min-width: 118px; min-height: 52px; cursor: pointer;
-    background: none; padding: 0 18px 6px; border: 26px solid transparent;
+  /* the language picker (the main menu's list: flag + own name, the current one gold with a tick), rectangular
+     (the user, 2026-11-24: «давай прямоугольную, а не круглую») */
+  .lang { position: relative; display: flex; justify-content: center; margin: 14px 0 6px; }
+  .lang-btn {
+    display: inline-flex; align-items: center; gap: 10px; min-height: 54px; cursor: pointer;
+    font: 700 17px Rubik, Arial, sans-serif; color: #5a3010; background: none;
+    padding: 0 6px 6px; border: 26px solid transparent;
     border-image: url(assets/button.png) 52 52 62 52 fill / 26px 26px 31px 26px stretch;
-    filter: grayscale(.85) brightness(.85); transition: filter .15s, transform .1s;
+    transition: transform .1s;
   }
-  .langs button[aria-pressed="true"] { filter: none; }
-  .langs button:active { transform: scale(.96); }
+  .lang-btn:active { transform: scale(.96); }
+  .lang-btn .flag { width: 33px; height: 22px; }
+  .lang-btn .chev { width: 18px; height: 18px; transition: transform .15s; }
+  .lang-btn[aria-expanded="true"] .chev { transform: rotate(180deg); }
+  .flag { border-radius: 3px; box-shadow: 0 1px 2px rgba(0,0,0,.35); }
+  .lang-list {
+    position: absolute; top: calc(100% + 4px); left: 50%; transform: translateX(-50%); z-index: 5;
+    list-style: none; margin: 0; padding: 4px 2px; min-width: 230px;
+    border: 17px solid transparent; border-image: url(assets/card.png) 34 fill / 17px stretch;
+    filter: drop-shadow(0 8px 14px rgba(0,0,0,.5));
+  }
+  .lang-list li {
+    display: flex; align-items: center; gap: 12px; padding: 8px 10px; min-height: 48px; cursor: pointer;
+    font-weight: 700; font-size: 17px; border: 10px solid transparent; margin: 2px 0;
+  }
+  .lang-list li .flag { width: 36px; height: 24px; }
+  .lang-list li .tick { width: 24px; height: 24px; margin-left: auto; visibility: hidden; }
+  .lang-list li[aria-selected="true"] { border-image: url(assets/row_selected.png) 34 fill / 10px stretch; }
+  .lang-list li[aria-selected="true"] .tick { visibility: visible; }
+  .lang-list li:hover { background: rgba(160,106,36,.1); }
+  /* without scripts both languages show and the picker is useless */
+  html:not(.js) .lang { display: none; }
   .sheet {
     margin-top: 10px; padding: 8px 6px 14px;
     border: 30px solid transparent; border-image: url(assets/panel.png) 46 46 56 46 fill / 30px 30px 36px 30px stretch;
@@ -88,10 +111,16 @@
   <header>
     <img class="logo" src="assets/logo.png" alt="CityCraft" width="600" height="160">
     <div><span class="ribbon" id="title">Privacy Policy</span></div>
-    <nav class="langs" aria-label="Language">
-      <button type="button" data-lang="en" aria-pressed="true">English</button>
-      <button type="button" data-lang="ru" aria-pressed="false">Русский</button>
-    </nav>
+    <div class="lang">
+      <button type="button" class="lang-btn" aria-haspopup="listbox" aria-expanded="false" aria-label="Language">
+        <img class="flag" id="lang-flag" src="assets/Flag_en.png" alt=""><span id="lang-name">English</span>
+        <img class="chev" src="assets/Chevron.png" alt="">
+      </button>
+      <ul class="lang-list" role="listbox" hidden>
+        <li role="option" data-lang="en" data-name="English" aria-selected="true"><img class="flag" src="assets/Flag_en.png" alt="">English<img class="tick" src="assets/Tick.png" alt=""></li>
+        <li role="option" data-lang="ru" data-name="Русский" aria-selected="false"><img class="flag" src="assets/Flag_ru.png" alt="">Русский<img class="tick" src="assets/Tick.png" alt=""></li>
+      </ul>
+    </div>
   </header>
 
   <main class="sheet">
@@ -203,15 +232,26 @@
   (function () {
     document.documentElement.classList.add('js');
     var titles = { en: 'Privacy Policy', ru: 'Политика конфиденциальности' };
+    var btn = document.querySelector('.lang-btn'), list = document.querySelector('.lang-list');
+    function open(on) { list.hidden = !on; btn.setAttribute('aria-expanded', on); }
     function show(lang) {
       document.querySelectorAll('article').forEach(function (a) { a.hidden = a.lang !== lang; });
-      document.querySelectorAll('.langs button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.lang === lang); });
+      document.querySelectorAll('.lang-list li').forEach(function (li) {
+        var on = li.dataset.lang === lang;
+        li.setAttribute('aria-selected', on);
+        if (on) { document.getElementById('lang-name').textContent = li.dataset.name; }
+      });
+      document.getElementById('lang-flag').src = 'assets/Flag_' + lang + '.png';
       document.getElementById('title').textContent = titles[lang];
       document.documentElement.lang = lang;
     }
-    document.querySelectorAll('.langs button').forEach(function (b) {
-      b.addEventListener('click', function () { show(b.dataset.lang); history.replaceState(null, '', '#' + b.dataset.lang); });
+    btn.addEventListener('click', function (e) { e.stopPropagation(); open(list.hidden); });
+    document.querySelectorAll('.lang-list li').forEach(function (li) {
+      li.addEventListener('click', function () { show(li.dataset.lang); open(false); history.replaceState(null, '', '#' + li.dataset.lang); });
     });
+    // a tap anywhere else, or Esc, closes it (as the menu's list)
+    document.addEventListener('click', function (e) { if (!list.hidden && !list.contains(e.target)) open(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') open(false); });
     var hash = location.hash.slice(1);
     show(hash === 'ru' || hash === 'en' ? hash : ((navigator.language || 'en').toLowerCase().indexOf('ru') === 0 ? 'ru' : 'en'));
   })();
