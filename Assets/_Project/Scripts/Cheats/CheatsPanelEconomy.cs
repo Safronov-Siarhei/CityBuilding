@@ -99,7 +99,7 @@ namespace CityBuilder.Cheats
             if (Button("Баннер поддержки")) SupportOfferWindow.ShowAfterWin(int.MaxValue, null);
             if (Button("Сбросить подсказку сбора"))
             {
-                PlayerPrefs.DeleteKey("hint.crystal_mine_collected");
+                CityBuilder.Core.Prefs.DeleteKey("hint.crystal_mine_collected");
                 PlayerPrefs.Save();
             }
             GUILayout.EndHorizontal();

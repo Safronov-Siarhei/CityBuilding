@@ -20,7 +20,7 @@ namespace CityBuilder.Core
             get => PlayerPrefs.GetInt(UpgradeCrystalsKey, 0);
             set
             {
-                PlayerPrefs.SetInt(UpgradeCrystalsKey, Mathf.Max(0, value));
+                CityBuilder.Core.Prefs.SetInt(UpgradeCrystalsKey, Mathf.Max(0, value));
                 PlayerPrefs.Save();
                 UpgradeCrystalsChanged?.Invoke();
             }
@@ -37,7 +37,7 @@ namespace CityBuilder.Core
             set
             {
                 var was = FreedomOwned;
-                PlayerPrefs.SetInt(FreedomKey, value ? 1 : 0);
+                CityBuilder.Core.Prefs.SetInt(FreedomKey, value ? 1 : 0);
                 PlayerPrefs.Save();
                 if (was != value) FreedomChanged?.Invoke();
             }
@@ -56,7 +56,7 @@ namespace CityBuilder.Core
             set
             {
                 var was = CrystalMineOwned;
-                PlayerPrefs.SetInt(CrystalMineKey, value ? 1 : 0);
+                CityBuilder.Core.Prefs.SetInt(CrystalMineKey, value ? 1 : 0);
                 PlayerPrefs.Save();
                 if (was != value) CrystalMineChanged?.Invoke();
             }

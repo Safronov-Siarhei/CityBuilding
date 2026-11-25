@@ -314,7 +314,7 @@ namespace CityBuilder.UI
         {
             var mode = Picked;
             if (menu == null || Locked(mode)) return;
-            PlayerPrefs.SetInt(PlayedKey, mode);
+            CityBuilder.Core.Prefs.SetInt(PlayedKey, mode);
             PlayerPrefs.Save();
             switch (mode)
             {

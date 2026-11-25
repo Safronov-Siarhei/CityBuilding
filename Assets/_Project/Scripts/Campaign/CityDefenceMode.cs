@@ -372,7 +372,7 @@ namespace CityBuilder.Campaign
 
             gameObject.AddComponent<CityDefenceHud>().Bind(this);
 
-            PlayerPrefs.DeleteKey(Part2Key);
+            CityBuilder.Core.Prefs.DeleteKey(Part2Key);
             BeginPart1();
             // the scene at the capital when the courier gets there (CityDefenceMode.Capital.cs), not in the tests
             _noCapital = _skipCapitalOnce;
@@ -848,7 +848,7 @@ namespace CityBuilder.Campaign
             // the help rides in and cuts them all down (later: the scene)
             foreach (var orc in new List<OrcUnit>(OrcUnit.All))
                 if (orc != null) orc.TakeDamage(orc.CurrentHealth * 10 + 1);
-            PlayerPrefs.DeleteKey(Part2Key);
+            CityBuilder.Core.Prefs.DeleteKey(Part2Key);
             CampaignProgress.MarkDone(Kind == Mission.Escort ? EscortLevelId : LevelId);
             Core.PiggyTasks.Report(Core.PiggyTasks.CampaignWin);
             StopMusic();

@@ -286,7 +286,7 @@ namespace CityBuilder.UI
                 if (taken > 0) Shop.OfferRewardFlight.FromWorld(crystalIcon, "Crystals", taken, _bubble);
                 if (taken > 0 && PlayerPrefs.GetInt(CollectedKey, 0) != 1)
                 {
-                    PlayerPrefs.SetInt(CollectedKey, 1);
+                    CityBuilder.Core.Prefs.SetInt(CollectedKey, 1);
                     PlayerPrefs.Save();
                 }
             });

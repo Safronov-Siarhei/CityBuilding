@@ -50,7 +50,7 @@ namespace CityBuilder.Core
             var room = Mathf.Max(0, Capacity - Stored);
             var added = Mathf.Min(room, crystals);
             if (added <= 0) return 0;
-            PlayerPrefs.SetInt(StoredKey, Stored + added);
+            CityBuilder.Core.Prefs.SetInt(StoredKey, Stored + added);
             Changed?.Invoke();
             return added;
         }
@@ -84,8 +84,8 @@ namespace CityBuilder.Core
         {
             LastBrokenLevel = Level;
             LastBrokenCrystals = Stored;
-            PlayerPrefs.SetInt(LevelKey, Mathf.Min(Level + 1, Levels - 1));
-            PlayerPrefs.SetInt(StoredKey, 0);
+            CityBuilder.Core.Prefs.SetInt(LevelKey, Mathf.Min(Level + 1, Levels - 1));
+            CityBuilder.Core.Prefs.SetInt(StoredKey, 0);
             PlayerPrefs.Save();
             Changed?.Invoke();
             Broken?.Invoke();
@@ -94,9 +94,9 @@ namespace CityBuilder.Core
         /// <summary>Cheats: set the level (0-based) and the crystals in it.</summary>
         public static void CheatSet(int level, int stored)
         {
-            PlayerPrefs.SetInt(LevelKey, Mathf.Clamp(level, 0, Levels - 1));
-            PlayerPrefs.SetInt(StoredKey, Mathf.Max(0, stored));
-            PlayerPrefs.SetInt(StoredKey, Mathf.Min(Stored, Capacity));
+            CityBuilder.Core.Prefs.SetInt(LevelKey, Mathf.Clamp(level, 0, Levels - 1));
+            CityBuilder.Core.Prefs.SetInt(StoredKey, Mathf.Max(0, stored));
+            CityBuilder.Core.Prefs.SetInt(StoredKey, Mathf.Min(Stored, Capacity));
             PlayerPrefs.Save();
             Changed?.Invoke();
         }

@@ -111,6 +111,7 @@ namespace CityBuilder.UI
                 _hidden.Add(c);
             }
             Store.Changed += RedrawRows;
+            Store.Granted += OnGranted;
             Build();
         }
 
@@ -183,12 +184,22 @@ namespace CityBuilder.UI
             button.onClick.AddListener(() => Buy(product));
         }
 
+        private string _awaiting;   // bought here, waiting for Store.Granted
+
         private void Buy(string product)
         {
-            if (!Store.Buy(product)) return;
-            // thanks in the two lines; the packs stay (a player may want another)
+            _awaiting = product;
+            if (!Store.Buy(product)) _awaiting = null;
+        }
+
+        /// <summary>The pack came (at once from the stand-in, later from Google Play): thanks in the two lines; the packs
+        /// stay (a player may want another).</summary>
+        private void OnGranted(string id)
+        {
+            if (_awaiting == null || id != _awaiting) return;
+            _awaiting = null;
             _line1.text = Localization.Get("#support_thanks");
-            _line2.text = Localization.Format("#support_got", Store.CrystalsOf(product));
+            _line2.text = Localization.Format("#support_got", Store.CrystalsOf(id));
         }
 
         /// <summary>«Продолжить» (and Android's back key through BackCurrent): out, on with the campaign.</summary>
@@ -208,6 +219,7 @@ namespace CityBuilder.UI
         private void OnDestroy()
         {
             Store.Changed -= RedrawRows;
+            Store.Granted -= OnGranted;
             foreach (var c in _hidden) if (c != null) c.enabled = true;
             Time.timeScale = _timeScaleBefore;
             ModalGate.SetBlocked(_gateBefore);

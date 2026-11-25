@@ -55,8 +55,8 @@ namespace CityBuilder.UI
             var amount = Reward(index);
             if (doubled) amount = Mathf.RoundToInt(amount * (BalanceConfig.Sandbox.DailyBonusAdMultiplier));
             Wallet.UpgradeCrystals += amount;
-            PlayerPrefs.SetString(LastPref, Key(DateTime.Now));
-            PlayerPrefs.SetInt(StreakPref, index + 1);
+            CityBuilder.Core.Prefs.SetString(LastPref, Key(DateTime.Now));
+            CityBuilder.Core.Prefs.SetInt(StreakPref, index + 1);
             PlayerPrefs.Save();
             // the chain's big days: a happy moment for the rate-us window (the user, 2026-11-11)
             if (index == 4 || index == Days - 1) RateUsDirector.Note("daily_big", menu: true);
@@ -67,7 +67,7 @@ namespace CityBuilder.UI
         public static void ResetToday()
         {
             if (Due) return;
-            PlayerPrefs.SetString(LastPref, Key(DateTime.Now.AddDays(-1)));
+            CityBuilder.Core.Prefs.SetString(LastPref, Key(DateTime.Now.AddDays(-1)));
             PlayerPrefs.Save();
         }
     }

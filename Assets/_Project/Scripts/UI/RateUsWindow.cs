@@ -161,7 +161,7 @@ namespace CityBuilder.UI
         private void Rate()
         {
             if (_closing) return;
-            PlayerPrefs.SetInt(RatedPref, 1);
+            CityBuilder.Core.Prefs.SetInt(RatedPref, 1);
             PlayerPrefs.Save();
             var id = Application.identifier;
 #if UNITY_ANDROID && !UNITY_EDITOR
@@ -175,8 +175,8 @@ namespace CityBuilder.UI
         private void PutOff()
         {
             if (_closing) return;
-            PlayerPrefs.SetInt(LaterCountPref, LaterCount + 1);
-            PlayerPrefs.SetString(LaterAtPref, System.DateTime.UtcNow.Ticks.ToString());
+            CityBuilder.Core.Prefs.SetInt(LaterCountPref, LaterCount + 1);
+            CityBuilder.Core.Prefs.SetString(LaterAtPref, System.DateTime.UtcNow.Ticks.ToString());
             PlayerPrefs.Save();
             Close();
         }

@@ -110,11 +110,11 @@ namespace CityBuilder.Core
             set
             {
                 _detail = value;
-                PlayerPrefs.SetInt(DetailKey + "fps", value.Fps);
-                PlayerPrefs.SetInt(DetailKey + "msaa", value.Msaa);
-                PlayerPrefs.SetInt(DetailKey + "scale", value.ScalePercent);
-                PlayerPrefs.SetInt(DetailKey + "shadows", value.Shadows);
-                PlayerPrefs.SetInt(DetailKey + "reach", value.ShadowReach);
+                CityBuilder.Core.Prefs.SetInt(DetailKey + "fps", value.Fps);
+                CityBuilder.Core.Prefs.SetInt(DetailKey + "msaa", value.Msaa);
+                CityBuilder.Core.Prefs.SetInt(DetailKey + "scale", value.ScalePercent);
+                CityBuilder.Core.Prefs.SetInt(DetailKey + "shadows", value.Shadows);
+                CityBuilder.Core.Prefs.SetInt(DetailKey + "reach", value.ShadowReach);
                 PlayerPrefs.Save();
                 Apply();
             }
@@ -147,7 +147,7 @@ namespace CityBuilder.Core
         {
             if (tier == GraphicsTier.Auto) { Chosen = GraphicsTier.Auto; return; }
             _chosen = tier;
-            PlayerPrefs.SetInt(Key, (int)tier);
+            CityBuilder.Core.Prefs.SetInt(Key, (int)tier);
             Current = Preset(tier);   // saves and applies
         }
 
@@ -164,7 +164,7 @@ namespace CityBuilder.Core
             set
             {
                 if (value == ShowFps) return;
-                PlayerPrefs.SetInt(ShowFpsKey, value ? 1 : 0);
+                CityBuilder.Core.Prefs.SetInt(ShowFpsKey, value ? 1 : 0);
                 PlayerPrefs.Save();
                 ShowFpsChanged?.Invoke();
             }
@@ -185,7 +185,7 @@ namespace CityBuilder.Core
             {
                 if (_chosen == value) return;
                 _chosen = value;
-                PlayerPrefs.SetInt(Key, (int)value);
+                CityBuilder.Core.Prefs.SetInt(Key, (int)value);
                 PlayerPrefs.Save();
                 Apply();
             }

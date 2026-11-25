@@ -26,7 +26,7 @@ namespace CityBuilder.Core
         {
             if (_unsaved < 1f) return;
             var whole = Mathf.FloorToInt(_unsaved);
-            PlayerPrefs.SetInt(Key, PlayerPrefs.GetInt(Key, 0) + whole);
+            CityBuilder.Core.Prefs.SetInt(Key, PlayerPrefs.GetInt(Key, 0) + whole);
             PlayerPrefs.Save();
             _unsaved -= whole;
         }

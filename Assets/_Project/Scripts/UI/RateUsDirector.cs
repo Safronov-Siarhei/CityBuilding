@@ -61,7 +61,7 @@ namespace CityBuilder.UI
             if (config != null && !config.RateUsEventOn(key)) return;
             if (menu)
             {
-                PlayerPrefs.SetInt(MenuPendingPref, 1);
+                CityBuilder.Core.Prefs.SetInt(MenuPendingPref, 1);
                 return;
             }
             if (!_instance.Due()) return;
@@ -106,11 +106,11 @@ namespace CityBuilder.UI
         {
             var today = DateTime.Now.ToString("yyyy-MM-dd");
             if (PlayerPrefs.GetString(LastDayPref, string.Empty) == today) return;
-            PlayerPrefs.SetString(LastDayPref, today);
+            CityBuilder.Core.Prefs.SetString(LastDayPref, today);
             var days = PlayerPrefs.GetInt(DaysPref, 0) + 1;
-            PlayerPrefs.SetInt(DaysPref, days);
+            CityBuilder.Core.Prefs.SetInt(DaysPref, days);
             PlayerPrefs.Save();
-            if ((days == 2 && On("day2")) || (days == 7 && On("day7"))) PlayerPrefs.SetInt(MenuPendingPref, 1);
+            if ((days == 2 && On("day2")) || (days == 7 && On("day7"))) CityBuilder.Core.Prefs.SetInt(MenuPendingPref, 1);
         }
 
         private static bool On(string key) => BalanceConfig.Instance == null || BalanceConfig.Instance.RateUsEventOn(key);
@@ -171,7 +171,7 @@ namespace CityBuilder.UI
             // the menu's own events (a record, a mission, a login day, the big bonus days)
             if (_menuScene && PlayerPrefs.GetInt(MenuPendingPref, 0) == 1 && _pendingUntil < 0f && Due())
             {
-                PlayerPrefs.SetInt(MenuPendingPref, 0);
+                CityBuilder.Core.Prefs.SetInt(MenuPendingPref, 0);
                 _pendingUntil = Time.unscaledTime + config.RateUsWaitSeconds;
             }
             // too long without an event: the next calm moment
@@ -251,14 +251,14 @@ namespace CityBuilder.UI
         {
             RateUsWindow.Show();
             _since = 0f;
-            PlayerPrefs.SetInt(ShowsPref, PlayerPrefs.GetInt(ShowsPref, 0) + 1);
-            PlayerPrefs.SetString(ShownDayPref, DateTime.Now.ToString("yyyy-MM-dd"));
+            CityBuilder.Core.Prefs.SetInt(ShowsPref, PlayerPrefs.GetInt(ShowsPref, 0) + 1);
+            CityBuilder.Core.Prefs.SetString(ShownDayPref, DateTime.Now.ToString("yyyy-MM-dd"));
             Save();
         }
 
         private void Save()
         {
-            PlayerPrefs.SetFloat(SincePref, _since);
+            CityBuilder.Core.Prefs.SetFloat(SincePref, _since);
             PlayerPrefs.Save();
         }
 

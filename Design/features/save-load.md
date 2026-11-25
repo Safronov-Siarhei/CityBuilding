@@ -44,3 +44,8 @@ EditMode `SaveDataShapeTests`, `SaveSystemSanitizeNameTests`; PlayMode `SaveRoun
 - 2026-11-17: a resumed save looks at the Town Hall's footprint CENTRE once the hall exists and the loading screen is gone (waits up to 20 s), and again 0.6 s later (`GameSaveController.LookAtTownHallAfterLoad`) -- it gave up at frame 3 and the save opened far away.
 
 **2026-11-20 (the user approved Design/ui/Concept_SaveSlots.png):** «Сохранить игру» lists THIS map's saves (by `GameSaveData.mapId` = `GameSaveController.CurrentMapId`, now public; autosaves never), newest first, in a scrolling column (`SetupProjectGameplayUI.BuildSaveUI`: card 900x800, `Slots` ScrollRect + RectMask2D, `Warning`, confirm = a dynamic-label button). A row tap puts its name in the field; a typed name that exists = overwrite: row lit (`UiTheme.RowSelected`), button «Перезаписать» (`#save_overwrite`), red `#save_overwrite_warning`; any other name = new save. Rows built at runtime in `SaveDialogController` (`#save_row_stats` day/people, local time). Each listed save is parsed once per opening (few files). Built, not compiled by setup yet (the user's Unity was open).
+
+**2026-11-25 cloud save (account progress, not map files):** PlayerPrefs progress goes to Google Play Games saved games
+through `Core/CloudSave.cs`; every runtime PlayerPrefs write must use `CityBuilder.Core.Prefs.Set*` (key list for the
+snapshot). Map saves (`SaveSystem` files) stay on the device for now. Details: monetization.md «Google Play billing +
+cloud save».

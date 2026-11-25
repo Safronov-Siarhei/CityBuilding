@@ -70,7 +70,7 @@ namespace CityBuilder.UI
         public static void MarkRead(BalanceConfig.NewsItem item)
         {
             if (item == null || IsRead(item)) return;
-            PlayerPrefs.SetInt(ReadPref + item.number, 1);
+            CityBuilder.Core.Prefs.SetInt(ReadPref + item.number, 1);
             PlayerPrefs.Save();
             Changed?.Invoke();
         }
@@ -79,7 +79,7 @@ namespace CityBuilder.UI
         public static void Claim(BalanceConfig.NewsItem item)
         {
             if (item == null || !RewardWaiting(item)) return;
-            PlayerPrefs.SetInt(ClaimedPref + item.number, 1);
+            CityBuilder.Core.Prefs.SetInt(ClaimedPref + item.number, 1);
             foreach (var reward in item.rewards)
             {
                 if (reward.kind == "crystal") Wallet.UpgradeCrystals += reward.amount;

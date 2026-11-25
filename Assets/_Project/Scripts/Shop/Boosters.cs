@@ -61,7 +61,7 @@ namespace CityBuilder.Shop
         public static void AddStock(string id, int amount)
         {
             if (string.IsNullOrEmpty(id) || amount == 0) return;
-            PlayerPrefs.SetInt(StockPref + id, Mathf.Max(0, Stock(id) + amount));
+            CityBuilder.Core.Prefs.SetInt(StockPref + id, Mathf.Max(0, Stock(id) + amount));
             PlayerPrefs.Save();
             Changed?.Invoke();
         }
@@ -91,7 +91,7 @@ namespace CityBuilder.Shop
         {
             var def = Def(id);
             if (def == null || !Here || Stock(id) <= 0) return false;
-            PlayerPrefs.SetInt(StockPref + id, Stock(id) - 1);
+            CityBuilder.Core.Prefs.SetInt(StockPref + id, Stock(id) - 1);
             if (def.durationSeconds <= 0f) DoAtOnce(id, def);
             else
             {
@@ -136,7 +136,7 @@ namespace CityBuilder.Shop
         public static void SaveLeft()
         {
             _saveIn = SaveEverySeconds;
-            foreach (var pair in _left) PlayerPrefs.SetFloat(LeftPref + pair.Key, pair.Value);
+            foreach (var pair in _left) CityBuilder.Core.Prefs.SetFloat(LeftPref + pair.Key, pair.Value);
             PlayerPrefs.Save();
         }
 

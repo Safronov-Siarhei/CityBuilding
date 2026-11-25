@@ -71,6 +71,11 @@ namespace CityBuilder.EditorTools
             // batchmode build reproducible on any machine.
             _balance = BalanceImporter.RebuildConfig();
 
+            // Google Play Games: the app id from Design/store/play_games_app_id.txt into the plugin's settings and
+            // manifest (CityBuilder.Editor.Android, found by name: this assembly must not need the Android module).
+            System.Type.GetType("CityBuilder.EditorTools.PlayGamesSetup, CityBuilder.Editor.Android")
+                ?.GetMethod("Apply")?.Invoke(null, null);
+
             // Before the models are reimported: their `Buildings` material is remapped onto this
             // one at import (ModelImportDefaults), so it has to exist by then.
             EnsurePaletteMaterial();

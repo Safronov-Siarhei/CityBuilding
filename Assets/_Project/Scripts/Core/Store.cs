@@ -13,10 +13,10 @@ namespace CityBuilder.Core
     ///   crystals_1..3       the crystal packs (menu_shop_pack_crystals_N);
     ///   sale_crystals_1..3  the same packs at the «Подожди!» price (menu_shop_pack_sale_usd_N), products of their own.
     ///
-    /// There is NO Google Play billing yet: Buy is a stand-in that gives the product at once (a test purchase). The
-    /// billing, when it comes, calls Grant on a bought product, MarkPending on a payment still on its way (cash
-    /// countries) and Revoke when a purchase is taken back (a refund): the mine is locked again everywhere and its
-    /// offer is back in the shop. The cheats drive Pending and Revoke until then.
+    /// Google Play billing (Billing.cs, 2026-11-25) calls Grant on a bought product, MarkPending on a payment still on
+    /// its way (cash countries) and Revoke when a purchase is taken back (a refund): the mine is locked again
+    /// everywhere and its offer is back in the shop. In the editor and on Windows Buy is a stand-in that gives the
+    /// product at once (a test purchase); the cheats drive Pending and Revoke there.
     /// </summary>
     public static class Store
     {
@@ -29,8 +29,28 @@ namespace CityBuilder.Core
 
         private const string PendingKey = "store.pending.";
 
-        /// <summary>No billing yet: every Buy is a test purchase given at once.</summary>
-        public static bool TestPurchases => true;
+        /// <summary>The stand-in: every Buy is a test purchase given at once. Only where there is no Google Play
+        /// billing (the editor, Windows); in an Android player a purchase always goes through <see cref="Billing"/>.</summary>
+        public static bool TestPurchases => Application.isEditor || Application.platform != RuntimePlatform.Android;
+
+        /// <summary>Every product Google Play sells, and whether it is consumable (packs, piggy) or once and for good.</summary>
+        public static System.Collections.Generic.IEnumerable<(string id, bool consumable)> Catalog()
+        {
+            yield return (Mine, false);
+            yield return (MineSale, false);
+            yield return (Freedom, false);
+            var config = BalanceConfig.Instance;
+            var packs = config != null ? config.MenuShopPackCount : 3;
+            for (var i = 0; i < packs; i++)
+            {
+                yield return (PackId(i), true);
+                yield return (PackSaleId(i), true);
+            }
+            for (var i = 0; i < PiggyBank.Levels; i++) yield return (PiggyId(i), true);
+        }
+
+        /// <summary>Billing's prices came, or something else changed outside a purchase: the open shop redraws.</summary>
+        public static void RaiseChanged() => Changed?.Invoke();
 
         /// <summary>A product was given (bought, or a pending payment came through).</summary>
         public static event Action<string> Granted;
@@ -90,8 +110,9 @@ namespace CityBuilder.Core
             return sale ? config.MenuShopPackSaleUsd(pack) : config.MenuShopPackUsd(pack);
         }
 
-        /// <summary>«$7.99» -- the price as the shop shows it.</summary>
-        public static string PriceText(string id) => PriceText(UsdOf(id));
+        /// <summary>«$7.99» -- the price as the shop shows it: Google's own string (the player's money) once billing has
+        /// it, the sheet's USD stand-in until then.</summary>
+        public static string PriceText(string id) => Billing.PriceOf(id) ?? PriceText(UsdOf(id));
 
         public static string PriceText(float usd) =>
             string.Format(Localization.Get("#shop_price_usd"), usd.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
@@ -105,10 +126,15 @@ namespace CityBuilder.Core
         public static bool CanBuy(string id) => !IsPending(id) && !(IsMine(id) && Wallet.CrystalMineOwned) && !(id == Freedom && Wallet.FreedomOwned)
             && (!IsPiggy(id) || (id == PiggyBank.ProductId && PiggyBank.CanBreak));
 
-        /// <summary>Buys a product. The stand-in gives it at once and says true; the billing will answer later through Granted.</summary>
+        /// <summary>
+        /// Buys a product. The stand-in gives it at once (Granted is raised inside this call). Google Play billing opens
+        /// its payment sheet and answers later through Granted -- so a window shows «bought» on Granted, never on this
+        /// call. False: nothing was started (cannot be bought, or billing is not connected yet).
+        /// </summary>
         public static bool Buy(string id)
         {
             if (!CanBuy(id)) return false;
+            if (!TestPurchases) return Billing.Purchase(id);
             Grant(id);
             return true;
         }
@@ -147,7 +173,7 @@ namespace CityBuilder.Core
 
         private static void SetPending(string id, bool pending)
         {
-            PlayerPrefs.SetInt(PendingKey + Family(id), pending ? 1 : 0);
+            CityBuilder.Core.Prefs.SetInt(PendingKey + Family(id), pending ? 1 : 0);
             PlayerPrefs.Save();
         }
     }

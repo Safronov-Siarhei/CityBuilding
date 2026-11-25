@@ -109,7 +109,7 @@ namespace CityBuilder.Core
         {
             if (cached == value) return;
             cached = value;
-            PlayerPrefs.SetInt(key, (int)value);
+            CityBuilder.Core.Prefs.SetInt(key, (int)value);
             PlayerPrefs.Save();
             OnChanged?.Invoke();
         }
@@ -130,14 +130,14 @@ namespace CityBuilder.Core
         public static float MusicVolume
         {
             get => _musicVolume ??= Mathf.Clamp01(PlayerPrefs.GetFloat(MusicVolumeKey, 1f));
-            set { _musicVolume = Mathf.Clamp01(value); PlayerPrefs.SetFloat(MusicVolumeKey, _musicVolume.Value); }
+            set { _musicVolume = Mathf.Clamp01(value); CityBuilder.Core.Prefs.SetFloat(MusicVolumeKey, _musicVolume.Value); }
         }
 
         /// <summary>The «Эффекты» slider: multiplies every other sound (building, combat, clicks, the campaign's sounds).</summary>
         public static float SfxVolume
         {
             get => _sfxVolume ??= Mathf.Clamp01(PlayerPrefs.GetFloat(SfxVolumeKey, 1f));
-            set { _sfxVolume = Mathf.Clamp01(value); PlayerPrefs.SetFloat(SfxVolumeKey, _sfxVolume.Value); }
+            set { _sfxVolume = Mathf.Clamp01(value); CityBuilder.Core.Prefs.SetFloat(SfxVolumeKey, _sfxVolume.Value); }
         }
 
         public static FogStyle FogStyle
@@ -157,7 +157,7 @@ namespace CityBuilder.Core
                 if (_loaded && _fogStyle == value) return;
                 _loaded = true;
                 _fogStyle = value;
-                PlayerPrefs.SetInt(FogStyleKey, (int)value);
+                CityBuilder.Core.Prefs.SetInt(FogStyleKey, (int)value);
                 PlayerPrefs.Save();
                 OnChanged?.Invoke();
             }
@@ -180,7 +180,7 @@ namespace CityBuilder.Core
                 if (_hudSkinLoaded && _hudSkin == value) return;
                 _hudSkinLoaded = true;
                 _hudSkin = value;
-                PlayerPrefs.SetInt(HudSkinKey, (int)value);
+                CityBuilder.Core.Prefs.SetInt(HudSkinKey, (int)value);
                 PlayerPrefs.Save();
                 OnChanged?.Invoke();
             }

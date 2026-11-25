@@ -226,7 +226,7 @@ namespace CityBuilder.UI
         {
             if (!Seen(place))
             {
-                PlayerPrefs.SetInt(SeenKey + place, 1);
+                CityBuilder.Core.Prefs.SetInt(SeenKey + place, 1);
                 PlayerPrefs.Save();
             }
             RefreshBadges();

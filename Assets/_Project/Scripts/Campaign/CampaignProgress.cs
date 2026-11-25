@@ -18,7 +18,7 @@ namespace CityBuilder.Campaign
 
         public static void MarkDone(string levelId)
         {
-            if (!string.IsNullOrEmpty(levelId)) PlayerPrefs.SetInt(DonePrefix + levelId, 1);
+            if (!string.IsNullOrEmpty(levelId)) CityBuilder.Core.Prefs.SetInt(DonePrefix + levelId, 1);
         }
     }
 }

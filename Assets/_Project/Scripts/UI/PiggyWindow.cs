@@ -80,7 +80,7 @@ namespace CityBuilder.UI
             var now = DateTime.UtcNow.Ticks / TimeSpan.TicksPerSecond;
             long.TryParse(PlayerPrefs.GetString(AutoKey, "0"), out var last);
             if (!lost && now - last < hours * 3600f) return;
-            PlayerPrefs.SetString(AutoKey, now.ToString());
+            CityBuilder.Core.Prefs.SetString(AutoKey, now.ToString());
             PiggyTasks.LostWhileFull = false;
             Show();
         }

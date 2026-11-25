@@ -65,7 +65,7 @@ namespace CityBuilder.Core
             // translated, the user 2026-11-14) is still the player's choice: it reads the English text
             _language = code;
             _languageIndex = ColumnFor(config, code);
-            PlayerPrefs.SetString(LanguagePrefsKey, code);
+            CityBuilder.Core.Prefs.SetString(LanguagePrefsKey, code);
             PlayerPrefs.Save();
             OnLanguageChanged?.Invoke();
         }

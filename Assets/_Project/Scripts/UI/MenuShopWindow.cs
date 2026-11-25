@@ -62,6 +62,7 @@ namespace CityBuilder.UI
         private float _balanceRoll = 1f;
         private bool _boughtFromWait;
         private bool _boughtThisVisit;
+        private string _awaiting;   // bought here, waiting for Store.Granted
         private int _visit;
         private Text _waitText;
         private RectTransform _waitCard;
@@ -104,11 +105,12 @@ namespace CityBuilder.UI
             if (_kind == Kind.Shop)
             {
                 _visit = PlayerPrefs.GetInt(VisitsKey, 0) + 1;
-                PlayerPrefs.SetInt(VisitsKey, _visit);
+                CityBuilder.Core.Prefs.SetInt(VisitsKey, _visit);
                 PlayerPrefs.Save();
             }
             HideTheInterfaceBehind();
             Store.Changed += Redraw;
+            Store.Granted += OnGranted;
             Wallet.UpgradeCrystalsChanged += OnCrystals;
             StartCoroutine(Build());
         }
@@ -463,9 +465,17 @@ namespace CityBuilder.UI
         private void Buy(string product)
         {
             _boughtFromWait = _waitView != null && _waitView.gameObject.activeSelf;
-            if (!Store.Buy(product)) return;
+            _awaiting = product;
+            if (!Store.Buy(product)) _awaiting = null;
+        }
+
+        /// <summary>The product came (at once from the stand-in, later from Google Play's payment sheet): «Покупка успешна».</summary>
+        private void OnGranted(string id)
+        {
+            if (_awaiting == null || id != _awaiting) return;
+            _awaiting = null;
             _boughtThisVisit = true;
-            ShowBought(product);
+            ShowBought(id);
         }
 
         // ------------------------------------------------------------ leaving
@@ -485,8 +495,8 @@ namespace CityBuilder.UI
 
         private void ShowWait(string offer)
         {
-            PlayerPrefs.SetString(ExitShownKey, DateTime.UtcNow.Ticks.ToString());
-            PlayerPrefs.SetString(LastOfferKey, offer);
+            CityBuilder.Core.Prefs.SetString(ExitShownKey, DateTime.UtcNow.Ticks.ToString());
+            CityBuilder.Core.Prefs.SetString(LastOfferKey, offer);
             PlayerPrefs.Save();
             if (_waitCard != null) Destroy(_waitCard.gameObject);
             var mine = Store.IsMine(offer);
@@ -548,6 +558,7 @@ namespace CityBuilder.UI
         private void OnDestroy()
         {
             Store.Changed -= Redraw;
+            Store.Granted -= OnGranted;
             Wallet.UpgradeCrystalsChanged -= OnCrystals;
             foreach (var canvas in _hidden) if (canvas != null) canvas.enabled = true;
             _hidden.Clear();

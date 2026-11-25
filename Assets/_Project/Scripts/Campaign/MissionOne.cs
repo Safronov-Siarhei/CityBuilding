@@ -120,7 +120,7 @@ namespace CityBuilder.Campaign
         {
             if (Running) return;
             // the film has been seen once: from now on level 1 starts past it (the map can replay it)
-            PlayerPrefs.SetInt(CampaignProgress.FilmSeenKey, 1);
+            CityBuilder.Core.Prefs.SetInt(CampaignProgress.FilmSeenKey, 1);
             _c = JsonUtility.FromJson<Config>(configFile.text);
             director.KeepAlive = true;
             director.CameraReleased = true;
@@ -272,7 +272,7 @@ namespace CityBuilder.Campaign
                     _stick.Locked = true;
                     _hud?.Hide();
                     Stretch(_c.chase?.checkpoints != null ? _c.chase.checkpoints.Length : 0);
-                    if (_bestBefore <= 0f || _elapsed < _bestBefore) PlayerPrefs.SetFloat(BestKey, _elapsed);
+                    if (_bestBefore <= 0f || _elapsed < _bestBefore) CityBuilder.Core.Prefs.SetFloat(BestKey, _elapsed);
                     // the piggy bank's tasks: a level won; faster than a record that already stood
                     if (_bestBefore > 0f && _elapsed < _bestBefore) Core.PiggyTasks.Report(Core.PiggyTasks.CampaignRecord);
                     Core.PiggyTasks.Report(Core.PiggyTasks.CampaignWin);
@@ -363,7 +363,7 @@ namespace CityBuilder.Campaign
             var seconds = _elapsed - _stretchFrom;
             _stretchFrom = _elapsed;
             var best = PlayerPrefs.GetFloat(SplitKey + i, 0f);
-            if (best <= 0f || seconds < best) PlayerPrefs.SetFloat(SplitKey + i, seconds);
+            if (best <= 0f || seconds < best) CityBuilder.Core.Prefs.SetFloat(SplitKey + i, seconds);
             _hud?.Split(i + 1, seconds, best);
         }
 

@@ -60,7 +60,12 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
 ### C. Must-have features before players (C, decisions U)
 - [ ] Cloud save of crystals + campaign progress (Play Games Saved Games) -- monetization card «BEFORE RELEASE».
 - [ ] Invasion leaderboards on Play Games (day / week), decided 2026-11-17.
-- [ ] Payments: Google Play Billing (Unity IAP) for crystals / offers -- only if paid items are in the first release.
+- [~] Payments: Google Play Billing via Unity IAP 5.5.1 (`Core/Billing.cs`, IN THE CODE 2026-11-25) behind `Store`; 14
+      products (`Design/store/product_ids.txt`). U: payments profile, first AAB, create + activate the products, license
+      testers -- `Design/store/PLAY_BILLING_AND_GAMES.md`.
+- [~] Cloud save of the account progress to Play Games saved games (`Core/CloudSave.cs` + `Prefs`, plugin 2.3.0 without
+      EDM4U, IN THE CODE 2026-11-25). U: PGS project, credentials (SHA-1s), Saved games ON, app id into
+      `Design/store/play_games_app_id.txt`. Then Data safety: user IDs + outside-account sign-in = Да.
 - [ ] Ads: Unity LevelPlay package + Unity Ads adapter, rewarded only, behind `Shop/RewardedAds` (today a stand-in),
       own consent prompt; U: LevelPlay account (Unity Cloud), Android app -> app key, rewarded ad unit id.
 - [ ] IN-GAME privacy link (Google: the policy must be linked on the store page AND inside the app): a «Политика

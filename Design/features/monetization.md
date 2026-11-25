@@ -3,9 +3,39 @@
 > **2026-11-18 phone playtest (BUILT, not seen):** main-menu shop scrolls from anywhere (the ScrollRect on the whole window, the list its viewport); the pack bonus sticker sits ABOVE the price button; cards LIVE (`UI/ShopCardLife.cs`): the gold rim overlay `CardRim`/`CardRimShort` pulses, each card its own period/phase, and the 4 sparkles are separate `Sparkle` pictures that twinkle (`menu_shop_art.py` grounds now drawn without sparkles, `sparkle_spots` = the code's spots). Daily bonus plays `Audio/Resources/Build/reward.wav` (coins + sparkle, `Tools/audio/build_sounds.py`, `BuildSound.Reward`). The move price: the user picked A (`Design/ui/MovePrice_Concepts.png`) with the crystal a bit left -- BUILT: a gold pill (`pill_gold`) on the ✓'s lower rim, «1» + crystal inside (SetupProjectGameplayUI «MovePrice»).
 
 > **Status (2026-11-11):** the user settled the direction below and asked for the offer shop («Да,
-> делай»): built, see «Offer shop: how it is built». The daily login bonus is built too. No ads SDK, no IAP.
+> делай»): built, see «Offer shop: how it is built». The daily login bonus is built too. No ads SDK yet; Google
+> Play billing + cloud save IN THE CODE 2026-11-25 (see the section below).
 > **Rule for the whole game (the user, 2026-11-11): an amount of crystals is the NUMBER LEFT, the icon
 > RIGHT** (other resources keep icon-then-number) -- see hud-and-ui.md.
+
+## Google Play billing + cloud save (the user 2026-11-25: «подключением кристаллов и их сохранением в гугл»; IN THE CODE, not on a phone yet)
+- **Billing** `Core/Billing.cs` (Unity IAP 5.5.1, `com.unity.purchasing` in the manifest, `Unity.Purchasing` in the
+  runtime asmdef). Live only in an Android player: Connect -> FetchProducts(`Store.Catalog()`: mine, mine_sale, freedom
+  non-consumable; crystals_N, sale_crystals_N, piggy_1..5 consumable) + FetchPurchases. `Store.Buy` -> `Billing.Purchase`
+  (the payment sheet) and returns at once; windows show «bought» on `Store.Granted` (MenuShopWindow/SupportOfferWindow
+  `_awaiting`; Piggy/Freedom were event-driven already). OnPurchasePending -> grant once per transaction id
+  (`store.granted_orders`, last 100, synced) -> ConfirmPurchase; held until `CloudSave.Ready`. Deferred (cash) ->
+  MarkPending. FetchPurchases: an owned mine/freedom flag without Google's order -> Revoke (refund); Google's order
+  without the flag -> flag back without the gift (new phone). Prices: `Store.PriceText` = Google's string, else the
+  sheet's USD. Editor/Windows: the stand-in as before (`Store.TestPurchases`). Android without a connected store: no
+  free purchases (Buy says false).
+- **Cloud** `Core/CloudSave.cs` + `Core/Prefs.cs`: every runtime PlayerPrefs WRITE goes through `CityBuilder.Core.Prefs`
+  (it keeps the list of written keys + types in `prefs.index`; PlayerPrefs cannot be listed). Snapshot = all those keys
+  minus the phone's own (`prefs.index`, `cloud.*`, `store.pending.*`, `settings.*`, `graphics_*`, language), JSON.
+  Start: sign in -> read -> if the cloud changed later (`cloud.changed_utc`, ticks) it replaces local (keys missing
+  from it deleted), the main menu reloads; in a game it waits for the next menu. Then every 20 s a hash check stamps a
+  change; push at most every 60 s and at once on pause/quit. Ready after the read, a failure or 15 s.
+  **NEW PlayerPrefs writes must use Prefs.Set*, or the key never reaches the cloud.**
+- **Play Games** `Scripts/PlayGames/PlayGamesCloud.cs` (own asmdef Android+Editor, `#if UNITY_ANDROID`): saved game
+  «account», UseLongestPlaytime with PlayTime.Seconds. Plugin 2.3.0 imported WITHOUT EDM4U (Assets/GooglePlayGames,
+  Assets/Plugins/Android/GooglePlayGamesManifest.androidlib); `Editor/Android/PlayGamesSetup.cs` (own Editor asmdef):
+  SetupProject calls `Apply` by reflection -> app id from `Design/store/play_games_app_id.txt` (missing/empty = off)
+  into the plugin settings + manifest; Gradle gets `play-services-games-v2:22.1.0` only while the id is set.
+  **Plugin patch (redo after a plugin update):** `GPGSAndroidSetupUI.cs` and `NearbyConnectionUI.cs` call
+  `Google.VersionHandler` (EDM4U) directly -- those blocks are wrapped in `#if CB_EDM4U` (never defined).
+- **The user's part:** `Design/store/PLAY_BILLING_AND_GAMES.md` (payments profile, first AAB, 14 products with these
+  exact ids -- `Design/store/product_ids.txt`, license testers, PGS project + credentials + Saved games ON + app id).
+- Open: first phone test with real products; sandbox map files to the cloud (later); Data safety when PGS ships.
 
 ## Crystal Mine -- paid building (the user's design 2026-11-14; BUILT 2026-11-14, not seen in the game)
 - **Rules (the user):** bought once in the shop for ~$8 (non-consumable IAP, needs «Restore purchases» for

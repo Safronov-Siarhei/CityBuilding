@@ -28,7 +28,7 @@ namespace CityBuilder.Tutorial
 
         public static void NoteDeclined()
         {
-            PlayerPrefs.SetInt(DeclinedKey, Declined + 1);
+            CityBuilder.Core.Prefs.SetInt(DeclinedKey, Declined + 1);
             PlayerPrefs.Save();
         }
 
@@ -43,8 +43,8 @@ namespace CityBuilder.Tutorial
             var slot = save != null ? save.WriteReturnSlot() : null;
             if (!string.IsNullOrEmpty(slot))
             {
-                PlayerPrefs.SetString(ReturnSlotKey, slot);
-                PlayerPrefs.SetString(ReturnNameKey, save.CurrentSaveName ?? string.Empty);
+                CityBuilder.Core.Prefs.SetString(ReturnSlotKey, slot);
+                CityBuilder.Core.Prefs.SetString(ReturnNameKey, save.CurrentSaveName ?? string.Empty);
                 PlayerPrefs.Save();
             }
             Time.timeScale = 1f;
@@ -71,8 +71,8 @@ namespace CityBuilder.Tutorial
         /// <summary>The way back is dropped (back in the main menu: the town stays in the saves list).</summary>
         public static void ForgetReturn()
         {
-            PlayerPrefs.DeleteKey(ReturnSlotKey);
-            PlayerPrefs.DeleteKey(ReturnNameKey);
+            CityBuilder.Core.Prefs.DeleteKey(ReturnSlotKey);
+            CityBuilder.Core.Prefs.DeleteKey(ReturnNameKey);
         }
     }
 }

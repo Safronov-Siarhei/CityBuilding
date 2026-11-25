@@ -130,7 +130,7 @@ namespace CityBuilder.Shop
                 default:
                     if (s.Bundle.kind == OfferRotation.KindStarter)
                     {
-                        PlayerPrefs.SetInt(StarterGivenPref, 1);
+                        CityBuilder.Core.Prefs.SetInt(StarterGivenPref, 1);
                         PlayerPrefs.Save();
                     }
                     Give(s, slot);

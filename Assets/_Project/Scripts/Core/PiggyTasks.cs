@@ -95,7 +95,7 @@ namespace CityBuilder.Core
         public static bool LostWhileFull
         {
             get => PlayerPrefs.GetInt(LostKey, 0) == 1;
-            set => PlayerPrefs.SetInt(LostKey, value ? 1 : 0);
+            set => CityBuilder.Core.Prefs.SetInt(LostKey, value ? 1 : 0);
         }
 
         // ------------------------------------------------------------ reporting
@@ -145,7 +145,7 @@ namespace CityBuilder.Core
             var seen = PlayerPrefs.GetString(key, "");
             var mark = "," + island + ",";
             if (("," + seen + ",").Contains(mark)) return;
-            PlayerPrefs.SetString(key, string.IsNullOrEmpty(seen) ? island.ToString() : seen + "," + island);
+            CityBuilder.Core.Prefs.SetString(key, string.IsNullOrEmpty(seen) ? island.ToString() : seen + "," + island);
             if (report) Report(Island);
         }
 
@@ -163,7 +163,7 @@ namespace CityBuilder.Core
         public static void MarkSeen(string mode)
         {
             if (string.IsNullOrEmpty(mode) || PlayerPrefs.GetInt(SeenPrefix + mode, 0) == 1) return;
-            PlayerPrefs.SetInt(SeenPrefix + mode, 1);
+            CityBuilder.Core.Prefs.SetInt(SeenPrefix + mode, 1);
             PlayerPrefs.Save();
         }
 
@@ -274,7 +274,7 @@ namespace CityBuilder.Core
         {
             if (!_dirty || _state == null) return;
             _dirty = false;
-            PlayerPrefs.SetString(StateKey, JsonUtility.ToJson(_state));
+            CityBuilder.Core.Prefs.SetString(StateKey, JsonUtility.ToJson(_state));
         }
 
         /// <summary>Cheats: a new set now (the same slot redrawn) / the task finished.</summary>
@@ -302,7 +302,7 @@ namespace CityBuilder.Core
         {
             _state = null;
             _dirty = false;
-            PlayerPrefs.DeleteKey(StateKey);
+            CityBuilder.Core.Prefs.DeleteKey(StateKey);
         }
     }
 }
