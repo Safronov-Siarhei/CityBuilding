@@ -63,6 +63,10 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
       own consent prompt; U: LevelPlay account (Unity Cloud), Android app -> app key, rewarded ad unit id.
 - [ ] IN-GAME privacy link (Google: the policy must be linked on the store page AND inside the app): a «Политика
       конфиденциальности» button in the main-menu settings opening the URL; none exists yet (checked 2026-11-25).
+- [x] Terms of Use page `docs/terms.html` (EN+RU, same kit as the policy, the two pages link each other), 2026-11-25:
+      licence, crystals have no money value, purchases/refunds via Google Play, rewarded ads, «as is», consumer
+      rights kept. URL in `Design/store/terms_url.txt`, entered on the Play Console trader-status form. Put a
+      «Условия» link next to the in-game privacy link. Trader status: «Да» (the user, 2026-11-25).
 - [ ] ANALYTICS (the user, 2026-11-25: «хочу добавить аналитику в игру, это важно, просто перед релизом сделаем»):
       events for the funnel (tutorial steps, campaign levels, sandbox progress, Invasion waves, shop/ad views and
       purchases), retention. Provider not chosen; Claude's suggestion: Firebase Analytics + Crashlytics (the Firebase
