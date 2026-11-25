@@ -81,8 +81,9 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
       the indie format «<project>.web.app/privacy-policy.html»): `firebase.json` serves `docs/`; the user makes the
       Firebase project on depigogames@gmail.com and runs `firebase login`; then `firebase deploy --only hosting`. Project id `citycraft-game` (.firebaserc) ->
       https://citycraft-game.web.app/privacy-policy.html
-- [ ] Data safety form, content rating questionnaire (IARC), target audience (not children: avoids the Families
-      policy), ads declaration.
+- [~] Data safety form, content rating questionnaire (IARC), target audience (not children: avoids the Families
+      policy), ads declaration: answers drafted in `Design/store/play_console_answers.md` (2026-11-25), the user fills
+      Play Console from it. Re-check Data safety whenever an SDK is added or removed (Play Games, more ad networks).
 
 ### F. Launch (U)
 - [ ] Internal testing track (instant, up to 100 testers) -> closed test (12+ testers x 14 days if personal
