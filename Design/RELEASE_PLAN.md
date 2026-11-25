@@ -61,6 +61,8 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
 - [ ] Payments: Google Play Billing (Unity IAP) for crystals / offers -- only if paid items are in the first release.
 - [ ] Ads: Unity LevelPlay package + Unity Ads adapter, rewarded only, behind `Shop/RewardedAds` (today a stand-in),
       own consent prompt; U: LevelPlay account (Unity Cloud), Android app -> app key, rewarded ad unit id.
+- [ ] IN-GAME privacy link (Google: the policy must be linked on the store page AND inside the app): a «Политика
+      конфиденциальности» button in the main-menu settings opening the URL; none exists yet (checked 2026-11-25).
 - [ ] ANALYTICS (the user, 2026-11-25: «хочу добавить аналитику в игру, это важно, просто перед релизом сделаем»):
       events for the funnel (tutorial steps, campaign levels, sandbox progress, Invasion waves, shop/ad views and
       purchases), retention. Provider not chosen; Claude's suggestion: Firebase Analytics + Crashlytics (the Firebase
