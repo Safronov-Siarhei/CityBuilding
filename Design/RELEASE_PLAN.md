@@ -1,5 +1,7 @@
 # Release plan: Google Play (started 2026-11-24)
 
+Summary of everything learned so far (Russian, for quick questions): `Design/store/PUBLISHING.md`.
+
 The user: «предлагаю начинать создавать проект в гугл и готовить всё к релизу». Content is frozen for now
 («можно отложить добавление контента, меня больше интересует быстрее зарелизить игру»).
 Status marks: [ ] not started, [~] in progress, [x] done. Who: **U** = the user (accounts, money, signing in,
