@@ -24,3 +24,5 @@ metadata:
 
 **Why:** the user wants the fastest path to release. **How to apply:** before adding content, prefer release-plan
 items; never commit keys (repo public); don't build the .aab unasked.
+- ANALYTICS before release (the user 2026-11-25, «это важно»): provider not chosen (suggested Firebase Analytics +
+  Crashlytics); policy + Data safety answers must be updated with it. Play Console answers: Design/store/play_console_answers.md.

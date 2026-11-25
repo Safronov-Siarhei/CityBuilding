@@ -61,6 +61,11 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
 - [ ] Payments: Google Play Billing (Unity IAP) for crystals / offers -- only if paid items are in the first release.
 - [ ] Ads: Unity LevelPlay package + Unity Ads adapter, rewarded only, behind `Shop/RewardedAds` (today a stand-in),
       own consent prompt; U: LevelPlay account (Unity Cloud), Android app -> app key, rewarded ad unit id.
+- [ ] ANALYTICS (the user, 2026-11-25: «хочу добавить аналитику в игру, это важно, просто перед релизом сделаем»):
+      events for the funnel (tutorial steps, campaign levels, sandbox progress, Invasion waves, shop/ad views and
+      purchases), retention. Provider not chosen; Claude's suggestion: Firebase Analytics + Crashlytics (the Firebase
+      project citycraft-game exists; crash reports too), alternative GameAnalytics. When added: update the privacy
+      policy, Design/store/play_console_answers.md (Data safety: app interactions, diagnostics, IDs for analytics).
 - [ ] Old-save check: real saves kept as fixtures, loaded by a test every run (see save-load card).
 
 ### D. Quality pass (U plays, C fixes)
