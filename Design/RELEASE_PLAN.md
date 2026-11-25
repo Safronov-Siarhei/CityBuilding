@@ -51,7 +51,7 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
       `splitApplicationBinary` = the data in an install-time asset pack (PAD), versionCode = git commit count.
 - [x] Release signing (key made + env vars set 2026-11-24): the build reads CB_KEYSTORE / CB_KEYSTORE_PASS / CB_KEY_ALIAS / CB_KEY_PASS (U makes the upload
       key OUTSIDE the repo and keeps a backup; `*.keystore`/`*.jks` are git-ignored). Play App Signing keeps the app key.
-- [ ] Check the first .aab: base module under 200 MB, the asset pack installs with the app (internal testing track).
+- [~] FIRST .aab BUILT 2026-11-25 (Unity Personal, versionCode 1607, 226.6 MB: base 35 MB + UnityDataAssetPack 202 MB compressed, signed with the upload key; billing library inside; Play Games off -- no app id). The build writes the keystore path + versionCode into ProjectSettings.asset: revert, never commit. Check the first .aab: base module under 200 MB, the asset pack installs with the app (internal testing track).
       Last APK build report: meshes 277 MB / textures 108 MB uncompressed of 429 MB user assets -- slimming later
       (mesh compression, dungeon reliefs ~5 MB each) would still help download size.
 - [ ] Target API level = Google's current requirement; 64-bit only (already ARM64).
