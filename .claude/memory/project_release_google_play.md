@@ -26,3 +26,5 @@ metadata:
 items; never commit keys (repo public); don't build the .aab unasked.
 - ANALYTICS before release (the user 2026-11-25, «это важно»): provider not chosen (suggested Firebase Analytics +
   Crashlytics); policy + Data safety answers must be updated with it. Play Console answers: Design/store/play_console_answers.md.
+
+2026-11-25: Play Console data safety FILLED (6 types, all via Unity Ads + purchase history); trader status «Да»; Terms of Use page docs/terms.html made (URL in Design/store/terms_url.txt), needs the user's firebase deploy. Next: gov/finance/health declarations (all «нет»), category+contacts, store listing graphics (not made).
