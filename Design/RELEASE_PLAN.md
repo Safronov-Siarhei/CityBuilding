@@ -54,6 +54,12 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
 - [~] FIRST .aab BUILT 2026-11-25 (Unity Personal, versionCode 1607, 226.6 MB: base 35 MB + UnityDataAssetPack 202 MB compressed, signed with the upload key; billing library inside; Play Games off -- no app id). The build writes the keystore path + versionCode into ProjectSettings.asset: revert, never commit. Check the first .aab: base module under 200 MB, the asset pack installs with the app (internal testing track).
       Last APK build report: meshes 277 MB / textures 108 MB uncompressed of 429 MB user assets -- slimming later
       (mesh compression, dungeon reliefs ~5 MB each) would still help download size.
+- [ ] **MUST before release: small first download (the user, 2026-11-25: «чем дольше скачивается -- тем меньше хочется
+      играть»).** Today the install is ~237 MB download / ~268 MB on the phone (base 35 MB + install-time pack 202 MB).
+      Goal ~50-70 MB at install: content to Addressables + Play Asset Delivery packs -- install-time = code, splash,
+      main menu, tutorial; fast-follow (downloads by itself right after install) = sandbox maps, campaign, dungeons,
+      Invasion; on-demand = rare content. A «Загружаем… N %» screen when a mode is opened before its pack arrived.
+      Step 1 first: measure size per mode + mesh compression / ASTC / dungeon reliefs (cheap); step 2: the packs.
 - [ ] Native debug symbols for Play Console crash reports (the first upload warned, 2026-11-25): Android symbols
       export in the -Store build (`EditorUserBuildSettings.androidCreateSymbols`), upload the .zip with each release.
 - [x] Target SDK 36 confirmed by Play Console on the first upload (2026-11-25).
