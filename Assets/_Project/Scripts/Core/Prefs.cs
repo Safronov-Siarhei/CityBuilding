@@ -16,21 +16,25 @@ namespace CityBuilder.Core
 
         private static Dictionary<string, char> _index;
 
+        /// <summary>Goes up on every write or delete through here: the cloud save rebuilds its snapshot only when it moved.</summary>
+        public static int Version { get; private set; }
+
         /// <summary>Every key written so far and its type: 'i' int, 'f' float, 's' string.</summary>
         public static IReadOnlyDictionary<string, char> Index
         {
             get { Load(); return _index; }
         }
 
-        public static void SetInt(string key, int value) { PlayerPrefs.SetInt(key, value); Note(key, 'i'); }
+        public static void SetInt(string key, int value) { PlayerPrefs.SetInt(key, value); Version++; Note(key, 'i'); }
 
-        public static void SetFloat(string key, float value) { PlayerPrefs.SetFloat(key, value); Note(key, 'f'); }
+        public static void SetFloat(string key, float value) { PlayerPrefs.SetFloat(key, value); Version++; Note(key, 'f'); }
 
-        public static void SetString(string key, string value) { PlayerPrefs.SetString(key, value); Note(key, 's'); }
+        public static void SetString(string key, string value) { PlayerPrefs.SetString(key, value); Version++; Note(key, 's'); }
 
         public static void DeleteKey(string key)
         {
             PlayerPrefs.DeleteKey(key);
+            Version++;
             Load();
             if (_index.Remove(key)) SaveIndex();
         }

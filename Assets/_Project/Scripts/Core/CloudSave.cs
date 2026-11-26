@@ -28,8 +28,12 @@ namespace CityBuilder.Core
         public static ICloudBackend Backend;
 
         public const string ChangedUtcKey = "cloud.changed_utc";
-        private const float CheckEvery = 20f;
-        private const float PushEvery = 60f;
+        // Short on purpose (2026-11-26 phone test: nothing reached the cloud): the push started on pause cannot finish
+        // while Unity is paused (the plugin answers on the game thread), so a game swiped away from the background never
+        // saved. A change now goes up ~PushEvery s after it happens; the check is cheap -- it skips while Prefs.Version
+        // has not moved.
+        private const float CheckEvery = 3f;
+        private const float PushEvery = 15f;
         private const float StartTimeout = 15f;
         private const string MenuScene = "MainMenu";
         private const string SplashScene = "Splash";
@@ -49,8 +53,12 @@ namespace CityBuilder.Core
         public static event Action Applied;
 
         private static bool _signedIn;
+        /// <summary>The start's sign-in + read is over (either way). Until then no change is stamped: a player busy while
+        /// Google's sign-in window is up must not get a later time stamp than the cloud they are about to receive.</summary>
+        private static bool _startDone;
         private static bool _baselineTaken;
         private static ulong _lastHash;
+        private static int _lastVersion = -1;
         private static bool _dirty;
         private static bool _pushing;
         private static float _sinceCheck, _sincePush, _sinceStart;
@@ -67,7 +75,7 @@ namespace CityBuilder.Core
         private static void Boot()
         {
             Ready = false;
-            _signedIn = _baselineTaken = _dirty = _pushing = false;
+            _signedIn = _baselineTaken = _dirty = _pushing = _startDone = false;
             _waiting = null;
             _sinceCheck = _sincePush = _sinceStart = 0f;
             var go = new GameObject("CloudSave") { hideFlags = HideFlags.HideInHierarchy };
@@ -75,14 +83,17 @@ namespace CityBuilder.Core
             go.AddComponent<Runner>();
             SceneManager.activeSceneChanged += (_, to) => { if (to.name == MenuScene && _waiting != null) Apply(_waiting); };
 
-            if (Backend == null) { SetReady(); return; }
+            if (Backend == null) { _startDone = true; SetReady(); return; }
             Backend.SignIn(ok =>
             {
                 _signedIn = ok;
-                if (!ok) { SetReady(); return; }
+                Debug.Log("CloudSave: signed in = " + ok);
+                if (!ok) { _startDone = true; SetReady(); return; }
                 Backend.Load((loaded, data) =>
                 {
+                    Debug.Log("CloudSave: load " + (loaded ? (data == null ? 0 : data.Length) + " bytes" : "FAILED"));
                     if (loaded && data != null && data.Length > 0) Consider(data);
+                    _startDone = true;
                     SetReady();
                 });
             });
@@ -99,6 +110,7 @@ namespace CityBuilder.Core
         private static void TakeBaseline()
         {
             _lastHash = Hash(Build(0).Joined());
+            _lastVersion = Prefs.Version;
             _baselineTaken = true;
         }
 
@@ -150,7 +162,8 @@ namespace CityBuilder.Core
         /// <summary>Has the progress changed since the last look? Then stamp it and mark it for the cloud.</summary>
         private static void Check()
         {
-            if (!_baselineTaken) return;
+            if (!_startDone || !_baselineTaken || Prefs.Version == _lastVersion) return;
+            _lastVersion = Prefs.Version;
             var hash = Hash(Build(0).Joined());
             if (hash == _lastHash) return;
             _lastHash = hash;
@@ -171,6 +184,7 @@ namespace CityBuilder.Core
             {
                 _pushing = false;
                 if (!ok) _dirty = true;
+                Debug.Log("CloudSave: push " + (ok ? "ok, " + bytes.Length + " bytes" : "FAILED"));
             });
         }
 

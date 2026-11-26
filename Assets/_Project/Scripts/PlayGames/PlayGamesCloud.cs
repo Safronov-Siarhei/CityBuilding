@@ -33,11 +33,27 @@ namespace CityBuilder.PlayGames
 
         private static ISavedGameClient Client => PlayGamesPlatform.Instance.SavedGame;
 
+        /// <summary>This install already showed Google's sign-in window once («cloud.» = a key of the phone, never synced).</summary>
+        private const string AskedKey = "cloud.signin_asked";
+
+        /// <summary>
+        /// The silent sign-in first. When it fails (no Play Games profile yet, or Google wants the player to choose an
+        /// account) Google's own sign-in window is shown -- once per install, so a player who declines is not asked at
+        /// every launch (2026-11-26 phone test: a fresh install was never offered a sign-in and the cloud stayed empty).
+        /// </summary>
         public void SignIn(Action<bool> done) =>
             PlayGamesPlatform.Instance.Authenticate(status =>
             {
-                if (status != SignInStatus.Success) Debug.Log("PlayGamesCloud: not signed in: " + status);
-                done(status == SignInStatus.Success);
+                Debug.Log("PlayGamesCloud: silent sign-in: " + status);
+                if (status == SignInStatus.Success) { done(true); return; }
+                if (PlayerPrefs.GetInt(AskedKey, 0) == 1) { done(false); return; }
+                PlayerPrefs.SetInt(AskedKey, 1);
+                PlayerPrefs.Save();
+                PlayGamesPlatform.Instance.ManuallyAuthenticate(manual =>
+                {
+                    Debug.Log("PlayGamesCloud: manual sign-in: " + manual);
+                    done(manual == SignInStatus.Success);
+                });
             });
 
         public void Load(Action<bool, byte[]> done) =>
