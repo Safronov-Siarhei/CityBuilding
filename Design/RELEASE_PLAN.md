@@ -79,6 +79,9 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
       own consent prompt; U: LevelPlay account (Unity Cloud), Android app -> app key, rewarded ad unit id.
 - [ ] IN-GAME privacy link (Google: the policy must be linked on the store page AND inside the app): a «Политика
       конфиденциальности» button in the main-menu settings opening the URL; none exists yet (checked 2026-11-25).
+- [ ] SITE HOME PAGE `docs/index.html` (the user, 2026-11-26: «потом сделаем»): the root https://citycraft-game.web.app/
+      is 404 today, but it is now the OAuth consent screen's «Application home page» (Google Auth Platform, project
+      citycraft-game) -- make it before Google ever reviews the consent screen; then also the Play listing «Веб-сайт».
 - [x] Terms of Use page `docs/terms.html` (EN+RU, same kit as the policy, the two pages link each other), 2026-11-25:
       licence, crystals have no money value, purchases/refunds via Google Play, rewarded ads, «as is», consumer
       rights kept. URL in `Design/store/terms_url.txt`, entered on the Play Console trader-status form. Put a
