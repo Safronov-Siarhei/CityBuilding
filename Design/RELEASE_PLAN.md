@@ -75,6 +75,10 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
 - [~] Cloud save of the account progress to Play Games saved games (`Core/CloudSave.cs` + `Prefs`, plugin 2.3.0 without
       EDM4U, IN THE CODE 2026-11-25). U: PGS project, credentials (SHA-1s), Saved games ON, app id into
       `Design/store/play_games_app_id.txt`. Then Data safety: user IDs + outside-account sign-in = Да.
+      2026-11-26: PGS project 594846398884 set up (2 Android credentials «CityCraft»: Play signing = for new installs,
+      upload key; Saved games ON; Drive API on; owner is a tester). AAB versionCode 1616 BUILT with Play Games
+      (play-services-games-v2 + APP_ID checked inside). NOT tested on the phone yet. Before release: PGS properties
+      (description, category, icon) + «Опубликовать» in Play Games Services → Публикация.
 - [ ] Ads: Unity LevelPlay package + Unity Ads adapter, rewarded only, behind `Shop/RewardedAds` (today a stand-in),
       own consent prompt; U: LevelPlay account (Unity Cloud), Android app -> app key, rewarded ad unit id.
 - [ ] IN-GAME privacy link (Google: the policy must be linked on the store page AND inside the app): a «Политика
