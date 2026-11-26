@@ -150,6 +150,16 @@
 - В «Типах данных» «Действия в приложении» — это и есть «взаимодействие с приложением», а «Отчёты об
   ошибках» — это «журналы сбоев».
 - Не писать в публичный репозиторий, почему AdMob недоступен. Только нейтрально: «недоступен студии».
+- Play Игры, 2026-11-26: в журнале телефона `DEVELOPER_ERROR`. Причина: в клиенте OAuth «CityCraft Play signing» стоял
+  не тот SHA-1. Правильный SHA-1 — это отпечаток игры, установленной ИЗ Google Play (ключ подписи Google), его можно
+  прочитать с телефона: `adb pull` базового APK и `apksigner verify --print-certs`. Оба отпечатка лежат в
+  `Design/store/signing_sha1.txt`. Исправление в Google Cloud подействовало за минуту.
+- После этого тихий вход отвечает `Canceled` («suppressed an interactive prompt»). Новый аккаунт должен один раз
+  согласиться в окне Google, поэтому игра зовёт `ManuallyAuthenticate` один раз на установку (код b3afc876f, ещё не
+  собран на 2026-11-26).
+- Журнал с телефона: Wi-Fi adb, `adb logcat -c`, запустить игру (`monkey -p com.depigogames.citycraft 1`), через
+  25 с `adb logcat -d`, искать `SignInAuthenticator|SignInPerformer|PlayGamesCloud|CloudSave`. Если `adb connect`
+  отказывает, нужно заново сопрячь телефон по коду (`adb pair ip:port код`).
 
 ## 10. Что осталось до выпуска
 Подробно — в `RELEASE_PLAN.md`. Коротко:
