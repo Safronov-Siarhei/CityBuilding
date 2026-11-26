@@ -82,6 +82,9 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
 - [ ] SITE HOME PAGE `docs/index.html` (the user, 2026-11-26: «потом сделаем»): the root https://citycraft-game.web.app/
       is 404 today, but it is now the OAuth consent screen's «Application home page» (Google Auth Platform, project
       citycraft-game) -- make it before Google ever reviews the consent screen; then also the Play listing «Веб-сайт».
+- [ ] OAuth consent screen PUBLISHED 2026-11-26 («In production», External, scopes games/games_lite/drive.appdata,
+      no logo). Watch on the phone: if signing in to the cloud save shows Google's «unverified app» screen, the app
+      must pass OAuth verification before release (the 100-user cap applies to unapproved sensitive scopes).
 - [x] Terms of Use page `docs/terms.html` (EN+RU, same kit as the policy, the two pages link each other), 2026-11-25:
       licence, crystals have no money value, purchases/refunds via Google Play, rewarded ads, «as is», consumer
       rights kept. URL in `Design/store/terms_url.txt`, entered on the Play Console trader-status form. Put a
