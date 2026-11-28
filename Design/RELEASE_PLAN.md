@@ -81,8 +81,16 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
       signing OAuth client -- fixed by the user, see Design/store/signing_sha1.txt), then silent sign-in = Canceled
       (consent needed). Fix in the code b3afc876f (Google's sign-in window once per install, push ~15 s after a change,
       logs) -- AAB 1620 built 2026-11-28; PHONE TEST PASSED (the user: sign in, buy, uninstall, reinstall -- the
-      crystals came back). Left: Data safety update (user IDs + outside-account sign-in = Да) before production. Before release: PGS properties
+      crystals came back). Data safety updated 2026-11-28 (outside-account sign-in = Да, «Другое»; Personal info → User
+      IDs: collected, not shared, not ephemeral, OPTIONAL, purpose App functionality). Before release: PGS properties
       (description, category, icon) + «Опубликовать» in Play Games Services → Публикация.
+- [ ] CLOUD SIGN-IN UI (the user, 2026-11-28): Google's sign-in window shows once per install, so a player who declined
+      has no way back. (1) After a consumable purchase (crystals_*, sale_crystals_*, piggy_*) while NOT signed in to Play
+      Games: a window «not signed in -- crystals and progress live only on this phone and are lost on uninstall» with
+      «Войти» / «Позже» (not for crystal_mine / sandbox_freedom: Google Play restores those anyway). (2) Main-menu
+      settings: «Облачное сохранение: вкл/выкл» + «Войти». «Войти» = PlayGamesPlatform.ManuallyAuthenticate, then
+      CloudSave's start read. Texts in the localization sheet, window from the skin kit. Purchases themselves never
+      need the sign-in (billing uses the Play Store account).
 - [ ] Advertising ID declaration (Play Console → Контент приложения): answered «Нет» 2026-11-28 -- the AAB has no
       AD_ID permission and no ads SDK yet. SWITCH TO «Да» in the same release that brings LevelPlay (its SDK adds
       com.google.android.gms.permission.AD_ID; check the AAB manifest), or Play Console blocks the release.
