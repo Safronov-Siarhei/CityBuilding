@@ -34,6 +34,8 @@ namespace CityBuilder.EditorTools
         private const string BuildingDataFolder = "Assets/_Project/ScriptableObjects/Buildings";
         private const string ResourceScriptableObjectsFolder = "Assets/_Project/ScriptableObjects/Resources";
         private const string MeshMapsFolder = "Assets/_Project/Resources/MeshMaps";
+        /// <summary>Every map's and island's decor (MapDecorData), outside Resources: it ships with what references it.</summary>
+        private const string MapDecorFolder = "Assets/_Project/Content/MapDecor";
         private const string ModelsTerrainFolder = "Assets/_Project/Models/Terrain";
         private const string ModelsBuildingsFolder = "Assets/_Project/Models/Buildings";
 
@@ -108,6 +110,9 @@ namespace CityBuilder.EditorTools
             };
 
             CleanupTemplateAssets();
+
+            // the small first download: what the maps above wrote outside Resources becomes the fast-follow pack
+            SetupProjectContent.Apply();
 
             // Whichever scene was built last is the active one here -- left as-is, that becomes the scene the Editor restores on its next normal (non-
             // batchmode) launch, silently replacing the "opens on MainMenu" behavior every prior

@@ -133,11 +133,19 @@ namespace CityBuilder.UI
                 }
             }
             if (mapCodeError != null) mapCodeError.gameObject.SetActive(false);
-            GameSessionIntent.NewGameMapId = id;
-            GameSessionIntent.NewGameSeason = MapThemes.SeasonOf(Theme);
-            // the world's settings from the scroll («Свобода песочницы»)
-            GameSessionIntent.NewGameWorld = WorldSettings.Draft.Clone();
-            LoadingScreen.IntoGame(gameplaySceneName);
+            var season = MapThemes.SeasonOf(Theme);
+            var world = WorldSettings.Draft.Clone();
+            void Prepare()
+            {
+                GameSessionIntent.NewGameMapId = id;
+                GameSessionIntent.NewGameSeason = season;
+                // the world's settings from the scroll («Свобода песочницы»)
+                GameSessionIntent.NewGameWorld = world;
+            }
+            // a typed code whose islands are in the pack not downloaded yet (the small first download, 2026-11-28):
+            // the loading screen waits for it
+            if (Maps.Archipelago.ArchipelagoMapId.OnPhone(id)) { Prepare(); LoadingScreen.IntoGame(gameplaySceneName); }
+            else LoadingScreen.IntoGameWhenContent(gameplaySceneName, Prepare);
         }
 
         private static string ArchipelagoMapIdFor(MeshMapDefinition map) => Maps.Archipelago.ArchipelagoMapId.NewRandom();

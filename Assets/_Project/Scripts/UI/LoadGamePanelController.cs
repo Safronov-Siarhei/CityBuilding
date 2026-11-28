@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CityBuilder.Core;
 using CityBuilder.Maps;
 using CityBuilder.Saving;
@@ -92,8 +92,16 @@ namespace CityBuilder.UI
         public void ConfirmLoad()
         {
             if (string.IsNullOrEmpty(_selectedName)) return;
-            GameSessionIntent.SaveNameToLoad = _selectedName;
-            LoadingScreen.IntoGame(gameplaySceneName);
+            var saveName = _selectedName;
+            // a save on a map whose islands are in the pack not downloaded yet (the small first download, 2026-11-28):
+            // the loading screen waits for it
+            var mapId = CityBuilder.Saving.SaveSystem.Load(saveName)?.mapId;
+            if (Maps.Archipelago.ArchipelagoMapId.OnPhone(mapId))
+            {
+                GameSessionIntent.SaveNameToLoad = saveName;
+                LoadingScreen.IntoGame(gameplaySceneName);
+            }
+            else LoadingScreen.IntoGameWhenContent(gameplaySceneName, () => GameSessionIntent.SaveNameToLoad = saveName);
         }
 
         private void Populate()

@@ -69,6 +69,32 @@ namespace CityBuilder.UI
         /// <summary>Loads `sceneName` behind the screen; without the prefab (a test scene), loads it plainly.</summary>
         public static void Load(string sceneName, bool intoGame) => Load(sceneName, intoGame, -1f);
 
+        /// <summary>
+        /// Into a game that needs the later content (a dungeon of the fast-follow pack, the user's small-download rule
+        /// 2026-11-28): the screen comes up at once and, while the pack is not on the phone, shows «Загружаем… N %» in
+        /// the tip's place; then `prepare` runs and the scene loads as usual. Offline for <see cref="GiveUpSeconds"/>
+        /// («Нужен интернет…»): the screen fades out, nothing loads, `giveUp` runs -- the player stays where he was.
+        /// </summary>
+        public static void IntoGameWhenContent(string sceneName, System.Action prepare, System.Action giveUp = null)
+        {
+            if (_current != null) return;
+            if (ContentPacks.Ready || UnityEngine.Resources.Load<LoadingScreen>(ResourcePath) == null)
+            {
+                prepare?.Invoke();
+                IntoGame(sceneName);
+                return;
+            }
+            _prepare = prepare;
+            _giveUp = giveUp;
+            _waitContent = true;
+            IntoGame(sceneName);
+        }
+
+        private const float GiveUpSeconds = 6f;
+        private static bool _waitContent;
+        private static System.Action _prepare;
+        private static System.Action _giveUp;
+
         /// <summary>Into the campaign map: its own time (loading_seconds_campaign_map).</summary>
         public static void ToCampaignMap(string sceneName)
         {
@@ -122,6 +148,35 @@ namespace CityBuilder.UI
                 yield return null;
             }
             group.alpha = 1f;
+            var wait = _waitContent;
+            var prepare = _prepare;
+            var giveUp = _giveUp;
+            _waitContent = false;
+            _prepare = _giveUp = null;
+            if (wait)
+            {
+                var offline = 0f;
+                while (!ContentPacks.Ready)
+                {
+                    if (tip != null) tip.text = ContentPacks.StatusText;
+                    offline = ContentPacks.Stalled ? offline + Time.unscaledDeltaTime : 0f;
+                    if (offline >= GiveUpSeconds)
+                    {
+                        for (var t = 0f; t < FadeSeconds; t += Time.unscaledDeltaTime)
+                        {
+                            group.alpha = 1f - t / FadeSeconds;
+                            yield return null;
+                        }
+                        _current = null;
+                        giveUp?.Invoke();
+                        Destroy(gameObject);
+                        yield break;
+                    }
+                    yield return null;
+                }
+                ShowTip();
+            }
+            prepare?.Invoke();
             var load = SceneManager.LoadSceneAsync(sceneName);
             var readyFor = 0f;
             var started = Time.realtimeSinceStartup;

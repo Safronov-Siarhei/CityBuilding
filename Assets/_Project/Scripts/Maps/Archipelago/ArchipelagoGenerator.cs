@@ -86,7 +86,10 @@ namespace CityBuilder.Maps.Archipelago
         {
             var rng = new SeedRandom(seed);
             var map = new ArchipelagoMap(seed, World) { Version = version };
-            var library = preview ? ArchipelagoPreviewLibrary.Load()?.Islands : ArchipelagoLibrary.Load()?.Islands;
+            // laid out from the cells-only library ALWAYS (2026-11-28, the small first download): it holds every island
+            // and is in the install, so a seed is the same map before and after the later content arrives; the
+            // islands' meshes (IslandAsset) are looked up by name afterwards -- the install has the start map's
+            var library = ArchipelagoPreviewLibrary.Load()?.Islands ?? (IReadOnlyList<IIslandCells>)ArchipelagoLibrary.Load()?.Islands;
             var used = new HashSet<IIslandCells>();
             Island Make(Kind kind, int size, int shapeSeed)
             {
@@ -156,6 +159,9 @@ namespace CityBuilder.Maps.Archipelago
             foreach (var island in placed) Stamp(map, island);
             // a library island brings its own forest, stone and clear zones from Blender
             if (library == null) Dress(map, rng);
+            if (!preview)
+                foreach (var island in placed)
+                    if (island.Asset == null && island.Source != null) island.Asset = ArchipelagoLibrary.Find(island.Source.IslandName);
             map.Islands.AddRange(placed);
             return map;
         }

@@ -723,6 +723,9 @@ namespace CityBuilder.Core
         [SerializeField] private float loadingSecondsExit = 5f;
         // the ship from the menu to the campaign map (loading_seconds_campaign_map; the user, 2026-11-12: 5 s)
         [SerializeField] private float loadingSecondsCampaignMap = 5f;
+        // the archipelago map a player gets while the later content is not downloaded (archipelago_start_seed; the user,
+        // 2026-11-28: one fixed start map in the install, Design/features/download-size.md)
+        [SerializeField] private int archipelagoStartSeed = 2028;
         // campaign mission 2 «Оборона города» (the economy tab «Кампания: оборона города», m2_*)
         [SerializeField] private CityDefenceBalance cityDefence = new CityDefenceBalance();
         [SerializeField] private EscortBalance escort = new EscortBalance();
@@ -1695,6 +1698,7 @@ namespace CityBuilder.Core
         public float LoadingSecondsEnter => loadingSecondsEnter;
         public float LoadingSecondsExit => loadingSecondsExit;
         public float LoadingSecondsCampaignMap => loadingSecondsCampaignMap;
+        public int ArchipelagoStartSeed => archipelagoStartSeed;
         public float TutorialBuildSeconds => tutorialBuildSeconds;
         public int TutorialStartPeople => tutorialStartPeople;
         public float TutorialKingHealBelow => tutorialKingHealBelow;
@@ -3085,6 +3089,7 @@ namespace CityBuilder.Core
             loadingSecondsEnter = Read(economy, "loading_seconds_enter", loadingSecondsEnter);
             loadingSecondsExit = Read(economy, "loading_seconds_exit", loadingSecondsExit);
             loadingSecondsCampaignMap = Read(economy, "loading_seconds_campaign_map", loadingSecondsCampaignMap);
+            archipelagoStartSeed = (int)Read(economy, "archipelago_start_seed", archipelagoStartSeed);
             tutorialRewardCrystals = (int)Read(economy, "tutorial_reward_crystals", tutorialRewardCrystals);
             tutorialOfferWindowSeconds = Read(economy, "tutorial_offer_window_sec", tutorialOfferWindowSeconds);
             tutorialOfferHallSeconds = Read(economy, "tutorial_offer_hall_sec", tutorialOfferHallSeconds);

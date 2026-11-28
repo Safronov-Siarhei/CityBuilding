@@ -62,8 +62,26 @@ namespace CityBuilder.Maps.Archipelago
             return true;
         }
 
-        /// <summary>A fresh random seed for a new game, as an id.</summary>
-        public static string NewRandom() => For(UnityEngine.Random.Range(1, 1000000));
+        /// <summary>
+        /// A fresh random seed for a new game, as an id -- or, while the later content is not downloaded, the START map
+        /// (archipelago_start_seed): its islands and its level-1 dungeon are in the install (the user, 2026-11-28).
+        /// </summary>
+        public static string NewRandom()
+        {
+            if (!Core.ContentPacks.Ready && !UnityEngine.Application.isEditor)
+            {
+                var config = Core.BalanceConfig.Instance;
+                if (config != null) return For(config.ArchipelagoStartSeed);
+            }
+            return For(UnityEngine.Random.Range(1, 1000000));
+        }
+
+        /// <summary>Is every island of this generated map on the phone now (the install, or the downloaded pack)?</summary>
+        public static bool OnPhone(string mapId)
+        {
+            if (!IsArchipelago(mapId) || mapId == TutorialId) return true;
+            return !TryParse(mapId, out var seed, out var version) || ArchipelagoLibrary.CanBuild(seed, version);
+        }
 
         /// <summary>
         /// The map the scene is about to load -- a new game's pick or the save's -- read before any

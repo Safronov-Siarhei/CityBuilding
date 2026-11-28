@@ -200,8 +200,14 @@ namespace CityBuilder.EditorTools
             }
             map.EditorInitializeSpots(null, null, null, null, spots.ToArray());
 
-            Directory.CreateDirectory(MeshMapsFolder);
-            var path = $"{MeshMapsFolder}/{mapId}.asset";
+            // only the first level-1 dungeon is in the install; the rest go to the fast-follow pack (the user,
+            // 2026-11-28: one level-1 variant at once, everything else downloads quietly) -- SetupProjectContent
+            // marks the later folder Addressable
+            var later = mapId != CityBuilder.Dungeon.DungeonTravel.FirstDungeonId;
+            var folder2 = later ? CityBuilder.Maps.MeshMapCatalog.LaterFolder : MeshMapsFolder;
+            DeleteIfExists($"{(later ? MeshMapsFolder : CityBuilder.Maps.MeshMapCatalog.LaterFolder)}/{mapId}.asset");
+            Directory.CreateDirectory(folder2);
+            var path = $"{folder2}/{mapId}.asset";
             DeleteIfExists(path);
             AssetDatabase.CreateAsset(map, path);
         }
@@ -310,19 +316,39 @@ namespace CityBuilder.EditorTools
                 }
             }
 
-            var library = ScriptableObject.CreateInstance<CityBuilder.Maps.Archipelago.ArchipelagoLibrary>();
-            library.EditorInitialize(islands.ToArray());
+            // every island as cells only: what the generator lays every map out from (and the main menu's chart)
             Directory.CreateDirectory("Assets/_Project/Resources");
-            var libraryPath = $"Assets/_Project/Resources/{CityBuilder.Maps.Archipelago.ArchipelagoLibrary.ResourcePath}.asset";
-            DeleteIfExists(libraryPath);
-            AssetDatabase.CreateAsset(library, libraryPath);
-            // the same islands as cells only, for the main menu's chart (no meshes loaded there)
             var preview = ScriptableObject.CreateInstance<CityBuilder.Maps.Archipelago.ArchipelagoPreviewLibrary>();
             preview.EditorInitialize(islands.ToArray());
             var previewPath = $"Assets/_Project/Resources/{CityBuilder.Maps.Archipelago.ArchipelagoPreviewLibrary.ResourcePath}.asset";
             DeleteIfExists(previewPath);
             AssetDatabase.CreateAsset(preview, previewPath);
-            Debug.Log($"CreateArchipelagoLibrary: {islands.Count} island(s).");
+            AssetDatabase.SaveAssets();
+
+            // the meshes in two parts (the small first download, the user 2026-11-28): the install keeps the tutorial's
+            // island and the start map's islands (archipelago_start_seed), the fast-follow pack the rest
+            var seed = _balance != null ? _balance.ArchipelagoStartSeed : 2028;
+            var start = new HashSet<string>();
+            foreach (var placed in CityBuilder.Maps.Archipelago.ArchipelagoGenerator.Generate(seed, CityBuilder.Maps.Archipelago.ArchipelagoGenerator.Version, preview: true).Islands)
+                if (placed.Source != null) start.Add(placed.Source.IslandName);
+            var now = new List<CityBuilder.Maps.Archipelago.IslandAsset>();
+            var later = new List<CityBuilder.Maps.Archipelago.IslandAsset>();
+            foreach (var island in islands)
+                (island.Kind == CityBuilder.Maps.Archipelago.ArchipelagoGenerator.Kind.Tutorial || start.Contains(island.IslandName) ? now : later).Add(island);
+            if (CityBuilder.Dungeon.DungeonTravel.LevelOneFor(seed, CityBuilder.Maps.Archipelago.ArchipelagoGenerator.Version, 0) != CityBuilder.Dungeon.DungeonTravel.FirstDungeonId)
+                Debug.LogError($"CreateArchipelagoLibrary: archipelago_start_seed {seed} does not lead to {CityBuilder.Dungeon.DungeonTravel.FirstDungeonId} -- its level-1 dungeon is not in the install (take a multiple of 4)");
+
+            var library = ScriptableObject.CreateInstance<CityBuilder.Maps.Archipelago.ArchipelagoLibrary>();
+            library.EditorInitialize(now.ToArray());
+            var libraryPath = $"Assets/_Project/Resources/{CityBuilder.Maps.Archipelago.ArchipelagoLibrary.ResourcePath}.asset";
+            DeleteIfExists(libraryPath);
+            AssetDatabase.CreateAsset(library, libraryPath);
+            var rest = ScriptableObject.CreateInstance<CityBuilder.Maps.Archipelago.ArchipelagoLibrary>();
+            rest.EditorInitialize(later.ToArray());
+            Directory.CreateDirectory(CityBuilder.Maps.MeshMapCatalog.LaterFolder);
+            DeleteIfExists(CityBuilder.Maps.Archipelago.ArchipelagoLibrary.LaterPath);
+            AssetDatabase.CreateAsset(rest, CityBuilder.Maps.Archipelago.ArchipelagoLibrary.LaterPath);
+            Debug.Log($"CreateArchipelagoLibrary: {islands.Count} island(s): {now.Count} in the install (start seed {seed}: {string.Join(", ", start)}), {later.Count} in the fast-follow pack.");
         }
 
         /// <summary>
@@ -447,8 +473,11 @@ namespace CityBuilder.EditorTools
 
             var data = ScriptableObject.CreateInstance<MapDecorData>();
             data.EditorInitialize(prototypes.ToArray(), index.ToArray(), positions.ToArray(), yaw.ToArray(), scales.ToArray());
-            Directory.CreateDirectory(MeshMapsFolder);
-            var path = $"{MeshMapsFolder}/{mapId}Decor.asset";
+            // outside Resources (2026-11-28, small first download): a map or an island references its decor, so the
+            // decor ships with whatever ships its map -- in Resources it went into the install whatever happened
+            DeleteIfExists($"{MeshMapsFolder}/{mapId}Decor.asset");
+            Directory.CreateDirectory(MapDecorFolder);
+            var path = $"{MapDecorFolder}/{mapId}Decor.asset";
             DeleteIfExists(path);
             AssetDatabase.CreateAsset(data, path);
             return data;

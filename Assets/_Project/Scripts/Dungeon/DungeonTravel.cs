@@ -113,18 +113,27 @@ namespace CityBuilder.Dungeon
                 }
             }
 
-            GameSessionIntent.DungeonId = dungeonId;
-            GameSessionIntent.DungeonLevel = Mathf.Clamp(level, 1, 3);
-            // the piggy bank: dungeon tasks may drop from now on; going below the first level is one
-            Core.PiggyTasks.MarkSeen(Core.PiggyTasks.ModeDungeon);
-            if (level >= 2) Core.PiggyTasks.Report(Core.PiggyTasks.DungeonDeeper);
-            GameSessionIntent.DungeonHeroes = heroes;
-            GameSessionIntent.DungeonReturnName = save.CurrentSaveName;
-            // the camera comes back to this mouth, not to the Town Hall (the user, 2026-11-01)
-            GameSessionIntent.DungeonMouth = from != null ? from.transform.position : (Vector3?)null;
-            GameSessionIntent.NewGameMapId = dungeonId;
-            GameSessionIntent.SaveNameToLoad = null;
-            LoadingScreen.IntoGame(SceneManager.GetActiveScene().name);
+            var returnName = save.CurrentSaveName;
+            var mouth = from != null ? from.transform.position : (Vector3?)null;
+            void Go()
+            {
+                GameSessionIntent.DungeonId = dungeonId;
+                GameSessionIntent.DungeonLevel = Mathf.Clamp(level, 1, 3);
+                // the piggy bank: dungeon tasks may drop from now on; going below the first level is one
+                Core.PiggyTasks.MarkSeen(Core.PiggyTasks.ModeDungeon);
+                if (level >= 2) Core.PiggyTasks.Report(Core.PiggyTasks.DungeonDeeper);
+                GameSessionIntent.DungeonHeroes = heroes;
+                GameSessionIntent.DungeonReturnName = returnName;
+                // the camera comes back to this mouth, not to the Town Hall (the user, 2026-11-01)
+                GameSessionIntent.DungeonMouth = mouth;
+                GameSessionIntent.NewGameMapId = dungeonId;
+                GameSessionIntent.SaveNameToLoad = null;
+            }
+            var scene = SceneManager.GetActiveScene().name;
+            // a dungeon of the fast-follow pack not on the phone yet (the small first download, 2026-11-28): the
+            // loading screen waits for it, or -- offline -- fades out and the heroes stay in town
+            if (Maps.MeshMapCatalog.Has(dungeonId)) { Go(); LoadingScreen.IntoGame(scene); }
+            else LoadingScreen.IntoGameWhenContent(scene, Go);
         }
 
         /// <summary>Back to the town, the heroes as the dungeon left them.</summary>

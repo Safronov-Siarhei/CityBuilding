@@ -80,15 +80,19 @@ namespace CityBuilder.Tests.EditMode
         [Test]
         public void EveryKind_HasFourVariants_AndAnOldMapKeepsItsIslands()
         {
-            var library = ArchipelagoLibrary.Load();
+            // every island (the cells-only library); the meshes by name -- since 2026-11-28 the mesh library is split
+            // into the install's part and the fast-follow pack's, and the editor sees both
+            var library = ArchipelagoPreviewLibrary.Load();
             Assert.IsNotNull(library, "No island library.");
             foreach (ArchipelagoGenerator.Kind kind in System.Enum.GetValues(typeof(ArchipelagoGenerator.Kind)))
             {
                 if (kind == ArchipelagoGenerator.Kind.Tutorial) continue;      // one frame, the tutorial's own map
                 var count = 0;
-                foreach (var asset in library.Islands)
+                foreach (var cells in library.Islands)
                 {
-                    if (asset == null || asset.Kind != kind) continue;
+                    if (cells == null || cells.Kind != kind) continue;
+                    var asset = ArchipelagoLibrary.Find(cells.IslandName);
+                    Assert.IsNotNull(asset, $"{cells.IslandName} has no meshes in either part of the library.");
                     count++;
                     // islands.py found no room for its zone: the island would carry no base / no castle
                     if (kind == ArchipelagoGenerator.Kind.Orc) Assert.IsTrue(asset.HasMainBase, $"{asset.IslandName} has no main base spot.");
