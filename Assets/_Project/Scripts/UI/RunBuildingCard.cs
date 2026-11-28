@@ -175,6 +175,8 @@ namespace CityBuilder.UI
                 {
                     if (levelIconKeys[i] == key) return levelIcons[i];
                 }
+                var later = LevelIconKit.Find(key);   // a picture in the download pack
+                if (later != null) return later;
             }
             return null;
         }

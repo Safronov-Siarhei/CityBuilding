@@ -700,12 +700,12 @@ namespace CityBuilder.EditorTools
             cityDefenceSO.FindProperty("introAmbient").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_gate.ogg");   // the scene's music: The Old Tower Inn (the user, 2026-11-15)
             cityDefenceSO.FindProperty("introCrowd").objectReferenceValue = null;   // the crowd dropped (the user, 2026-11-15)
             cityDefenceSO.FindProperty("introHorn").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/sfx_horn.ogg");
-            cityDefenceSO.FindProperty("introScript").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Mission2Intro.json");
+            filmKitSO.FindProperty("introScript").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Mission2Intro.json");
             var introTakes = new System.Collections.Generic.List<Object>();
             if (System.IO.Directory.Exists("Assets/_Project/Campaign/M2Intro"))
                 foreach (var file in System.IO.Directory.GetFiles("Assets/_Project/Campaign/M2Intro", "*.json"))
                     introTakes.Add(AssetDatabase.LoadAssetAtPath<TextAsset>(file.Replace('\\', '/')));
-            WriteArray(cityDefenceSO.FindProperty("introTakes"), introTakes.ToArray());
+            WriteArray(filmKitSO.FindProperty("introTakes"), introTakes.ToArray());
             var introFigures = new System.Collections.Generic.List<Object>();
             var introClips = new System.Collections.Generic.List<Object>();
             // the M2 cast, and the film's spear orc for the horde out of the forest (the user, 2026-11-15)
@@ -728,7 +728,7 @@ namespace CityBuilder.EditorTools
             WriteArray(filmKitSO.FindProperty("introProps"), introProps.ToArray());
             // the second scene, at the capital when the courier gets there (approved 2026-11-15;
             // Tools/blender/cinematic/export_m2capital.py, CityDefenceMode.Capital.cs)
-            cityDefenceSO.FindProperty("capitalScript").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Mission2Capital.json");
+            filmKitSO.FindProperty("capitalScript").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Mission2Capital.json");
             // scene 2's music in two parts, neither looped (the user, 2026-11-16: the 23 s mus_village began again
             // mid-scene): the streets The Old Tower Inn whole (50 s), the throne room the war theme
             cityDefenceSO.FindProperty("capitalMusic").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_gate.ogg");
@@ -737,7 +737,7 @@ namespace CityBuilder.EditorTools
             if (System.IO.Directory.Exists("Assets/_Project/Campaign/M2Capital"))
                 foreach (var file in System.IO.Directory.GetFiles("Assets/_Project/Campaign/M2Capital", "*.json"))
                     capitalTakes.Add(AssetDatabase.LoadAssetAtPath<TextAsset>(file.Replace('\\', '/')));
-            WriteArray(cityDefenceSO.FindProperty("capitalTakes"), capitalTakes.ToArray());
+            WriteArray(filmKitSO.FindProperty("capitalTakes"), capitalTakes.ToArray());
             var capitalFigures = new System.Collections.Generic.List<Object>();
             var capitalClips = new System.Collections.Generic.List<Object>();
             foreach (var file in System.IO.Directory.GetFiles(cine + "Cast", "Cap*.fbx"))
@@ -763,19 +763,19 @@ namespace CityBuilder.EditorTools
             // the last scene «Подкрепление», at the win (approved 2026-11-16; Tools/blender/cinematic/export_m2help.py,
             // CityDefenceMode.Help.cs): its figures and props are among the Cap* above; the fight's music, then the
             // cavalry's from the horn
-            cityDefenceSO.FindProperty("helpScript").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Mission2Help.json");
+            filmKitSO.FindProperty("helpScript").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Mission2Help.json");
             cityDefenceSO.FindProperty("helpMusic").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_attack.ogg");
             cityDefenceSO.FindProperty("helpMusic2").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_gate.ogg");
             var helpTakes = new System.Collections.Generic.List<Object>();
             if (System.IO.Directory.Exists("Assets/_Project/Campaign/M2Help"))
                 foreach (var file in System.IO.Directory.GetFiles("Assets/_Project/Campaign/M2Help", "*.json"))
                     helpTakes.Add(AssetDatabase.LoadAssetAtPath<TextAsset>(file.Replace('\\', '/')));
-            WriteArray(cityDefenceSO.FindProperty("helpTakes"), helpTakes.ToArray());
+            WriteArray(filmKitSO.FindProperty("helpTakes"), helpTakes.ToArray());
             WriteArray(filmKitSO.FindProperty("helpSets"), new Object[] { AssetDatabase.LoadAssetAtPath<GameObject>(cine + "M2HelpBridgeSet.fbx") });
             // the level-3 prologue «Пленные», right after the last scene (approved 2026-11-22/23;
             // Tools/blender/cinematic/export_prologue.py, CityDefenceMode.Prologue.cs): its figures (CapL3*) and the
             // cart are among the Cap* above; the dead of the last scene lie on
-            cityDefenceSO.FindProperty("prologueScript").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Level3Prologue.json");
+            filmKitSO.FindProperty("prologueScript").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Level3Prologue.json");
             cityDefenceSO.FindProperty("prologueMusic").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_gate.ogg");
             cityDefenceSO.FindProperty("prologueMusic2").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_portal.ogg");
             var prologueTakes = new System.Collections.Generic.List<Object>();
@@ -783,7 +783,7 @@ namespace CityBuilder.EditorTools
                 foreach (var file in System.IO.Directory.GetFiles("Assets/_Project/Campaign/L3Prologue", "*.json"))
                     prologueTakes.Add(AssetDatabase.LoadAssetAtPath<TextAsset>(file.Replace('\\', '/')));
             prologueTakes.Add(AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/M2Help/dead.json"));
-            WriteArray(cityDefenceSO.FindProperty("prologueTakes"), prologueTakes.ToArray());
+            WriteArray(filmKitSO.FindProperty("prologueTakes"), prologueTakes.ToArray());
             WriteArray(filmKitSO.FindProperty("prologueSets"), new Object[]
             {
                 AssetDatabase.LoadAssetAtPath<GameObject>(cine + "L3GladeSet.fbx"),
@@ -792,14 +792,14 @@ namespace CityBuilder.EditorTools
             });
             // mission 3b «Клетка»'s opening scene (the forest ambush, approved 2026-11-23; export_m3opening.py,
             // mission3b_opening_json.py, CityDefenceMode.Escort.cs): its figures (CapM3*) and props are among the Cap* above
-            cityDefenceSO.FindProperty("openingScript").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Mission3Opening.json");
+            filmKitSO.FindProperty("openingScript").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Mission3Opening.json");
             cityDefenceSO.FindProperty("openingMusic").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_gate.ogg");
             cityDefenceSO.FindProperty("openingMusic2").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_attack.ogg");
             var openingTakes = new System.Collections.Generic.List<Object>();
             if (System.IO.Directory.Exists("Assets/_Project/Campaign/M3Opening"))
                 foreach (var file in System.IO.Directory.GetFiles("Assets/_Project/Campaign/M3Opening", "*.json"))
                     openingTakes.Add(AssetDatabase.LoadAssetAtPath<TextAsset>(file.Replace('\\', '/')));
-            WriteArray(cityDefenceSO.FindProperty("openingTakes"), openingTakes.ToArray());
+            WriteArray(filmKitSO.FindProperty("openingTakes"), openingTakes.ToArray());
             WriteArray(filmKitSO.FindProperty("openingSets"), new Object[] { AssetDatabase.LoadAssetAtPath<GameObject>(cine + "M3RoadSet.fbx") });
             filmKitSO.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(filmKit);

@@ -88,6 +88,7 @@ namespace CityBuilder.EditorTools
 
             // The city first: its building prefabs are what the main menu's background stages its
             // scenes with, so they have to be this run's, not the last one's.
+            BeginLaterLevels();
             BuildCityScene();
             BuildMainMenuScene();
             BuildLoadingScreen();
@@ -112,6 +113,7 @@ namespace CityBuilder.EditorTools
             CleanupTemplateAssets();
 
             // the small first download: what the maps above wrote outside Resources becomes the fast-follow pack
+            SaveLaterLevels();
             SetupProjectContent.Apply();
 
             // Whichever scene was built last is the active one here -- left as-is, that becomes the scene the Editor restores on its next normal (non-

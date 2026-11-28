@@ -815,7 +815,10 @@ namespace CityBuilder.UI
             // the level's own picture, else the nearest one below it
             for (var l = level; l >= 1; l--)
             {
-                if (_iconsByKey.TryGetValue(l == 1 ? targetId : $"{targetId}_L{l}", out var sprite)) return sprite;
+                var key = l == 1 ? targetId : $"{targetId}_L{l}";
+                if (_iconsByKey.TryGetValue(key, out var sprite)) return sprite;
+                var later = LevelIconKit.Find(key);   // a picture in the download pack
+                if (later != null) return later;
             }
             return null;
         }

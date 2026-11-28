@@ -45,3 +45,9 @@ PlayMode `StorageAndUpgradeTests` (`Photograph_TheBuildingLevels` — occasional
 ## Open
 The card never says what an upgrade BUYS («Рабочих 3 → 4»); L4/L5 balance unplayed; ~18 MB of level
 FBX referenced by prefabs (APK size).
+
+## Download pack (2026-11-28)
+Levels 3-5 of buildings the Invasion does not use (45 of them) are in the download pack: `BuildingLevelKit` (models,
+fitted transform) + `UI/LevelIconKit` (pictures). The prefab keeps the HEIGHT with no model; `BuildingLevelAppearance.FillFromKit`
+makes it when the level is shown, else the level below shows. TRAP: anything that caches a building's renderers at spawn misses
+a model made later (season is re-applied; the bot's palette via `ModelMade`). Keep list = invasion.csv's building table.

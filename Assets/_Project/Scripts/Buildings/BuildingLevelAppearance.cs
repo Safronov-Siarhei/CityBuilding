@@ -23,11 +23,41 @@ namespace CityBuilder.Buildings
         // back the level actually being shown, and its height is the one the click box wants.
         [SerializeField] private List<float> levelHeights = new List<float>();
 
-        /// <summary>Set by SetupProject as it builds the prefab. Entries may be null where that level has no model of its own.</summary>
-        public void SetModels(List<GameObject> models, List<float> heights)
+        // the building's id in BuildingLevelKit: a level with a height and no model is in the fast-follow pack (2026-11-28)
+        [SerializeField] private string kitId;
+
+        /// <summary>Set by SetupProject as it builds the prefab. Entries may be null where that level has no model of its own;
+        /// null with a height = the model is in BuildingLevelKit (the download pack), made when the level is shown.</summary>
+        public void SetModels(List<GameObject> models, List<float> heights, string id = null)
         {
             levelModels = models;
             levelHeights = heights;
+            kitId = id;
+        }
+
+        /// <summary>Called with each model made from the download pack (the bot's town dresses it in its palette).</summary>
+        [System.NonSerialized] public System.Action<GameObject> ModelMade;
+
+        /// <summary>Makes a level's model from the download pack when it is on the phone and the prefab left it out.</summary>
+        private void FillFromKit(int level)
+        {
+            if (string.IsNullOrEmpty(kitId) || levelModels == null || levelHeights == null) return;
+            var top = Mathf.Min(Mathf.Clamp(level, 1, levelModels.Count), levelHeights.Count);
+            for (var i = 0; i < top; i++)
+            {
+                if (levelModels[i] != null || levelHeights[i] <= 0f) continue;
+                var kit = BuildingLevelKit.Load();
+                if (kit == null || !kit.TryGet(kitId, i + 1, out var e)) continue;
+                var model = Instantiate(e.source, transform, false);
+                model.name = $"{kitId}-lvl{i + 1}";
+                model.transform.localPosition = e.position;
+                model.transform.localRotation = e.rotation;
+                model.transform.localScale = e.scale;
+                model.SetActive(false);
+                Maps.SeasonStyle.DressAny(model);
+                levelModels[i] = model;
+                ModelMade?.Invoke(model);
+            }
         }
 
         // set while another look stands in for the level models (a tower against a walk wall, WallTowerLook)
@@ -45,6 +75,7 @@ namespace CityBuilder.Buildings
         public void Apply(int level)
         {
             _level = level;
+            FillFromKit(level);
             var index = Resolve(level);
             if (index < 0) return;
 
@@ -87,12 +118,14 @@ namespace CityBuilder.Buildings
         /// <summary>True when this level was modelled itself rather than borrowing the model of a level below it.</summary>
         public bool HasOwnModel(int level)
         {
-            return levelModels != null && level >= 1 && level <= levelModels.Count && levelModels[level - 1] != null;
+            return levelModels != null && level >= 1 && level <= levelModels.Count
+                   && (levelModels[level - 1] != null || (levelHeights != null && level <= levelHeights.Count && levelHeights[level - 1] > 0f));
         }
 
         /// <summary>The model this level shows (its own or the one it borrows), or null with no models.</summary>
         public GameObject ModelFor(int level)
         {
+            FillFromKit(level);
             var index = Resolve(level);
             return index < 0 ? null : levelModels[index];
         }

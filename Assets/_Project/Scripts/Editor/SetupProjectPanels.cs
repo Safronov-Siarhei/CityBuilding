@@ -948,6 +948,7 @@ namespace CityBuilder.EditorTools
                 // the level pictures, and each building's own card picture for a level with none
                 // of its own (the Lighthouse has one model for all five)
                 if (!System.Text.RegularExpressions.Regex.IsMatch(name, "_L[2-5]$|^[A-Z][A-Za-z]+$")) continue;
+                if (IsLaterLevelIcon(name)) continue;   // in the download pack (LevelIconKit)
                 keys.Add(name);
                 sprites.Add(AssetDatabase.LoadAssetAtPath<Sprite>(file));
             }
@@ -1145,6 +1146,7 @@ namespace CityBuilder.EditorTools
                 var file = AssetDatabase.GUIDToAssetPath(guid);
                 var name = System.IO.Path.GetFileNameWithoutExtension(file);
                 if (!System.Text.RegularExpressions.Regex.IsMatch(name, "_L[2-5]$|^[A-Z][A-Za-z]+$")) continue;
+                if (IsLaterLevelIcon(name)) continue;   // in the download pack (LevelIconKit)
                 keys.Add(name);
                 sprites.Add(AssetDatabase.LoadAssetAtPath<Sprite>(file));
             }
@@ -1512,6 +1514,7 @@ namespace CityBuilder.EditorTools
             foreach (var guid in AssetDatabase.FindAssets("t:Sprite", new[] { UiTextureImport.IconsFolder }))
             {
                 var file = AssetDatabase.GUIDToAssetPath(guid);
+                if (IsLaterLevelIcon(System.IO.Path.GetFileNameWithoutExtension(file))) continue;   // in the download pack (LevelIconKit)
                 keys.Add(System.IO.Path.GetFileNameWithoutExtension(file));
                 sprites.Add(AssetDatabase.LoadAssetAtPath<Sprite>(file));
             }

@@ -650,6 +650,8 @@ namespace CityBuilder.UI
                 var key = l >= 2 ? $"{buildingId}_L{l}" : buildingId;
                 for (var i = 0; i < levelIconKeys.Length && i < levelIcons.Length; i++)
                     if (levelIconKeys[i] == key) return levelIcons[i];
+                var later = LevelIconKit.Find(key);   // a picture in the download pack
+                if (later != null) return later;
             }
             return null;
         }

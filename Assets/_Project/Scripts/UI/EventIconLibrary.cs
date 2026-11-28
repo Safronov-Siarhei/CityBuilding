@@ -31,6 +31,12 @@ namespace CityBuilder.UI
             {
                 if (pictureNames[i] == name) return pictures[i];
             }
+            // a level picture of the download pack, else (not downloaded yet) the level below's
+            var later = LevelIconKit.Find(name);
+            if (later != null) return later;
+            var cut = name.LastIndexOf("_L", System.StringComparison.Ordinal);
+            if (cut > 0 && int.TryParse(name.Substring(cut + 2), out var level) && level >= 2)
+                return GetPicture(level == 2 ? name.Substring(0, cut) : $"{name.Substring(0, cut)}_L{level - 1}");
             return null;
         }
 

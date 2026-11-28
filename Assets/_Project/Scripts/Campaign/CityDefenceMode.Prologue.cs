@@ -18,8 +18,8 @@ namespace CityBuilder.Campaign
     /// </summary>
     public partial class CityDefenceMode
     {
-        [SerializeField] private TextAsset prologueScript;                         // Campaign/Level3Prologue.json
-        [SerializeField] private TextAsset[] prologueTakes = new TextAsset[0];      // Campaign/L3Prologue/*.json + M2Help/dead.json
+        [System.NonSerialized] private TextAsset prologueScript;                         // Campaign/Level3Prologue.json
+        [System.NonSerialized] private TextAsset[] prologueTakes = new TextAsset[0];      // Campaign/L3Prologue/*.json + M2Help/dead.json
         [System.NonSerialized] private GameObject[] prologueSets = new GameObject[0];    // Models/Cinematic/L3Glade*Set.fbx
         [SerializeField] private AudioClip prologueMusic;                          // Audio/Campaign/mus_gate.ogg (the square)
         [SerializeField] private AudioClip prologueMusic2;                         // Audio/Campaign/mus_portal.ogg (from the glade)

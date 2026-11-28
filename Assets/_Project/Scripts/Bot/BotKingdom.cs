@@ -317,6 +317,9 @@ namespace CityBuilder.Bot
             if (instance == null) instance = go.AddComponent<BuildingInstance>();
             instance.InitializeAsBot(slot.data, slot.origin, slot.steps, slot.level);
             Dress(go);
+            // a level model made later from the download pack wears the bot's palette too
+            var levels = go.GetComponent<BuildingLevelAppearance>();
+            if (levels != null) levels.ModelMade = Dress;
             grid.SetAreaOccupied(slot.origin, footprint, true);
             if (slot.data.isRoad && RoadNetwork.Instance != null)
             {

@@ -27,8 +27,8 @@ namespace CityBuilder.Campaign
         [SerializeField] private TextAsset escortPlan;   // Campaign/Mission3Escort.json
         // the opening scene (the forest ambush, approved 2026-11-23; Tools/blender/cinematic/export_m3opening.py, laid out by
         // Tools/campaign/mission3b_opening_json.py): its figures (CapM3*) and props are among the capital's Cap* lists
-        [SerializeField] private TextAsset openingScript;                         // Campaign/Mission3Opening.json
-        [SerializeField] private TextAsset[] openingTakes = new TextAsset[0];      // Campaign/M3Opening/*.json
+        [System.NonSerialized] private TextAsset openingScript;                         // Campaign/Mission3Opening.json
+        [System.NonSerialized] private TextAsset[] openingTakes = new TextAsset[0];      // Campaign/M3Opening/*.json
         [System.NonSerialized] private GameObject[] openingSets = new GameObject[0];    // Models/Cinematic/M3RoadSet.fbx
         [SerializeField] private AudioClip openingMusic;                          // the ride
         [SerializeField] private AudioClip openingMusic2;                         // from the horn

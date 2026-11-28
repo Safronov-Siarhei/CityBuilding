@@ -270,6 +270,16 @@ namespace CityBuilder.Campaign
             helpSets = kit.helpSets;
             prologueSets = kit.prologueSets;
             openingSets = kit.openingSets;
+            introScript = kit.introScript;
+            introTakes = kit.introTakes;
+            capitalScript = kit.capitalScript;
+            capitalTakes = kit.capitalTakes;
+            helpScript = kit.helpScript;
+            helpTakes = kit.helpTakes;
+            prologueScript = kit.prologueScript;
+            prologueTakes = kit.prologueTakes;
+            openingScript = kit.openingScript;
+            openingTakes = kit.openingTakes;
         }
 
         private void Awake()

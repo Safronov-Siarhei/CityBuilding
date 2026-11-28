@@ -343,7 +343,7 @@ namespace CityBuilder.EditorTools
                 routeProp.GetArrayElementAtIndex(i).FindPropertyRelative("prefab").objectReferenceValue = m;
             }
             // and the islands' meadow props: Map 3's decor kit and its material
-            var map3 = AssetDatabase.LoadAssetAtPath<CityBuilder.Maps.MeshMapDefinition>("Assets/_Project/Resources/MeshMaps/Map3.asset");
+            var map3 = AssetDatabase.LoadAssetAtPath<CityBuilder.Maps.MeshMapDefinition>(CityBuilder.Maps.MeshMapCatalog.EditorOnlyFolder + "/Map3.asset");
             if (map3 != null)
             {
                 so.FindProperty("decorKit").objectReferenceValue = map3.DecorData;

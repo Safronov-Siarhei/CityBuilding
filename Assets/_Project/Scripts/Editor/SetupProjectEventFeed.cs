@@ -165,6 +165,8 @@ namespace CityBuilder.EditorTools
         private static EventIconLibrary CreateEventIconLibrary()
         {
             var guids = AssetDatabase.FindAssets("t:Sprite", new[] { UiTextureImport.IconsFolder });
+            // the sandbox-only level 3-5 pictures are in the download pack (LevelIconKit), not here
+            guids = System.Array.FindAll(guids, g => !IsLaterLevelIcon(Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(g))));
             var names = new string[guids.Length];
             var sprites = new Sprite[guids.Length];
             for (var i = 0; i < guids.Length; i++)

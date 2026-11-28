@@ -27,6 +27,17 @@ namespace CityBuilder.Campaign
         public GameObject[] helpSets = new GameObject[0];      // M2HelpBridgeSet
         public GameObject[] prologueSets = new GameObject[0];  // L3Glade*Set
         public GameObject[] openingSets = new GameObject[0];   // M3RoadSet
+        // the films' scripts and takes (Campaign/Mission2*.json, M2Intro/, M2Capital/, M2Help/, L3Prologue/, M3Opening/)
+        public TextAsset introScript;
+        public TextAsset[] introTakes = new TextAsset[0];
+        public TextAsset capitalScript;
+        public TextAsset[] capitalTakes = new TextAsset[0];
+        public TextAsset helpScript;
+        public TextAsset[] helpTakes = new TextAsset[0];
+        public TextAsset prologueScript;
+        public TextAsset[] prologueTakes = new TextAsset[0];
+        public TextAsset openingScript;
+        public TextAsset[] openingTakes = new TextAsset[0];
 
         /// <summary>Is a Models/Cinematic piece one of missions 2-3's (kept out of the install's scenes)?</summary>
         public static bool IsLater(string pieceName) =>

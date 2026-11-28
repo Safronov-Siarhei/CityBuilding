@@ -336,14 +336,103 @@ namespace CityBuilder.EditorTools
                 // overhangs its neighbours instead of claiming more ground.
                 WarnIfOverhangs(size, footprint, $"{id} lvl{level}");
 
+                heights.Add(size.y);
+                // levels 3-5 of a building only the sandbox raises that high: into the download pack, fitted here,
+                // made at runtime (BuildingLevelKit; the user, 2026-11-28)
+                if (level >= 3 && !KeepsHighLevels(id))
+                {
+                    _laterLevels.Add(new CityBuilder.Buildings.BuildingLevelKit.Entry
+                    {
+                        id = id, level = level, source = source,
+                        position = model.transform.localPosition, rotation = model.transform.localRotation, scale = model.transform.localScale,
+                    });
+                    Object.DestroyImmediate(model);
+                    models.Add(null);
+                    continue;
+                }
                 // Level 1 is what a newly placed building shows; the rest wait to be upgraded into.
                 model.SetActive(false);
                 models.Add(model);
-                heights.Add(size.y);
             }
 
             if (!anyDrawn) return;
-            root.AddComponent<BuildingLevelAppearance>().SetModels(models, heights);
+            root.AddComponent<BuildingLevelAppearance>().SetModels(models, heights, id);
+        }
+
+        // the level 3-5 models this run sends to the download pack (AddLevelModels -> SaveLaterLevels)
+        private static readonly List<CityBuilder.Buildings.BuildingLevelKit.Entry> _laterLevels = new List<CityBuilder.Buildings.BuildingLevelKit.Entry>();
+        private static HashSet<string> _keepHighLevels;
+
+        /// <summary>
+        /// Does the install keep this building's levels 3-5? The Invasion's buildings (its tab's building table: they
+        /// level up to 5 in a run) -- the tutorial raises nothing past 2 and campaign level 1 uses its own models.
+        /// </summary>
+        private static bool KeepsHighLevels(string id)
+        {
+            if (_keepHighLevels == null)
+            {
+                _keepHighLevels = new HashSet<string>();
+                var inBuildings = false;
+                foreach (var line in System.IO.File.ReadAllLines("Assets/_Project/Balance/invasion.csv"))
+                {
+                    var first = line.Split(',')[0].Trim();
+                    if (first == "building" || first == "unit" || first == "key") { inBuildings = first == "building"; continue; }
+                    if (inBuildings && first.Length > 0) _keepHighLevels.Add(first);
+                }
+            }
+            return _keepHighLevels.Contains(id);
+        }
+
+        /// <summary>A level 3-5 picture (UI/Icons/&lt;Id&gt;_L3..L5) of a building whose levels 3-5 are in the download pack.</summary>
+        private static bool IsLaterLevelIcon(string name)
+        {
+            var m = System.Text.RegularExpressions.Regex.Match(name ?? string.Empty, "^([A-Z][A-Za-z0-9]*)_L([3-5])$");
+            return m.Success && !KeepsHighLevels(m.Groups[1].Value);
+        }
+
+        private static void BeginLaterLevels()
+        {
+            _laterLevels.Clear();
+            _keepHighLevels = null;
+        }
+
+        /// <summary>Writes this run's later level models into BuildingLevelKit (in the download pack, SetupProjectContent).</summary>
+        private static void SaveLaterLevels()
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(CityBuilder.Buildings.BuildingLevelKit.Path));
+            var kit = AssetDatabase.LoadAssetAtPath<CityBuilder.Buildings.BuildingLevelKit>(CityBuilder.Buildings.BuildingLevelKit.Path);
+            if (kit == null)
+            {
+                kit = ScriptableObject.CreateInstance<CityBuilder.Buildings.BuildingLevelKit>();
+                AssetDatabase.CreateAsset(kit, CityBuilder.Buildings.BuildingLevelKit.Path);
+            }
+            kit.entries = new List<CityBuilder.Buildings.BuildingLevelKit.Entry>(_laterLevels);
+            EditorUtility.SetDirty(kit);
+            AssetDatabase.SaveAssets();
+            Debug.Log($"SaveLaterLevels: {_laterLevels.Count} level 3-5 models in the download pack");
+
+            // and their pictures (LevelIconKit; the cards leave them out of their own lists)
+            var keys = new List<string>();
+            var sprites = new List<Sprite>();
+            foreach (var guid in AssetDatabase.FindAssets("t:Sprite", new[] { UiTextureImport.IconsFolder }))
+            {
+                var file = AssetDatabase.GUIDToAssetPath(guid);
+                var name = Path.GetFileNameWithoutExtension(file);
+                if (!IsLaterLevelIcon(name)) continue;
+                keys.Add(name);
+                sprites.Add(AssetDatabase.LoadAssetAtPath<Sprite>(file));
+            }
+            var icons = AssetDatabase.LoadAssetAtPath<CityBuilder.UI.LevelIconKit>(CityBuilder.UI.LevelIconKit.Path);
+            if (icons == null)
+            {
+                icons = ScriptableObject.CreateInstance<CityBuilder.UI.LevelIconKit>();
+                AssetDatabase.CreateAsset(icons, CityBuilder.UI.LevelIconKit.Path);
+            }
+            icons.keys = keys.ToArray();
+            icons.sprites = sprites.ToArray();
+            EditorUtility.SetDirty(icons);
+            AssetDatabase.SaveAssets();
+            Debug.Log($"SaveLaterLevels: {keys.Count} level 3-5 pictures in the download pack");
         }
 
         /// <summary>

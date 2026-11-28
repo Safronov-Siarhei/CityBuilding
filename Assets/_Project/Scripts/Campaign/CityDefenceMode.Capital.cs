@@ -26,8 +26,8 @@ namespace CityBuilder.Campaign
     /// </summary>
     public partial class CityDefenceMode
     {
-        [SerializeField] private TextAsset capitalScript;                         // Campaign/Mission2Capital.json
-        [SerializeField] private TextAsset[] capitalTakes = new TextAsset[0];      // Campaign/M2Capital/*.json
+        [System.NonSerialized] private TextAsset capitalScript;                         // Campaign/Mission2Capital.json
+        [System.NonSerialized] private TextAsset[] capitalTakes = new TextAsset[0];      // Campaign/M2Capital/*.json
         [System.NonSerialized] private GameObject[] capitalFigures = new GameObject[0];  // Models/Cinematic/Cast/Cap*.fbx
         [System.NonSerialized] private CineClips[] capitalClips = new CineClips[0];      // their clips, in the same order
         [System.NonSerialized] private GameObject[] capitalProps = new GameObject[0];    // Models/Cinematic/CapProp*.fbx

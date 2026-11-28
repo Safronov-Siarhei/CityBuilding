@@ -28,8 +28,8 @@ namespace CityBuilder.Campaign
     /// </summary>
     public partial class CityDefenceMode : IFilm
     {
-        [SerializeField] private TextAsset introScript;              // Campaign/Mission2Intro.json
-        [SerializeField] private TextAsset[] introTakes = new TextAsset[0];      // Campaign/M2Intro/*.json
+        [System.NonSerialized] private TextAsset introScript;              // Campaign/Mission2Intro.json
+        [System.NonSerialized] private TextAsset[] introTakes = new TextAsset[0];      // Campaign/M2Intro/*.json
         [System.NonSerialized] private GameObject[] introFigures = new GameObject[0];  // Models/Cinematic/Cast/M2*.fbx
         [System.NonSerialized] private CineClips[] introClips = new CineClips[0];      // their clips, in the same order
         [System.NonSerialized] private GameObject[] introProps = new GameObject[0];    // Models/Cinematic/M2Intro*.fbx

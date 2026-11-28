@@ -23,36 +23,51 @@ namespace CityBuilder.Core
         /// <summary>The fast-follow Addressables group and Play asset pack (letters, digits, underscores only: Google's rule).</summary>
         public const string PackName = "LaterContent";
 
-        /// <summary>Label of every map definition in the pack (MeshMapCatalog loads them all by it).</summary>
+        /// <summary>
+        /// The small pack asked for FIRST (the user, 2026-11-28: «поставить первый приоритет»): the level-1 dungeon the
+        /// player may walk into in the first minutes. Its own Play asset pack, so it lands in seconds, ahead of the big one.
+        /// </summary>
+        public const string FirstPackName = "FirstContent";
+
+        /// <summary>Label of every map definition in the big pack (MeshMapCatalog loads them all by it).</summary>
         public const string MapLabel = "later_map";
 
         private const float RetryEvery = 30f;
 
+        private static readonly string[] Names = { FirstPackName, PackName };
+        private static readonly bool[] Here = new bool[2];
+        private static readonly bool[] Asking = new bool[2];
+        private static readonly bool[] Stuck = new bool[2];
+        private static readonly float[] Done = new float[2];
+        private static bool _addressablesUp;
+
+        /// <summary>Every pack is on the phone and Addressables are up.</summary>
         public static bool Ready { get; private set; }
 
-        /// <summary>0..1 while downloading.</summary>
-        public static float Progress { get; private set; }
+        /// <summary>The first (small) pack is on the phone and Addressables are up.</summary>
+        public static bool FirstReady => _addressablesUp && Here[0];
+
+        /// <summary>0..1 of the big pack while downloading.</summary>
+        public static float Progress => Ready ? 1f : Done[1];
+
+        /// <summary>0..1 of the first pack.</summary>
+        public static float FirstProgress => FirstReady ? 1f : Done[0];
 
         /// <summary>The last request failed, waits for Wi-Fi / the player's consent, or the phone is offline: say «нужен интернет».</summary>
-        public static bool Stalled
-        {
-            get => !Ready && (_stalled || Application.internetReachability == NetworkReachability.NotReachable);
-            private set => _stalled = value;
-        }
+        public static bool Stalled => !Ready && (Stuck[0] || Stuck[1] || Offline);
 
-        private static bool _stalled;
+        public static bool FirstStalled => !FirstReady && (Stuck[0] || Offline);
+
+        private static bool Offline => Application.internetReachability == NetworkReachability.NotReachable;
 
         /// <summary>Raised once, when <see cref="Ready"/> turns true.</summary>
         public static event Action BecameReady;
 
-        private static bool _addressablesUp;
-        private static bool _packHere;
-
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Boot()
         {
-            Ready = _addressablesUp = _packHere = Stalled = false;
-            Progress = 0f;
+            Ready = _addressablesUp = false;
+            for (var i = 0; i < 2; i++) { Here[i] = Asking[i] = Stuck[i] = false; Done[i] = 0f; }
             Addressables.InitializeAsync().Completed += _ => { _addressablesUp = true; Check(); };
 #if UNITY_ANDROID && !UNITY_EDITOR
             var go = new GameObject("ContentPacks") { hideFlags = HideFlags.HideInHierarchy };
@@ -60,72 +75,82 @@ namespace CityBuilder.Core
             go.AddComponent<Runner>();
             Request();
 #else
-            _packHere = true;
+            Here[0] = Here[1] = true;
 #endif
         }
 
-        /// <summary>Text for a screen that waits on the pack: «Загружаем… N %» or «Нужен интернет…».</summary>
+        /// <summary>Text for a screen that waits on the big pack: «Загружаем… N %» or «Нужен интернет…».</summary>
         public static string StatusText =>
             Stalled ? Localization.Get("#content_offline") : Localization.Format("#content_loading", Mathf.RoundToInt(Progress * 100f));
 
+        /// <summary>The same for the first pack (a dungeon entered before it landed).</summary>
+        public static string FirstStatusText =>
+            FirstStalled ? Localization.Get("#content_offline") : Localization.Format("#content_loading", Mathf.RoundToInt(FirstProgress * 100f));
+
         private static void Check()
         {
-            if (Ready || !_addressablesUp || !_packHere) return;
+            if (Ready || !_addressablesUp || !Here[0] || !Here[1]) return;
             Ready = true;
-            Progress = 1f;
-            Stalled = false;
             Debug.Log("ContentPacks: the later content is here");
             BecameReady?.Invoke();
         }
 
 #if UNITY_ANDROID && !UNITY_EDITOR
-        private static bool _asking;
         private static float _sinceAsk;
+
+        private static void Arrived(int i)
+        {
+            Asking[i] = false;
+            Stuck[i] = false;
+            Here[i] = true;
+            Done[i] = 1f;
+            Check();
+            // the big one only after the first (its priority)
+            if (i == 0) Request();
+        }
 
         private static void Request()
         {
-            if (_packHere || _asking) return;
-            if (!string.IsNullOrEmpty(AndroidAssetPacks.GetAssetPackPath(PackName))) { _packHere = true; Check(); return; }
-            _asking = true;
             _sinceAsk = 0f;
-            try { AndroidAssetPacks.DownloadAssetPackAsync(new[] { PackName }, OnState); }
-            catch (InvalidOperationException e)
+            for (var i = 0; i < 2; i++)
             {
-                // no Play Core in this build (a plain APK): the bundles are in StreamingAssets
-                Debug.Log("ContentPacks: no asset packs here (" + e.Message + ") -- the content is built in");
-                _asking = false;
-                _packHere = true;
-                Check();
+                if (Here[i] || Asking[i]) { if (!Here[i]) return; continue; }
+                if (!string.IsNullOrEmpty(AndroidAssetPacks.GetAssetPackPath(Names[i]))) { Arrived(i); continue; }
+                Asking[i] = true;
+                try { AndroidAssetPacks.DownloadAssetPackAsync(new[] { Names[i] }, OnState); }
+                catch (InvalidOperationException e)
+                {
+                    // no Play Core in this build (a plain APK): the bundles are in StreamingAssets
+                    Debug.Log("ContentPacks: no asset packs here (" + e.Message + ") -- the content is built in");
+                    for (var j = 0; j < 2; j++) { Here[j] = true; Asking[j] = false; Done[j] = 1f; }
+                    Check();
+                }
+                return;   // one pack at a time, the first one first
             }
         }
 
         private static void OnState(AndroidAssetPackInfo info)
         {
-            if (info.name != PackName) return;
-            if (info.size > 0) Progress = Mathf.Clamp01(info.bytesDownloaded / (float)info.size);
+            var i = Array.IndexOf(Names, info.name);
+            if (i < 0) return;
+            if (info.size > 0) Done[i] = Mathf.Clamp01(info.bytesDownloaded / (float)info.size);
             switch (info.status)
             {
                 case AndroidAssetPackStatus.Completed:
-                    _asking = false;
-                    _packHere = true;
-                    Check();
-                    break;
                 case AndroidAssetPackStatus.Unknown:
-                    // not installed from Google Play (adb, an APK): no packs -- the content is in the app itself
-                    _asking = false;
-                    _packHere = true;
-                    Check();
+                    // Unknown: not installed from Google Play (adb, an APK): no packs -- the content is in the app itself
+                    Arrived(i);
                     break;
                 case AndroidAssetPackStatus.Failed:
                 case AndroidAssetPackStatus.Canceled:
                 case AndroidAssetPackStatus.WaitingForWifi:
                 case AndroidAssetPackStatus.RequiresUserConfirmation:
                     // never a dialog of its own: the pack waits, the game asks again later
-                    _asking = false;
-                    Stalled = true;
+                    Asking[i] = false;
+                    Stuck[i] = true;
                     break;
                 default:
-                    Stalled = false;
+                    Stuck[i] = false;
                     break;
             }
         }
@@ -134,15 +159,15 @@ namespace CityBuilder.Core
         {
             private void Update()
             {
-                if (_packHere) { enabled = false; return; }
-                if (_asking) return;
+                if (Here[0] && Here[1]) { enabled = false; return; }
+                if (Asking[0] || Asking[1]) return;
                 _sinceAsk += Time.unscaledDeltaTime;
                 if (_sinceAsk >= RetryEvery) Request();
             }
 
             private void OnApplicationPause(bool paused)
             {
-                if (!paused && !_packHere && !_asking) Request();
+                if (!paused && !(Here[0] && Here[1]) && !Asking[0] && !Asking[1]) Request();
             }
         }
 #endif

@@ -1,8 +1,9 @@
 # Small first download (Play Asset Delivery)
 
-**Status (2026-11-28):** STEP 2 BUILT: dungeons + islands (5e27f253f), then campaign 2-3. AAB 1635: install
-**~110 MB** (base 34.3 + UnityDataAssetPack 75.5; was 213), the fast-follow pack «LaterContent» 109.5 MB. NOT checked
-on a phone (needs an install from Play internal testing). MUST before release (the user, 2026-11-25:
+**Status (2026-11-28):** STEP 2 BUILT (5 rounds the same day). AAB 1636 (14:22): install **~92 MB** (base 34.3 +
+UnityDataAssetPack 58.1; was 213); two fast-follow packs: «FirstContent» 4.5 MB (the start map's level-1 dungeon,
+asked for first) and «LaterContent» 118.8 MB. NOT checked on a phone (needs an install from Play internal testing);
+EditMode tests NOT run after rounds 3-5 (the user: «подожди с тестами»). MUST before release (the user, 2026-11-25:
 «чем дольше скачивается -- тем меньше хочется играть»).
 
 ## Today (AAB 1620)
@@ -108,6 +109,29 @@ E. Build + phone: fast-follow only works for an install from Google Play (intern
   `CampaignFilmKit`), read in CityDefenceMode.Awake (UseFilmKit). Mission2/Mission3 maps -> LaterMaps. Begin/BeginEscort
   wait for the pack (IntoGameWhenContent). Music stays in the install: the first cutscene plays the same tracks.
   Measured AAB 1635: install 122 -> 110 MB, pack 94.8 -> 109.5 MB (~2 MB shared pieces counted in both).
+
+- Round 3 (2026-11-28, the user's idea): levels 3-5 of the buildings only the sandbox raises that high go to the
+  pack: `Buildings/BuildingLevelKit` (Content/LaterMaps/BuildingLevelKit.asset, address `BuildingLevelKit`, 135
+  models = 45 buildings x 3); the prefab keeps the level's HEIGHT and no model, BuildingLevelAppearance.FillFromKit
+  makes it (fitted transform from setup, season-dressed) when the level is shown; until the pack is here the level
+  shows the model below. Kept in the install: the Invasion tab's 12 buildings (read from invasion.csv by
+  SetupProjectBuildings.KeepsHighLevels); the tutorial raises nothing past 2; campaign 1 uses raw fbx. The bot's
+  village is the same buildings, nothing kept for it (the user: unseen in the first minutes). Orc camps stay (~1.5 MB,
+  not worth it). Map3-5 (no player picks them) -> `Content/EditorMaps` (MeshMapCatalog.EditorOnlyFolder, editor/tests
+  only, never built). Missions 2-3's scripts + takes (json) -> CampaignFilmKit. Sandbox music: NOT moved (the user:
+  leave it for now; only 2 tracks are the sandbox's, ~6 MB). Measured: install 110 -> 100 MB.
+  Trap: a level made from the kit appears AFTER placement -- anything caching a building's renderers at spawn misses
+  it (SeasonStyle is re-applied in FillFromKit).
+
+- Round 4-5 (2026-11-28): NO dungeon in the install (the user: «вынести подземелье 1 в докачку и поставить ей первый
+  приоритет»): Dungeon1 -> `Content/FirstMaps` (MeshMapCatalog.FirstFolder, label `first_map`), its own Addressables
+  group / Play pack `FirstContent` (ContentPacks.FirstPackName); ContentPacks asks for it FIRST, the big one after it
+  lands (one at a time); `FirstReady` / `FirstProgress` / `FirstStatusText`; DungeonTravel waits for the first pack only
+  (`IntoGameWhenContent(..., firstPackOnly)`); MeshMapCatalog loads the first pack's maps alone when only it is here.
+  Level 3-5 PICTURES of the same 45 buildings -> `UI/LevelIconKit` (135; BuildingInfoCard, Laboratory, RunBuildingCard,
+  EventIconLibrary look there on a miss, else the level below). Bot town: `BuildingLevelAppearance.ModelMade` -> the
+  bot's palette for a model made later. Measured: 100 -> 92.4 MB. Next if needed: ASTC 8x8 big pictures (~6-8 MB),
+  stronger mesh compression (~4-6 MB), sandbox music (~6 MB, the user: not now).
 
 ### Traps
 - The pack arrives only for an install FROM PLAY (internal testing) or bundletool --local-testing; a sideloaded AAB

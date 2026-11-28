@@ -35,8 +35,42 @@ namespace CityBuilder.EditorTools
                 settings.AddDataBuilder(ScriptAsset<BuildScriptPlayAssetDelivery>("DataBuilders"));
             settings.BuildAddressablesWithPlayerBuild = AddressableAssetSettings.PlayerBuildOption.BuildWithPlayer;
 
-            var group = settings.FindGroup(ContentPacks.PackName)
-                        ?? settings.CreateGroup(ContentPacks.PackName, false, false, true, null,
+            // the small FIRST pack (asked for first): the start map's level-1 dungeon
+            var firstGroup = PackGroup(settings, ContentPacks.FirstPackName);
+            settings.AddLabel(MeshMapCatalog.FirstMapLabel, false);
+            var firstWanted = new HashSet<string>();
+            AddMaps(settings, firstGroup, MeshMapCatalog.FirstFolder, MeshMapCatalog.FirstMapLabel, firstWanted);
+            DropStale(firstGroup, firstWanted);
+
+            // the big pack: every other map, the later islands, the campaign's films, the sandbox-only level models and icons
+            var group = PackGroup(settings, ContentPacks.PackName);
+            settings.AddLabel(ContentPacks.MapLabel, false);
+            var wanted = new HashSet<string>();
+            AddMaps(settings, group, MeshMapCatalog.LaterFolder, ContentPacks.MapLabel, wanted);
+            foreach (var (kitPath, kitAddress) in new[]
+                     {
+                         (CityBuilder.Maps.Archipelago.ArchipelagoLibrary.LaterPath, CityBuilder.Maps.Archipelago.ArchipelagoLibrary.LaterAddress),
+                         (CityBuilder.Campaign.CampaignFilmKit.Path, CityBuilder.Campaign.CampaignFilmKit.Address),
+                         (CityBuilder.Buildings.BuildingLevelKit.Path, CityBuilder.Buildings.BuildingLevelKit.Address),
+                         (CityBuilder.UI.LevelIconKit.Path, CityBuilder.UI.LevelIconKit.Address),
+                     })
+            {
+                var kitGuid = AssetDatabase.AssetPathToGUID(kitPath);
+                if (string.IsNullOrEmpty(kitGuid)) continue;
+                wanted.Add(kitGuid);
+                settings.CreateOrMoveEntry(kitGuid, group, false, false).address = kitAddress;
+            }
+            DropStale(group, wanted);
+
+            EditorUtility.SetDirty(settings);
+            AssetDatabase.SaveAssets();
+            Debug.Log($"SetupProjectContent: {ContentPacks.FirstPackName} = {firstWanted.Count}, {ContentPacks.PackName} = {wanted.Count} entries (fast-follow)");
+        }
+
+        private static AddressableAssetGroup PackGroup(AddressableAssetSettings settings, string name)
+        {
+            var group = settings.FindGroup(name)
+                        ?? settings.CreateGroup(name, false, false, true, null,
                             typeof(BundledAssetGroupSchema), typeof(ContentUpdateGroupSchema), typeof(PlayAssetDeliverySchema));
             var pad = group.GetSchema<PlayAssetDeliverySchema>() ?? group.AddSchema<PlayAssetDeliverySchema>();
             pad.IncludeInCustomAssetPack = false;
@@ -44,40 +78,27 @@ namespace CityBuilder.EditorTools
             var bundled = group.GetSchema<BundledAssetGroupSchema>() ?? group.AddSchema<BundledAssetGroupSchema>();
             bundled.BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackSeparately;
             bundled.IncludeInBuild = true;
+            EditorUtility.SetDirty(group);
+            return group;
+        }
 
-            settings.AddLabel(ContentPacks.MapLabel, false);
-            var wanted = new HashSet<string>();
-            if (AssetDatabase.IsValidFolder(MeshMapCatalog.LaterFolder))
-                foreach (var guid in AssetDatabase.FindAssets("t:MeshMapDefinition", new[] { MeshMapCatalog.LaterFolder }))
-                {
-                    wanted.Add(guid);
-                    var entry = settings.CreateOrMoveEntry(guid, group, false, false);
-                    entry.address = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(guid));
-                    entry.SetLabel(ContentPacks.MapLabel, true, true, false);
-                }
-            // the archipelago's later islands (all but the start map's and the tutorial's), looked up by address
-            var islandsGuid = AssetDatabase.AssetPathToGUID(CityBuilder.Maps.Archipelago.ArchipelagoLibrary.LaterPath);
-            if (!string.IsNullOrEmpty(islandsGuid))
+        private static void AddMaps(AddressableAssetSettings settings, AddressableAssetGroup group, string folder, string label, HashSet<string> wanted)
+        {
+            if (!AssetDatabase.IsValidFolder(folder)) return;
+            foreach (var guid in AssetDatabase.FindAssets("t:MeshMapDefinition", new[] { folder }))
             {
-                wanted.Add(islandsGuid);
-                var entry = settings.CreateOrMoveEntry(islandsGuid, group, false, false);
-                entry.address = CityBuilder.Maps.Archipelago.ArchipelagoLibrary.LaterAddress;
+                wanted.Add(guid);
+                var entry = settings.CreateOrMoveEntry(guid, group, false, false);
+                entry.address = Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(guid));
+                entry.SetLabel(label, true, true, false);
             }
-            // campaign missions 2-3's film pieces (SetupProjectCityScene)
-            var kitGuid = AssetDatabase.AssetPathToGUID(CityBuilder.Campaign.CampaignFilmKit.Path);
-            if (!string.IsNullOrEmpty(kitGuid))
-            {
-                wanted.Add(kitGuid);
-                settings.CreateOrMoveEntry(kitGuid, group, false, false).address = CityBuilder.Campaign.CampaignFilmKit.Address;
-            }
+        }
+
+        private static void DropStale(AddressableAssetGroup group, HashSet<string> wanted)
+        {
             var stale = new List<AddressableAssetEntry>();
             foreach (var entry in group.entries) if (!wanted.Contains(entry.guid)) stale.Add(entry);
             foreach (var entry in stale) group.RemoveAssetEntry(entry, false);
-
-            EditorUtility.SetDirty(settings);
-            EditorUtility.SetDirty(group);
-            AssetDatabase.SaveAssets();
-            Debug.Log($"SetupProjectContent: {ContentPacks.PackName} = {wanted.Count} later maps (fast-follow)");
         }
 
         private static T ScriptAsset<T>(string subfolder) where T : ScriptableObject

@@ -138,8 +138,11 @@ namespace CityBuilder.EditorTools
 
             // campaign missions 2-3's maps go to the fast-follow pack (the user, 2026-11-28: the install holds level 1 only)
             var later = mapId == CityBuilder.Campaign.CityDefenceMode.MapId || mapId == CityBuilder.Campaign.CityDefenceMode.EscortMapId;
-            var mapFolder = later ? CityBuilder.Maps.MeshMapCatalog.LaterFolder : MeshMapsFolder;
-            DeleteIfExists($"{(later ? MeshMapsFolder : CityBuilder.Maps.MeshMapCatalog.LaterFolder)}/{mapId}.asset");
+            // the old designed maps no player can pick stay out of the build (the tests read them in the editor)
+            var editorOnly = mapId == "Map3" || mapId == "Map4" || mapId == "Map5";
+            var mapFolder = later ? CityBuilder.Maps.MeshMapCatalog.LaterFolder : editorOnly ? CityBuilder.Maps.MeshMapCatalog.EditorOnlyFolder : MeshMapsFolder;
+            foreach (var other in new[] { MeshMapsFolder, CityBuilder.Maps.MeshMapCatalog.LaterFolder, CityBuilder.Maps.MeshMapCatalog.EditorOnlyFolder })
+                if (other != mapFolder) DeleteIfExists($"{other}/{mapId}.asset");
             Directory.CreateDirectory(mapFolder);
             var path = $"{mapFolder}/{mapId}.asset";
             DeleteIfExists(path);
@@ -204,12 +207,13 @@ namespace CityBuilder.EditorTools
             }
             map.EditorInitializeSpots(null, null, null, null, spots.ToArray());
 
-            // only the first level-1 dungeon is in the install; the rest go to the fast-follow pack (the user,
-            // 2026-11-28: one level-1 variant at once, everything else downloads quietly) -- SetupProjectContent
-            // marks the later folder Addressable
-            var later = mapId != CityBuilder.Dungeon.DungeonTravel.FirstDungeonId;
-            var folder2 = later ? CityBuilder.Maps.MeshMapCatalog.LaterFolder : MeshMapsFolder;
-            DeleteIfExists($"{(later ? MeshMapsFolder : CityBuilder.Maps.MeshMapCatalog.LaterFolder)}/{mapId}.asset");
+            // no dungeon is in the install (the user, 2026-11-28): the start map's level-1 one goes to the small FIRST
+            // pack (asked for first, lands in seconds), the rest to the big fast-follow pack -- SetupProjectContent
+            // marks both folders Addressable
+            var first = mapId == CityBuilder.Dungeon.DungeonTravel.FirstDungeonId;
+            var folder2 = first ? CityBuilder.Maps.MeshMapCatalog.FirstFolder : CityBuilder.Maps.MeshMapCatalog.LaterFolder;
+            foreach (var other in new[] { MeshMapsFolder, CityBuilder.Maps.MeshMapCatalog.LaterFolder, CityBuilder.Maps.MeshMapCatalog.FirstFolder })
+                if (other != folder2) DeleteIfExists($"{other}/{mapId}.asset");
             Directory.CreateDirectory(folder2);
             var path = $"{folder2}/{mapId}.asset";
             DeleteIfExists(path);
@@ -340,7 +344,7 @@ namespace CityBuilder.EditorTools
             foreach (var island in islands)
                 (island.Kind == CityBuilder.Maps.Archipelago.ArchipelagoGenerator.Kind.Tutorial || start.Contains(island.IslandName) ? now : later).Add(island);
             if (CityBuilder.Dungeon.DungeonTravel.LevelOneFor(seed, CityBuilder.Maps.Archipelago.ArchipelagoGenerator.Version, 0) != CityBuilder.Dungeon.DungeonTravel.FirstDungeonId)
-                Debug.LogError($"CreateArchipelagoLibrary: archipelago_start_seed {seed} does not lead to {CityBuilder.Dungeon.DungeonTravel.FirstDungeonId} -- its level-1 dungeon is not in the install (take a multiple of 4)");
+                Debug.LogError($"CreateArchipelagoLibrary: archipelago_start_seed {seed} does not lead to {CityBuilder.Dungeon.DungeonTravel.FirstDungeonId} -- its level-1 dungeon is not in the small first pack (take a multiple of 4)");
 
             var library = ScriptableObject.CreateInstance<CityBuilder.Maps.Archipelago.ArchipelagoLibrary>();
             library.EditorInitialize(now.ToArray());

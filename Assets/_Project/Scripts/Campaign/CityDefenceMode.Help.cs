@@ -22,8 +22,8 @@ namespace CityBuilder.Campaign
     /// </summary>
     public partial class CityDefenceMode
     {
-        [SerializeField] private TextAsset helpScript;                         // Campaign/Mission2Help.json
-        [SerializeField] private TextAsset[] helpTakes = new TextAsset[0];      // Campaign/M2Help/*.json (figures and props: capital*, all Cap*)
+        [System.NonSerialized] private TextAsset helpScript;                         // Campaign/Mission2Help.json
+        [System.NonSerialized] private TextAsset[] helpTakes = new TextAsset[0];      // Campaign/M2Help/*.json (figures and props: capital*, all Cap*)
         [System.NonSerialized] private GameObject[] helpSets = new GameObject[0];    // Models/Cinematic/M2HelpBridgeSet.fbx
         [SerializeField] private AudioClip helpMusic;                          // Audio/Campaign/mus_attack.ogg (the fight)
         [SerializeField] private AudioClip helpMusic2;                         // Audio/Campaign/mus_gate.ogg (the cavalry)

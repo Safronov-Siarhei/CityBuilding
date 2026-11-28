@@ -133,7 +133,8 @@ namespace CityBuilder.Dungeon
             // a dungeon of the fast-follow pack not on the phone yet (the small first download, 2026-11-28): the
             // loading screen waits for it, or -- offline -- fades out and the heroes stay in town
             if (Maps.MeshMapCatalog.Has(dungeonId)) { Go(); LoadingScreen.IntoGame(scene); }
-            else LoadingScreen.IntoGameWhenContent(scene, Go);
+            // the start map's level-1 dungeon is in the small first pack: wait for that one only
+            else LoadingScreen.IntoGameWhenContent(scene, Go, null, dungeonId == FirstDungeonId);
         }
 
         /// <summary>Back to the town, the heroes as the dungeon left them.</summary>
