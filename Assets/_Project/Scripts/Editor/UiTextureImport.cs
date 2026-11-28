@@ -19,7 +19,7 @@ namespace CityBuilder.EditorTools
     public class UiTextureImport : AssetPostprocessor
     {
         /// <summary>Raised when these rules change, so Unity reimports the pictures they cover (2: the Android ASTC override).</summary>
-        public override uint GetVersion() => 3;
+        public override uint GetVersion() => 4;
 
         public const string SkinFolder = "Assets/_Project/UI/Skin";
         public const string IconsFolder = "Assets/_Project/UI/Icons";
@@ -82,11 +82,15 @@ namespace CityBuilder.EditorTools
             // On Android the interface would be some 40 MB of raw RGBA and pushed the APK past
             // Telegram's 50 MB (60,3 MB on 2026-10-22). ASTC 4x4 is a quarter of that and keeps
             // the 9-slice edges and the icons' outlines clean; the editor and Windows keep the raw pictures.
+            // 2026-11-28 (the user, small first download): everything but the building icons and the event glyphs
+            // goes to ASTC 6x6 -- side-by-side sheets showed no visible difference on the windows, frames, scrolls and
+            // loading maps (PSNR 45-56 dB against the source); a small icon lost detail (35.6 dB), so icons stay 4x4.
+            var sharp = assetPath.StartsWith(IconsFolder + "/") || assetPath.StartsWith(GlyphsFolder + "/");
             importer.SetPlatformTextureSettings(new TextureImporterPlatformSettings
             {
                 name = "Android",
                 overridden = true,
-                format = TextureImporterFormat.ASTC_4x4,
+                format = sharp ? TextureImporterFormat.ASTC_4x4 : TextureImporterFormat.ASTC_6x6,
                 // the rate-us window shows its art at half size: half the texture is enough
                 // (the campaign's support banner is drawn at full size: its window keeps 2048)
                 maxTextureSize = assetPath.StartsWith(RateUsFolder + "/") || (assetPath.StartsWith(ShopFolder + "/") && !assetPath.Contains("/Support/") && !assetPath.Contains("/Piggy/")) || assetPath.StartsWith(DailyBonusFolder + "/") || assetPath.StartsWith(PlagueFolder + "/") || assetPath.StartsWith(FireFolder + "/") || assetPath.StartsWith(InvasionDefeatFolder + "/") || assetPath.StartsWith(TutorialOfferFolder + "/") || assetPath.StartsWith(DevGiftFolder + "/") || assetPath.StartsWith(TributeFolder + "/") || assetPath.StartsWith(DiplomacyFolder + "/Banner") ? 1024 : 2048,
