@@ -133,6 +133,19 @@ E. Build + phone: fast-follow only works for an install from Google Play (intern
   bot's palette for a model made later. Measured: 100 -> 92.4 MB. Next if needed: ASTC 8x8 big pictures (~6-8 MB),
   stronger mesh compression (~4-6 MB), sandbox music (~6 MB, the user: not now).
 
+## Adding content (the user's rules, 2026-11-28)
+- The store install (base + UnityDataAssetPack) stays UNDER 99 MB in every update; `build_android.ps1 -Store` prints
+  it per pack and shouts over the ceiling.
+- Every new asset is decided when it is added: install (the tutorial, Invasion, campaign cutscene 1 + level 1, the
+  start archipelago + its islands, the menu and its music) or the download pack (everything else). Where it goes:
+  - a map / dungeon definition -> `Content/LaterMaps` (or `FirstMaps` for what the first minutes may need);
+  - a building's levels 3-5 -> automatic (BuildingLevelKit + LevelIconKit) unless the building is in invasion.csv;
+  - a campaign film piece of mission 2+ -> CampaignFilmKit, file name Cap*/M2*/M3*/L3* (campaign.md trap);
+  - anything else -> a ScriptableObject kit in `Content/LaterMaps` added to SetupProjectContent's list, loaded with
+    Addressables when `ContentPacks.Ready`, with a fallback (or a wait on the loading screen) until then.
+- Never reference a pack asset from a scene, a prefab, Resources or an install-time ScriptableObject: Unity then copies
+  it into the install (that is how the menu village carried all of campaign 2-3).
+
 ### Traps
 - The pack arrives only for an install FROM PLAY (internal testing) or bundletool --local-testing; a sideloaded AAB
   reports Unknown, treated as «here» (everything is then in the APK set anyway).

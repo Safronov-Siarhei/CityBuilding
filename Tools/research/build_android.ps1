@@ -1,4 +1,4 @@
-﻿param(
+param(
     [switch]$Development,
     # a build for players: no cheat window, no PerfProbe (BuildAndroid's -release -> CB_RELEASE)
     [switch]$Release,
@@ -63,6 +63,17 @@ if ($p.ExitCode -ne 0) {
         Get-ChildItem "$project/Builds/Android" -Filter *.aab -ErrorAction SilentlyContinue |
             Select-Object Name, @{ Name = 'MB'; Expression = { [math]::Round($_.Length / 1MB, 1) } }, LastWriteTime
         Write-Output "versionCode $code -- upload Builds/Android/CityCraft.aab in Play Console"
+        # the install = base + the install-time data pack; the user's ceiling is 99 MB (2026-11-28,
+        # Design/features/download-size.md) -- the fast-follow packs do not count
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        $zip = [IO.Compression.ZipFile]::OpenRead("$project/Builds/Android/CityCraft.aab")
+        $mods = @{}
+        foreach ($e in $zip.Entries) { $m = $e.FullName.Split('/')[0]; $mods[$m] = $mods[$m] + $e.CompressedLength }
+        $zip.Dispose()
+        $install = ($mods['base'] + $mods['UnityDataAssetPack']) / 1MB
+        foreach ($m in @('base', 'UnityDataAssetPack', 'FirstContent', 'LaterContent')) { if ($mods[$m]) { Write-Output ("  {0,-20} {1,6:N1} MB" -f $m, ($mods[$m] / 1MB)) } }
+        if ($install -gt 99) { Write-Output ("INSTALL {0:N1} MB -- OVER THE 99 MB CEILING: move content to the download pack" -f $install) }
+        else { Write-Output ("install {0:N1} MB (ceiling 99)" -f $install) }
         return
     }
     $apkName = if ($Development) { 'CityBuilding-dev.apk' } else { 'CityBuilding.apk' }

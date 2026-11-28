@@ -37,3 +37,5 @@
   as renders for approval BEFORE entering the game; cutscenes are discussed before they are built;
   never build an APK unasked; push right after every commit; sizes in map cells; «дёшево» = lacks
   detail; anything to copy goes as a file; do every playtest item.
+- **Install under 99 MB in every update; every new asset is sorted into install vs download pack** (the user,
+  2026-11-28): `Design/features/download-size.md` «Adding content».

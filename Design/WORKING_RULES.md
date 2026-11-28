@@ -67,6 +67,12 @@ see the map at the bottom.
 - **The repo is PUBLIC** — nothing secret in commits (tokens, passwords, personal data).
 - Mobile first: weigh frame time and GC in every design and implementation decision.
 
+- **Install ceiling 99 MB** (the user, 2026-11-28): every update keeps the store install (base + the install-time
+  data pack) under 99 MB; `build_android.ps1 -Store` prints it and shouts when it is over. Download packs do not count.
+- **Every new asset is sorted** (the user, 2026-11-28): needed at install (the tutorial, Invasion, campaign cutscene 1 +
+  level 1, the start archipelago, the menu) or into the download pack (everything else). Decide it when the asset is
+  added and write it in the feature card; how: Design/features/download-size.md («Adding content»).
+
 ## Keeping the project's memory
 - After every finished task, update the touched feature card(s) in `Design/features/` (status, rules
   the user decided, files, traps, open items); a new feature gets a card + a row in its README.
