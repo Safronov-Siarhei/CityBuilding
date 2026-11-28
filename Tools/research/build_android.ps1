@@ -1,4 +1,4 @@
-param(
+﻿param(
     [switch]$Development,
     # a build for players: no cheat window, no PerfProbe (BuildAndroid's -release -> CB_RELEASE)
     [switch]$Release,
@@ -70,8 +70,9 @@ if ($p.ExitCode -ne 0) {
         $mods = @{}
         foreach ($e in $zip.Entries) { $m = $e.FullName.Split('/')[0]; $mods[$m] = $mods[$m] + $e.CompressedLength }
         $zip.Dispose()
-        $install = ($mods['base'] + $mods['UnityDataAssetPack']) / 1MB
-        foreach ($m in ($mods.Keys | Where-Object { $_ -eq 'base' -or $_ -like '*Pack' -or $_ -like '*Content' } | Sort-Object)) { if ($mods[$m]) { Write-Output ("  {0,-20} {1,6:N1} MB" -f $m, ($mods[$m] / 1MB)) } }
+        # in Google's megabytes (1 000 000 bytes): Play Console showed 96.4 MB for an install this script called 92.4
+        $install = ($mods['base'] + $mods['UnityDataAssetPack']) / 1000000
+        foreach ($m in ($mods.Keys | Where-Object { $_ -eq 'base' -or $_ -like '*Pack' -or $_ -like '*Content' } | Sort-Object)) { if ($mods[$m]) { Write-Output ("  {0,-20} {1,6:N1} MB" -f $m, ($mods[$m] / 1000000)) } }
         if ($install -gt 99) { Write-Output ("INSTALL {0:N1} MB -- OVER THE 99 MB CEILING: move content to the download pack" -f $install) }
         else { Write-Output ("install {0:N1} MB (ceiling 99)" -f $install) }
         return

@@ -9,10 +9,10 @@ namespace CityBuilder.Core
 {
     /// <summary>
     /// The content that is NOT in the install (the user, 2026-11-28: a small first download, the rest downloads quietly
-    /// right after -- Design/features/download-size.md). Play Asset Delivery FAST-FOLLOW packs, one Addressables group
-    /// each, split by what the player may need first (the user: «поэтапно подгружались части игры»): Google Play starts
-    /// them as soon as the app is installed; every launch asks again, one pack at a time in <see cref="Pack"/> order,
-    /// until all are on the phone. A pack is usable the moment IT is here -- the sandbox does not wait for the dungeons.
+    /// right after -- Design/features/download-size.md). Play Asset Delivery ON-DEMAND packs (fast-follow made Google
+    /// Play show the whole 200 MB and shut «Играть» until all landed, AAB 1643), one Addressables group each, split by
+    /// what the player may need first (the user: «поэтапно подгружались части игры»): the game asks for them from its
+    /// first launch, one pack at a time in <see cref="Pack"/> order, at every launch until all are on the phone. A pack is usable the moment IT is here -- the sandbox does not wait for the dungeons.
     ///
     /// The editor, Windows and an APK built without Play Asset Delivery (the bundles sit in StreamingAssets; Google
     /// reports a pack as Unknown) have every pack as soon as Addressables initialise.

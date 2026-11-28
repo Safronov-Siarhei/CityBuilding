@@ -152,6 +152,12 @@ E. Build + phone: fast-follow only works for an install from Google Play (intern
   MeshMapCatalog joins each pack's maps (label `maps_<pack>`) when it lands. Returning players: SandboxHistory +
   CloudSaves (save-load.md). The pack texts now say «для этого режима докачиваются файлы».
 
+- Round 7 (2026-11-28, phone test of AAB 1643): with FAST-FOLLOW packs Google Play showed «85% из 200 МБ» and kept
+  «Играть» (and the app) shut until every pack was down -- the small install bought nothing. All six packs are now
+  ON-DEMAND (SetupProjectContent.PackGroup): not in the store's size, the game asks for them itself from the first
+  launch (ContentPacks, one at a time). Play Console counts MB as 1 000 000 bytes: it showed 96.4 MB for the install
+  the script called 92.4 -- build_android now reports Google's MB, and the margin under 99 is only ~2.6 MB.
+
 ### Traps
 - The pack arrives only for an install FROM PLAY (internal testing) or bundletool --local-testing; a sideloaded AAB
   reports Unknown, treated as «here» (everything is then in the APK set anyway).

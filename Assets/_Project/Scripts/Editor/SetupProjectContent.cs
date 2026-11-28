@@ -88,7 +88,7 @@ namespace CityBuilder.EditorTools
 
             EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();
-            Debug.Log("SetupProjectContent: " + string.Join(", ", report) + " (fast-follow)");
+            Debug.Log("SetupProjectContent: " + string.Join(", ", report) + " (on-demand)");
         }
 
         private static AddressableAssetGroup PackGroup(AddressableAssetSettings settings, string name)
@@ -98,7 +98,11 @@ namespace CityBuilder.EditorTools
                             typeof(BundledAssetGroupSchema), typeof(ContentUpdateGroupSchema), typeof(PlayAssetDeliverySchema));
             var pad = group.GetSchema<PlayAssetDeliverySchema>() ?? group.AddSchema<PlayAssetDeliverySchema>();
             pad.IncludeInCustomAssetPack = false;
-            pad.AssetPackDeliveryType = DeliveryType.FastFollow;
+            // ON-DEMAND, not fast-follow (the user's phone test of AAB 1643, 2026-11-28: with fast-follow packs Google Play
+            // showed «200 МБ» and kept «Играть» shut until every pack was down -- the small install meant nothing). The
+            // game asks for each pack itself at every launch (ContentPacks), so nothing is lost but the first minutes
+            // before the game is opened.
+            pad.AssetPackDeliveryType = DeliveryType.OnDemand;
             var bundled = group.GetSchema<BundledAssetGroupSchema>() ?? group.AddSchema<BundledAssetGroupSchema>();
             bundled.BundleMode = BundledAssetGroupSchema.BundlePackingMode.PackSeparately;
             bundled.IncludeInBuild = true;
