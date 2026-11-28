@@ -44,8 +44,9 @@ campaign + cinematics 64 (M2CapitalSet 11 MB), sandbox maps 62, buildings 45 (le
    map 53.6/44.8, sandbox frame 70.2/56.4, Freedom window 53.7/46.8, tribute scroll 60.3/54.3, Crystal Mine icon
    41.8/35.6 (>40 dB = not visible). Proposal: 6x6 for large windows/frames/loading screens, 4x4 kept for icons and
    small/text-heavy sprites. DONE 2026-11-28 (the user: «иконки зданий 4х4, остальное 6х6»): UiTextureImport v4 --
-   Android ASTC 6x6 for every UI picture except UI/Icons + UI/Glyphs (4x4); 479 metas regenerated. Download size NOT
-   measured yet (needs a -Store build). Dungeon reliefs: NOT simplified (the user
+   Android ASTC 6x6 for every UI picture except UI/Icons + UI/Glyphs (4x4); 479 metas regenerated. MEASURED on AAB
+   1630: textures 110.7 -> 68.0 MB raw; the data pack 192.8 -> 178.9 MB, the .aab 226.7 -> 212.8 MB = about -14 MB of
+   download (~6 %). Meshes are now 69 % (291 MB raw): the size problem is the models, and step 2 (packs) is the lever. Dungeon reliefs: NOT simplified (the user
    doubts the quality; 11 of 12 variants are in the fast-follow pack anyway). Music: the tracks of the menu,
    tutorial, Invasion AND the campaign's first cutscene + level 1 are in the install (the user, 2026-11-28).
    Measure the download after it.
