@@ -686,6 +686,16 @@ namespace CityBuilder.EditorTools
             // Ардан with the sword in place of the Латник's look (approved 2026-11-12)
             cityDefenceSO.FindProperty("ardenModel").objectReferenceValue = AssetDatabase.LoadAssetAtPath<GameObject>(cine + "Cast/CineArdanSword.fbx");
             cityDefenceSO.FindProperty("ardenClips").objectReferenceValue = AssetDatabase.LoadAssetAtPath<CityBuilder.Campaign.CineClips>("Assets/_Project/Campaign/Cast/CineArdanSwordClips.asset");
+            // missions 2-3's film pieces go to the fast-follow pack, not into the scene (CampaignFilmKit; the user,
+            // 2026-11-28: the install holds the first cutscene and level 1 only)
+            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(CityBuilder.Campaign.CampaignFilmKit.Path));
+            var filmKit = AssetDatabase.LoadAssetAtPath<CityBuilder.Campaign.CampaignFilmKit>(CityBuilder.Campaign.CampaignFilmKit.Path);
+            if (filmKit == null)
+            {
+                filmKit = ScriptableObject.CreateInstance<CityBuilder.Campaign.CampaignFilmKit>();
+                AssetDatabase.CreateAsset(filmKit, CityBuilder.Campaign.CampaignFilmKit.Path);
+            }
+            var filmKitSO = new SerializedObject(filmKit);
             // the opening scene at the north gate (approved 2026-11-15; Tools/blender/cinematic/export_m2intro.py)
             cityDefenceSO.FindProperty("introAmbient").objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/_Project/Audio/Campaign/mus_gate.ogg");   // the scene's music: The Old Tower Inn (the user, 2026-11-15)
             cityDefenceSO.FindProperty("introCrowd").objectReferenceValue = null;   // the crowd dropped (the user, 2026-11-15)
@@ -710,12 +720,12 @@ namespace CityBuilder.EditorTools
                 introFigures.Add(model);
                 introClips.Add(clips);
             }
-            WriteArray(cityDefenceSO.FindProperty("introFigures"), introFigures.ToArray());
-            WriteArray(cityDefenceSO.FindProperty("introClips"), introClips.ToArray());
+            WriteArray(filmKitSO.FindProperty("introFigures"), introFigures.ToArray());
+            WriteArray(filmKitSO.FindProperty("introClips"), introClips.ToArray());
             var introProps = new System.Collections.Generic.List<Object>();
             foreach (var file in System.IO.Directory.GetFiles(cine, "M2Intro*.fbx"))
                 introProps.Add(AssetDatabase.LoadAssetAtPath<GameObject>(file.Replace('\\', '/')));
-            WriteArray(cityDefenceSO.FindProperty("introProps"), introProps.ToArray());
+            WriteArray(filmKitSO.FindProperty("introProps"), introProps.ToArray());
             // the second scene, at the capital when the courier gets there (approved 2026-11-15;
             // Tools/blender/cinematic/export_m2capital.py, CityDefenceMode.Capital.cs)
             cityDefenceSO.FindProperty("capitalScript").objectReferenceValue = AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/Mission2Capital.json");
@@ -739,13 +749,13 @@ namespace CityBuilder.EditorTools
                 capitalFigures.Add(model);
                 capitalClips.Add(clips);
             }
-            WriteArray(cityDefenceSO.FindProperty("capitalFigures"), capitalFigures.ToArray());
-            WriteArray(cityDefenceSO.FindProperty("capitalClips"), capitalClips.ToArray());
+            WriteArray(filmKitSO.FindProperty("capitalFigures"), capitalFigures.ToArray());
+            WriteArray(filmKitSO.FindProperty("capitalClips"), capitalClips.ToArray());
             var capitalProps = new System.Collections.Generic.List<Object>();
             foreach (var file in System.IO.Directory.GetFiles(cine, "CapProp*.fbx"))
                 capitalProps.Add(AssetDatabase.LoadAssetAtPath<GameObject>(file.Replace('\\', '/')));
-            WriteArray(cityDefenceSO.FindProperty("capitalProps"), capitalProps.ToArray());
-            WriteArray(cityDefenceSO.FindProperty("capitalSets"), new Object[]
+            WriteArray(filmKitSO.FindProperty("capitalProps"), capitalProps.ToArray());
+            WriteArray(filmKitSO.FindProperty("capitalSets"), new Object[]
             {
                 AssetDatabase.LoadAssetAtPath<GameObject>(cine + "M2CapitalSet.fbx"),
                 AssetDatabase.LoadAssetAtPath<GameObject>(cine + "M2ThroneSet.fbx"),
@@ -761,7 +771,7 @@ namespace CityBuilder.EditorTools
                 foreach (var file in System.IO.Directory.GetFiles("Assets/_Project/Campaign/M2Help", "*.json"))
                     helpTakes.Add(AssetDatabase.LoadAssetAtPath<TextAsset>(file.Replace('\\', '/')));
             WriteArray(cityDefenceSO.FindProperty("helpTakes"), helpTakes.ToArray());
-            WriteArray(cityDefenceSO.FindProperty("helpSets"), new Object[] { AssetDatabase.LoadAssetAtPath<GameObject>(cine + "M2HelpBridgeSet.fbx") });
+            WriteArray(filmKitSO.FindProperty("helpSets"), new Object[] { AssetDatabase.LoadAssetAtPath<GameObject>(cine + "M2HelpBridgeSet.fbx") });
             // the level-3 prologue «Пленные», right after the last scene (approved 2026-11-22/23;
             // Tools/blender/cinematic/export_prologue.py, CityDefenceMode.Prologue.cs): its figures (CapL3*) and the
             // cart are among the Cap* above; the dead of the last scene lie on
@@ -774,7 +784,7 @@ namespace CityBuilder.EditorTools
                     prologueTakes.Add(AssetDatabase.LoadAssetAtPath<TextAsset>(file.Replace('\\', '/')));
             prologueTakes.Add(AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Campaign/M2Help/dead.json"));
             WriteArray(cityDefenceSO.FindProperty("prologueTakes"), prologueTakes.ToArray());
-            WriteArray(cityDefenceSO.FindProperty("prologueSets"), new Object[]
+            WriteArray(filmKitSO.FindProperty("prologueSets"), new Object[]
             {
                 AssetDatabase.LoadAssetAtPath<GameObject>(cine + "L3GladeSet.fbx"),
                 AssetDatabase.LoadAssetAtPath<GameObject>(cine + "L3GladeOrcSet.fbx"),
@@ -790,7 +800,9 @@ namespace CityBuilder.EditorTools
                 foreach (var file in System.IO.Directory.GetFiles("Assets/_Project/Campaign/M3Opening", "*.json"))
                     openingTakes.Add(AssetDatabase.LoadAssetAtPath<TextAsset>(file.Replace('\\', '/')));
             WriteArray(cityDefenceSO.FindProperty("openingTakes"), openingTakes.ToArray());
-            WriteArray(cityDefenceSO.FindProperty("openingSets"), new Object[] { AssetDatabase.LoadAssetAtPath<GameObject>(cine + "M3RoadSet.fbx") });
+            WriteArray(filmKitSO.FindProperty("openingSets"), new Object[] { AssetDatabase.LoadAssetAtPath<GameObject>(cine + "M3RoadSet.fbx") });
+            filmKitSO.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(filmKit);
             cityDefenceSO.ApplyModifiedPropertiesWithoutUndo();
 
             // The dungeon (Dungeon/DungeonMode): idle in a town; when DungeonTravel sent the heroes
@@ -890,7 +902,7 @@ namespace CityBuilder.EditorTools
             CreateMeshMapDefinition(CityBuilder.Campaign.CityDefenceMode.MapId, "Map-M2", null);
             // Campaign mission 3b «Клетка»'s escort map (Tools/blender/mission3b.py, plan v1 approved 2026-11-23): the
             // forest road from the ambush clearing to the capital; only the campaign map's «Клетка» plays it.
-            CreateMeshMapDefinition("Mission3", "Map-M3", null);
+            CreateMeshMapDefinition(CityBuilder.Campaign.CityDefenceMode.EscortMapId, "Map-M3", null);
             // The level-1 dungeons (Tools/blender/dungeon1.py, the approved plan and variants b-d):
             // the labyrinths the heroes walk while the town waits (Dungeon/DungeonMode). Not in any
             // picker -- a mouth on the map opens one (DungeonTravel.LevelOneFor).

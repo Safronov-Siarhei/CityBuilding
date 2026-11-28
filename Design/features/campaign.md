@@ -194,6 +194,13 @@
     - Pillar blocks sway slightly, and ruin stones are placed so none sits inside another.
   - Render the cast: `blender --background <Models.blend> --python Tools/blender/cinematic/render_cast.py -- <out> CineElder CinePriest`. Nothing is in the game yet; the menu banner says «Скоро».
 
+## Download pack (2026-11-28)
+Missions 2-3 live in the fast-follow pack (Design/features/download-size.md). TRAP for every new film piece: a
+mission 2+ figure/clip/prop/set goes into `CampaignFilmKit` (Scripts/Campaign/CampaignFilmKit.cs, written by
+SetupProjectCityScene via `filmKitSO`), NOT into a serialized field of CityDefenceMode or the opening village --
+and its file name must start with Cap/M2/M3/L3 (`CampaignFilmKit.IsLater`), or the menu and the first cutscene pull
+it into the install. A mission-2+ level starts through `LoadingScreen.IntoGameWhenContent`.
+
 ## Entering the campaign (decided 2026-11-12; map APPROVED and the screen BUILT the same day, not seen)
 - **3D campaign island, CONCEPTS (2026-11-24, the user: «хочу изменить карту кампании ... 3д островом, где игрок
   может выбирать уровни, визуально должна быть схожесть с песочницей»; waiting for the user's pick):**

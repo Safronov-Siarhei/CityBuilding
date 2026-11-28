@@ -307,7 +307,8 @@ namespace CityBuilder.EditorTools
                 foreach (var file in Directory.GetFiles(CinematicModelsFolder, "*.fbx"))
                 {
                     var m = AssetDatabase.LoadAssetAtPath<GameObject>(file.Replace('\\', '/'));
-                    if (m != null) set.Add(m);
+                    // missions 2-3's sets and props stay out of the install (CampaignFilmKit, the fast-follow pack)
+                    if (m != null && !CampaignFilmKit.IsLater(m.name)) set.Add(m);
                 }
             }
             var setProp = so.FindProperty("setPieces");
@@ -355,9 +356,12 @@ namespace CityBuilder.EditorTools
             var lso = new SerializedObject(life);
             lso.FindProperty("village").objectReferenceValue = village;
             var castProp = lso.FindProperty("cast");
-            castProp.arraySize = clips.Count;
+            // missions 2-3's figures (Cap*, M2*) stay out of the install: CampaignFilmKit, the fast-follow pack
+            var opening = new List<KeyValuePair<string, CineClips>>();
+            foreach (var kv in clips) if (!CampaignFilmKit.IsLater(kv.Key)) opening.Add(kv);
+            castProp.arraySize = opening.Count;
             var n = 0;
-            foreach (var kv in clips)
+            foreach (var kv in opening)
             {
                 var e = castProp.GetArrayElementAtIndex(n++);
                 e.FindPropertyRelative("id").stringValue = kv.Key;

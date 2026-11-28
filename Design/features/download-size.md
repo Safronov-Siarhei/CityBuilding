@@ -1,8 +1,8 @@
 # Small first download (Play Asset Delivery)
 
-**Status (2026-11-28):** STEP 2 BUILT for dungeons + islands (5e27f253f): install ~122 MB (was 213), the fast-follow
-pack «LaterContent» 94.8 MB. NOT checked on a phone (needs an install from Play internal testing). Campaign 2-3 still in
-the install (a scene-reference refactor, to discuss). MUST before release (the user, 2026-11-25:
+**Status (2026-11-28):** STEP 2 BUILT: dungeons + islands (5e27f253f), then campaign 2-3. AAB 1635: install
+**~110 MB** (base 34.3 + UnityDataAssetPack 75.5; was 213), the fast-follow pack «LaterContent» 109.5 MB. NOT checked
+on a phone (needs an install from Play internal testing). MUST before release (the user, 2026-11-25:
 «чем дольше скачивается -- тем меньше хочется играть»).
 
 ## Today (AAB 1620)
@@ -101,6 +101,14 @@ E. Build + phone: fast-follow only works for an install from Google Play (intern
 - Tests: EditMode 460/466; the 6 failures are the sheet's balance numbers (Road upgrade, HealerHouse/TownSquare radius,
   Spearman metal, building numbers) and OrcBaseLayout's Brute guard on a rock -- none touches this work.
 
+- Campaign 2-3 (2026-11-28, the user: «Кампанию в докачку»): the CAUSE was the opening village (main menu + the first
+  cutscene) taking EVERY Models/Cinematic fbx as set pieces and every Cast figure into its cast -- now it skips
+  `CampaignFilmKit.IsLater` names (Cap*, M2*, M3*, L3*). Missions 2-3's figures, clips, props and sets moved from
+  CityDefenceMode's serialized fields into `Campaign/CampaignFilmKit` (Content/LaterMaps/CampaignFilmKit.asset, address
+  `CampaignFilmKit`), read in CityDefenceMode.Awake (UseFilmKit). Mission2/Mission3 maps -> LaterMaps. Begin/BeginEscort
+  wait for the pack (IntoGameWhenContent). Music stays in the install: the first cutscene plays the same tracks.
+  Measured AAB 1635: install 122 -> 110 MB, pack 94.8 -> 109.5 MB (~2 MB shared pieces counted in both).
+
 ### Traps
 - The pack arrives only for an install FROM PLAY (internal testing) or bundletool --local-testing; a sideloaded AAB
   reports Unknown, treated as «here» (everything is then in the APK set anyway).
@@ -109,8 +117,6 @@ E. Build + phone: fast-follow only works for an install from Google Play (intern
 - After a -Store build revert ProjectSettings.asset (git checkout).
 
 ### Open
-- Campaign missions 2-3 to the pack (CityDefenceMode scene refs: capitalSets, capitalFigures, capitalClips, openingSets,
-  helpSets, Cast clips; ~50 MB raw) -> AssetReferences. Discuss with the user first.
 - Later music (sandbox, campaign 2+) to the pack.
 - Phone check from internal testing: install size, quiet download, the offline loading screen.
 

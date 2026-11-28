@@ -28,10 +28,10 @@ namespace CityBuilder.Campaign
     {
         [SerializeField] private TextAsset capitalScript;                         // Campaign/Mission2Capital.json
         [SerializeField] private TextAsset[] capitalTakes = new TextAsset[0];      // Campaign/M2Capital/*.json
-        [SerializeField] private GameObject[] capitalFigures = new GameObject[0];  // Models/Cinematic/Cast/Cap*.fbx
-        [SerializeField] private CineClips[] capitalClips = new CineClips[0];      // their clips, in the same order
-        [SerializeField] private GameObject[] capitalProps = new GameObject[0];    // Models/Cinematic/CapProp*.fbx
-        [SerializeField] private GameObject[] capitalSets = new GameObject[0];     // M2CapitalSet, M2ThroneSet
+        [System.NonSerialized] private GameObject[] capitalFigures = new GameObject[0];  // Models/Cinematic/Cast/Cap*.fbx
+        [System.NonSerialized] private CineClips[] capitalClips = new CineClips[0];      // their clips, in the same order
+        [System.NonSerialized] private GameObject[] capitalProps = new GameObject[0];    // Models/Cinematic/CapProp*.fbx
+        [System.NonSerialized] private GameObject[] capitalSets = new GameObject[0];     // M2CapitalSet, M2ThroneSet
         [SerializeField] private AudioClip capitalMusic;                          // Audio/Campaign/mus_gate.ogg (the streets)
         [SerializeField] private AudioClip capitalMusic2;                         // Audio/Campaign/mus_attack.ogg (the throne room)
 

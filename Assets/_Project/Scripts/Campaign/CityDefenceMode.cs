@@ -226,8 +226,8 @@ namespace CityBuilder.Campaign
             GameSessionIntent.NewGameMapId = MapId;
             GameSessionIntent.NewGameSeason = MapSeason.Summer;
             GameSessionIntent.NewGameIsInvasion = false;
-            Pending = true;
-            UI.LoadingScreen.IntoGame(GameplayScene);
+            // missions 2-3 are in the fast-follow pack (CampaignFilmKit, the maps): the loading screen waits for it
+            UI.LoadingScreen.IntoGameWhenContent(GameplayScene, () => Pending = true);
         }
 
         /// <summary>The campaign map's film flag «Пролог» (the user, 2026-11-23: the level-3 prologue its own icon on the
@@ -251,8 +251,25 @@ namespace CityBuilder.Campaign
             GameSessionIntent.NewGameMapId = EscortMapId;
             GameSessionIntent.NewGameSeason = MapSeason.Summer;
             GameSessionIntent.NewGameIsInvasion = false;
-            Pending = true;
-            UI.LoadingScreen.IntoGame(GameplayScene);
+            // missions 2-3 are in the fast-follow pack (CampaignFilmKit, the maps): the loading screen waits for it
+            UI.LoadingScreen.IntoGameWhenContent(GameplayScene, () => Pending = true);
+        }
+
+        /// <summary>The films' pieces from the fast-follow pack (CampaignFilmKit); a missing kit leaves the films without figures.</summary>
+        private void UseFilmKit()
+        {
+            var kit = CampaignFilmKit.Load();
+            if (kit == null) { Debug.LogError("CityDefenceMode: no CampaignFilmKit (the pack not downloaded?)"); return; }
+            introFigures = kit.introFigures;
+            introClips = kit.introClips;
+            introProps = kit.introProps;
+            capitalFigures = kit.capitalFigures;
+            capitalClips = kit.capitalClips;
+            capitalProps = kit.capitalProps;
+            capitalSets = kit.capitalSets;
+            helpSets = kit.helpSets;
+            prologueSets = kit.prologueSets;
+            openingSets = kit.openingSets;
         }
 
         private void Awake()
@@ -261,6 +278,7 @@ namespace CityBuilder.Campaign
             _active = Pending;
             Pending = false;
             if (!_active) return;
+            UseFilmKit();
             foreach (var behaviour in notInAMission)
                 if (behaviour != null) behaviour.enabled = false;
             // fighters close in to strike (the user's third playtest: «подходили вплотную»)

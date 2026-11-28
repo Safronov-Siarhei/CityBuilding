@@ -63,6 +63,13 @@ namespace CityBuilder.EditorTools
                 var entry = settings.CreateOrMoveEntry(islandsGuid, group, false, false);
                 entry.address = CityBuilder.Maps.Archipelago.ArchipelagoLibrary.LaterAddress;
             }
+            // campaign missions 2-3's film pieces (SetupProjectCityScene)
+            var kitGuid = AssetDatabase.AssetPathToGUID(CityBuilder.Campaign.CampaignFilmKit.Path);
+            if (!string.IsNullOrEmpty(kitGuid))
+            {
+                wanted.Add(kitGuid);
+                settings.CreateOrMoveEntry(kitGuid, group, false, false).address = CityBuilder.Campaign.CampaignFilmKit.Address;
+            }
             var stale = new List<AddressableAssetEntry>();
             foreach (var entry in group.entries) if (!wanted.Contains(entry.guid)) stale.Add(entry);
             foreach (var entry in stale) group.RemoveAssetEntry(entry, false);

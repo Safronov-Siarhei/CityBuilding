@@ -30,9 +30,9 @@ namespace CityBuilder.Campaign
     {
         [SerializeField] private TextAsset introScript;              // Campaign/Mission2Intro.json
         [SerializeField] private TextAsset[] introTakes = new TextAsset[0];      // Campaign/M2Intro/*.json
-        [SerializeField] private GameObject[] introFigures = new GameObject[0];  // Models/Cinematic/Cast/M2*.fbx
-        [SerializeField] private CineClips[] introClips = new CineClips[0];      // their clips, in the same order
-        [SerializeField] private GameObject[] introProps = new GameObject[0];    // Models/Cinematic/M2Intro*.fbx
+        [System.NonSerialized] private GameObject[] introFigures = new GameObject[0];  // Models/Cinematic/Cast/M2*.fbx
+        [System.NonSerialized] private CineClips[] introClips = new CineClips[0];      // their clips, in the same order
+        [System.NonSerialized] private GameObject[] introProps = new GameObject[0];    // Models/Cinematic/M2Intro*.fbx
         [SerializeField] private AudioClip introAmbient;    // Audio/Campaign/mus_gate.ogg: the scene's music (The Old Tower Inn)
         [SerializeField] private AudioClip introCrowd;      // none since 2026-11-15 (the user dropped the crowd); its source plays the horn
         [SerializeField] private AudioClip introHorn;       // Audio/Campaign/sfx_horn.ogg: the lookout's blow (war_horns, CC0)

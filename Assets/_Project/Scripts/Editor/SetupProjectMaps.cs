@@ -136,8 +136,12 @@ namespace CityBuilder.EditorTools
             map.EditorInitializeExtras(relief, rocksArea, noBuildArea, decor, terrainMaterial, keepWaterRot: relief != null);
             ReadOrcSpots(map, $"{folder}/{prefix}-Spots.csv");
 
-            Directory.CreateDirectory(MeshMapsFolder);
-            var path = $"{MeshMapsFolder}/{mapId}.asset";
+            // campaign missions 2-3's maps go to the fast-follow pack (the user, 2026-11-28: the install holds level 1 only)
+            var later = mapId == CityBuilder.Campaign.CityDefenceMode.MapId || mapId == CityBuilder.Campaign.CityDefenceMode.EscortMapId;
+            var mapFolder = later ? CityBuilder.Maps.MeshMapCatalog.LaterFolder : MeshMapsFolder;
+            DeleteIfExists($"{(later ? MeshMapsFolder : CityBuilder.Maps.MeshMapCatalog.LaterFolder)}/{mapId}.asset");
+            Directory.CreateDirectory(mapFolder);
+            var path = $"{mapFolder}/{mapId}.asset";
             DeleteIfExists(path);
             AssetDatabase.CreateAsset(map, path);
         }
