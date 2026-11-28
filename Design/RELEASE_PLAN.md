@@ -120,7 +120,7 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
 - [ ] Old-save check: real saves kept as fixtures, loaded by a test every run (see save-load card).
 
 ### D. Quality pass (U plays, C fixes)
-- [ ] One general test run (EditMode), fix what fails.
+- [x] One general test run (EditMode), fix what fails -- 466/466 on 2026-11-28 (62a5a888e).
 - [ ] A release AAB/APK on the phones of the fleet: sandbox, campaign to the prologue, Invasion -- end to end.
 - [ ] Performance on the weakest phone.
 - [ ] Translations last: en ru de fr es pt it pl tr, then a check that every text fits its box.
