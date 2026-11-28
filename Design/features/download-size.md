@@ -1,11 +1,9 @@
 # Small first download (Play Asset Delivery)
 
-**Status (2026-11-28):** STEP 2 BUILT. AAB 1639: install **92.4 MB** (base 34.3 + UnityDataAssetPack 58.1; was 213;
-ceiling 99). SIX fast-follow packs asked for one at a time in this order (`ContentPacks.Pack`, the user: «поэтапно»):
-FirstContent 4.5 (the start map's level-1 dungeon), SandboxContent 32.2 (islands, level 3-5 models + pictures),
-CampaignContent 15.0 (missions 2-3), Dungeon1Content 14.1 (level-1 B-D), Dungeon2Content 29.9, Dungeon3Content 27.5.
-Each is usable the moment IT lands; a mode waits on the loading screen for its own pack only («Для этого режима
-докачиваются файлы: N %»). NOT checked on a phone (needs Play internal testing); EditMode tests not run since round 3.
+**Status (2026-11-28):** DONE. AAB 1644 on internal testing: install 96.9 MB (Google's MB; ceiling 99, margin ~2 MB),
+six ON-DEMAND packs the game asks for itself, one at a time (First 4.8, Sandbox 33.8, Campaign 15.7, Dungeon1-3
+14.7/31.4/28.9). The user's phone test: «вроде всё норм». Next content must free room first (ASTC 8x8 big pictures,
+sandbox music) -- the margin is small.
 
 ## Today (AAB 1620)
 Download 237 MB = base module 35 MB (engine + code) + one install-time pack 202 MB (`splitApplicationBinary`).
