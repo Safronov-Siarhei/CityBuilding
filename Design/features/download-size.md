@@ -6,7 +6,9 @@
 ## Today (AAB 1620)
 Download 237 MB = base module 35 MB (engine + code) + one install-time pack 202 MB (`splitApplicationBinary`).
 Content before packing 464 MB (build report, RunLogs/android_build.log, «Used Assets ... sorted by uncompressed size»):
-dungeons 152 (12 variants: Relief/Props/Ground 3-6 MB each), UI 78 (~1 100 PNGs, a third of them UNCOMPRESSED),
+dungeons 152 (12 variants: Relief/Props/Ground 3-6 MB each), UI 78 (CORRECTED 2026-11-28: textures are ALREADY
+ASTC -- 825 files 85 MB at ~8 bpp = 4x4, 51 files 21 MB at 6x6+, only 0.7 MB uncompressed; the importer's
+textureCompression:0 in many metas is not what Android gets),
 campaign + cinematics 64 (M2CapitalSet 11 MB), sandbox maps 62, buildings 45 (levels 1-5: 5.6 / 7.4 / 9.4 / 10.3 /
 10.4), other 27, loading screens 15, music 14. Mesh compression is already Medium on all FBX.
 
@@ -36,8 +38,11 @@ campaign + cinematics 64 (M2CapitalSet 11 MB), sandbox maps 62, buildings 45 (le
   загрузить продолжение».
 
 ## Plan
-1. **Step 1 -- compress what exists** (no architecture change): ASTC for UI + loading screens (check the big frames
-   on the phone, keep the most visible ones high quality), simpler dungeon reliefs in Blender, music to Vorbis.
+1. **Step 1 -- compress what exists** (no architecture change). Textures are already ASTC 4x4: the only lever is 4x4
+   -> 6x6 (~-45 MB raw), a QUALITY trade -- comparison sheets (source | 4x4 | 6x6, made with Unity's astcenc DLL
+   through ctypes) sent to the user 2026-11-28, waiting for the verdict. Dungeon reliefs: NOT simplified (the user
+   doubts the quality; 11 of 12 variants are in the fast-follow pack anyway). Music: the tracks of the menu,
+   tutorial, Invasion AND the campaign's first cutscene + level 1 are in the install (the user, 2026-11-28).
    Measure the download after it.
 2. **Step 2 -- packs**: Addressables + Play Asset Delivery (com.unity.addressables.android); the fast-follow content
    moves out of Resources/scenes into Addressable groups; SetupProject generates them; mode loading becomes async;
