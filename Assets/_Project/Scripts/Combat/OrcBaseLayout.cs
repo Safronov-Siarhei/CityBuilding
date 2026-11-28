@@ -425,8 +425,9 @@ namespace CityBuilder.Combat
             Patrol(new[] { brute, grunt, grunt }, (-9f, -23f), (-9f, -17.5f), (-9f, -10.5f), (8.5f, -10.5f), (8.5f, -17.5f), (-9f, -17.5f));
             // 3: the corridor between the sanctum's two walls, two brutes
             Patrol(new[] { brute, brute }, (-11.5f, -7f), (11.5f, -7f), (11.5f, 5.5f), (-11.5f, 5.5f));
-            // 5: round the portal itself, two brutes and a grunt
-            Patrol(new[] { brute, brute, grunt }, (-9.5f, -4.5f), (9.5f, -4.5f), (9.5f, 1.5f), (8.5f, 3.4f), (-8.5f, 3.4f), (-9.5f, 1.5f));
+            // 5: round the portal itself, two brutes and a grunt (the south corners one cell in: at x +-9.5 they stood in
+            // the bend towers at (-11,-6) / (9,-6) -- OrcBaseLayoutTests, 2026-11-28)
+            Patrol(new[] { brute, brute, grunt }, (-8.5f, -4.5f), (8.5f, -4.5f), (9.5f, 1.5f), (8.5f, 3.4f), (-8.5f, 3.4f), (-9.5f, 1.5f));
             // 4: at the skull, two grunts from its jaws out to the stakes and back
             Patrol(new[] { grunt, grunt }, (0f, -31.5f), (0f, -41f));
 

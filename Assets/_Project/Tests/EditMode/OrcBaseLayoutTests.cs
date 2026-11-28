@@ -171,7 +171,8 @@ namespace CityBuilder.Tests.EditMode
                     Assert.IsTrue(main.Bounds.Contains(cell), $"The {piece.Kind} at {piece.Min} leaves the main base.");
                     Assert.IsFalse(rock.Contains(cell), $"The {piece.Kind} at {piece.Min} stands in the mountains.");
                     Assert.IsTrue(taken.Add(cell), $"The {piece.Kind} at {piece.Min} overlaps another plot at {cell}.");
-                    if (OrcBaseLayout.IsWall(piece.Kind)) wall.Add(cell);
+                    // a tower on a wall's bend takes the wall's cells and stops a walker as well as the wall
+                    if (OrcBaseLayout.IsWall(piece.Kind) || piece.Kind == OrcCampBuildingKind.Watchtower) wall.Add(cell);
                 }
             }
             foreach (var guard in main.Guards)
@@ -199,7 +200,8 @@ namespace CityBuilder.Tests.EditMode
 
             int Count(OrcCampBuildingKind kind) => new List<CampPiece>(main.Pieces).FindAll(p => p.Kind == kind).Count;
             Assert.AreEqual(2, Count(OrcCampBuildingKind.Totem), "Two totems shield the great portal.");
-            Assert.AreEqual(3, Count(OrcCampBuildingKind.GateTower), "Three stone gates under towers, one per wall.");
+            // one per wall: the yard's front, the chief's quarter, the sanctum's outer and inner walls (OrcBaseLayout.Main)
+            Assert.AreEqual(4, Count(OrcCampBuildingKind.GateTower), "Four stone gates under towers, one per wall.");
             Assert.AreEqual(1, Count(OrcCampBuildingKind.ChiefHouse));
             Assert.AreEqual(1, Count(OrcCampBuildingKind.Treasury), "One treasury, the chief's.");
             Assert.AreEqual(1, new List<GuardSlot>(main.Guards).FindAll(g => g.Kind == OrcKind.Boss).Count, "The chief, the miniboss.");

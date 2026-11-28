@@ -76,7 +76,9 @@ namespace CityBuilder.Tests.EditMode
         [Test]
         public void TheServiceBuildingsHaveAReach()
         {
-            foreach (var id in new[] { "Well", "HealerHouse", "FireBrigade" })
+            // the Лечебница has beds, not a reach, since its v2 (the user, 2026-11-13: SandboxHealer); the Пожарная
+            // бригада's crews cover the whole island since fires v2 (the user, 2026-11-14)
+            foreach (var id in new[] { "Well" })
             {
                 var building = BalanceConfig.Instance.Building(id);
                 Assert.IsNotNull(building, $"No buildings row for '{id}'.");

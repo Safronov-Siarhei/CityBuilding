@@ -120,8 +120,12 @@ namespace CityBuilder.Tests.EditMode
 
                 for (var level = 1; level < BuildingInstance.MaxLevel; level++)
                 {
-                    Assert.Greater(building.levels[level].serviceRadius, building.levels[level - 1].serviceRadius,
-                        $"{building.id} serves exactly the same circle at level {level + 1} as at level {level}.");
+                    // a level may buy a bigger bonus instead of a wider circle (the Town Square: happiness 5-8-13-19-26
+                    // over radius 4-4-5-5-6) -- but it has to buy one of the two
+                    var now = building.levels[level];
+                    var before = building.levels[level - 1];
+                    Assert.IsTrue(now.serviceRadius > before.serviceRadius || now.happiness > before.happiness,
+                        $"{building.id} serves exactly the same circle with the same bonus at level {level + 1} as at level {level}.");
                 }
             }
             Assert.IsTrue(checkedAny, "No building serves a radius at all -- the well, the healer and the fire brigade should.");

@@ -148,7 +148,10 @@ namespace CityBuilder.Tests.EditMode
             foreach (var building in config.Buildings)
             {
                 Assert.IsNotEmpty(building.displayName, $"{building.id}: an empty display name shows up as a blank hotbar tooltip.");
-                Assert.Greater(building.productionIntervalSeconds, 0f, $"{building.id}: a zero production interval ticks every frame.");
+                // only a building with workers ticks a production (SetupProject adds ProductionBuilding then): the Crystal
+                // Mine runs on crystal_mine_seconds_N and has none
+                var employs = building.levels.Exists(l => l.maxWorkers > 0);
+                if (employs) Assert.Greater(building.productionIntervalSeconds, 0f, $"{building.id}: a zero production interval ticks every frame.");
                 Assert.GreaterOrEqual(building.fogRevealRadius, 0, $"{building.id}: negative reveal radius.");
                 Assert.AreEqual(BuildingInstance.MaxLevel, building.levels.Count, $"{building.id}: every building needs stats for every upgrade level.");
 
@@ -236,8 +239,10 @@ namespace CityBuilder.Tests.EditMode
                 var previous = 0;
                 for (var i = 0; i < costs.Length; i++)
                 {
+                    // coins are not counted: the sandbox pattern (the user, 2026-11-18) pays a cheap level partly in
+                    // coins and the next one in an ingot instead -- fewer pieces, each worth far more
                     var total = 0;
-                    foreach (var amount in costs[i]) total += amount.amount;
+                    foreach (var amount in costs[i]) if (amount.type != CityBuilder.Resources.ResourceType.Coins) total += amount.amount;
 
                     Assert.GreaterOrEqual(total, previous,
                         $"{building.id}: reaching level {i + 2} costs {total} resources in total, less than the {previous} level {i + 1} costs.");
