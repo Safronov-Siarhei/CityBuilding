@@ -75,11 +75,11 @@ namespace CityBuilder.UI
         /// the tip's place; then `prepare` runs and the scene loads as usual. Offline for <see cref="GiveUpSeconds"/>
         /// («Нужен интернет…»): the screen fades out, nothing loads, `giveUp` runs -- the player stays where he was.
         /// </summary>
-        /// <param name="firstPackOnly">Wait only for the small first pack (the level-1 dungeon), not the big one.</param>
-        public static void IntoGameWhenContent(string sceneName, System.Action prepare, System.Action giveUp = null, bool firstPackOnly = false)
+        /// <param name="pack">The download pack the game needs (ContentPacks.Pack): only that one is waited for.</param>
+        public static void IntoGameWhenContent(string sceneName, ContentPacks.Pack pack, System.Action prepare, System.Action giveUp = null)
         {
             if (_current != null) return;
-            if ((firstPackOnly ? ContentPacks.FirstReady : ContentPacks.Ready) || UnityEngine.Resources.Load<LoadingScreen>(ResourcePath) == null)
+            if (ContentPacks.IsReady(pack) || UnityEngine.Resources.Load<LoadingScreen>(ResourcePath) == null)
             {
                 prepare?.Invoke();
                 IntoGame(sceneName);
@@ -88,13 +88,13 @@ namespace CityBuilder.UI
             _prepare = prepare;
             _giveUp = giveUp;
             _waitContent = true;
-            _waitFirstOnly = firstPackOnly;
+            _waitPack = pack;
             IntoGame(sceneName);
         }
 
         private const float GiveUpSeconds = 6f;
         private static bool _waitContent;
-        private static bool _waitFirstOnly;
+        private static ContentPacks.Pack _waitPack;
         private static System.Action _prepare;
         private static System.Action _giveUp;
 
@@ -152,7 +152,7 @@ namespace CityBuilder.UI
             }
             group.alpha = 1f;
             var wait = _waitContent;
-            var firstOnly = _waitFirstOnly;
+            var pack = _waitPack;
             var prepare = _prepare;
             var giveUp = _giveUp;
             _waitContent = false;
@@ -160,10 +160,10 @@ namespace CityBuilder.UI
             if (wait)
             {
                 var offline = 0f;
-                while (!(firstOnly ? ContentPacks.FirstReady : ContentPacks.Ready))
+                while (!ContentPacks.IsReady(pack))
                 {
-                    if (tip != null) tip.text = firstOnly ? ContentPacks.FirstStatusText : ContentPacks.StatusText;
-                    offline = (firstOnly ? ContentPacks.FirstStalled : ContentPacks.Stalled) ? offline + Time.unscaledDeltaTime : 0f;
+                    if (tip != null) tip.text = ContentPacks.StatusOf(pack);
+                    offline = ContentPacks.IsStalled(pack) ? offline + Time.unscaledDeltaTime : 0f;
                     if (offline >= GiveUpSeconds)
                     {
                         for (var t = 0f; t < FadeSeconds; t += Time.unscaledDeltaTime)

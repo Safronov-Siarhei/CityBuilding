@@ -71,7 +71,7 @@ if ($p.ExitCode -ne 0) {
         foreach ($e in $zip.Entries) { $m = $e.FullName.Split('/')[0]; $mods[$m] = $mods[$m] + $e.CompressedLength }
         $zip.Dispose()
         $install = ($mods['base'] + $mods['UnityDataAssetPack']) / 1MB
-        foreach ($m in @('base', 'UnityDataAssetPack', 'FirstContent', 'LaterContent')) { if ($mods[$m]) { Write-Output ("  {0,-20} {1,6:N1} MB" -f $m, ($mods[$m] / 1MB)) } }
+        foreach ($m in ($mods.Keys | Where-Object { $_ -eq 'base' -or $_ -like '*Pack' -or $_ -like '*Content' } | Sort-Object)) { if ($mods[$m]) { Write-Output ("  {0,-20} {1,6:N1} MB" -f $m, ($mods[$m] / 1MB)) } }
         if ($install -gt 99) { Write-Output ("INSTALL {0:N1} MB -- OVER THE 99 MB CEILING: move content to the download pack" -f $install) }
         else { Write-Output ("install {0:N1} MB (ceiling 99)" -f $install) }
         return

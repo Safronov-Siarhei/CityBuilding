@@ -54,7 +54,7 @@ namespace CityBuilder.Buildings
             _loaded = AssetDatabase.LoadAssetAtPath<BuildingLevelKit>(Path);
             if (_loaded == null) _failed = true;
 #else
-            if (!Core.ContentPacks.Ready) return null;
+            if (!Core.ContentPacks.IsReady(Core.ContentPacks.Pack.Sandbox)) return null;
             try
             {
                 _loaded = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<BuildingLevelKit>(Address).WaitForCompletion();

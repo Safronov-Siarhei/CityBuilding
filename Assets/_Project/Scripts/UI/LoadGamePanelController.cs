@@ -99,9 +99,10 @@ namespace CityBuilder.UI
             if (Maps.Archipelago.ArchipelagoMapId.OnPhone(mapId))
             {
                 GameSessionIntent.SaveNameToLoad = saveName;
+                Core.SandboxHistory.MarkPlayed();
                 LoadingScreen.IntoGame(gameplaySceneName);
             }
-            else LoadingScreen.IntoGameWhenContent(gameplaySceneName, () => GameSessionIntent.SaveNameToLoad = saveName);
+            else LoadingScreen.IntoGameWhenContent(gameplaySceneName, Core.ContentPacks.Pack.Sandbox, () => { GameSessionIntent.SaveNameToLoad = saveName; Core.SandboxHistory.MarkPlayed(); });
         }
 
         private void Populate()

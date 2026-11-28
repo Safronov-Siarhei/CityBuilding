@@ -56,15 +56,19 @@ namespace CityBuilder.PlayGames
                 });
             });
 
-        public void Load(Action<bool, byte[]> done) =>
-            Open(DataSource.ReadNetworkOnly, (ok, meta) =>
+        public void Load(Action<bool, byte[]> done) => LoadFile(FileName, done);
+
+        public void Save(byte[] data, TimeSpan played, Action<bool> done) => SaveFile(FileName, data, played, done);
+
+        public void LoadFile(string file, Action<bool, byte[]> done) =>
+            Open(file, DataSource.ReadNetworkOnly, (ok, meta) =>
             {
                 if (!ok) { done(false, null); return; }
                 Client.ReadBinaryData(meta, (status, data) => done(status == SavedGameRequestStatus.Success, data));
             });
 
-        public void Save(byte[] data, TimeSpan played, Action<bool> done) =>
-            Open(DataSource.ReadCacheOrNetwork, (ok, meta) =>
+        public void SaveFile(string file, byte[] data, TimeSpan played, Action<bool> done) =>
+            Open(file, DataSource.ReadCacheOrNetwork, (ok, meta) =>
             {
                 if (!ok) { done(false); return; }
                 var update = new SavedGameMetadataUpdate.Builder()
@@ -78,11 +82,11 @@ namespace CityBuilder.PlayGames
                 });
             });
 
-        private static void Open(DataSource source, Action<bool, ISavedGameMetadata> done)
+        private static void Open(string file, DataSource source, Action<bool, ISavedGameMetadata> done)
         {
             var client = Client;
             if (client == null) { done(false, null); return; }
-            client.OpenWithAutomaticConflictResolution(FileName, source, ConflictResolutionStrategy.UseLongestPlaytime,
+            client.OpenWithAutomaticConflictResolution(file, source, ConflictResolutionStrategy.UseLongestPlaytime,
                 (status, meta) =>
                 {
                     if (status != SavedGameRequestStatus.Success) Debug.LogWarning("PlayGamesCloud: open failed: " + status);

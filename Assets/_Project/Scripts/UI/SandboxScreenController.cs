@@ -141,11 +141,30 @@ namespace CityBuilder.UI
                 GameSessionIntent.NewGameSeason = season;
                 // the world's settings from the scroll («Свобода песочницы»)
                 GameSessionIntent.NewGameWorld = world;
+                SandboxHistory.MarkPlayed();
             }
             // a typed code whose islands are in the pack not downloaded yet (the small first download, 2026-11-28):
             // the loading screen waits for it
             if (Maps.Archipelago.ArchipelagoMapId.OnPhone(id)) { Prepare(); LoadingScreen.IntoGame(gameplaySceneName); }
-            else LoadingScreen.IntoGameWhenContent(gameplaySceneName, Prepare);
+            else LoadingScreen.IntoGameWhenContent(gameplaySceneName, Core.ContentPacks.Pack.Sandbox, Prepare);
+        }
+
+        /// <summary>
+        /// A new player's first visit (SandboxHistory, the user 2026-11-28: no choice the first time): straight into a game
+        /// on the start map -- the generated map, the start seed's code, the season picked in the settings.
+        /// </summary>
+        public void StartFirstGame()
+        {
+            if (mapIds.Length == 0) return;
+            _picked = mapIds[0];
+            if (mapCode != null)
+            {
+                var config = BalanceConfig.Instance;
+                mapCode.text = Maps.Archipelago.ArchipelagoMapId.Code(config != null
+                    ? Maps.Archipelago.ArchipelagoMapId.For(config.ArchipelagoStartSeed)
+                    : Maps.Archipelago.ArchipelagoMapId.NewRandom());
+            }
+            StartGame();
         }
 
         private static string ArchipelagoMapIdFor(MeshMapDefinition map) => Maps.Archipelago.ArchipelagoMapId.NewRandom();

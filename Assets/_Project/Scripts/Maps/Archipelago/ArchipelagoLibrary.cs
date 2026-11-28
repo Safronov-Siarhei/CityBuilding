@@ -55,10 +55,10 @@ namespace CityBuilder.Maps.Archipelago
 
         private static void EnsureNames()
         {
-            if (_byName != null && (_withLater || !ContentPacks.Ready || _laterFailed)) return;
+            if (_byName != null && (_withLater || !ContentPacks.IsReady(ContentPacks.Pack.Sandbox) || _laterFailed)) return;
             _byName = new Dictionary<string, IslandAsset>();
             Add(Load());
-            _withLater = ContentPacks.Ready || Application.isEditor;
+            _withLater = ContentPacks.IsReady(ContentPacks.Pack.Sandbox) || Application.isEditor;
             if (!_withLater) return;
 #if UNITY_EDITOR
             Add(UnityEditor.AssetDatabase.LoadAssetAtPath<ArchipelagoLibrary>(LaterPath));

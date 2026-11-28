@@ -46,6 +46,9 @@ namespace CityBuilder.Core
 
         public static bool Ready { get; private set; }
 
+        /// <summary>Signed in to the cloud (after <see cref="Ready"/>): CloudSaves may read and write.</summary>
+        public static bool SignedIn => _signedIn;
+
         /// <summary>Raised once, when <see cref="Ready"/> turns true.</summary>
         public static event Action BecameReady;
 
@@ -271,5 +274,10 @@ namespace CityBuilder.Core
         void Load(Action<bool, byte[]> done);
 
         void Save(byte[] data, TimeSpan played, Action<bool> done);
+
+        /// <summary>The same for another file of the account (CloudSaves: the sandbox's saves).</summary>
+        void LoadFile(string file, Action<bool, byte[]> done);
+
+        void SaveFile(string file, byte[] data, TimeSpan played, Action<bool> done);
     }
 }

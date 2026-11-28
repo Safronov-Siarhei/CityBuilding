@@ -49,3 +49,15 @@ EditMode `SaveDataShapeTests`, `SaveSystemSanitizeNameTests`; PlayMode `SaveRoun
 through `Core/CloudSave.cs`; every runtime PlayerPrefs write must use `CityBuilder.Core.Prefs.Set*` (key list for the
 snapshot). Map saves (`SaveSystem` files) stay on the device for now. Details: monetization.md «Google Play billing +
 cloud save».
+
+## Sandbox saves in the cloud (2026-11-28, BUILT, not checked on a phone)
+The user: a player who deletes the game must not lose the sandbox saves. `Core/CloudSaves.cs`: one more Play Games
+saved-games file, `sandbox_saves`, beside the account's progress (`account`, CloudSave): every slot's text gzipped with
+its write time (UTC ticks), deleted slots as tombstones (`SaveSystem.Removed` -> `cloud.saves_gone`, a phone key).
+Start (signed in, in the main menu, never under a running game): newer-in-the-cloud slots are written
+(`SaveSystem.WriteRaw` keeps the cloud's time), newer tombstones delete; then this phone's extras are pushed. Push: when
+`SaveSystem.Changes` moved, at most every 60 s, and on pause/quit. Size: 10 saves ~ 100 KB packed; the data lives in the
+player's own Google account (no server of ours). Backend: `ICloudBackend.LoadFile/SaveFile(file, ...)`.
+Also `Core/SandboxHistory` (`sandbox.played`, rides in the progress snapshot): a NEW player's first sandbox visit goes
+straight into the start map (no map table: `SandboxScreenController.StartFirstGame`, MainMenuController.ChooseMode); a
+player who played before (the flag back from the cloud, or a save here) gets the table and any map at once.

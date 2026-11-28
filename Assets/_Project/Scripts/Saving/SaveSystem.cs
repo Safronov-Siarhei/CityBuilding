@@ -48,6 +48,43 @@ namespace CityBuilder.Saving
 
         private static string GetPath(string name) => Path.Combine(SavesFolder, $"{name}.json");
 
+        /// <summary>Moves on every write, delete or move of a slot (CloudSaves pushes when it moved).</summary>
+        public static int Changes { get; private set; }
+
+        /// <summary>A slot that went (deleted, or moved onto another name): CloudSaves remembers it so the cloud drops it too.</summary>
+        public static event System.Action<string> Removed;
+
+        /// <summary>Every slot on the phone: its name and when it was last written (UTC ticks).</summary>
+        public static List<(string name, long utc)> Slots()
+        {
+            var list = new List<(string, long)>();
+            if (!Directory.Exists(SavesFolder)) return list;
+            foreach (var file in Directory.GetFiles(SavesFolder, "*.json"))
+                list.Add((Path.GetFileNameWithoutExtension(file), File.GetLastWriteTimeUtc(file).Ticks));
+            return list;
+        }
+
+        /// <summary>A slot's file as it is (CloudSaves); null when there is none.</summary>
+        public static string ReadRaw(string name) => SaveExists(name) ? File.ReadAllText(GetPath(name)) : null;
+
+        /// <summary>A slot from the cloud, stamped with the time it was written on the other phone.</summary>
+        public static void WriteRaw(string name, string text, long utc)
+        {
+            if (string.IsNullOrEmpty(name) || text == null) return;
+            Directory.CreateDirectory(SavesFolder);
+            var path = GetPath(name);
+            File.WriteAllText(path, text);
+            File.SetLastWriteTimeUtc(path, new System.DateTime(utc, System.DateTimeKind.Utc));
+        }
+
+        /// <summary>A slot the cloud says was deleted elsewhere: gone here too, without reporting it back.</summary>
+        public static void DeleteQuietly(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return;
+            var path = GetPath(name);
+            if (File.Exists(path)) File.Delete(path);
+        }
+
         public static bool SaveExists(string name) => !string.IsNullOrEmpty(name) && File.Exists(GetPath(name));
 
         public static bool HasAnySave() => Directory.Exists(SavesFolder) && Directory.GetFiles(SavesFolder, "*.json").Length > 0;
@@ -59,6 +96,8 @@ namespace CityBuilder.Saving
 
             var path = GetPath(name);
             if (File.Exists(path)) File.Delete(path);
+            Changes++;
+            Removed?.Invoke(name);
         }
 
         /// <summary>Moves slot `from` onto slot `to`; if `to` is already there and newer, `from` is just dropped.</summary>
@@ -66,6 +105,8 @@ namespace CityBuilder.Saving
         {
             var src = GetPath(from);
             if (!File.Exists(src)) return;
+            Changes++;
+            Removed?.Invoke(from);
             var dst = GetPath(to);
             if (File.Exists(dst))
             {
@@ -80,6 +121,7 @@ namespace CityBuilder.Saving
             if (string.IsNullOrEmpty(name)) return;
             Directory.CreateDirectory(SavesFolder);
             File.WriteAllText(GetPath(name), JsonUtility.ToJson(data, true));
+            Changes++;
         }
 
         public static GameSaveData Load(string name)

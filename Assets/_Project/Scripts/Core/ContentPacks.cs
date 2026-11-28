@@ -9,54 +9,70 @@ namespace CityBuilder.Core
 {
     /// <summary>
     /// The content that is NOT in the install (the user, 2026-11-28: a small first download, the rest downloads quietly
-    /// right after -- Design/features/download-size.md). It is one Addressables group, <see cref="PackName"/>, built as a
-    /// Play Asset Delivery FAST-FOLLOW pack: Google Play starts downloading it as soon as the app is installed; if that
-    /// did not finish (no internet), every launch asks for it again, in the background, until it is on the phone.
+    /// right after -- Design/features/download-size.md). Play Asset Delivery FAST-FOLLOW packs, one Addressables group
+    /// each, split by what the player may need first (the user: «поэтапно подгружались части игры»): Google Play starts
+    /// them as soon as the app is installed; every launch asks again, one pack at a time in <see cref="Pack"/> order,
+    /// until all are on the phone. A pack is usable the moment IT is here -- the sandbox does not wait for the dungeons.
     ///
-    /// <see cref="Ready"/> -- the pack is on the phone and Addressables are up, so its assets load at once (even with
-    /// WaitForCompletion: the Play Asset Delivery provider refuses a synchronous load only while a pack still has to
-    /// download). The editor, Windows and an APK built without Play Asset Delivery (the pack's bundles then sit in
-    /// StreamingAssets; Google reports the pack as Unknown) are Ready as soon as Addressables initialise.
+    /// The editor, Windows and an APK built without Play Asset Delivery (the bundles sit in StreamingAssets; Google
+    /// reports a pack as Unknown) have every pack as soon as Addressables initialise.
     /// </summary>
     public static class ContentPacks
     {
-        /// <summary>The fast-follow Addressables group and Play asset pack (letters, digits, underscores only: Google's rule).</summary>
-        public const string PackName = "LaterContent";
+        /// <summary>The packs in the order they are asked for (names: letters, digits, underscores -- Google's rule).</summary>
+        public enum Pack
+        {
+            /// <summary>The start map's level-1 dungeon: the first minutes may walk into it.</summary>
+            First,
+            /// <summary>The archipelago's other islands, the sandbox-only level 3-5 models and pictures.</summary>
+            Sandbox,
+            /// <summary>Campaign missions 2-3: films, maps.</summary>
+            Campaign,
+            Dungeons1,
+            Dungeons2,
+            Dungeons3,
+        }
 
-        /// <summary>
-        /// The small pack asked for FIRST (the user, 2026-11-28: «поставить первый приоритет»): the level-1 dungeon the
-        /// player may walk into in the first minutes. Its own Play asset pack, so it lands in seconds, ahead of the big one.
-        /// </summary>
-        public const string FirstPackName = "FirstContent";
+        private static readonly string[] Names = { "FirstContent", "SandboxContent", "CampaignContent", "Dungeon1Content", "Dungeon2Content", "Dungeon3Content" };
+        private static readonly int Count = Names.Length;
 
-        /// <summary>Label of every map definition in the big pack (MeshMapCatalog loads them all by it).</summary>
-        public const string MapLabel = "later_map";
+        public static string NameOf(Pack pack) => Names[(int)pack];
+
+        /// <summary>Label of a pack's map definitions (MeshMapCatalog loads each pack's by its own).</summary>
+        public static string MapLabelOf(Pack pack) => "maps_" + Names[(int)pack];
+
+        /// <summary>Which pack a map definition of the pack folders is in (SetupProjectContent files them by this, the
+        /// loaders wait on it). Null: not a pack map (it is in the install).</summary>
+        public static Pack? PackForMap(string mapId)
+        {
+            if (string.IsNullOrEmpty(mapId)) return null;
+            if (mapId == "Dungeon1") return Pack.First;
+            if (mapId.StartsWith("Dungeon1")) return Pack.Dungeons1;
+            if (mapId.StartsWith("Dungeon2")) return Pack.Dungeons2;
+            if (mapId.StartsWith("Dungeon3")) return Pack.Dungeons3;
+            if (mapId.StartsWith("Mission")) return Pack.Campaign;
+            return null;
+        }
 
         private const float RetryEvery = 30f;
 
-        private static readonly string[] Names = { FirstPackName, PackName };
-        private static readonly bool[] Here = new bool[2];
-        private static readonly bool[] Asking = new bool[2];
-        private static readonly bool[] Stuck = new bool[2];
-        private static readonly float[] Done = new float[2];
+        private static readonly bool[] Here = new bool[Names.Length];
+        private static readonly bool[] Asking = new bool[Names.Length];
+        private static readonly bool[] Stuck = new bool[Names.Length];
+        private static readonly float[] Done = new float[Names.Length];
         private static bool _addressablesUp;
 
         /// <summary>Every pack is on the phone and Addressables are up.</summary>
         public static bool Ready { get; private set; }
 
-        /// <summary>The first (small) pack is on the phone and Addressables are up.</summary>
-        public static bool FirstReady => _addressablesUp && Here[0];
+        /// <summary>This pack is on the phone and Addressables are up: its assets load at once.</summary>
+        public static bool IsReady(Pack pack) => _addressablesUp && Here[(int)pack];
 
-        /// <summary>0..1 of the big pack while downloading.</summary>
-        public static float Progress => Ready ? 1f : Done[1];
+        /// <summary>0..1 of this pack while it downloads.</summary>
+        public static float ProgressOf(Pack pack) => IsReady(pack) ? 1f : Done[(int)pack];
 
-        /// <summary>0..1 of the first pack.</summary>
-        public static float FirstProgress => FirstReady ? 1f : Done[0];
-
-        /// <summary>The last request failed, waits for Wi-Fi / the player's consent, or the phone is offline: say «нужен интернет».</summary>
-        public static bool Stalled => !Ready && (Stuck[0] || Stuck[1] || Offline);
-
-        public static bool FirstStalled => !FirstReady && (Stuck[0] || Offline);
+        /// <summary>The pack's last request failed, waits for Wi-Fi / the player's consent, or the phone is offline.</summary>
+        public static bool IsStalled(Pack pack) => !IsReady(pack) && (Stuck[(int)pack] || Offline);
 
         private static bool Offline => Application.internetReachability == NetworkReachability.NotReachable;
 
@@ -67,7 +83,7 @@ namespace CityBuilder.Core
         private static void Boot()
         {
             Ready = _addressablesUp = false;
-            for (var i = 0; i < 2; i++) { Here[i] = Asking[i] = Stuck[i] = false; Done[i] = 0f; }
+            for (var i = 0; i < Count; i++) { Here[i] = Asking[i] = Stuck[i] = false; Done[i] = 0f; }
             Addressables.InitializeAsync().Completed += _ => { _addressablesUp = true; Check(); };
 #if UNITY_ANDROID && !UNITY_EDITOR
             var go = new GameObject("ContentPacks") { hideFlags = HideFlags.HideInHierarchy };
@@ -75,23 +91,20 @@ namespace CityBuilder.Core
             go.AddComponent<Runner>();
             Request();
 #else
-            Here[0] = Here[1] = true;
+            for (var i = 0; i < Count; i++) Here[i] = true;
 #endif
         }
 
-        /// <summary>Text for a screen that waits on the big pack: «Загружаем… N %» or «Нужен интернет…».</summary>
-        public static string StatusText =>
-            Stalled ? Localization.Get("#content_offline") : Localization.Format("#content_loading", Mathf.RoundToInt(Progress * 100f));
-
-        /// <summary>The same for the first pack (a dungeon entered before it landed).</summary>
-        public static string FirstStatusText =>
-            FirstStalled ? Localization.Get("#content_offline") : Localization.Format("#content_loading", Mathf.RoundToInt(FirstProgress * 100f));
+        /// <summary>Text for a screen that waits on a pack: «Для этого режима докачиваются файлы: N %» or «Нужен интернет…».</summary>
+        public static string StatusOf(Pack pack) =>
+            IsStalled(pack) ? Localization.Get("#content_offline") : Localization.Format("#content_loading", Mathf.RoundToInt(ProgressOf(pack) * 100f));
 
         private static void Check()
         {
-            if (Ready || !_addressablesUp || !Here[0] || !Here[1]) return;
+            if (Ready || !_addressablesUp) return;
+            for (var i = 0; i < Count; i++) if (!Here[i]) return;
             Ready = true;
-            Debug.Log("ContentPacks: the later content is here");
+            Debug.Log("ContentPacks: all the later content is here");
             BecameReady?.Invoke();
         }
 
@@ -104,28 +117,42 @@ namespace CityBuilder.Core
             Stuck[i] = false;
             Here[i] = true;
             Done[i] = 1f;
+            Debug.Log("ContentPacks: " + Names[i] + " is here");
             Check();
-            // the big one only after the first (its priority)
-            if (i == 0) Request();
+            Request();   // the next one
         }
 
+        private static bool AnyAsking()
+        {
+            for (var i = 0; i < Count; i++) if (Asking[i]) return true;
+            return false;
+        }
+
+        private static bool AllHere()
+        {
+            for (var i = 0; i < Count; i++) if (!Here[i]) return false;
+            return true;
+        }
+
+        /// <summary>Asks Play for the first pack not on the phone yet -- one at a time, in order.</summary>
         private static void Request()
         {
             _sinceAsk = 0f;
-            for (var i = 0; i < 2; i++)
+            if (AnyAsking()) return;
+            for (var i = 0; i < Count; i++)
             {
-                if (Here[i] || Asking[i]) { if (!Here[i]) return; continue; }
-                if (!string.IsNullOrEmpty(AndroidAssetPacks.GetAssetPackPath(Names[i]))) { Arrived(i); continue; }
+                if (Here[i]) continue;
+                if (!string.IsNullOrEmpty(AndroidAssetPacks.GetAssetPackPath(Names[i]))) { Arrived(i); return; }
                 Asking[i] = true;
                 try { AndroidAssetPacks.DownloadAssetPackAsync(new[] { Names[i] }, OnState); }
                 catch (InvalidOperationException e)
                 {
                     // no Play Core in this build (a plain APK): the bundles are in StreamingAssets
                     Debug.Log("ContentPacks: no asset packs here (" + e.Message + ") -- the content is built in");
-                    for (var j = 0; j < 2; j++) { Here[j] = true; Asking[j] = false; Done[j] = 1f; }
+                    for (var j = 0; j < Count; j++) { Here[j] = true; Asking[j] = false; Done[j] = 1f; }
                     Check();
                 }
-                return;   // one pack at a time, the first one first
+                return;
             }
         }
 
@@ -139,7 +166,7 @@ namespace CityBuilder.Core
                 case AndroidAssetPackStatus.Completed:
                 case AndroidAssetPackStatus.Unknown:
                     // Unknown: not installed from Google Play (adb, an APK): no packs -- the content is in the app itself
-                    Arrived(i);
+                    if (!Here[i]) Arrived(i);
                     break;
                 case AndroidAssetPackStatus.Failed:
                 case AndroidAssetPackStatus.Canceled:
@@ -159,15 +186,15 @@ namespace CityBuilder.Core
         {
             private void Update()
             {
-                if (Here[0] && Here[1]) { enabled = false; return; }
-                if (Asking[0] || Asking[1]) return;
+                if (AllHere()) { enabled = false; return; }
+                if (AnyAsking()) return;
                 _sinceAsk += Time.unscaledDeltaTime;
                 if (_sinceAsk >= RetryEvery) Request();
             }
 
             private void OnApplicationPause(bool paused)
             {
-                if (!paused && !(Here[0] && Here[1]) && !Asking[0] && !Asking[1]) Request();
+                if (!paused && !AllHere() && !AnyAsking()) Request();
             }
         }
 #endif

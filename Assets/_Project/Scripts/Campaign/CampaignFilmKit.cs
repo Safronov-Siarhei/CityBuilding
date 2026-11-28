@@ -53,7 +53,7 @@ namespace CityBuilder.Campaign
 #if UNITY_EDITOR
             _loaded = AssetDatabase.LoadAssetAtPath<CampaignFilmKit>(Path);
 #else
-            if (!Core.ContentPacks.Ready) return null;
+            if (!Core.ContentPacks.IsReady(Core.ContentPacks.Pack.Campaign)) return null;
             try
             {
                 _loaded = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<CampaignFilmKit>(Address).WaitForCompletion();

@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &4843044844895942116
+--- !u!1 &802728767463156634
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,46 +8,46 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4073662824494892079}
-  - component: {fileID: 1801389185804613381}
-  - component: {fileID: 7358701478970471953}
+  - component: {fileID: 3825188677625295621}
+  - component: {fileID: 9036969878015777845}
+  - component: {fileID: 8818337950874974327}
   m_Layer: 0
-  m_Name: DecBush-lvl2
+  m_Name: DecBush1-lvl1(Clone)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &4073662824494892079
+  m_IsActive: 1
+--- !u!4 &3825188677625295621
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4843044844895942116}
+  m_GameObject: {fileID: 802728767463156634}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 661952289047084801}
+  m_Father: {fileID: 3155019214547160076}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &1801389185804613381
+--- !u!33 &9036969878015777845
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4843044844895942116}
-  m_Mesh: {fileID: -5022783131591253294, guid: e826f13053ed8874299b5079f31bbad7, type: 3}
---- !u!23 &7358701478970471953
+  m_GameObject: {fileID: 802728767463156634}
+  m_Mesh: {fileID: 719007689284787045, guid: bc74e855c5e39b6428d1e0b9a7ba5fab, type: 3}
+--- !u!23 &8818337950874974327
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4843044844895942116}
+  m_GameObject: {fileID: 802728767463156634}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -90,7 +90,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &6480586277485780651
+--- !u!1 &2126443535392817725
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -98,10 +98,10 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 661952289047084801}
-  - component: {fileID: 2482729712100541863}
-  - component: {fileID: 1658473299578024251}
-  - component: {fileID: 6037144193048361931}
+  - component: {fileID: 3155019214547160076}
+  - component: {fileID: 9132882590309065619}
+  - component: {fileID: 438693556433030229}
+  - component: {fileID: 1650304917747569376}
   m_Layer: 0
   m_Name: DecBush
   m_TagString: Untagged
@@ -109,42 +109,42 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &661952289047084801
+--- !u!4 &3155019214547160076
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6480586277485780651}
+  m_GameObject: {fileID: 2126443535392817725}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 3480674414667204817}
-  - {fileID: 4073662824494892079}
+  - {fileID: 3825188677625295621}
+  - {fileID: 7434272649504962308}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2482729712100541863
+--- !u!114 &9132882590309065619
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6480586277485780651}
+  m_GameObject: {fileID: 2126443535392817725}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: bf100bf46c50ffc4591b6ceec3dfa752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingInstance
---- !u!65 &1658473299578024251
+--- !u!65 &438693556433030229
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6480586277485780651}
+  m_GameObject: {fileID: 2126443535392817725}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -159,21 +159,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.92, y: 0.94, z: 0.92}
   m_Center: {x: 0, y: 0.47, z: 0}
---- !u!114 &6037144193048361931
+--- !u!114 &1650304917747569376
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6480586277485780651}
+  m_GameObject: {fileID: 2126443535392817725}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5b9271cb3d3ae0b47941f8fbeeffdee8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CityBuilder.Runtime::CityBuilder.Buildings.BuildingLevelAppearance
   levelModels:
-  - {fileID: 8927101568409571706}
-  - {fileID: 4843044844895942116}
+  - {fileID: 802728767463156634}
+  - {fileID: 4378903625322575548}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -184,7 +184,7 @@ MonoBehaviour:
   - 1.32
   - 1.32
   kitId: DecBush
---- !u!1 &8927101568409571706
+--- !u!1 &4378903625322575548
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -192,46 +192,46 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3480674414667204817}
-  - component: {fileID: 3600859529797434542}
-  - component: {fileID: 6450088137618033181}
+  - component: {fileID: 7434272649504962308}
+  - component: {fileID: 1051530934121086696}
+  - component: {fileID: 1130905754359845679}
   m_Layer: 0
-  m_Name: DecBush1-lvl1(Clone)
+  m_Name: DecBush-lvl2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &3480674414667204817
+  m_IsActive: 0
+--- !u!4 &7434272649504962308
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8927101568409571706}
+  m_GameObject: {fileID: 4378903625322575548}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 661952289047084801}
+  m_Father: {fileID: 3155019214547160076}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &3600859529797434542
+--- !u!33 &1051530934121086696
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8927101568409571706}
-  m_Mesh: {fileID: 719007689284787045, guid: bc74e855c5e39b6428d1e0b9a7ba5fab, type: 3}
---- !u!23 &6450088137618033181
+  m_GameObject: {fileID: 4378903625322575548}
+  m_Mesh: {fileID: -5022783131591253294, guid: e826f13053ed8874299b5079f31bbad7, type: 3}
+--- !u!23 &1130905754359845679
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8927101568409571706}
+  m_GameObject: {fileID: 4378903625322575548}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1

@@ -109,6 +109,8 @@ namespace CityBuilder.UI
         {
             if ((GameMode)mode == GameMode.Sandbox)
             {
+                // a new player's first visit: no map table, straight into the start map (SandboxHistory)
+                if (sandbox != null && !SandboxHistory.PlayedBefore) { sandbox.StartFirstGame(); return; }
                 _screen = Screen.Sandbox;
                 if (sandbox != null) sandbox.Open();
             }

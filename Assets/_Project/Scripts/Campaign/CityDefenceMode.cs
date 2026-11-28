@@ -227,7 +227,7 @@ namespace CityBuilder.Campaign
             GameSessionIntent.NewGameSeason = MapSeason.Summer;
             GameSessionIntent.NewGameIsInvasion = false;
             // missions 2-3 are in the fast-follow pack (CampaignFilmKit, the maps): the loading screen waits for it
-            UI.LoadingScreen.IntoGameWhenContent(GameplayScene, () => Pending = true);
+            UI.LoadingScreen.IntoGameWhenContent(GameplayScene, Core.ContentPacks.Pack.Campaign, () => Pending = true);
         }
 
         /// <summary>The campaign map's film flag «Пролог» (the user, 2026-11-23: the level-3 prologue its own icon on the
@@ -252,7 +252,7 @@ namespace CityBuilder.Campaign
             GameSessionIntent.NewGameSeason = MapSeason.Summer;
             GameSessionIntent.NewGameIsInvasion = false;
             // missions 2-3 are in the fast-follow pack (CampaignFilmKit, the maps): the loading screen waits for it
-            UI.LoadingScreen.IntoGameWhenContent(GameplayScene, () => Pending = true);
+            UI.LoadingScreen.IntoGameWhenContent(GameplayScene, Core.ContentPacks.Pack.Campaign, () => Pending = true);
         }
 
         /// <summary>The films' pieces from the fast-follow pack (CampaignFilmKit); a missing kit leaves the films without figures.</summary>

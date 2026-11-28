@@ -45,7 +45,7 @@ namespace CityBuilder.UI
             _loaded = AssetDatabase.LoadAssetAtPath<LevelIconKit>(Path);
             if (_loaded == null) _failed = true;
 #else
-            if (!Core.ContentPacks.Ready) return null;
+            if (!Core.ContentPacks.IsReady(Core.ContentPacks.Pack.Sandbox)) return null;
             try
             {
                 _loaded = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<LevelIconKit>(Address).WaitForCompletion();

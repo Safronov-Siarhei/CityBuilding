@@ -63,12 +63,13 @@ namespace CityBuilder.Maps.Archipelago
         }
 
         /// <summary>
-        /// A fresh random seed for a new game, as an id -- or, while the later content is not downloaded, the START map
-        /// (archipelago_start_seed): its islands and its level-1 dungeon are in the install (the user, 2026-11-28).
+        /// A fresh random seed for a new game, as an id -- or, for a NEW player while the sandbox pack is not downloaded,
+        /// the START map (archipelago_start_seed): its islands are in the install (the user, 2026-11-28). A player who
+        /// played before gets any map; one still downloading waits on the loading screen.
         /// </summary>
         public static string NewRandom()
         {
-            if (!Core.ContentPacks.Ready && !UnityEngine.Application.isEditor)
+            if (!Core.ContentPacks.IsReady(Core.ContentPacks.Pack.Sandbox) && !Core.SandboxHistory.PlayedBefore && !UnityEngine.Application.isEditor)
             {
                 var config = Core.BalanceConfig.Instance;
                 if (config != null) return For(config.ArchipelagoStartSeed);

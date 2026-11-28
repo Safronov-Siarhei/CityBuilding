@@ -6,10 +6,10 @@ using UnityEngine.AddressableAssets;
 namespace CityBuilder.Maps
 {
     /// <summary>
-    /// Runtime lookup over every MeshMapDefinition: the install's under Resources/MeshMaps, plus -- once the later
-    /// content is on the phone (ContentPacks.Ready) -- the ones in the fast-follow pack (label ContentPacks.MapLabel:
-    /// the dungeons but the first, the user's small-download rule 2026-11-28). Cached; read again once when the pack
-    /// arrives. A map of the pack asked for before then is null: the caller waits (LoadingScreen) or skips it.
+    /// Runtime lookup over every MeshMapDefinition: the install's under Resources/MeshMaps, plus each download pack's
+    /// (ContentPacks.PackForMap: the dungeons, the campaign's missions -- the user's small-download rule 2026-11-28),
+    /// joined as soon as that pack is on the phone. A map of a pack not here yet is null: the caller waits (LoadingScreen)
+    /// or skips it.
     /// </summary>
     public static class MeshMapCatalog
     {
@@ -21,17 +21,10 @@ namespace CityBuilder.Maps
         /// <summary>Where SetupProject writes the small FIRST pack's map definitions (the start map's level-1 dungeon).</summary>
         public const string FirstFolder = "Assets/_Project/Content/FirstMaps";
 
-        /// <summary>Label of the map definitions in the first pack.</summary>
-        public const string FirstMapLabel = "first_map";
-
-        private static bool _withFirst;
-
         /// <summary>The old designed maps (Map3-5) no player can pick: the editor and the tests only, never in a build (2026-11-28).</summary>
         public const string EditorOnlyFolder = "Assets/_Project/Content/EditorMaps";
 
         private static Dictionary<string, MeshMapDefinition> _byId;
-        private static bool _withLater;
-        private static bool _laterFailed;
 
         public static List<MeshMapDefinition> All
         {
@@ -53,67 +46,49 @@ namespace CityBuilder.Maps
         /// <summary>Is this map on the phone now (in the install, or in the downloaded pack)?</summary>
         public static bool Has(string mapId) => GetById(mapId) != null;
 
+﻿        // which packs' maps are in _byId (the player); a pack that failed is not asked again
+        private static bool[] _packLoaded;
+
         private static void EnsureLoaded()
         {
-            if (_byId != null && (_withLater || !ContentPacks.Ready || _laterFailed))
+            if (_byId == null)
             {
-                // the first pack lands before the big one: its maps join without a full reload
-                if (!_withFirst && ContentPacks.FirstReady && !Application.isEditor) LoadFirst();
-                return;
-            }
-
-            _byId = new Dictionary<string, MeshMapDefinition>();
-            foreach (var map in UnityEngine.Resources.LoadAll<MeshMapDefinition>(ResourcesFolder))
-                _byId[map.MapId] = map;
-
-            _withFirst = false;
-            _withLater = ContentPacks.Ready || Application.isEditor;
-            if (!_withLater)
-            {
-                if (ContentPacks.FirstReady) LoadFirst();
-                return;
-            }
+                _byId = new Dictionary<string, MeshMapDefinition>();
+                foreach (var map in UnityEngine.Resources.LoadAll<MeshMapDefinition>(ResourcesFolder))
+                    _byId[map.MapId] = map;
 #if UNITY_EDITOR
-            // the editor and the tests read the folder itself: no Addressables build needed
-            _withFirst = true;
-            foreach (var folder in new[] { FirstFolder, LaterFolder, EditorOnlyFolder })
-            if (UnityEditor.AssetDatabase.IsValidFolder(folder))
-                foreach (var guid in UnityEditor.AssetDatabase.FindAssets("t:MeshMapDefinition", new[] { folder }))
-                {
-                    var map = UnityEditor.AssetDatabase.LoadAssetAtPath<MeshMapDefinition>(UnityEditor.AssetDatabase.GUIDToAssetPath(guid));
-                    if (map != null) _byId[map.MapId] = map;
-                }
-#else
-            try
-            {
-                LoadFirst();
-                var handle = Addressables.LoadAssetsAsync<MeshMapDefinition>(ContentPacks.MapLabel, null);
-                var maps = handle.WaitForCompletion();
-                if (maps != null) foreach (var map in maps) if (map != null) _byId[map.MapId] = map;
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogWarning("MeshMapCatalog: the later maps did not load: " + e.Message);
-                _withLater = false;
-                _laterFailed = true;
-            }
+                // the editor and the tests read the folders themselves: no Addressables build needed
+                foreach (var folder in new[] { FirstFolder, LaterFolder, EditorOnlyFolder })
+                    if (UnityEditor.AssetDatabase.IsValidFolder(folder))
+                        foreach (var guid in UnityEditor.AssetDatabase.FindAssets("t:MeshMapDefinition", new[] { folder }))
+                        {
+                            var map = UnityEditor.AssetDatabase.LoadAssetAtPath<MeshMapDefinition>(UnityEditor.AssetDatabase.GUIDToAssetPath(guid));
+                            if (map != null) _byId[map.MapId] = map;
+                        }
 #endif
-        }
-
-        private static void LoadFirst()
-        {
-            _withFirst = true;
-#if !UNITY_EDITOR
-            try
-            {
-                var maps = Addressables.LoadAssetsAsync<MeshMapDefinition>(FirstMapLabel, null).WaitForCompletion();
-                if (maps != null) foreach (var map in maps) if (map != null) _byId[map.MapId] = map;
             }
-            catch (System.Exception e)
+#if !UNITY_EDITOR
+            // each pack's maps join the moment that pack is on the phone (ContentPacks.Pack order)
+            var packs = (ContentPacks.Pack[])System.Enum.GetValues(typeof(ContentPacks.Pack));
+            if (_packLoaded == null) _packLoaded = new bool[packs.Length];
+            foreach (var pack in packs)
             {
-                Debug.LogWarning("MeshMapCatalog: the first pack's maps did not load: " + e.Message);
+                var i = (int)pack;
+                if (_packLoaded[i] || pack == ContentPacks.Pack.Sandbox || !ContentPacks.IsReady(pack)) continue;   // the sandbox pack holds no maps
+                _packLoaded[i] = true;
+                try
+                {
+                    var maps = Addressables.LoadAssetsAsync<MeshMapDefinition>(ContentPacks.MapLabelOf(pack), null).WaitForCompletion();
+                    if (maps != null) foreach (var map in maps) if (map != null) _byId[map.MapId] = map;
+                }
+                catch (System.Exception e)
+                {
+                    // a pack with no maps of its own has no such label: nothing to add
+                    Debug.Log($"MeshMapCatalog: no maps from {ContentPacks.NameOf(pack)} ({e.Message})");
+                }
             }
 #endif
         }
     }
 }
+

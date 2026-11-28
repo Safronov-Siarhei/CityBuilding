@@ -1,10 +1,11 @@
 # Small first download (Play Asset Delivery)
 
-**Status (2026-11-28):** STEP 2 BUILT (5 rounds the same day). AAB 1636 (14:22): install **~92 MB** (base 34.3 +
-UnityDataAssetPack 58.1; was 213); two fast-follow packs: «FirstContent» 4.5 MB (the start map's level-1 dungeon,
-asked for first) and «LaterContent» 118.8 MB. NOT checked on a phone (needs an install from Play internal testing);
-EditMode tests NOT run after rounds 3-5 (the user: «подожди с тестами»). MUST before release (the user, 2026-11-25:
-«чем дольше скачивается -- тем меньше хочется играть»).
+**Status (2026-11-28):** STEP 2 BUILT. AAB 1639: install **92.4 MB** (base 34.3 + UnityDataAssetPack 58.1; was 213;
+ceiling 99). SIX fast-follow packs asked for one at a time in this order (`ContentPacks.Pack`, the user: «поэтапно»):
+FirstContent 4.5 (the start map's level-1 dungeon), SandboxContent 32.2 (islands, level 3-5 models + pictures),
+CampaignContent 15.0 (missions 2-3), Dungeon1Content 14.1 (level-1 B-D), Dungeon2Content 29.9, Dungeon3Content 27.5.
+Each is usable the moment IT lands; a mode waits on the loading screen for its own pack only («Для этого режима
+докачиваются файлы: N %»). NOT checked on a phone (needs Play internal testing); EditMode tests not run since round 3.
 
 ## Today (AAB 1620)
 Download 237 MB = base module 35 MB (engine + code) + one install-time pack 202 MB (`splitApplicationBinary`).
@@ -145,6 +146,11 @@ E. Build + phone: fast-follow only works for an install from Google Play (intern
     Addressables when `ContentPacks.Ready`, with a fallback (or a wait on the loading screen) until then.
 - Never reference a pack asset from a scene, a prefab, Resources or an install-time ScriptableObject: Unity then copies
   it into the install (that is how the menu village carried all of campaign 2-3).
+
+- Round 6 (2026-11-28): the big pack split by mode (above); `ContentPacks.IsReady/ProgressOf/IsStalled/StatusOf(pack)`,
+  `PackForMap(mapId)` decides a map's pack (SetupProjectContent files by it, the loaders wait on it); kits by mode;
+  MeshMapCatalog joins each pack's maps (label `maps_<pack>`) when it lands. Returning players: SandboxHistory +
+  CloudSaves (save-load.md). The pack texts now say «для этого режима докачиваются файлы».
 
 ### Traps
 - The pack arrives only for an install FROM PLAY (internal testing) or bundletool --local-testing; a sideloaded AAB
