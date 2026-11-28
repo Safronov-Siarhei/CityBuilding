@@ -1,0 +1,47 @@
+# Small first download (Play Asset Delivery)
+
+**Status (2026-11-28):** layout DECIDED with the user, nothing built. MUST before release (the user, 2026-11-25:
+«чем дольше скачивается -- тем меньше хочется играть»).
+
+## Today (AAB 1620)
+Download 237 MB = base module 35 MB (engine + code) + one install-time pack 202 MB (`splitApplicationBinary`).
+Content before packing 464 MB (build report, RunLogs/android_build.log, «Used Assets ... sorted by uncompressed size»):
+dungeons 152 (12 variants: Relief/Props/Ground 3-6 MB each), UI 78 (~1 100 PNGs, a third of them UNCOMPRESSED),
+campaign + cinematics 64 (M2CapitalSet 11 MB), sandbox maps 62, buildings 45 (levels 1-5: 5.6 / 7.4 / 9.4 / 10.3 /
+10.4), other 27, loading screens 15, music 14. Mesh compression is already Medium on all FBX.
+
+## The user's rules (2026-11-28)
+- The goal is a small INSTALL so the size does not scare the player; everything else downloads quietly right after.
+- Every mode must start at once on the first launch:
+  - Tutorial -- whole, in the install.
+  - Invasion -- whole, in the install.
+  - Campaign -- the first cutscene + level 1 in the install; the rest downloads while the player plays it.
+  - Sandbox (archipelago is the only sandbox map) -- ONE fixed starting layout of the archipelago's islands + ONE
+    variant of a level-1 dungeon (the start island's dungeon is reachable at once: only the King is needed).
+- Building levels 3-5 STAY in the install (saves only ~15 MB of download, and Invasion / bot town / orc camps /
+  campaign use high levels anyway).
+- NO on-demand / event-triggered packs: everything not in the install is ONE fast-follow layer. Google starts it right
+  after install; if it did not finish (no internet), the game resumes it at every launch, in the background.
+
+## Layout
+| Pack | Content | When |
+|---|---|---|
+| install-time | engine, code, UI, all buildings (all levels), units, orcs, sounds; tutorial; Invasion; campaign cutscene 1 + level 1; archipelago start layout + 1 level-1 dungeon variant | with the app |
+| fast-follow | the rest of the island library, the other dungeons (all levels), the rest of the campaign, the other music | right after install / at launch |
+
+## Behaviour while the fast-follow pack is missing
+- Archipelago: a new map is built from the whole island library only when the pack is there; otherwise again from
+  the start set (the player does not notice).
+- Campaign: past level 1 without the pack -- «Загружаем… N %» before level 2; offline: «Нужен интернет, чтобы
+  загрузить продолжение».
+
+## Plan
+1. **Step 1 -- compress what exists** (no architecture change): ASTC for UI + loading screens (check the big frames
+   on the phone, keep the most visible ones high quality), simpler dungeon reliefs in Blender, music to Vorbis.
+   Measure the download after it.
+2. **Step 2 -- packs**: Addressables + Play Asset Delivery (com.unity.addressables.android); the fast-follow content
+   moves out of Resources/scenes into Addressable groups; SetupProject generates them; mode loading becomes async;
+   the start archipelago layout + dungeon variant fixed for the first game. Target install 70-100 MB (measure).
+
+## Files
+None yet. Build: `Tools/research/build_android.ps1 -Store`; size report in RunLogs/android_build.log.
