@@ -83,6 +83,9 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
       logs) -- AAB 1620 built 2026-11-28; PHONE TEST PASSED (the user: sign in, buy, uninstall, reinstall -- the
       crystals came back). Left: Data safety update (user IDs + outside-account sign-in = Да) before production. Before release: PGS properties
       (description, category, icon) + «Опубликовать» in Play Games Services → Публикация.
+- [ ] Advertising ID declaration (Play Console → Контент приложения): answered «Нет» 2026-11-28 -- the AAB has no
+      AD_ID permission and no ads SDK yet. SWITCH TO «Да» in the same release that brings LevelPlay (its SDK adds
+      com.google.android.gms.permission.AD_ID; check the AAB manifest), or Play Console blocks the release.
 - [ ] Ads: Unity LevelPlay package + Unity Ads adapter, rewarded only, behind `Shop/RewardedAds` (today a stand-in),
       own consent prompt; U: LevelPlay account (Unity Cloud), Android app -> app key, rewarded ad unit id.
 - [ ] IN-GAME privacy link (Google: the policy must be linked on the store page AND inside the app): a «Политика
