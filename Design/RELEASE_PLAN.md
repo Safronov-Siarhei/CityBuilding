@@ -80,7 +80,8 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
       (play-services-games-v2 + APP_ID checked inside). Phone test of 1616: DEVELOPER_ERROR (wrong SHA-1 in the Play
       signing OAuth client -- fixed by the user, see Design/store/signing_sha1.txt), then silent sign-in = Canceled
       (consent needed). Fix in the code b3afc876f (Google's sign-in window once per install, push ~15 s after a change,
-      logs) -- NOT BUILT: the next AAB, then re-test (install, play, reinstall: crystals come back). Before release: PGS properties
+      logs) -- AAB 1620 built 2026-11-28; PHONE TEST PASSED (the user: sign in, buy, uninstall, reinstall -- the
+      crystals came back). Left: Data safety update (user IDs + outside-account sign-in = Да) before production. Before release: PGS properties
       (description, category, icon) + «Опубликовать» in Play Games Services → Публикация.
 - [ ] Ads: Unity LevelPlay package + Unity Ads adapter, rewarded only, behind `Shop/RewardedAds` (today a stand-in),
       own consent prompt; U: LevelPlay account (Unity Cloud), Android app -> app key, rewarded ad unit id.

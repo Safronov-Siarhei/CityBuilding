@@ -155,8 +155,8 @@
   прочитать с телефона: `adb pull` базового APK и `apksigner verify --print-certs`. Оба отпечатка лежат в
   `Design/store/signing_sha1.txt`. Исправление в Google Cloud подействовало за минуту.
 - После этого тихий вход отвечает `Canceled` («suppressed an interactive prompt»). Новый аккаунт должен один раз
-  согласиться в окне Google, поэтому игра зовёт `ManuallyAuthenticate` один раз на установку (код b3afc876f, ещё не
-  собран на 2026-11-26).
+  согласиться в окне Google, поэтому игра зовёт `ManuallyAuthenticate` один раз на установку (код b3afc876f). AAB 1620
+  (2026-11-28): облако ПРОВЕРЕНО на телефоне: вход, удаление, установка, кристаллы вернулись.
 - Журнал с телефона: Wi-Fi adb, `adb logcat -c`, запустить игру (`monkey -p com.depigogames.citycraft 1`), через
   25 с `adb logcat -d`, искать `SignInAuthenticator|SignInPerformer|PlayGamesCloud|CloudSave`. Если `adb connect`
   отказывает, нужно заново сопрячь телефон по коду (`adb pair ip:port код`).
