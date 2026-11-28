@@ -42,16 +42,16 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
 
 ## Steps
 ### A. Accounts (U)
-- [ ] Google Play Console developer account (one-time 25 USD, identity verification; personal or organization).
-- [ ] Create the app in Play Console: name, default language, game, free, the declarations.
-- [ ] Payments profile (only if there will be paid items).
+- [x] Google Play Console developer account (one-time 25 USD, identity verification; personal or organization).
+- [x] Create the app in Play Console: name, default language, game, free, the declarations.
+- [x] Payments profile (only if there will be paid items).
 
 ### B. Build for the store (C)
 - [x] AAB build: `Tools/research/build_android.ps1 -Store` (2026-11-24, code only, NOT built yet): .aab, CB_RELEASE,
       `splitApplicationBinary` = the data in an install-time asset pack (PAD), versionCode = git commit count.
 - [x] Release signing (key made + env vars set 2026-11-24): the build reads CB_KEYSTORE / CB_KEYSTORE_PASS / CB_KEY_ALIAS / CB_KEY_PASS (U makes the upload
       key OUTSIDE the repo and keeps a backup; `*.keystore`/`*.jks` are git-ignored). Play App Signing keeps the app key.
-- [~] FIRST .aab BUILT 2026-11-25 (Unity Personal, versionCode 1607, 226.6 MB: base 35 MB + UnityDataAssetPack 202 MB compressed, signed with the upload key; billing library inside; Play Games off -- no app id). The build writes the keystore path + versionCode into ProjectSettings.asset: revert, never commit. Check the first .aab: base module under 200 MB, the asset pack installs with the app (internal testing track).
+- [x] FIRST .aab BUILT 2026-11-25 (Unity Personal, versionCode 1607, 226.6 MB: base 35 MB + UnityDataAssetPack 202 MB compressed, signed with the upload key; billing library inside; Play Games off -- no app id). The build writes the keystore path + versionCode into ProjectSettings.asset: revert, never commit. Check the first .aab: base module under 200 MB, the asset pack installs with the app (internal testing track).
       Last APK build report: meshes 277 MB / textures 108 MB uncompressed of 429 MB user assets -- slimming later
       (mesh compression, dungeon reliefs ~5 MB each) would still help download size.
 - [ ] **MUST before release: small first download (the user, 2026-11-25: «чем дольше скачивается -- тем меньше хочется
@@ -63,16 +63,16 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
 - [ ] Native debug symbols for Play Console crash reports (the first upload warned, 2026-11-25): Android symbols
       export in the -Store build (`EditorUserBuildSettings.androidCreateSymbols`), upload the .zip with each release.
 - [x] Target SDK 36 confirmed by Play Console on the first upload (2026-11-25).
-- [ ] Target API level = Google's current requirement; 64-bit only (already ARM64).
+- [x] Target API level = Google's current requirement; 64-bit only (already ARM64).
 - [ ] Release flags: no cheats, no PerfProbe, no debug logs (`-release` / CB_RELEASE already exists).
 
 ### C. Must-have features before players (C, decisions U)
-- [ ] Cloud save of crystals + campaign progress (Play Games Saved Games) -- monetization card «BEFORE RELEASE».
+- [x] Cloud save of crystals + campaign progress (Play Games Saved Games) -- monetization card «BEFORE RELEASE».
 - [ ] Invasion leaderboards on Play Games (day / week), decided 2026-11-17.
 - [~] Payments: Google Play Billing via Unity IAP 5.5.1 (`Core/Billing.cs`, IN THE CODE 2026-11-25) behind `Store`; 14
       products (`Design/store/product_ids.txt`). U: payments profile, first AAB, create + activate the products, license
       testers -- `Design/store/PLAY_BILLING_AND_GAMES.md`.
-- [~] Cloud save of the account progress to Play Games saved games (`Core/CloudSave.cs` + `Prefs`, plugin 2.3.0 without
+- [x] Cloud save of the account progress to Play Games saved games (`Core/CloudSave.cs` + `Prefs`, plugin 2.3.0 without
       EDM4U, IN THE CODE 2026-11-25). U: PGS project, credentials (SHA-1s), Saved games ON, app id into
       `Design/store/play_games_app_id.txt`. Then Data safety: user IDs + outside-account sign-in = Да.
       2026-11-26: PGS project 594846398884 set up (2 Android credentials «CityCraft»: Play signing = for new installs,
