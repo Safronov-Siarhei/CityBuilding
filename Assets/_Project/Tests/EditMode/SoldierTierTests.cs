@@ -49,24 +49,18 @@ namespace CityBuilder.Tests.EditMode
         }
 
         /// <summary>
-        /// Militia is coins alone -- an armed peasant needs no forge, and that is exactly why it is
-        /// the tier available before a settlement has an industry. Every tier above it is paid for
-        /// partly in smelted metal, which is what makes the Плавильня worth building.
+        /// Every soldier is hired for coins alone (the user, 2026-11-28: «только монеты» -- the sheet had already dropped
+        /// the ingots): no metal hides in a cost list, so the hire bar never asks for what the sheet does not.
         /// </summary>
         [Test]
-        public void MilitiaCostsCoinsOnly_AndEveryTierAboveItCostsMetal()
+        public void EverySoldierCostsCoinsOnly()
         {
-            var militia = SoldierStats.RecruitCost(SoldierType.Militia);
-            Assert.AreEqual(1, militia.Count, "Militia is supposed to cost coins and nothing else.");
-            Assert.AreEqual(ResourceType.Coins, militia[0].type);
-
             foreach (var type in SoldierStats.All)
             {
-                if (type == SoldierType.Militia) continue;
-
-                var bars = Row(type).recruitIronBars + Row(type).recruitCopperBars;
-                Assert.Greater(bars, 0, $"{type} costs no metal, so an army needs no industry behind it.");
-                Assert.Greater(SoldierStats.RecruitCost(type).Count, 1, $"{type}'s cost list does not carry its metal, so the Barracks would raise it for coins.");
+                var cost = SoldierStats.RecruitCost(type);
+                Assert.AreEqual(1, cost.Count, $"{type} is supposed to cost coins and nothing else.");
+                Assert.AreEqual(ResourceType.Coins, cost[0].type, $"{type} is supposed to cost coins.");
+                Assert.AreEqual(0, Row(type).recruitIronBars + Row(type).recruitCopperBars, $"{type} carries metal in the sheet.");
             }
         }
 

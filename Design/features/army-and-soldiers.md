@@ -243,3 +243,6 @@ siege model changes; machines have one model for all levels. A new unit: a row i
 `Tools/docs/reference.py` + a note in `Design/reference/units.tsv`.
 
 **2026-11-19:** a soldier/hero keeps the target he picked till it falls (`SoldierUnit.KeptTarget`; before, every 0.4 s the nearest one -> to-and-fro in runs). SANDBOX heroes let go on the Town Hall's island (King included) go for an enemy on that island (no islands: within king_guard_radius of the hall) and stroll on after (`Hero.TickDefendHome`). Not seen.
+
+- **Hire cost: coins only for every soldier** (the user, 2026-11-28: «только монеты»; the sheet had already dropped the
+  ingots). SoldierTierTests.EverySoldierCostsCoinsOnly guards it (replaced the old «every tier above militia costs metal»).
