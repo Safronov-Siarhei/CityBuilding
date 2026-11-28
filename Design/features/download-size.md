@@ -1,6 +1,8 @@
 # Small first download (Play Asset Delivery)
 
-**Status (2026-11-28):** layout DECIDED with the user, nothing built. MUST before release (the user, 2026-11-25:
+**Status (2026-11-28):** STEP 2 BUILT for dungeons + islands (5e27f253f): install ~122 MB (was 213), the fast-follow
+pack «LaterContent» 94.8 MB. NOT checked on a phone (needs an install from Play internal testing). Campaign 2-3 still in
+the install (a scene-reference refactor, to discuss). MUST before release (the user, 2026-11-25:
 «чем дольше скачивается -- тем меньше хочется играть»).
 
 ## Today (AAB 1620)
@@ -66,7 +68,7 @@ ScriptableObjects under Resources, so ALL of it is in the one data pack:
 Estimate: moving dungeons (but one level-1 variant), the islands (but the start set), campaign 2-3, Map3-5 and the
 later music out = ~240 of 421 MB raw -> install about 100-115 MB (from 237). Exact after the build.
 
-## Step 2 -- plan (proposed 2026-11-28, not started)
+## Step 2 -- plan (proposed 2026-11-28; A, C, D done for dungeons + islands, B partly, E: size only)
 A. Packages com.unity.addressables + com.unity.addressables.android (Addressable groups -> Play asset packs);
    SetupProject generates the groups: default = install-time, «Later» = fast-follow; build_android builds the
    Addressables content before the player.
@@ -81,5 +83,39 @@ D. Editor + tests: Addressables in the editor read the AssetDatabase, so the tes
 E. Build + phone: fast-follow only works for an install from Google Play (internal testing) or bundletool
    --local-testing; measure the install, check the background download, offline start.
 
+## Step 2 -- built (2026-11-28, 5e27f253f)
+- Packages Addressables 2.9.1 + Addressables for Android 1.1.1. `SetupProjectContent.Apply` (after CleanupTemplateAssets)
+  makes the PAD init object + data builder, BuildWithPlayer, and the group `LaterContent` (FastFollow, pack separately):
+  every MeshMapDefinition in `Assets/_Project/Content/LaterMaps` (label `later_map`) + `ArchipelagoLibraryLater`.
+- SetupProjectMaps writes dungeons but `Dungeon1` to LaterMaps; decor to `Content/MapDecor` (out of Resources); the
+  island library split: install = tutorial islands + the islands of the START map (`archipelago_start_seed` 2028, 16
+  islands), the other 45 in LaterMaps/ArchipelagoLibraryLater. The cells-only preview library stays whole in Resources,
+  so layout (and the map code) never depends on the pack; island meshes are found by name (`ArchipelagoLibrary.Find`).
+  Setup logs an error if the start seed's level-1 dungeon is not Dungeon1.
+- Runtime `Core/ContentPacks.cs`: at every launch asks Play for the pack, retries every 30 s and on resume; `Ready`,
+  `Progress`, `Stalled`, `StatusText`. Not Android / editor = ready.
+- Before Ready: a new sandbox game starts on the start map (`ArchipelagoMapId.NewRandom`); a typed code, a save
+  (LoadGamePanel) or a dungeon not on the phone goes through `LoadingScreen.IntoGameWhenContent`: «Загружаем… N %»,
+  offline «Нужен интернет, чтобы загрузить» and back to the menu after 6 s stalled.
+- Measured AAB: base 34.3 + UnityDataAssetPack 88.1 = install ~122 MB; LaterContent 94.8 MB (fast-follow in the manifest).
+- Tests: EditMode 460/466; the 6 failures are the sheet's balance numbers (Road upgrade, HealerHouse/TownSquare radius,
+  Spearman metal, building numbers) and OrcBaseLayout's Brute guard on a rock -- none touches this work.
+
+### Traps
+- The pack arrives only for an install FROM PLAY (internal testing) or bundletool --local-testing; a sideloaded AAB
+  reports Unknown, treated as «here» (everything is then in the APK set anyway).
+- Moving an asset out of Resources: SetupProject deletes the old copy -- an old Resources path left behind doubles the size.
+- The sheet tabs are now thematic Russian names; the old English tabs are «СТАРЫЙ … (не править)».
+- After a -Store build revert ProjectSettings.asset (git checkout).
+
+### Open
+- Campaign missions 2-3 to the pack (CityDefenceMode scene refs: capitalSets, capitalFigures, capitalClips, openingSets,
+  helpSets, Cast clips; ~50 MB raw) -> AssetReferences. Discuss with the user first.
+- Later music (sandbox, campaign 2+) to the pack.
+- Phone check from internal testing: install size, quiet download, the offline loading screen.
+
 ## Files
-`Assets/_Project/Scripts/Editor/UiTextureImport.cs` (Android ASTC per folder). Build: `Tools/research/build_android.ps1 -Store`; size report in RunLogs/android_build.log.
+`Assets/_Project/Scripts/Editor/UiTextureImport.cs` (Android ASTC per folder); `Editor/SetupProjectContent.cs`, `Editor/SetupProjectMaps.cs`
+(CreateArchipelagoLibrary, dungeon/decor folders); `Core/ContentPacks.cs`; `Maps/MeshMapCatalog.cs`; `Maps/Archipelago/ArchipelagoLibrary.cs`,
+`ArchipelagoGenerator.cs`, `ArchipelagoMapId.cs`; `UI/LoadingScreen.cs` (IntoGameWhenContent); `Dungeon/DungeonTravel.cs`;
+`UI/SandboxScreenController.cs`, `UI/LoadGamePanelController.cs`. Build: `Tools/research/build_android.ps1 -Store`; size report in RunLogs/android_build.log.

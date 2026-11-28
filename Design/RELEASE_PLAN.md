@@ -62,6 +62,8 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
       Step 1 first: measure size per mode + mesh compression / ASTC / dungeon reliefs (cheap); step 2: the packs.
       LAYOUT DECIDED 2026-11-28 -- card Design/features/download-size.md (install: tutorial, Invasion, campaign
       level 1, archipelago start layout + 1 dungeon; everything else ONE fast-follow pack, no on-demand).
+      STEP 2 BUILT 2026-11-28 for dungeons + islands: install ~122 MB (was 213), pack 94.8 MB. Left: campaign 2-3
+      to the pack (to discuss), phone check from internal testing.
 - [ ] Native debug symbols for Play Console crash reports (the first upload warned, 2026-11-25): Android symbols
       export in the -Store build (`EditorUserBuildSettings.androidCreateSymbols`), upload the .zip with each release.
 - [x] Target SDK 36 confirmed by Play Console on the first upload (2026-11-25).
