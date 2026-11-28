@@ -327,6 +327,9 @@ Mockups for approval: `Design/store/ExitOffer_Pack1-3.png`, `ExitOffer_Packs_She
     a failed load retries in 30 s. All five places go through it: offer shop («offer», «shortage»), booster shop
     («booster»), daily bonus («daily_bonus»; closed early -> the window stays), plague banner («plague»), diplomacy
     («diplomacy»). Closed early = no reward.
+  - Networks: Unity Ads ONLY (the user, 2026-11-28: «пока что хватит и этой рекламы, не будем подключать айрон сорс»;
+    ironSource Ads would cost no size -- it is inside mediation-sdk -- but stays off; more networks only after
+    post-release fill data, never AdMob/Google).
   - Open: the EEA/UK consent prompt; Play Console «Advertising ID» -> «Да» in the release that brings this; the
     install size after the SDK (measure in the next AAB).
 
