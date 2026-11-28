@@ -99,8 +99,8 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
       AD_ID permission and no ads SDK yet. SWITCH TO «Да» in the same release that brings LevelPlay (its SDK adds
       com.google.android.gms.permission.AD_ID; check the AAB manifest), or Play Console blocks the release.
 - [ ] Ads: Unity LevelPlay package + Unity Ads adapter, rewarded only, behind `Shop/RewardedAds`: IN THE CODE
-      2026-11-28 (package 9.6.0, SDK via LevelPlaySetup gradle; card monetization.md). Left: U makes the LevelPlay
-      account + Android app -> app key + rewarded ad unit id into `Assets/_Project/Resources/levelplay_ids.txt`; own
+      2026-11-28 (package 9.6.0, SDK via LevelPlaySetup gradle; card monetization.md). LevelPlay app + Unity Ads
+      connected and ids in `Assets/_Project/Resources/levelplay_ids.txt` (2026-11-28). Left: own
       EEA/UK consent prompt; phone test. The 99 MB ceiling is waived for this SDK (the user, 2026-11-28).
 - [ ] IN-GAME privacy link (Google: the policy must be linked on the store page AND inside the app): a «Политика
       конфиденциальности» button in the main-menu settings opening the URL; none exists yet (checked 2026-11-25).

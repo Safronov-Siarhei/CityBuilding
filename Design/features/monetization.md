@@ -319,7 +319,9 @@ Mockups for approval: `Design/store/ExitOffer_Pack1-3.png`, `ExitOffer_Packs_She
     (brings the AD_ID permission by manifest merge). Package update -> take the SDK range from its
     `Editor/Json/LevelPlayVersions.json`.
   - Ids: `Assets/_Project/Resources/levelplay_ids.txt`, line 1 the app key, line 2 the rewarded ad unit id (public
-    ids, fine in the repo). EMPTY until the user makes the LevelPlay app -> the stand-in stays (also editor/Windows).
+    ids, fine in the repo). FILLED 2026-11-28: LevelPlay app «CityCraft» (Android, not live yet, COPPA not directed),
+    Unity Cloud project CityCraft (mediation = LevelPlay), Unity Ads connected; ad unit «rewarded_main». Editor/Windows
+    keep the stand-in.
   - `Shop/RewardedAds`: `IsReady` (live: an ad loaded), `Show(placement, Action<bool>)`, `Watch(...)` for coroutines;
     true only after OnAdRewarded (waits 1.5 s after the close for a late reward); load at start and after each show,
     a failed load retries in 30 s. All five places go through it: offer shop («offer», «shortage»), booster shop
