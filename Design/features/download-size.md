@@ -40,7 +40,10 @@ campaign + cinematics 64 (M2CapitalSet 11 MB), sandbox maps 62, buildings 45 (le
 ## Plan
 1. **Step 1 -- compress what exists** (no architecture change). Textures are already ASTC 4x4: the only lever is 4x4
    -> 6x6 (~-45 MB raw), a QUALITY trade -- comparison sheets (source | 4x4 | 6x6, made with Unity's astcenc DLL
-   through ctypes) sent to the user 2026-11-28, waiting for the verdict. Dungeon reliefs: NOT simplified (the user
+   through ctypes) sent to the user 2026-11-28; the user saw no difference. PSNR vs source (4x4 / 6x6 dB): loading
+   map 53.6/44.8, sandbox frame 70.2/56.4, Freedom window 53.7/46.8, tribute scroll 60.3/54.3, Crystal Mine icon
+   41.8/35.6 (>40 dB = not visible). Proposal: 6x6 for large windows/frames/loading screens, 4x4 kept for icons and
+   small/text-heavy sprites. Waiting for the user's yes. Dungeon reliefs: NOT simplified (the user
    doubts the quality; 11 of 12 variants are in the fast-follow pack anyway). Music: the tracks of the menu,
    tutorial, Invasion AND the campaign's first cutscene + level 1 are in the install (the user, 2026-11-28).
    Measure the download after it.
