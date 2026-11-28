@@ -54,5 +54,32 @@ campaign + cinematics 64 (M2CapitalSet 11 MB), sandbox maps 62, buildings 45 (le
    moves out of Resources/scenes into Addressable groups; SetupProject generates them; mode loading becomes async;
    the start archipelago layout + dungeon variant fixed for the first game. Target install 70-100 MB (measure).
 
+## Step 2 -- how the content loads today (checked 2026-11-28, AAB 1630, raw MB)
+Five scenes (Splash, MainMenu, CityBuilder 7.4 MB, CampaignOpening, CampaignMap); the heavy content hangs off
+ScriptableObjects under Resources, so ALL of it is in the one data pack:
+- `Resources/MeshMaps/*` (MeshMapCatalog, Resources.LoadAll): Dungeon1-3 x A-D + Decor, Inv1-2, Map3-5, Mission2-3,
+  Isl-*Decor. Models: Dungeon2* 56.7, Dungeon3* 50.8, Dungeon1* 39.7, Map3/4/5 ~7.
+- `Resources/ArchipelagoLibrary` (every island, IslandAsset): Models/Islands 45.8.
+- Campaign sets referenced straight from the CityBuilder scene (CityDefenceMode capitalSets / openingSets:
+  M2CapitalSet, M2ThroneSet, M3RoadSet): Models/Cinematic 32.1, Campaign/Cast 16.8, Campaign/M3Opening 4.5.
+- Stays in the install whatever we do: Buildings 43.6, UI ~60, Orcs/Soldiers/Citizens, Inv1-2.
+Estimate: moving dungeons (but one level-1 variant), the islands (but the start set), campaign 2-3, Map3-5 and the
+later music out = ~240 of 421 MB raw -> install about 100-115 MB (from 237). Exact after the build.
+
+## Step 2 -- plan (proposed 2026-11-28, not started)
+A. Packages com.unity.addressables + com.unity.addressables.android (Addressable groups -> Play asset packs);
+   SetupProject generates the groups: default = install-time, «Later» = fast-follow; build_android builds the
+   Addressables content before the player.
+B. Move the fast-follow content out of Resources into the «Later» group: dungeon map definitions (but the one
+   level-1 variant), island assets (but the start set), Map3-5, Mission2-3 maps; the campaign sets become
+   AssetReferences instead of scene references.
+C. Runtime `ContentPacks`: starts the fast-follow download at every launch until it is complete (quietly), exposes
+   Ready + progress. MeshMapCatalog / ArchipelagoLibrary look up async; the archipelago uses only the start set and
+   the first game's fixed layout until Ready; a dungeon picks among the variants present; campaign level 2+ waits on
+   «Загружаем… N %» / «Нужен интернет».
+D. Editor + tests: Addressables in the editor read the AssetDatabase, so the tests keep working.
+E. Build + phone: fast-follow only works for an install from Google Play (internal testing) or bundletool
+   --local-testing; measure the install, check the background download, offline start.
+
 ## Files
 `Assets/_Project/Scripts/Editor/UiTextureImport.cs` (Android ASTC per folder). Build: `Tools/research/build_android.ps1 -Store`; size report in RunLogs/android_build.log.
