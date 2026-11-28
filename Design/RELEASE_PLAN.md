@@ -138,5 +138,9 @@ legal), **C** = Claude (code, builds, texts, images in the repo).
       Play Console from it. Re-check Data safety whenever an SDK is added or removed (Play Games, more ad networks).
 
 ### F. Launch (U)
+- [ ] Before production: send ALL saved «Контент приложения» changes (Data safety for Play Games 2026-11-28, advertising
+      ID «Нет» -- or «Да» with LevelPlay, later ads/analytics answers) to review in ONE go via «Обзор публикации».
+      They sit as drafts until then (the user, 2026-11-28: no point sending before the release build is final).
+      Exception: if a test release gets blocked by the advertising-ID declaration, send it then.
 - [ ] Internal testing track (instant, up to 100 testers) -> closed test (12+ testers x 14 days if personal
       account) -> production, possibly a staged rollout.
