@@ -342,3 +342,11 @@ https://claude.ai/artifact/DLLxzFesTdktVVR6uSUwD6 (looks).
 - Loading screen: `WideFrom` 1.55 -> 1.72 (a 5:3 tablet took the 20:9 map and lost the compass off the left), and the
   map's pivot (0,1) so the envelope's overflow goes right/down -- the top-left compass always shows.
 - FPS counter hidden on the Splash scene (`OnSplash`), from the main menu on as before.
+
+## Settings window redo (concepts 2026-11-28, the user: «переделаем окно настроек, предложи концепт окна где будет всё необходимое для игрока»)
+- Concepts `Design/ui/Settings_A1..A3.png` (A: one card, bookmark tabs «Игра» / «Аккаунт» / «Помощь») and
+  `Settings_B.png` (B: one wide card, the three groups as columns), `Tools/ui/settings_concepts.py`. WAITING for the pick.
+- Contents: Игра = music, effects, language (flag pill = the menu's list), graphics auto/manual, fog, HUD look.
+  Аккаунт = Play Games cloud status (red «Вход не выполнен» + «Войти через Google Play» / green signed in + last sync),
+  cloud save on/off, player ID for support (copy). Помощь = write to support (depigogames@gmail.com), ad settings
+  (re-opens the EEA/UK consent window), privacy policy, terms (open the site), Discord/YouTube, version.
