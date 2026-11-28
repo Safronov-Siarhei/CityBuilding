@@ -52,7 +52,14 @@ namespace CityBuilder.UI
             ui.OnTap("Ad", () =>
             {
                 if (_adLeft >= 0f || !Shop.RewardedAds.IsReady) return;
-                _adLeft = Mathf.Max(0.1f, BalanceConfig.Instance.ShopAdStubSeconds);
+                _adLeft = 0f;
+                Shop.RewardedAds.Show("diplomacy", paid =>
+                {
+                    if (_adLeft < 0f) return;   // the window was closed meanwhile
+                    _adLeft = -1f;
+                    if (paid) DiplomacyRules.NewOffers();
+                    Refresh();
+                });
             });
             ui.OnTap("Crystals", () =>
             {
@@ -80,11 +87,6 @@ namespace CityBuilder.UI
         {
             if (!IsOpen) return;
             var dt = Time.unscaledDeltaTime;
-            if (_adLeft >= 0f)
-            {
-                _adLeft -= dt;
-                if (_adLeft < 0f) DiplomacyRules.NewOffers();
-            }
             _refreshIn -= dt;
             if (_refreshIn > 0f) return;
             _refreshIn = RefreshSeconds;
@@ -125,7 +127,7 @@ namespace CityBuilder.UI
                 ui.Show(g + "Swap", !taken && dealsLeft);
                 ui.Interactable(g + "Swap", DiplomacyRules.CanSwap(i));
             }
-            ui.Show("Ad", Shop.RewardedAds.IsReady);
+            ui.Show("Ad", Shop.RewardedAds.IsReady || _adLeft >= 0f);
             ui.Interactable("Ad", _adLeft < 0f);
             ui.SetText("CrystalsLabel", config.DiplomacyTradeRefreshCrystals.ToString());
         }

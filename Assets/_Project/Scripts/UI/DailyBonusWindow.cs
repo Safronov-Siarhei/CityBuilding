@@ -139,9 +139,13 @@ namespace CityBuilder.UI
         {
             _busy = true;
             take.interactable = doubled.interactable = close.interactable = false;
-            yield return new WaitForSecondsRealtime(BalanceConfig.Sandbox.ShopAdStubSeconds);
+            var paid = false;
+            yield return RewardedAds.Watch("daily_bonus", ok => paid = ok);
             _busy = false;
-            Claim(true);
+            if (paid) { Claim(true); yield break; }
+            // closed early: the window stays, «Забрать» still takes the plain reward
+            take.interactable = close.interactable = true;
+            doubled.interactable = RewardedAds.IsReady;
         }
 
         private void Claim(bool twice)

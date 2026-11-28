@@ -135,6 +135,8 @@ E. Build + phone: fast-follow only works for an install from Google Play (intern
 ## Adding content (the user's rules, 2026-11-28)
 - The store install (base + UnityDataAssetPack) stays UNDER 99 MB in every update; `build_android.ps1 -Store` prints
   it per pack and shouts over the ceiling.
+- EXCEPTION (the user, 2026-11-28, «нигде не освобождаем, игнорируем порог»): the ads SDK (LevelPlay + Unity Ads,
+  monetization.md) went in without freeing room; the next AAB may print OVER THE CEILING and that is accepted.
 - Every new asset is decided when it is added: install (the tutorial, Invasion, campaign cutscene 1 + level 1, the
   start archipelago + its islands, the menu and its music) or the download pack (everything else). Where it goes:
   - a map / dungeon definition -> `Content/LaterMaps` (or `FirstMaps` for what the first minutes may need);

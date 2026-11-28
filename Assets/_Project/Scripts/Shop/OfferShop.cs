@@ -191,8 +191,10 @@ namespace CityBuilder.Shop
         {
             AdPlayingSlot = ShortageSlot;
             Changed?.Invoke();
-            yield return new WaitForSecondsRealtime((_config ?? BalanceConfig.Sandbox).ShopAdStubSeconds);
+            var paid = false;
+            yield return RewardedAds.Watch("shortage", ok => paid = ok);
             AdPlayingSlot = -1;
+            if (!paid) { Changed?.Invoke(); yield break; }
             GiveShortage(bundle);
         }
 
@@ -210,8 +212,10 @@ namespace CityBuilder.Shop
         {
             AdPlayingSlot = slot;
             Changed?.Invoke();
-            yield return new WaitForSecondsRealtime(_config.ShopAdStubSeconds);
+            var paid = false;
+            yield return RewardedAds.Watch("offer", ok => paid = ok);
             AdPlayingSlot = -1;
+            if (!paid) { Changed?.Invoke(); yield break; }
             var s = Rotation.Slots[slot];
             if (s.Bundle == bundle) Give(s, slot);
             else Give(new OfferSlot { Bundle = bundle }, slot);

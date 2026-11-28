@@ -17,3 +17,5 @@ Invasion, campaign cutscene 1 + level 1, start archipelago, menu) or into the do
 **How to apply:** `build_android.ps1 -Store` prints the install and shouts over 99; where each kind of asset goes:
 Design/features/download-size.md «Adding content». Never reference a pack asset from a scene/prefab/Resources. See
 [[project-release-google-play]].
+
+Exception (the user, 2026-11-28): the ads SDK (LevelPlay + Unity Ads) goes in WITHOUT freeing room -- «нигде не освобождаем, игнорируем порог». Do not re-raise the ceiling for it.

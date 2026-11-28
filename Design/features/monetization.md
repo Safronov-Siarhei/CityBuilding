@@ -308,9 +308,25 @@ Mockups for approval: `Design/store/ExitOffer_Pack1-3.png`, `ExitOffer_Packs_She
 - First «AdMob as mediation hub», then dropped: ADMOB IS NOT AVAILABLE to the studio (do not suggest it again, nor
   Google demand via MAX/LevelPlay -- that needs AdMob). The user: «поставить самую простую сеть», tune later. So: Unity Ads
   alone, through Unity LevelPlay (Unity's supported SDK; more networks join later from its dashboard).
-- Rewarded ads only. The code door is `Shop/RewardedAds` (still a stand-in: `IsReady` is always true except the cheat
-  switch). Consent: own simple EEA/UK prompt (LevelPlay has none). Policy page names Unity Ads.
-- NOT BUILT. Waits for the user's LevelPlay app key + rewarded ad unit id. Plan: Design/RELEASE_PLAN.md step C.
+- Rewarded ads only, always started by the player's tap. Consent: own simple EEA/UK prompt (LevelPlay has none) --
+  NOT BUILT yet. Policy page names Unity Ads.
+- **IN THE CODE 2026-11-28 (not on a phone; the user: «Да, реклама», and for this release «игнорируем порог» -- the
+  99 MB install ceiling is NOT kept for the ads SDK, nothing was freed):**
+  - Package `com.unity.services.levelplay` 9.6.0 (Ads Mediation; Java bridge as sources in the package), `Unity.LevelPlay`
+    in CityBuilder.Runtime.asmdef. NO dependency manager (MDR/EDM4U), like Play Games: `Editor/Android/LevelPlaySetup.cs`
+    appends the Maven libraries to unityLibrary's build.gradle ALWAYS (the bridge does not compile without them):
+    mediation-sdk 9.8.0, unityads-adapter 5.17.0 (pulls unity-ads 4.22.0), play-services-ads-identifier 18.1.0
+    (brings the AD_ID permission by manifest merge). Package update -> take the SDK range from its
+    `Editor/Json/LevelPlayVersions.json`.
+  - Ids: `Assets/_Project/Resources/levelplay_ids.txt`, line 1 the app key, line 2 the rewarded ad unit id (public
+    ids, fine in the repo). EMPTY until the user makes the LevelPlay app -> the stand-in stays (also editor/Windows).
+  - `Shop/RewardedAds`: `IsReady` (live: an ad loaded), `Show(placement, Action<bool>)`, `Watch(...)` for coroutines;
+    true only after OnAdRewarded (waits 1.5 s after the close for a late reward); load at start and after each show,
+    a failed load retries in 30 s. All five places go through it: offer shop («offer», «shortage»), booster shop
+    («booster»), daily bonus («daily_bonus»; closed early -> the window stays), plague banner («plague»), diplomacy
+    («diplomacy»). Closed early = no reward.
+  - Open: the EEA/UK consent prompt; Play Console «Advertising ID» -> «Да» in the release that brings this; the
+    install size after the SDK (measure in the next AAB).
 
 ## BEFORE RELEASE (the user, 2026-11-11: «запомни»)
 Players' crystals must survive a reinstall. Today `Wallet.UpgradeCrystals` is PlayerPrefs only, so a

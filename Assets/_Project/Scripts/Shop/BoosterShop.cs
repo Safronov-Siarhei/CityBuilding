@@ -125,8 +125,10 @@ namespace CityBuilder.Shop
         {
             AdPlayingSlot = index;
             Changed?.Invoke();
-            yield return new WaitForSecondsRealtime(BalanceConfig.Sandbox.ShopAdStubSeconds);
+            var paid = false;
+            yield return RewardedAds.Watch("booster", ok => paid = ok);
             AdPlayingSlot = -1;
+            if (!paid) { Changed?.Invoke(); yield break; }
             // the place may have changed meanwhile: the booster watched for is what is given
             if (Slots[index].Id == id && !Slots[index].Taken) Give(index, useAtOnce);
             else

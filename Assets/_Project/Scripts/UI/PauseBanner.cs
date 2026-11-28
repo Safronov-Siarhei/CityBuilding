@@ -74,7 +74,7 @@ namespace CityBuilder.UI
         {
             var price = Price;
             if (bodyText != null) bodyText.text = BodyText;
-            if (adButton != null) adButton.gameObject.SetActive(Shop.RewardedAds.IsReady);
+            if (adButton != null) adButton.gameObject.SetActive(Shop.RewardedAds.IsReady || _adLeft >= 0f);
             if (adLabel != null) adLabel.text = _adLeft >= 0f ? Localization.Get(Key("ad_playing")) : Localization.Get(Key("ad"));
             // the price alone, beside the crystal icon (the user, 2026-11-13: «вместо слов просто 30 + иконка»)
             if (crystalsLabel != null) crystalsLabel.text = price.ToString();
@@ -84,15 +84,6 @@ namespace CityBuilder.UI
         private void Update()
         {
             if (!IsOpen) return;
-            if (_adLeft >= 0f)
-            {
-                _adLeft -= Time.unscaledDeltaTime;
-                if (_adLeft < 0f)
-                {
-                    EndPlague();
-                    return;
-                }
-            }
             Refresh();
         }
 
@@ -100,7 +91,15 @@ namespace CityBuilder.UI
         public void WatchAd()
         {
             if (_adLeft >= 0f || !Shop.RewardedAds.IsReady) return;
-            _adLeft = Mathf.Max(0.1f, BalanceConfig.Instance.ShopAdStubSeconds);
+            var island = _island;
+            _adLeft = 0f;
+            Shop.RewardedAds.Show("plague", paid =>
+            {
+                if (_adLeft < 0f || _island != island) return;   // closed or another banner meanwhile
+                _adLeft = -1f;
+                if (paid) EndPlague();
+                else Refresh();
+            });
             Refresh();
         }
 
